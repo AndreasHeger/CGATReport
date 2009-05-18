@@ -1,4 +1,6 @@
-import os, sys, re, types, copy
+from __future__ import with_statement 
+
+import os, sys, re, types, copy, warnings
 
 import sqlalchemy
 
@@ -101,7 +103,6 @@ class TrackerSQL(Tracker):
 
         # ignore unknown type BigInt warnings
         if db:
-            import warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 self.metadata = sqlalchemy.MetaData(db, reflect = True)

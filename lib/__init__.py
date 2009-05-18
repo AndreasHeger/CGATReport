@@ -1,7 +1,8 @@
 __all__ = [ "Renderer",
             "Plotter",
             "Tracker",
-            "SQLDatabase",
+            "CorrespondenceAnalysis",
+            "Stats",
             "DataTypes",
             "only_directive",
             "render_directive" ]

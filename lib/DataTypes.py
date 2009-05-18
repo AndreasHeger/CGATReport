@@ -86,7 +86,7 @@ class SingleColumnData(Data):
         for x in self._data:
             assert type(x) in NumberTypes, "value %s is not a number: type=%s" % (str(x), type(x))
 
-class MultipleColumn(Data):
+class MultipleColumns(Data):
     """Multiple column data
 
     The data can be any scalar type. All columns have the same length.
@@ -103,7 +103,7 @@ class MultipleColumn(Data):
         assert min( [len(c) for c in self._data[1]]) == max( [len(c) for c in self._data[1]]), "data columns have not the same length."
 
 
-class MultipleColumnData(MultipleColumnData):
+class MultipleColumnData(Data):
     """Multiple column data
 
     All data are numerical values.

@@ -16,7 +16,6 @@ import numpy.ma
 # so that arange is available in eval
 from numpy import *
 
-import SQLDatabase
 import sqlalchemy
 
 import Stats
@@ -1373,7 +1372,7 @@ class RendererGroupedTable(Renderer):
                 dd = zip( *data )
                 g = group
                 for row in dd:
-                    result.append( '   "%s","%s","%s"' % (,track, '","'.join( map(str, row) ) ) )
+                    result.append( '   "%s","%s","%s"' % ( group,track, '","'.join( map(str, row) ) ) )
 
         return result
 

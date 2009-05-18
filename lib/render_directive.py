@@ -24,6 +24,11 @@ except ImportError:
     from docutils.parsers.rst.directives.images import Image
     align = Image.align
 
+try:
+    from sphinx.writers.latex import LaTeXTranslator
+except ImportError:
+    from sphinx.latexwriter import LaTeXTranslator
+
 import Renderer
 import matplotlib
 

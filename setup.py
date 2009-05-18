@@ -7,7 +7,7 @@ setup(name='SphinxReport',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',
       packages=[ 'SphinxReport' ],
-      package_dir = { 'SphinxReport': 'lib'}
+      package_dir = { 'SphinxReport': 'lib'},
       scripts=glob.glob( 'scripts/*.py'),
       package_data={'SphinxReport': ['./templates/*']},
       )
