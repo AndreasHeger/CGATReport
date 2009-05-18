@@ -1,0 +1,158 @@
+import types, copy, numpy
+
+ContainerTypes = (types.TupleType, types.ListType, type(numpy.zeros(0)))
+# Taken from numpy.scalartype, but removing the types object and unicode
+# None is allowed to represent missing values.
+NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
+               numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
+               numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
+               numpy.float32, numpy.float64, numpy.float128 )
+
+def is_numeric(obj):
+    attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
+    return all(hasattr(obj, attr) for attr in attrs)
+
+class Data(object):
+    """Base class for data types.
+
+    Derived class enforce consistency checks on data.
+    """
+    __slots__=["_instance", "_data", "_fn"]
+    def __init__(self, fn):
+        """Store data returned by function."""
+        object.__setattr__( self, "_fn", fn)
+        object.__setattr__( self, "_data", None)
+    def __call__(self,*args, **kwargs):
+        """call the function and return a clone of one-self.
+        """
+        ## Decorators will use the same object for each decoration
+        ## and data will get overwritten in successive calls to the same function.
+        ## Thus clone oneself before storing the data and return
+        ## the clone.
+        clone = copy.copy(self)
+        setattr( clone, "_data", self._fn( self._instance, *args, **kwargs ) )
+        clone.__check__()
+        return clone
+
+    def __len__(self):
+        return len(self._data)
+    def __get__(self, instance, cls=None):
+        object.__setattr__( self, "_instance", instance )
+        return self
+    def __getstate__(self ):
+        ## previously used deepcoy, but not necessary
+        return { "_data" : self._data  }
+    def __setstate__(self, dict ):
+        for key,val in dict.iteritems():
+            object.__setattr__( self, key, val )
+    def __iter__(self):
+        return self._data.__iter__()
+    def __getitem__(self, *args, **kwargs ):
+        return self._data.__getitem__( *args, **kwargs )
+    def __setslice__(self, *args, **kwargs):
+        return self._data.__getslice__( *args, **kwargs )
+    def __contains__(self):
+        return self._data.__contains__( *args, **kwargs )
+    def __copy__(self):
+        return self.__class__(self)
+#    def __getattr__(self, name):
+#        return getattr(self._data, name)
+#    def __setattr__(self, name, value):
+#        setattr(self._data, name, value) 
+
+class SingleColumn( Data ):
+    """Single column.
+
+    The data can be any scalar type.
+
+    Example: (1,2,"a")
+    """
+    def __init__(self, fn): Data.__init__(self, fn)
+    def __check__( self ):
+        assert type(self._data) in ContainerTypes, "returned type is not a collection: %s" % (type(self._data))
+        for x in self._data:
+            assert type(x) in NumberTypes, "value %s is not a number: type=%s" % (str(x), type(x))
+
+class SingleColumnData(Data):
+    """Single column data.
+
+    All data are numerical values.
+
+    Example: (1,2,3)
+    """
+    def __init__(self, fn): Data.__init__(self, fn)
+    def __check__( self ):
+        assert type(self._data) in ContainerTypes, "returned type is not a collection: %s" % (type(self._data))
+        for x in self._data:
+            assert type(x) in NumberTypes, "value %s is not a number: type=%s" % (str(x), type(x))
+
+class MultipleColumn(Data):
+    """Multiple column data
+
+    The data can be any scalar type. All columns have the same length.
+
+    Example: (("column1", "column2"), (("val1",2,3), ("val2",2,3)))
+    """
+    def __init__(self, fn): Data.__init__(self, fn)
+    def __check__( self ):
+        assert type(self._data) in ContainerTypes, "returned type is not a collection: %s" % (type(self._data))
+        assert type(self._data[0]) in ContainerTypes, "first column is not a collection: %s" % (type(self._data[0]))
+        assert type(self._data[1]) in ContainerTypes, "second column is not a collection: %s" % (type(self._data[1]))
+        for c in self._data[1]:
+            assert type(c) in ContainerTypes, "column is not a collection: %s" % (type(c))
+        assert min( [len(c) for c in self._data[1]]) == max( [len(c) for c in self._data[1]]), "data columns have not the same length."
+
+
+class MultipleColumnData(MultipleColumnData):
+    """Multiple column data
+
+    All data are numerical values.
+
+    Example: (("column1", "column2"), ((1,2,3), (1,2,3)))
+    """
+    def __init__(self, fn): Data.__init__(self, fn)
+    def __check__( self ):
+        assert type(self._data) in ContainerTypes, "returned type is not a collection: %s" % (type(self._data))
+        assert type(self._data[0]) in ContainerTypes, "first column is not a collection: %s" % (type(self._data[0]))
+        assert type(self._data[1]) in ContainerTypes, "second column is not a collection: %s" % (type(self._data[1]))
+        for c in self._data[1]:
+            assert type(c) in ContainerTypes, "column is not a collection: %s" % (type(c))
+            for x in c:
+                assert type(x) in NumberTypes, "value %s is not a number: type=%s" % (str(x), type(x))
+        assert min( [len(c) for c in self._data[1]]) == max( [len(c) for c in self._data[1]]), "data columns have not the same length."
+
+class LabeledData(Data):
+    """Labeled data points.
+
+    All data are numerical values. There is only one value per label.
+
+    Example: (("column1", 1), ("column2",2))
+    """
+    def __init__(self, fn): Data.__init__(self, fn)
+    def __check__( self ):
+        assert type(self._data) in ContainerTypes, "returned type is not a collection: %s" % (self._data)
+        for x in self._data:
+            assert type(x) in ContainerTypes, "row is not a collection: %s" % str(x)
+            assert len(x) == 2, "data is not a column, value tuple: %s" % str(x)
+
+def returnSingleColumn( f ):
+    """decorator for Trackers returning :class:`SingleColumn`."""
+    return SingleColumn( f )
+
+def returnSingleColumnData( f ):
+    """decorator for Trackers returning :class:`SingleColumnData`."""
+    return SingleColumnData( f )
+
+def returnMultipleColumns( f ):
+    """decorator for Trackers returning :class:`MultipleColumn`."""
+    return MultipleColumns( f )
+
+def returnMultipleColumnData( f ):
+    """decorator for Trackers returning :class:`MultipleColumnData`."""
+    return MultipleColumnData( f )
+
+def returnLabeledData( f ):
+    """decorator for Trackers returning :class:`LabeledData`."""
+    return LabeledData( f )
+
+
