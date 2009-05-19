@@ -4,6 +4,31 @@
 Tutorial
 ********
 
+=============================
+ Creating a skeleton project
+=============================
+
+First, we create a skeleton report in the directory tutorial::
+
+   sphinxreport-quickstart.py -d tutorial
+
+This will create a skeleton report layout in the directory :file:`tutorial`.
+Enter this directory and build the report::
+
+   make html
+
+This will create the skeleton report. View it by opening the file 
+:file:`tutorial/_build/html/index.html` in a web browser.
+
+Configuration
+=============
+
+Configuration options are set in the file :file:`conf.py`.
+
+
+
+
+
 The :mod:`SphinxReport` module is an extension for sphinx
 that provides facilities for data retrieval and data rendering
 within reStructured text. For example, the reST snippet::
@@ -15,8 +40,9 @@ will insert a table with transcript length information at the current location.
 It will do so by instantiating a :class:`Renderer` of the type *histogram* and fill it 
 with data from the Tracker :class:`Lengths`.
 
-Simple example
-==============
+================
+ Simple example
+================
 
 To do this, the extension will require a module called :mod:`Trackers` in its PYTHONPATH and 
 a class called :class:`Lengths` which defines a :meth:`__call__` method.

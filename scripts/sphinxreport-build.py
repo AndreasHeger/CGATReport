@@ -135,10 +135,12 @@ def buildPlots( options, args ):
         for b in blocks:
             work.append( (f, b) )
 
+    if len(work) == 0: return
+
     cs = len(work) // options.num_jobs
     processes = []
     for x in range( 0, len(work), cs ):
-        
+
         p = Process( target = run, args = ( work[x:x+cs], ) )
         processes.append( p )
         p.start()
