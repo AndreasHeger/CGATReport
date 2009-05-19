@@ -24,11 +24,6 @@ except ImportError:
     from docutils.parsers.rst.directives.images import Image
     align = Image.align
 
-try:
-    from sphinx.writers.latex import LaTeXTranslator
-except ImportError:
-    from sphinx.latexwriter import LaTeXTranslator
-
 import Renderer
 import matplotlib
 
@@ -39,7 +34,6 @@ DEBUG = False
 # Matplotlib might be imported beforehand? plt.switch_backend did not
 # change the backend. The only option I found was to change my own matplotlibrc.
 
-import matplotlib.cbook as cbook
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 from matplotlib import _pylab_helpers
@@ -181,6 +175,14 @@ def out_of_date(original, derived):
     return (not os.path.exists(derived) \
         or os.stat(derived).st_mtime < os.stat(original).st_mtime)
 
+
+def exception_to_str(s = None):
+
+    sh = StringIO.StringIO()
+    if s is not None: print >>sh, s
+    traceback.print_exc(file=sh)
+    return sh.getvalue()
+
 def run(arguments, options, state_machine, lineno, content, document = None):
 
     # sort out the paths
@@ -194,7 +196,7 @@ def run(arguments, options, state_machine, lineno, content, document = None):
     reldir = rstdir[len(setup.confdir)+1:]
     relparts = [p for p in os.path.split(reldir) if p.strip()]
     nparts = len(relparts)
-    outdir = os.path.join('_static', 'render_directive', basedir)
+    outdir = os.path.join('_static', 'report_directive', basedir)
     linkdir = ('../' * (nparts)) + outdir
 
     if DEBUG:
@@ -203,7 +205,8 @@ def run(arguments, options, state_machine, lineno, content, document = None):
         print 'rstdir=%s, reldir=%s, relparts=%s, nparts=%d'%(rstdir, reldir, relparts, nparts)
         print 'reference="%s", basedir="%s", linkdir="%s", outdir="%s"'%(reference, basedir, linkdir, outdir)
 
-    if not os.path.exists(outdir): cbook.mkdirs(outdir)
+
+    if not os.path.exists(outdir): os.mkdirs(outdir)
 
     # check if we need to update. 
 
@@ -313,7 +316,7 @@ def run(arguments, options, state_machine, lineno, content, document = None):
                 try:
                     figman.canvas.figure.savefig( outpath, dpi=dpi )
                 except:
-                    s = cbook.exception_to_str("Exception running plot %s" % fullpath)
+                    s = exception_to_str("Exception running plot %s" % fullpath)
                     warnings.warn(s)
                     return 0, module
 
@@ -380,16 +383,16 @@ try:
 except ImportError:
     from docutils.parsers.rst.directives import _directives
 
-    def render_directive(name, arguments, options, content, lineno,
+    def report_directive(name, arguments, options, content, lineno,
                        content_offset, block_text, state, state_machine):
         return run(arguments, options, state_machine, lineno)
-    render_directive.__doc__ = __doc__
-    render_directive.arguments = (1, 0, 1)
-    render_directive.options = options
+    report_directive.__doc__ = __doc__
+    report_directive.arguments = (1, 0, 1)
+    report_directive.options = options
 
-    _directives['render'] = render_directive
+    _directives['report'] = report_directive
 else:
-    class render_directive(Directive):
+    class report_directive(Directive):
         required_arguments = 1
         optional_arguments = 0
         has_content = True
@@ -405,20 +408,20 @@ else:
                        self.lineno,
                        self.content, 
                        document)
-    render_directive.__doc__ = __doc__
+    report_directive.__doc__ = __doc__
 
-    directives.register_directive('render', render_directive)
+    directives.register_directive('report', report_directive)
 
 def setup(app):
     setup.app = app
     setup.config = app.config
     setup.confdir = app.confdir
 
-render_directive.__doc__ = __doc__
+report_directive.__doc__ = __doc__
 
-directives.register_directive('render', render_directive)
+directives.register_directive('report', report_directive)
 
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
-    stream = open( "renderer.log", "a" ) )
+    stream = open( "sphinxreport.log", "a" ) )
