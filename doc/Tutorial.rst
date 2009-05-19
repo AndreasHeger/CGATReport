@@ -8,7 +8,7 @@ The :mod:`SphinxReport` module is an extension for sphinx
 that provides facilities for data retrieval and data rendering
 within reStructured text. For example, the reST snippet::
 
-   .. render:: Trackers.Lengths
+   .. report:: Trackers.Lengths
       :render: histogram
 
 will insert a table with transcript length information at the current location.
@@ -138,7 +138,7 @@ will now insert three histograms for the slices "all", "H" and "2B", each plot c
 The default is to group tracks by slice, but if you would want to group slices by track, you could give the option
 ``:groupby:`` to the reST snippet::
 
-   .. render:: Trackers.Lengths
+   .. report:: Trackers.Lengths
       :render: histogram
       :groupby: track
 

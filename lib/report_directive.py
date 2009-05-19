@@ -183,7 +183,7 @@ def exception_to_str(s = None):
     traceback.print_exc(file=sh)
     return sh.getvalue()
 
-def run(arguments, options, state_machine, lineno, content, document = None):
+def run(arguments, options, lineno, content, state_machine = None, document = None):
 
     # sort out the paths
     # reference is used for time-stamping
@@ -192,21 +192,26 @@ def run(arguments, options, state_machine, lineno, content, document = None):
     basename, ext = os.path.splitext(fname)
 
     # get the directory of the rst file
-    rstdir, rstfile = os.path.split(state_machine.document.attributes['source'])
-    reldir = rstdir[len(setup.confdir)+1:]
+    rstdir, rstfile = os.path.split( document ) # state_machine.document.attributes['source'])
+    # reldir = rstdir[len(setup.confdir)+1:]
+    reldir = rstdir[len(os.path.abspath( os.getcwd() ))+1:]
     relparts = [p for p in os.path.split(reldir) if p.strip()]
     nparts = len(relparts)
     outdir = os.path.join('_static', 'report_directive', basedir)
     linkdir = ('../' * (nparts)) + outdir
 
     if DEBUG:
-        print 'arguments', arguments
+        print "arguments=", arguments
+        print "options=", options
+        print "lineno", lineno
+        print "content=", content
+        print "document=", document
         print 'plotdir=', reference, "basename=", basename, "ext=", ext, "fname=", fname
         print 'rstdir=%s, reldir=%s, relparts=%s, nparts=%d'%(rstdir, reldir, relparts, nparts)
         print 'reference="%s", basedir="%s", linkdir="%s", outdir="%s"'%(reference, basedir, linkdir, outdir)
 
 
-    if not os.path.exists(outdir): os.mkdirs(outdir)
+    if not os.path.exists(outdir): os.makedirs(outdir)
 
     # check if we need to update. 
 
@@ -245,6 +250,9 @@ def run(arguments, options, state_machine, lineno, content, document = None):
     template_name = quoted( "@".join( (reference, renderer_name, options_hash ) ))
     filename_text = os.path.join( outdir, "%s.txt" % (template_name))
 
+    if DEBUG:
+        print "options_hash=", options_hash
+
     ###########################################################
     # check for existing files
     # update strategy does not use file stamps, but checks
@@ -273,7 +281,7 @@ def run(arguments, options, state_machine, lineno, content, document = None):
         else:
             logging.info( "no redo: all files are present" )
             ## all is present - save text and return
-            if lines:
+            if lines and state_machine:
                 state_machine.insert_input(
                     lines, state_machine.input_lines.source(0) )
             return []
@@ -316,7 +324,7 @@ def run(arguments, options, state_machine, lineno, content, document = None):
                 try:
                     figman.canvas.figure.savefig( outpath, dpi=dpi )
                 except:
-                    s = exception_to_str("Exception running plot %s" % fullpath)
+                    s = exception_to_str("Exception running plot %s" % outpath)
                     warnings.warn(s)
                     return 0, module
 
@@ -373,7 +381,7 @@ def run(arguments, options, state_machine, lineno, content, document = None):
     if DEBUG: 
         for x, l in enumerate( lines): print x, l
 
-    if len(lines):
+    if len(lines) and state_machine:
         state_machine.insert_input(
             lines, state_machine.input_lines.source(0))
     return []
@@ -385,7 +393,7 @@ except ImportError:
 
     def report_directive(name, arguments, options, content, lineno,
                        content_offset, block_text, state, state_machine):
-        return run(arguments, options, state_machine, lineno)
+        return run(arguments, options, lineno, content, state_machine )
     report_directive.__doc__ = __doc__
     report_directive.arguments = (1, 0, 1)
     report_directive.options = options
@@ -404,9 +412,9 @@ else:
             logging.info( "starting: %s:%i" % (str(document), self.lineno) )
             return run(self.arguments, 
                        self.options,
-                       self.state_machine, 
                        self.lineno,
                        self.content, 
+                       self.state_machine, 
                        document)
     report_directive.__doc__ = __doc__
 

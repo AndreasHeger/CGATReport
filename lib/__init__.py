@@ -5,4 +5,4 @@ __all__ = [ "Renderer",
             "Stats",
             "DataTypes",
             "only_directive",
-            "render_directive" ]
+            "report_directive" ]

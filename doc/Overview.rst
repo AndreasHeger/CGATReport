@@ -43,7 +43,7 @@ For the user, the :mod:`SphinxReport` extension consists of two parts:
 
 The following code-snippet illustrates how Renderers and Trackers work together::
 
-   .. render:: Trackers.Lengths
+   .. report:: Trackers.Lengths
       :render: histogram-plot
 
 This snippet will insert a plot of a histogram (:class:`RendererHistogram`) at the current

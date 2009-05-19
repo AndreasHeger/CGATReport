@@ -44,8 +44,12 @@ SimpleContextMenu.attach('container', 'CM1');
 import os, glob, re, collections
 
 multiimage = re.compile('(.*)_\d\d')
-rootdir = '_static/render_directive'
+rootdir = '_static/report_directive'
 dest = '_templates/gallery.html'
+
+# create directory if not present
+if not os.path.exists(os.path.dirname( dest )):
+    os.makedirs( os.path.dirname( dest ))
 
 columns = 5
 

@@ -21,7 +21,7 @@ import sqlalchemy
 import Stats
 import Histogram
 import collections
-from logging import warn, log, debug
+from logging import warn, log, debug, info
 import logging
 
 from DataTypes import *
@@ -37,7 +37,7 @@ VERBOSE=True
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
-    stream = open( "renderer.log", "a" ) )
+    stream = open( "sphinxreport.log", "a" ) )
 
 # for cachedir
 if not os.path.exists("conf.py"):
@@ -1355,25 +1355,48 @@ class RendererGroupedTable(Renderer):
     def addData( self, group, title, data ):
         self.mData[group].append( (title, data ) )
 
+    def getHeaders( self ):
+        """return a list of headers and a mapping of header to column."""
+        # preserve the order of columns
+        headers = {}
+        sorted_headers = []
+        for group, data in self.mData.iteritems():
+            for track, d in data:
+                columns, data = d
+                for h in columns:
+                    if h not in headers: 
+                        headers[h] = len(headers)
+                        sorted_headers.append(h)
+
+        return sorted_headers, headers
+
     def commit(self): 
         
         debug( "%s: rendering data started" % (self.mTracker,) )
         
         result = []
+        
+        sorted_headers, headers = self.getHeaders()
 
         result.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        result.append( '   :header: "group", "track","%s" ' % '","'.join( columns ) )
+        result.append( '   :header: "group", "track","%s" ' % '","'.join( sorted_headers ) )
         result.append( '')
 
+        def toValue( dd, x ):
+            if dd[x] == None:
+                return "na"
+            else:
+                return str(dd[x])
+
         for group, data in self.mData.iteritems():
+            g = group
             for track, d in data:
                 columns, data = d
-
-                dd = zip( *data )
-                g = group
-                for row in dd:
-                    result.append( '   "%s","%s","%s"' % ( group,track, '","'.join( map(str, row) ) ) )
-
+                # tranpose to row-oriented format
+                for row in zip( *data ):
+                    dd = dict( zip( columns, row) )
+                    result.append( '   "%s","%s","%s"' % ( g,track, '","'.join( [toValue( dd, x) for x in sorted_headers] )))
+                    g = ""
         return result
 
 

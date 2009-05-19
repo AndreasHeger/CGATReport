@@ -44,7 +44,12 @@ def getTrackers( fullpath ):
     cls = cls[1:]
     module_name = os.path.basename(name)
 
-    (file, pathname, description) = imp.find_module( name )
+    try:
+        (file, pathname, description) = imp.find_module( name )
+    except ImportError, msg:
+        print "could not find module %s" % name
+        raise
+
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
     try:

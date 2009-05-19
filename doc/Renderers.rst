@@ -17,7 +17,7 @@ Table
 The :class:`Renderer.RendererTable` class inserts labeled data into
 a table.
 
-.. render:: Trackers.LabeledData
+.. report:: Trackers.LabeledData
    :render: table
 
    Table caption.
@@ -28,7 +28,7 @@ Stacked Barplot
 The :class:`Renderer.RendererStackedBars` class presents labeled data
 as stacked bars.
 
-.. render:: Trackers.LabeledData
+.. report:: Trackers.LabeledData
    :render: stacked-bars
 
    Figure caption.
@@ -39,7 +39,7 @@ Interleaved Barplot
 The :class:`Renderer.RendererInterleavedBars` class presents labeled data
 as interleaved bars. Both *interleaved-bars* and *bars* can be used.
 
-.. render:: Trackers.LabeledData
+.. report:: Trackers.LabeledData
    :render: interleaved-bars
 
    Figure caption.
@@ -56,7 +56,7 @@ Histogram
 The :class:`Renderer.RendererHistogram` class computes a histogram
 of data and inserts it as a table.
 
-.. render:: Trackers.SingleColumnData
+.. report:: Trackers.SingleColumnData
    :render: histogram
    :bins: arange(0,10)
 
@@ -68,7 +68,7 @@ HistogramPlot
 The :class:`Renderer.RendererHistogramPlot` class computes a histogram
 of data and inserts a plot.
 
-.. render:: Trackers.SingleColumnData
+.. report:: Trackers.SingleColumnData
    :render: histogram-plot
    :bins: arange(0,10)
 
@@ -80,7 +80,7 @@ Stats
 The :class:`Renderer.RendererStats` class computes summary
 statistics and displays them in a table.
 
-.. render:: Trackers.SingleColumnData
+.. report:: Trackers.SingleColumnData
    :render: stats
 
    Table caption.
@@ -90,7 +90,7 @@ Boxplot
 
 The :class:`Renderer.RendererBoxplot` class computes boxplots.
 
-.. render:: Trackers.SingleColumnData
+.. report:: Trackers.SingleColumnData
    :render: box-plot
 
    Figure caption.
@@ -107,7 +107,7 @@ Pairwise statistics table
 
 Compute correlation statistics between all columns.
 
-.. render:: Trackers.MultipleColumnData
+.. report:: Trackers.MultipleColumnData
    :render: pairwise-stats
 
    Figure caption.
@@ -117,7 +117,7 @@ Pairwise statistics plot
 
 Plot correlation coefficients between all columns.
 
-.. render:: Trackers.MultipleColumnData
+.. report:: Trackers.MultipleColumnData
    :render: pairwise-stats-plot
 
    Figure caption.
@@ -127,8 +127,18 @@ Pairwise scatter plot
 
 A scatter plot.
 
-.. render:: Trackers.MultipleColumnData
+.. report:: Trackers.MultipleColumnData
    :render: scatter-plot
 
    Figure caption.
 
+
+Grouped table
+=============
+
+A grouped plot.
+
+.. report:: Trackers.MultipleColumns
+   :render: grouped-table
+
+   Figure caption.
