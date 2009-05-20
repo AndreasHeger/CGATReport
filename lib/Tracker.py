@@ -134,13 +134,20 @@ class TrackerSQL(Tracker):
         """
         return self.execute(stmt).fetchone()[0]
 
+    def getFirstRow( self, stmt ):
+        """return a row of values from an SQL statement.
+
+        This function will return the first row
+        from an SELECT statement.
+        """
+        return list(self.execute(stmt).fetchone())
+
     def getValues( self, stmt ):
         """return all results from an SQL statement.
 
         This function will return the first value in each row
         from an SELECT statement.
         """
-
         return [x[0] for x in self.execute(stmt).fetchall() ]
 
     def getAll( self, stmt ):

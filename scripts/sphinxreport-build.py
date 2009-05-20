@@ -46,6 +46,7 @@ class ReportBlock:
         self.mLines = []
         self.mOptions = {}
         self.mArguments = None
+        self.mCaption = []
 
     def append(self,v):
         s = v.strip()
@@ -56,8 +57,10 @@ class ReportBlock:
             if s:
                 key, value = s.groups()
                 self.mOptions[key] = value
+            else:
+                self.mCaption.append( v )
         self.mLines.append( v )
-
+        
 def run( work ):
     """run a set of worker jobs."""
 
@@ -65,7 +68,7 @@ def run( work ):
         report_directive.run(  b.mArguments,
                                b.mOptions,
                                lineno = 0,
-                               content = b.mLines,
+                               content = b.mCaption,
                                state_machine = None,
                                document = os.path.abspath( f ) )
     

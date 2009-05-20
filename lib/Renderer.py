@@ -1389,13 +1389,13 @@ class RendererGroupedTable(Renderer):
                 return str(dd[x])
 
         for group, data in self.mData.iteritems():
-            g = group
+            g = "*%s*" % group
             for track, d in data:
                 columns, data = d
                 # tranpose to row-oriented format
                 for row in zip( *data ):
                     dd = dict( zip( columns, row) )
-                    result.append( '   "%s","%s","%s"' % ( g,track, '","'.join( [toValue( dd, x) for x in sorted_headers] )))
+                    result.append( '   "%s","*%s*","%s"' % ( g,track, '","'.join( [toValue( dd, x) for x in sorted_headers] )))
                     g = ""
         return result
 

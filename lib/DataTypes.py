@@ -100,9 +100,14 @@ class MultipleColumns(Data):
         assert type(self._data[1]) in ContainerTypes, "second column is not a collection: %s" % (type(self._data[1]))
         for c in self._data[1]:
             assert type(c) in ContainerTypes, "column is not a collection: %s" % (type(c))
-        assert min( [len(c) for c in self._data[1]]) == max( [len(c) for c in self._data[1]]), "data columns have not the same length."
-
-
+        try:
+            assert min( [len(c) for c in self._data[1]]) == max( [len(c) for c in self._data[1]]), \
+                "data columns have not the same length: %i != %i." %\
+                (min( [len(c) for c in self._data[1]]), max( [len(c) for c in self._data[1]]))
+        except ValueError, msg:
+            # ignore errors due to empty sequences
+            pass
+        
 class MultipleColumnData(Data):
     """Multiple column data
 

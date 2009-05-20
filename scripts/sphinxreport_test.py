@@ -27,7 +27,7 @@ execfile( "conf.py" )
 
 RST_TEMPLATE = """.. _%(label)s:
 
-.. render:: %(tracker)s
+.. report:: %(tracker)s
    :render: %(renderer)s
    %(options)s
 
