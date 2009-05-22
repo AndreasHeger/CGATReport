@@ -130,7 +130,9 @@ class Plotter:
             currentAxesPos = currentAxes.get_position()
 
             # scale plot by 2% for each extra character
-            offset = offset * (maxlen- cliplen)
+            # scale at most 30% as otherwise the plot will
+            # become illegible (and matplotlib might crash)
+            offset = min(0.3, offset * (maxlen- cliplen) )
 
             # move the x-axis up
             currentAxes.set_position((currentAxesPos.xmin,
@@ -177,7 +179,6 @@ class PlotterMatrix(Plotter):
         self.startPlot( matrix )
 
         nrows, ncols = matrix.shape
-
         if self.mZRange:
             vmin, vmax = self.mZRange
             for x in range(nrows):
@@ -197,12 +198,14 @@ class PlotterMatrix(Plotter):
         else:
             color_scheme = None
 
+
         plt.imshow(matrix,
                    cmap=color_scheme,
                    origin='lower',
                    vmax = vmax,
                    vmin = vmin,
                    interpolation='nearest')
+
 
         # offset=0: x=center,y=center
         # offset=0.5: y=top/x=right

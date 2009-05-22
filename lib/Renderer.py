@@ -434,8 +434,17 @@ class RendererMatrix(RendererTable):
 
     Requires :class:`DataTypes.LabeledData`
     """
+
     def __init__(self, *args, **kwargs):
         RendererTable.__init__(self, *args, **kwargs )
+
+        self.mMapKeywordToTransform = {
+            "correspondence-analysis": self.transformCorrespondenceAnalysis,
+            "transpose": self.transformTranspose,
+            "normalized-row-total" : self.transformNormalizeRowTotal,
+            "normalized-row-max" : self.transformNormalizeRowMax,
+            "normalized-col-total" : self.transformNormalizeColumnTotal,
+            "normalized-col-max" : self.transformNormalizeColumnMax }
 
     def prepare(self, *args, **kwargs):
         RendererTable.prepare( self, *args, **kwargs )
@@ -443,20 +452,15 @@ class RendererMatrix(RendererTable):
         self.mConverters = []        
         if "transform-matrix" in kwargs:
             for kw in [x.strip() for x in kwargs["transform-matrix"].split(",")]:
-                if kw == "correspondence-analysis":
-                    self.mConverters.append( self.transformCorrespondenceAnalysis )
-                elif kw == "normalized-row-total":
-                    self.mConverters.append( self.transformNormalizeRowTotal )
-                    self.mFormat = "%6.4f"
-                elif kw == "normalized-row-max":
-                    self.mConverters.append( self.transformNormalizeRowMax )
-                    self.mFormat = "%6.4f"
-                elif kw == "normalized-column-total":
-                    self.mConverters.append( self.transformNormalizeColumnTotal )
-                    self.mFormat = "%6.4f"
-                elif kw == "normalized-column-max":
-                    self.mConverters.append( self.transformNormalizeColumnMmax )
-                    self.mFormat = "%6.4f"
+                if kw.startswith( "normalized" ): self.mFormat = "%6.4f"
+                try:
+                    self.mConverters.append( self.mMapKeywordToTransform[ kw ] )
+                except KeyError:
+                    raise ValueError("unknown matrix transformation %s" % kw )
+
+    def transformTranspose( self, matrix, row_headers, col_headers ):
+        """transpose the matrix."""
+        return numpy.transpose( matrix ), col_headers, row_headers
 
     def transformCorrespondenceAnalysis( self, matrix, row_headers, col_headers ):
         """apply correspondence analysis to a matrix.
@@ -519,7 +523,7 @@ class RendererMatrix(RendererTable):
                 if m != 0: matrix[x,y] /= m
         return matrix, rows, cols
 
-    def transformNormalizeColumn_max( self, matrix, rows, cols ):
+    def transformNormalizeColumnMax( self, matrix, rows, cols ):
         """normalize a matrix by the column maximum
 
         Returns the normalized matrix.
@@ -1399,4 +1403,5 @@ class RendererGroupedTable(Renderer):
                     g = ""
         return result
 
+        
 
