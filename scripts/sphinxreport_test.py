@@ -17,8 +17,10 @@ import matplotlib.pyplot as plt
 from SphinxReport.Tracker import Tracker
 from SphinxReport.Renderer import *
 
-from multiprocessing import Process
-# from threading import Thread as Process
+try:
+    from multiprocessing import Process
+except ImportError:
+    from threading import Thread as Process
 
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
@@ -43,9 +45,9 @@ def getTrackers( fullpath ):
     # remove leading '.'
     cls = cls[1:]
     module_name = os.path.basename(name)
-
+    
     try:
-        (file, pathname, description) = imp.find_module( name )
+        (file, pathname, description) = imp.find_module( module_name )
     except ImportError, msg:
         print "could not find module %s" % name
         raise

@@ -3,11 +3,18 @@ import types, copy, numpy
 ContainerTypes = (types.TupleType, types.ListType, type(numpy.zeros(0)))
 # Taken from numpy.scalartype, but removing the types object and unicode
 # None is allowed to represent missing values.
-NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
+try:
+    NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
                numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
                numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
                numpy.float32, numpy.float64, numpy.float128 )
-
+except AttributeError, msg:
+    NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
+               numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
+               numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
+               numpy.float32, numpy.float64 )
+    
+    
 def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
     return all(hasattr(obj, attr) for attr in attrs)

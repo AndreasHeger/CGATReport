@@ -4,6 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinxreport-build.py --num-jobs=4 sphinx-build
+SPHINXCLEAN   = sphinxreport_clean.py
 PAPER         =
 
 # Internal variables.
@@ -27,7 +28,10 @@ help:
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf _build/*
+	$(SPHINXCLEAN) clean
+
+distclean:
+	$(SPHINXCLEAN) distclean
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html

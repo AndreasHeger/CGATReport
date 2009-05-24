@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import os, sys
 
 if not os.path.exists("conf.py"):
@@ -16,10 +17,11 @@ except NameError:
     db = None
 
 if db:
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        metadata = MetaData(db, reflect = True)
+    pass
+    #import warnings
+    #with warnings.catch_warnings():
+    #    warnings.simplefilter("ignore")
+    #    metadata = MetaData(db, reflect = True)
         
 def getTables():
     return metadata.sorted_tables

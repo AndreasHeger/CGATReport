@@ -14,6 +14,7 @@ source will be included inline, as well as a link to the source.
 """
 
 import sys, os, glob, shutil, imp, warnings, cStringIO, hashlib, re, logging
+import traceback
 
 from docutils.parsers.rst import directives
 try:
@@ -128,29 +129,29 @@ RENDER_OPTIONS = { 'cumulative': directives.flag,
                    'plot-value' : directives.unchanged,
                    'tracks': directives.unchanged,
                    'slices': directives.unchanged,
-                   'as-lines': directives.flag
+                   'as-lines': directives.flag          
                    }
 
 TEMPLATE_PLOT = """
 .. htmlonly::
 
-   [`source code <%(linkdir)s/%(codename)s>`__,
-   `rst <%(linkdir)s/%(outname)s.txt>`__,
-   `png <%(linkdir)s/%(outname)s.hires.png>`__,
-   `pdf <%(linkdir)s/%(outname)s.pdf>`__]
-
-   .. image:: %(linkdir)s/%(outname)s.png
+   .. image:: %(linkedname)s.png
 %(display_options)s
 
+   [`source code <%(linked_codename)s>`__,
+   `rst <%(linkedname)s.txt>`__,
+   `png <%(linkedname)s.hires.png>`__,
+   `pdf <%(linkedname)s.pdf>`__]
+
 .. latexonly::
-   .. image:: %(linkdir)s/%(outname)s.pdf
+   .. image:: %(linkedname)s.pdf
 %(display_options)s
 """
 
 TEMPLATE_TEXT = """
 .. htmlonly::
 
-   [`source code <%(linkdir)s/%(codename)s>`__]
+   [`source code <%(linked_codename)s>`__]
 
 """
 
@@ -178,7 +179,7 @@ def out_of_date(original, derived):
 
 def exception_to_str(s = None):
 
-    sh = StringIO.StringIO()
+    sh = cStringIO.StringIO()
     if s is not None: print >>sh, s
     traceback.print_exc(file=sh)
     return sh.getvalue()
@@ -217,6 +218,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     code, tracker = getTracker( reference )
     codename = quoted(fname) + ".code"
+    linked_codename = re.sub( "\\\\", "/", os.path.join( linkdir, codename )) 
     if basedir != outdir:
         outfile = open( os.path.join(outdir, codename ), "w" )
         for line in code: outfile.write( line )
@@ -326,7 +328,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                 except:
                     s = exception_to_str("Exception running plot %s" % outpath)
                     warnings.warn(s)
-                    return 0, module
+                    return []
 
                 if format=='png':
                     thumbdir = os.path.join(outdir, 'thumbnails')
@@ -342,7 +344,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                     outfile = open(captionfile,"w")
                     outfile.write( "\n".join( content ) + "\n" )
                     outfile.close()
-
+            linkedname = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
             try:
                 l = lines.index( "## Figure %i ##" % (i+1) )
                 lines[l:l+1] = (TEMPLATE_PLOT % locals()).split('\n')
