@@ -3,6 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
+SPHINXCLEAN   = sphinxreport-clean.py
 SPHINXBUILD   = sphinxreport-build.py --num-jobs=4 sphinx-build
 PAPER         =
 
@@ -16,7 +17,6 @@ ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  html      to make standalone HTML files"
-	@echo "  gallery   to update the thumbnail gallery - you might need to run 'make html' again afterwards."
 	@echo "  clean	   to clean up the current build while keeping all the cached data."
 	@echo "  distclean to clean up the current build and all the cached data."
 	@echo "  dirhtml   to make HTML files named index.html in directories"
@@ -30,21 +30,15 @@ help:
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf _build/*
+	$(SPHINXCLEAN) clean
 
 distclean:
-	-rm -rf _build/* _cache/*
+	$(SPHINXCLEAN) distclean
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
-
-gallery:
-	sphinxreport_gallery.py 
-	@echo
-	@echo "The gallery has been rebuilt. Running 'make html' again."
-	$(MAKE) html
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) _build/dirhtml

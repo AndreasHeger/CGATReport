@@ -166,7 +166,7 @@ def runCommand( command ):
 def buildGallery( options, args ):
     """construct the gallery page.
     """
-    runCommand( "sphinxreport_gallery.py" )
+    runCommand( "sphinxreport-gallery.py" )
 
 @timeit( "buildDocument" )
 def buildDocument( options, args ):
