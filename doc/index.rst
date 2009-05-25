@@ -15,9 +15,10 @@ Contents:
 
    Introduction.rst   
    Overview.rst
-   Tutorial.rst
+   Tutorials.rst
+   Running.rst
    Reference.rst
-   Renderers.rst
+   Gallery.rst
    Glossary.rst
    FAQ.rst
 

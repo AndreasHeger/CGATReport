@@ -20,6 +20,9 @@ sys.path.extend( [os.path.join( '..', 'lib'),
                   os.path.abspath( 'python'), 
                   os.path.abspath( '.') ] )
 
+
+sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
@@ -144,7 +147,7 @@ html_static_path = ['_static']
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-#html_additional_pages = {}
+html_additional_pages = { 'gallery' : 'gallery.html' }
 
 # If false, no module index is generated.
 #html_use_modindex = True

@@ -3,7 +3,7 @@ import sys, os, re, random
 from SphinxReport.Tracker import Tracker
 from SphinxReport.DataTypes import returnLabeledData, returnSingleColumnData, returnMultipleColumnData, returnMultipleColumns
 
-class LabeledData( Tracker ):
+class LabeledDataExample( Tracker ):
     def getSlices( self, subset = None ): return "slice1", "slice2"
     def getTracks( self ): return "track1", "track2", "track3"
     @returnLabeledData
@@ -15,7 +15,7 @@ class LabeledData( Tracker ):
             return [ ("column1", 20),
                      ("column2", 10 ), ]
 
-class SingleColumnData( Tracker ):
+class SingleColumnDataExample( Tracker ):
     def getSlices( self, subset = None ): return "slice1", "slice2"
     def getTracks( self ): return "track1", "track2", "track3"
     @returnSingleColumnData
@@ -24,7 +24,7 @@ class SingleColumnData( Tracker ):
         random.shuffle( s )
         return s
 
-class MultipleColumnData( Tracker ):
+class MultipleColumnDataExample( Tracker ):
     mColumns = [ "col1", "col2" ]
     def getSlices( self, subset = None ): return "slice1", "slice2"
     def getTracks( self ): return "track1", "track2"
@@ -39,7 +39,7 @@ class MultipleColumnData( Tracker ):
                 data.append( [ y + random.gauss( 0, 0.5 ) for y in range(20) ] )
         return [ self.mColumns, data ]
 
-class MultipleColumns( Tracker ):
+class MultipleColumnsExample( Tracker ):
     mColumns = [ "col1", "col2" ]
     def getSlices( self, subset = None ): return "slice1", "slice2"
     def getTracks( self ): return "track1", "track2"
@@ -53,3 +53,6 @@ class MultipleColumns( Tracker ):
             for x in range(len(self.mColumns)):
                 data.append( ("%s-c" % track, "%s-d" % track, 1, 4 ) )
         return [ self.mColumns, data ]
+
+
+    

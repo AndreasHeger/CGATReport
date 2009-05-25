@@ -13,15 +13,15 @@ within reStructured text.
 Features
 ********
 
-:module:``SphinxReport`` is a report generator that is implemented as an extension
-to :module:``Sphinx``. It is easy to use and powerful enough to give all the flexibility 
+:mod:`SphinxReport` is a report generator that is implemented as an extension
+to :mod:`Sphinx`. It is easy to use and powerful enough to give all the flexibility 
 needed during the development of computational pipelines and robustness during the
 production use of a pipeline.
 
 It is intended for developers and computational scientists with ``python`` scripting experience.
 
-Briefly, the :module:``SphinxReport`` is a report generator that is implemented as an extension
-to :module:``Sphinx``. It
+Briefly, the :mod:`SphinxReport` is a report generator that is implemented as an extension
+to :mod:`Sphinx`. It
 
 * uses simple markup in the form of restructured text
 * supports both automated and narrative analysis
@@ -33,29 +33,41 @@ to :module:``Sphinx``. It
 Usage
 *****
 
-For the user, the :mod:`SphinxReport` extension consists of two parts:
+The :mod:`SphinxReport` extension has three parts:
 
-1. Renderers are python classes and are provided by the :mod:`SphinxReport`. They can be incorporated into
-   restructured text files.
+1. ``Renderers`` are provided by the :mod:`SphinxReport` extension and are used to display data
+   as graphs or tables. They can be incorporated into restructured text files using the ``:report::`` directive.
 
-2. Trackers are python classes and are provided by the user and collect data. The data can be obtained from
-   any data source imaginable like flat files, SQL tables and more.
+2. ``Trackers`` are python classes and are provided by the user and collect data. The data can be obtained from
+   data sources like flat files, SQL tables and more. Trackers provide data by :term:`track` and :term:`slice`. 
+   Tracks are principal collections of data, for example data measurements taken from different species. Slices 
+   are subsections of the data. For example, a :class:`Tracker` might provide *weight* measurements of different species
+   according to the slice *gender*.
 
-The following code-snippet illustrates how Renderers and Trackers work together::
+3. :file:``sphinxreport-build.py`` is used to build a document. 
 
-   .. report:: Trackers.Lengths
-      :render: histogram-plot
+The following minimal example illustrates how Renderers and Trackers work together. A ``:report:``
+directive like::
 
-This snippet will insert a plot of a histogram (:class:`RendererHistogram`) at the current
-location. The Renderer will obtain the data from a python class *Lengths* in the file
+   .. report:: BarData
+      :render: bars
+
+will insert a barplot (:class:`RendererInterleavedBars`) at the current
+location. The Renderer will obtain the data from a python class or function *BarData* in the file
 :file:`Trackers.py` that should be somewhere in the python search path (see :ref:`Configuration`).
+The function *BarData* might look like this::
 
-Trackers provide data by :term:`track` and :term:`slice`. Tracks are principal collections
-of data, for example data measurements taken from different species. Slices are subsections
-of the data. For example, a :class:`Tracker` might provide *weight* measurements of different species
-according to the slice *gender*.
+   @returnLabeledData
+   def BarData(): return [("bar1", 10), ("bar2", 20)]
 
-See the :ref:`Tutorial` for a more complete introduction on how to use the extension.
+The document is built using the usual :mod:`Sphinx` process::
+
+   sphinx-build -b html -d _build/doctrees   . _build/html
+
+See the :ref:`Tutorials` for a more complete introduction on how to use the extension. See
+:ref:`Running` on more advanced building methods.
+
+
 
 .. _Background:
 

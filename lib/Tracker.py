@@ -96,6 +96,7 @@ class TrackerSQL(Tracker):
 
 
         db = sqlalchemy.create_engine( sql_backend )
+
         if not db:
             raise ValueError( "could not connect to database %s" % sql_backend)
 
@@ -103,24 +104,39 @@ class TrackerSQL(Tracker):
 
         # ignore unknown type BigInt warnings
         if db:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    self.metadata = sqlalchemy.MetaData(db, reflect = True)
+            except AttributeError:
                 self.metadata = sqlalchemy.MetaData(db, reflect = True)
 
         self.db = db
 
     def getTables(self, pattern = None ):
         """return a list of table objects matching a :term:`track` pattern."""
+        # old version of sqlalchemy have no sorted_tables attribute
+        try:
+            sorted_tables = self.metadata.sorted_tables
+        except AttributeError, msg:
+            sorted_tables = []
+            for x in sorted(self.metadata.tables.keys()):
+                sorted_tables.append( self.metadata.tables[x])
+
         if pattern:
             rx = re.compile(pattern)
-            return [ x for x in self.metadata.sorted_tables if rx.search( x.name ) ]
+            return [ x for x in sorted_tables if rx.search( x.name ) ]
         else:
-            return self.metadata.sorted_tables
+            return sorted_tables
 
     def getTable( self, name ):
         """return table with name *name*."""
-        for table in self.metadata.sorted_tables:
-            if table.name == name: return table
+        try:
+            for table in self.metadata.sorted_tables:
+                if table.name == name: return table
+        except AttributeError, msg:
+            return self.metadata.tables[name]
+
         raise IndexError( "table %s no found" % name )
 
     def execute(self, stmt ):

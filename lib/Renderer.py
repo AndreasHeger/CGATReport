@@ -117,7 +117,7 @@ class Renderer:
 
         try: 
             self.mSlices = [ x.strip() for x in kwargs["slices"].split(",")]
-            if len(self.mSlices) == 1: self.mSlices = self.mSlices[0]
+            # if len(self.mSlices) == 1: self.mSlices = self.mSlices[0]
         except KeyError: self.mSlices = None
 
         self.mData = collections.defaultdict( list )
@@ -175,13 +175,23 @@ class Renderer:
     def getData( self, track, slice):
         """get data for track and slice. Save data in persistent cache for further use."""
 
-        key = ":".join( (track.encode(), str(slice)) )
-
+        key = ":".join( (str(track), str(slice)) )
         result = self.getDataFromCache( key )
 
+        kwargs = {}
+        if track != None: kwargs['track'] = track
+        if slice != None: kwargs['slice'] = slice
+        
         if result == None:
+
             try:
-                result = self.mTracker( track, slice )
+                # this messy code distinguishes between the result of functors
+                # and true functions that have been wrapped with the DataTypes
+                # decorators.
+                if type(self.mTracker) == types.InstanceType:
+                    result = self.mTracker( **kwargs )
+                else:
+                    result = self.mTracker
                 debug( "collected data for key '%s': %i" % (key, len(result)) )
             except Exception, msg:
                 warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.mTracker), track, slice, msg) )
@@ -202,16 +212,34 @@ class Renderer:
 
     def collectData( self ):
 
-        if self.mTracks == None:
+        try:
             tracks = self.mTracker.getTracks()
-        else:
+        except AttributeError:
+            # not a Tracker, simply call function:
+            data = self.getData( None, None )
+            self.addData( "all", "slice", data )
+            return
+
+        if self.mTracks != None:
             tracks = self.mTracks
 
         if len(tracks) == 0: 
             debug( "%s: no tracks found - no output" % self.mTracker )
             return
 
-        slices = self.mTracker.getSlices( subset = self.mSlices )
+        # first get all slices without subsets and check if all
+        # specified slices are available
+        if self.mSlices:
+            all_slices = set(self.mTracker.getSlices( subset = None ))
+            for s in self.mSlices:
+                if s not in all_slices:
+                    slices = self.mTracker.getSlices( subset = self.mSlices )
+                    break
+            else:
+                slices = self.mSlices
+        else:
+            slices = self.mTracker.getSlices( subset = None )
+        
         if type(slices) in types.StringTypes: slices=[slices,]
         if len(slices) == 0: slices=[None,]
 
@@ -851,9 +879,9 @@ class RendererHistogram(Renderer ):
             if len(vals) == 3: mi, ma, binsize = vals[0], vals[1], float(vals[2])
             elif len(vals) == 2: mi, ma, binsize = vals[0], vals[1], None
             elif len(vals) == 1: mi, ma, binsize = vals[0], None, None
-            if mi == "": mi = min(data)
+            if mi == None: mi = min(data)
             else: mi = float(mi)
-            if ma == "": ma = max(data)
+            if ma == None: ma = max(data)
             else: ma = float(ma)
         else:
             mi, ma= min( data ), max(data)

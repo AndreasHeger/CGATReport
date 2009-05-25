@@ -2,7 +2,8 @@ import types, copy, numpy
 
 ContainerTypes = (types.TupleType, types.ListType, type(numpy.zeros(0)))
 # Taken from numpy.scalartype, but removing the types object and unicode
-# None is allowed to represent missing values.
+# None is allowed to represent missing values. numpy.float128 is a recent
+# numpy addition.
 try:
     NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
                numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
@@ -19,16 +20,17 @@ def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
     return all(hasattr(obj, attr) for attr in attrs)
 
-class Data(object):
+class DataSimple(object):
     """Base class for data types.
 
-    Derived class enforce consistency checks on data.
+    Derived classes enforce consistency checks on data.
     """
     __slots__=["_instance", "_data", "_fn"]
     def __init__(self, fn):
         """Store data returned by function."""
         object.__setattr__( self, "_fn", fn)
         object.__setattr__( self, "_data", None)
+        object.__setattr__( self, "_instance", None)
     def __call__(self,*args, **kwargs):
         """call the function and return a clone of one-self.
         """
@@ -40,12 +42,44 @@ class Data(object):
         setattr( clone, "_data", self._fn( self._instance, *args, **kwargs ) )
         clone.__check__()
         return clone
-
     def __len__(self):
         return len(self._data)
     def __get__(self, instance, cls=None):
         object.__setattr__( self, "_instance", instance )
         return self
+    def __getstate__(self ):
+        ## previously used deepcoy, but not necessary
+        return { "_data" : self._data  }
+    def __setstate__(self, dict ):
+        for key,val in dict.iteritems():
+            object.__setattr__( self, key, val )
+    def __iter__(self):
+        return self._data.__iter__()
+    def __getitem__(self, *args, **kwargs ):
+        return self._data.__getitem__( *args, **kwargs )
+    def __setslice__(self, *args, **kwargs):
+        return self._data.__getslice__( *args, **kwargs )
+    def __contains__(self):
+        return self._data.__contains__( *args, **kwargs )
+    def __copy__(self):
+        return self.__class__(self)
+#    def __getattr__(self, name):
+#        return getattr(self._data, name)
+#    def __setattr__(self, name, value):
+#        setattr(self._data, name, value) 
+
+class Data(object):
+    """Base class for data types.
+
+    Derived classes enforce consistency checks on data.
+    """
+    __slots__=["_data"]
+    def __init__(self, data):
+        """Store data returned by function."""
+        object.__setattr__( self, "_data", data)
+        if data: self.__check__()
+    def __len__(self):
+        return len(self._data)
     def __getstate__(self ):
         ## previously used deepcoy, but not necessary
         return { "_data" : self._data  }
@@ -149,22 +183,51 @@ class LabeledData(Data):
 
 def returnSingleColumn( f ):
     """decorator for Trackers returning :class:`SingleColumn`."""
-    return SingleColumn( f )
+    def wrapped_f(*args, **kwargs):
+        return SingleColumn( f( *args, **kwargs) )
+    return wrapped_f
 
 def returnSingleColumnData( f ):
     """decorator for Trackers returning :class:`SingleColumnData`."""
-    return SingleColumnData( f )
+    def wrapped_f(*args, **kwargs):
+        return SingleColumnData( f( *args, **kwargs) )
+    return wrapped_f
 
 def returnMultipleColumns( f ):
     """decorator for Trackers returning :class:`MultipleColumn`."""
-    return MultipleColumns( f )
+    def wrapped_f(*args, **kwargs):
+        return MultipleColumns( f( *args, **kwargs) )
+    return wrapped_f
 
 def returnMultipleColumnData( f ):
     """decorator for Trackers returning :class:`MultipleColumnData`."""
-    return MultipleColumnData( f )
+    def wrapped_f(*args, **kwargs):
+        return MultipleColumnData( f( *args, **kwargs) )
+    return wrapped_f
 
 def returnLabeledData( f ):
-    """decorator for Trackers returning :class:`LabeledData`."""
-    return LabeledData( f )
+    def wrapped_f(*args, **kwargs):
+        return LabeledData( f(*args, **kwargs) )
+    return wrapped_f
+
+# def returnSingleColumn( f ):
+#     """decorator for Trackers returning :class:`SingleColumn`."""
+#     return SingleColumn( f )
+
+# def returnSingleColumnData( f ):
+#     """decorator for Trackers returning :class:`SingleColumnData`."""
+#     return SingleColumnData( f )
+
+# def returnMultipleColumns( f ):
+#     """decorator for Trackers returning :class:`MultipleColumn`."""
+#     return MultipleColumns( f )
+
+# def returnMultipleColumnData( f ):
+#     """decorator for Trackers returning :class:`MultipleColumnData`."""
+#     return MultipleColumnData( f )
+
+# def returnLabeledData( f ):
+#     """decorator for Trackers returning :class:`LabeledData`."""
+#     return LabeledData( f )
 
 

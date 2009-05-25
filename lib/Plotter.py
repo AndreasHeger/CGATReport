@@ -49,6 +49,8 @@ class Plotter:
         self.mColors = "bgrcmk"
         self.mSymbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
         self.mMarkers = "so^>dph8+x"
+        self.mXLabel = None
+        self.mYLabel = None
 
         try: self.mLogScale = kwargs["logscale"]
         except KeyError: self.mLogScale = None
@@ -56,11 +58,15 @@ class Plotter:
         try: self.mTitle = kwargs["title"]
         except KeyError: self.mTitle = None
 
-        try: self.mXTitle = kwargs["xtitle"]
-        except KeyError: self.mXLabel = self.mTracker.getXLabel()
+        try: self.mXLabel = kwargs["xtitle"]
+        except KeyError: 
+            try: self.mXLabel = self.mTracker.getXLabel()
+            except AttributeError: self.mXLabel = None
 
         try: self.mYLabel = kwargs["ytitle"]
-        except KeyError: self.mYLabel = self.mTracker.getYLabel()
+        except KeyError: 
+            try: self.mYLabel = self.mTracker.getYLabel()
+            except AttributeError: self.mYLabel = None
 
         try: self.mLegendLocation = kwargs["legend-location"]
         except KeyError: self.mLegendLocation = "outer"

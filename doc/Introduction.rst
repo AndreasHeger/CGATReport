@@ -13,8 +13,13 @@ within reStructured text.
 Installation
 ************
 
-In order to install the extension, download the latest sources from *TODO*
-or check out the latest code from svn (*TODO*).
+In order to install the extension, download the latest sources from *TODO* and unpack:
+
+   tar -xvzf sphinx-report.tar.gz
+
+Alternatively, check out the the latest code from the subversion repository::
+
+   svn checkout http://sphinx-report.googlecode.com/svn/trunk/ sphinx-report-read-only
 
 To install, type::
 
@@ -36,9 +41,9 @@ Enter ``newproject`` and build the skeleton report::
 Open :file:`newproject/_build/html/index.html` in your browser 
 to view the skeleton documentation. 
 
-At this stage you can review :ref:`Configuration`_ options
+At this stage you can review :ref:`Configuration` options
 in the file :file:`conf.py` and then start adding content
-to your report. See the :ref:`Tutorial` on how to do this.
+to your report. See the :ref:`Tutorials` on how to do this.
 
 .. _Configuration:
 
@@ -55,6 +60,12 @@ to use the extension, add the following entries to the variable :data:`extension
 
 Further variables can be addded to :file:`conf.py` to customize the extension. The
 variables are:
+
+This file containing python code sets mostly :mod:`sphinx` configuration 
+options (see the `sphinx documentation <http://sphinx.pocoo.org/config.html>`_
+for more information), but some sphinxreport options as well.
+
+
 
 
 

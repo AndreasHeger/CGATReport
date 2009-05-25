@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 
 from SphinxReport.Tracker import Tracker
 from SphinxReport.Renderer import *
+from SphinxReport.report_directive import MAP_RENDERER
 
 try:
     from multiprocessing import Process
@@ -65,8 +66,12 @@ def getTrackers( fullpath ):
     trackers = []
     for name in dir(module):
         obj = getattr(module, name)
-        if (isinstance(obj, (type, types.ClassType)) and
-            issubclass(obj, Tracker)):
+        if isinstance(obj, (type, types.ClassType)) and \
+                issubclass(obj, Tracker):
+            trackers.append( (name, obj, module_name) )
+        elif isinstance(obj, (type, types.FunctionType)):
+            trackers.append( (name, obj, module_name) )
+        elif isinstance(obj, (type, types.LambdaType)):
             trackers.append( (name, obj, module_name) )
 
     return trackers
@@ -114,9 +119,9 @@ def main():
 
     if options.renderer:
         try:
-            renderer = eval("%s" % options.renderer)
-        except NameError:
-            raise NameError ("could not find renderer '%s'. Examples are: 'RendererHistogramTable', 'RendererStatsPlot'" % options.renderer )
+            renderer = MAP_RENDERER[options.renderer]
+        except IndexError:
+            raise IndexError("could not find renderer '%s'. Available are %s" % MAP_RENDERER.keys() )
     else:
         renderer = Renderer
 
@@ -131,41 +136,44 @@ def main():
     if options.tracks: kwargs["tracks"] = options.tracks
     if options.slices: kwargs["slices"] = options.slices
 
-    for filename in glob.glob( "python/*.py" ):
+    if options.tracker:
 
-        trackers = [ x for x in getTrackers( filename ) if x[0] not in ("Tracker", "TrackerSQL") ] 
-        if options.tracker:
-            available_trackers = set( [ x[0] for x in trackers ] )
-            if options.tracker not in available_trackers:
-                raise NameError( "unknown tracker '%s': available trackers are %s" % (options.tracker, ",".join( available_trackers) ) )
+        trackers = []
+        for filename in glob.glob( "python/*.py" ):
+            trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in ("Tracker", "TrackerSQL") ] )
 
-            for name, tracker, modulename in trackers:
-                if name == options.tracker: break
+        available_trackers = set( [ x[0] for x in trackers ] )
+        if options.tracker not in available_trackers:
+            raise NameError( "unknown tracker '%s': available trackers are %s" % (options.tracker, ",".join( available_trackers) ) )
 
-            r = renderer( tracker() )
-            result = r( **kwargs)
-            if options.do_print:                        
-                options_rst = []
-                for key,val in kwargs.items():
-                    if val == None:
-                        options_rst.append(":%s:" % key )
-                    else:
-                        options_rst.append(":%s: %s" % (key,val) )
+        for name, tracker, modulename in trackers:
+            if name == options.tracker: break
 
-                print "..Template start"
-                print
-                params = { "tracker" : "%s.%s" % (modulename,name),
-                           "renderer" : options.renderer,
-                           "label" : options.label,
-                           "options": ("\n   ").join(options_rst),
-                           "caption" : options.caption }
-                print RST_TEMPLATE % params
-                print
-                print "..Template ends"
-            if result: print "\n".join(result)
-            if options.do_show: plt.show()
+        r = renderer( tracker() )
+        result = r( **kwargs)
+        if options.do_print:                        
+            options_rst = []
+            for key,val in kwargs.items():
+                if val == None:
+                    options_rst.append(":%s:" % key )
+                else:
+                    options_rst.append(":%s: %s" % (key,val) )
 
-        else:
+            print "..Template start"
+            print
+            params = { "tracker" : "%s.%s" % (modulename,name),
+                       "renderer" : options.renderer,
+                       "label" : options.label,
+                       "options": ("\n   ").join(options_rst),
+                       "caption" : options.caption }
+            print RST_TEMPLATE % params
+            print
+            print "..Template ends"
+        if result: print "\n".join(result)
+        if options.do_show: plt.show()
+
+    else:
+        for filename in glob.glob( "python/*.py" ):
             processes = []
             for name, tracker, modulename in trackers:
                 obj = tracker()
