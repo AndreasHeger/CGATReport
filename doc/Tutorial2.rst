@@ -63,7 +63,7 @@ Testing the data source
 
 Testing the current implementation::
 
-   sphinxreport_test.py -t MyDataOneTrack -r bars
+   sphinxreport-test -t MyDataOneTrack -r bars
 
 will show a familiar plot - the functor is equivalent
 to the single funtion case.
@@ -98,11 +98,11 @@ Testing the data source
 
 Testing the current implementation::
 
-   sphinxreport_test.py -t MyDataTwoTracks -r bars
+   sphinxreport-test -t MyDataTwoTracks -r bars
 
 will now show two bars side-by-side. Try out::
 
-   sphinxreport_test.py -t MyDataTwoTracks -r stacked-bars
+   sphinxreport-test -t MyDataTwoTracks -r stacked-bars
 
 Creating a restructured text document
 *************************************

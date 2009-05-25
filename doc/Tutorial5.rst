@@ -18,7 +18,7 @@ we will now
 
 First, check the plot's look on the command line::
 
-   sphinxreport_test.py -t ExpressionLevelWithSlices -r histogram-plot -o range=0,100,4 -o groupby=all -o as-lines -o xtitle="expression level"
+   sphinxreport-test -t ExpressionLevelWithSlices -r histogram-plot -o range=0,100,4 -o groupby=all -o as-lines -o xtitle="expression level"
 
 If you are satisfied, add the following text to your document::
 

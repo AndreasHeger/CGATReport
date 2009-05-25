@@ -29,10 +29,10 @@ To install, type::
 First steps
 ***********
 
-To get running quickly, use the the :file:`sphinxreport-quickstart.py`` to
+To get running quickly, use the the :file:`sphinxreport-quickstart`` to
 create a skeleton project in the directory ``newproject``::
 
-   sphinxreport-quickstart.py -d newproject
+   sphinxreport-quickstart -d newproject
 
 Enter ``newproject`` and build the skeleton report::
 

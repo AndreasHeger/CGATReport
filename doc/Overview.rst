@@ -44,7 +44,7 @@ The :mod:`SphinxReport` extension has three parts:
    are subsections of the data. For example, a :class:`Tracker` might provide *weight* measurements of different species
    according to the slice *gender*.
 
-3. :file:``sphinxreport-build.py`` is used to build a document. 
+3. :file:``sphinxreport-build`` is used to build a document. 
 
 The following minimal example illustrates how Renderers and Trackers work together. A ``:report:``
 directive like::

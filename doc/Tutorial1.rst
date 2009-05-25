@@ -13,7 +13,7 @@ Creating the skeleton project
 
 First, we create a skeleton report in the directory tutorial::
 
-   sphinxreport-quickstart.py -d tutorial
+   sphinxreport-quickstart -d tutorial
 
 This will create a skeleton report layout in the directory :file:`tutorial`.
 Enter this directory and build the report as html::
@@ -59,16 +59,16 @@ For example, a histogram requires a list or tuple of values.
 Testing the data source
 =======================
 
-The utility :file:`sphinxreport-test.py` can be used to check if a
+The utility :file:`sphinxreport-test` can be used to check if a
 data source works. To test your data source, type::
 
-   sphinxreport_test.py -t MyDataFunction -r bars
+   sphinxreport-test -t MyDataFunction -r bars
 
 on the command prompt in the root directory. This should create a 
 bar plot (``-r bars`` or ``--renderer=bars`` ) of your data source
 (``-t MyDataFunction`` or ``--tracker=MyDataFunction``).
 
-:file:`sphinxreport-test.py` will also produce the restructured text
+:file:`sphinxreport-test` will also produce the restructured text
 required to render this graph within a restructured text document.
 This utility is very useful for fine-tuning the appearance
 of a plot before inserting it into the main document.

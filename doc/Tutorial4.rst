@@ -85,7 +85,7 @@ values and converts these to a python list.
 
 Testing this data source you should see one plot::
 
-   sphinxreport_test.py -t ExpressionLevel -r histogram-plot -o range=0,100,4
+   sphinxreport-test -t ExpressionLevel -r histogram-plot -o range=0,100,4
 
 The plots show a bi-modal distribution in the two experiments.
 
@@ -111,7 +111,7 @@ following data source::
 
 Testing this data source you should now see two plots by function::
 
-   sphinxreport_test.py -t ExpressionLevel -r histogram-plot -o range=0,100,4
+   sphinxreport-test -t ExpressionLevel -r histogram-plot -o range=0,100,4
 
 The plot is concorporated into a restructured text document as usual::
 

@@ -50,9 +50,9 @@ a list of word sizes (:class:`DataTypes.SingleColumnData`).
 
 Testing this data source::
 
-   sphinxreport_test.py -t WordCounter -r histogram-plot -o range=0,100,1"
+   sphinxreport-test -t WordCounter -r histogram-plot -o range=0,100,1"
 
-should produce a line plot. Note the ``-o`` option to :file:`sphinxreport_test.py` in order to pass 
+should produce a line plot. Note the ``-o`` option to :file:`sphinxreport-test` in order to pass 
 parameters. In the above example, the histogram is computed in the range from 0 to 100 in steps of size 1.
 
 *************
@@ -105,12 +105,12 @@ for words starting with vocals and consonants.
 
 Testing the data source::
 
-   sphinxreport_test.py -t WordCounterWithSlices -r histogram-plot -o range=0,1,100
+   sphinxreport-test -t WordCounterWithSlices -r histogram-plot -o range=0,1,100
 
 will now produce three plots, one for each slice. Per default, plots are grouped by ``slice``, but the grouping
 can be changed using the option ``groupby=track``::
 
-   sphinxreport_test.py -t WordCounterWithSlices -r histogram-plot -o range=0,1,100 -o groubpy=track
+   sphinxreport-test -t WordCounterWithSlices -r histogram-plot -o range=0,1,100 -o groubpy=track
 
 Again, three plots are created, but this time there is one plot per ``track``. 
 
