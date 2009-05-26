@@ -14,6 +14,9 @@ Glossary
    slice
       A slice through a data set, for example gender like "male" and "female". 
 
+   Tracker
+      A python function or functor returning data for a track, see :class:`Tracker.Tracker`.
+
    SingleColumnData
       Return type of a :class:`Tracker.Tracker`. SingleColumnData is a single list or tuple of data,
       for example ``(1,2,3,4)``.

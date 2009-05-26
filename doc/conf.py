@@ -16,9 +16,9 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.extend( [os.path.join( '..', 'lib'), 
-                  os.path.abspath( 'python'), 
-                  os.path.abspath( '.') ] )
+sys.path.extend( [os.path.join('..', 'lib'), 
+                  os.path.abspath('python'), 
+                  os.path.abspath('.') ] )
 
 
 # The cachedir holding the data from the Trackers. If not defined, no cache will 
@@ -51,7 +51,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'contents'
 
 # General information about the project.
 project = u'SphinxReport'
@@ -152,7 +152,7 @@ html_static_path = ['_static']
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = { 'gallery' : 'gallery.html' }
+html_additional_pages = { 'index' : 'index.html', 'gallery' : 'gallery.html' }
 
 # If false, no module index is generated.
 #html_use_modindex = True

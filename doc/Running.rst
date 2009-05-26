@@ -80,7 +80,7 @@ Options for sphinxreport-build are:
 sphinxreport-clean
 ------------------
 
-The :file:`sphinxreport-clean` utility removes files from a previous built. It is called as
+The :file:`sphinxreport-clean` utility removes files from a previous built. It is called as::
 
    $ sphinxreport-clean [*target* [[*tracker] ...]
 
@@ -160,7 +160,7 @@ Caching
 
 Extracting data from a database potentially takes much time if a lot of processing
 is involved or the data set is large. To speed up the writing process :mod:`SphinxReport`
-is able to cache function calls to :term:`Trackers` if the configuration variable
+is able to cache function calls to a :term:`Tracker` if the configuration variable
 ``cachedir`` is set, for example to::
 
    cachedir=os.path.abspath("_cache")
@@ -177,9 +177,9 @@ delete the cached data using the command :ref:`sphinxreport-clean`.
 Dependency checking
 ===================
 
-:ref:`Sphinx` implements dependency checking such that existing documents are only rebuilt
+:mod:`Sphinx` implements dependency checking such that existing documents are only rebuilt
 if the underlying sources have changed. The same dependency checking is still available in 
-:ref:`SphinxReport`, however currently there is no dependency checking between the data
+:mod:`SphinxReport`, however currently there is no dependency checking between the data
 source and an existing image. As long as an image or table is present on the file system, it
 will not be re-rendered even if the document or the underlying data has changed. To force
 re-rendering, use the command :ref:`sphinxreport-clean`.
@@ -189,7 +189,7 @@ re-rendering, use the command :ref:`sphinxreport-clean`.
 Gallery
 =======
 
-:ref:`SphinxReport` builds a gallery of all plots created similar to the 
+:mod:`SphinxReport` builds a gallery of all plots created similar to the 
 `matplotlib gallery <matplotlib.sourceforge.net/gallery.html>`_. The gallery
 can be built manually with :file:`sphinxreport-gallery`, but is also built
 automatically by :file:`sphinxreport-build`.

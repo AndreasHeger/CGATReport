@@ -69,7 +69,7 @@ def main():
             dirs.append( "_cache" )
 
         if options.target in ("distclean",):
-            dirs.append( "_static" )
+            dirs.append( "_static/report_directive" )
 
         for d in dirs:
             if os.path.exists(d):
