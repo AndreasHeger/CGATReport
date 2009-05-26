@@ -29,13 +29,25 @@ If you are satisfied, add the following text to your document::
       :groupby: all
       :as-lines:
 
-   Expression level by experiment and function.
+      Expression level by experiment and function.
 
 Note that the same data can often be presented in different ways. For example,
 you might be interested in the stats of these functions::
 
    .. report:: Tutorial4.ExpressionLevelWithSlices
       :render: stats
+
+      Expression level by experiment and function.
+
+display a box plot::
+
+   .. report:: Tutorial4.ExpressionLevelWithSlices
+      :render: box-plot
+      :ytitle: expression level
+      :groupby: all
+
+      Expression level by experiment and function.
+
 
 or might want to present the histogram literally::
 

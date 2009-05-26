@@ -40,4 +40,12 @@ Glossary
          
          data1   data2 
          1	 2
-      
+
+   source directory
+      The directory which, including its subdirectories, contains all source
+      files for one Sphinx project.
+
+   configuration directory
+      The directory containing :file:`conf.py`.  By default, this is the same as
+      the :term:`source directory`, but can be set differently with the **-c**
+      command-line option.

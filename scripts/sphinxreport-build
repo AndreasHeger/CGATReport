@@ -89,7 +89,7 @@ def rst_reader(infile ):
         if keep: 
             if re.match( "^\S", line ):
                 keep = False
-                result.append( line ) 
+                # result.append( line ) 
                 yield result
                 result = ReportBlock()
             else:
@@ -157,16 +157,16 @@ def runCommand( command ):
     try:
         retcode = subprocess.call( command, shell=True)
         if retcode < 0:
-            warn( "Child was terminated by signal %i" % -retcode )
+            warn( "child was terminated by signal %i" % -retcode )
     except OSError, e:
-        fail( "Execution of %s failed" % cmd)
+        fail( "execution of %s failed" % cmd)
         raise
 
 @timeit( "buildGallery" )
 def buildGallery( options, args ):
     """construct the gallery page.
     """
-    runCommand( "sphinxreport-gallery.py" )
+    runCommand( "sphinxreport-gallery" )
 
 @timeit( "buildDocument" )
 def buildDocument( options, args ):

@@ -21,6 +21,11 @@ sys.path.extend( [os.path.join( '..', 'lib'),
                   os.path.abspath( '.') ] )
 
 
+# The cachedir holding the data from the Trackers. If not defined, no cache will 
+# be used.
+cachedir=os.path.abspath("_cache")
+
+# The Database backend. Possible values are mysql, psql and sqlite
 sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 
 # -- General configuration -----------------------------------------------------

@@ -15,30 +15,13 @@ Contents:
 
    Introduction.rst   
    Overview.rst
-   Tutorials.rst
    Running.rst
-   Reference.rst
    Gallery.rst
+   Tutorials.rst
+   Reference.rst
    Glossary.rst
+   Developing.rst
+   Roadmap.rst
    FAQ.rst
-
-Modules:
-
-.. toctree::
-   :maxdepth: 2
-
-   Renderer.rst
-   Plotter.rst
-   Tracker.rst
-   DataTypes.rst
-
-Indices and tables
-==================
-
-This is some text
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 

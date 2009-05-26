@@ -30,6 +30,8 @@ import matplotlib
 
 DEBUG = False
 
+SEPARATOR="@"
+
 # This does not work:
 # matplotlib.use('Agg', warn = False)
 # Matplotlib might be imported beforehand? plt.switch_backend did not
@@ -249,7 +251,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     options_hash = hashlib.md5( str(render_options) ).hexdigest()
 
-    template_name = quoted( "@".join( (reference, renderer_name, options_hash ) ))
+    template_name = quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
     filename_text = os.path.join( outdir, "%s.txt" % (template_name))
 
     if DEBUG:

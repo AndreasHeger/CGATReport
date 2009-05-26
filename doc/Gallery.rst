@@ -136,7 +136,7 @@ A scatter plot.
 Grouped table
 =============
 
-A grouped plot.
+A grouped table.
 
 .. report:: Trackers.MultipleColumnsExample
    :render: grouped-table

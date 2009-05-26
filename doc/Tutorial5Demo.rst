@@ -33,6 +33,16 @@ The same data in tabular form:
    Expression level in house-keeping and regulatory genes
    in two experiments.
 
+as box plot:
+
+.. report:: Tutorial4.ExpressionLevelWithSlices
+   :render: box-plot
+   :groupby: all
+   :ytitle: expression level
+
+   Expression level in house-keeping and regulatory genes
+   in two experiments.
+
 or as literal histogram:
 
 .. report:: Tutorial4.ExpressionLevelWithSlices

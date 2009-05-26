@@ -1,7 +1,7 @@
 #!/bin/env python
 import sys, os, imp, cStringIO, re, types, glob, optparse
 
-USAGE = """python %s [OPTIONS] args
+USAGE = """python %s [OPTIONS] [tracker renderer]
 
 evaluate all Trackers in the python directory.
 
@@ -101,8 +101,11 @@ def main():
     parser.add_option( "-o", "--option", dest="options", type="string", action="append",
                        help="renderer options - supply as key=value pairs (without spaces). [default=%default]" )
 
-    parser.add_option( "-p", "--print", dest="do_print", action="store_true",
-                       help = "print an rst text element to create the displayed plots [default=%default]." )
+    parser.add_option( "--no-print", dest="do_print", action="store_false",
+                       help = "do not print an rst text element to create the displayed plots [default=%default]." )
+
+    parser.add_option( "--no-show", dest="do_show", action="store_false",
+                       help = "do not show a plot [default=%default]." )
 
     parser.set_defaults(
         tracker=None,
@@ -116,6 +119,9 @@ def main():
         caption = "add caption here" )
     
     (options, args) = parser.parse_args()
+
+    if len(args) == 2:
+        options.tracker, options.renderer = args
 
     if options.renderer:
         try:
