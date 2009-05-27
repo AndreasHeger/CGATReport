@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% set title = 'SphinxReport' %}
+
+{% block body %}
+
+<p>
+<img src="_static/logo.png" alt="logo">
+</p>
+
+<h1>Welcome</h1>
+
+<i>SphinxReport</i> is a report generator that is implemented as an extension
+to <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+
+<p>
+Its purpose is to facilitate
+writing scientific reports interpreting large and changing datasets. It is
+designed to assist the iterative analysis during the development of a
+computational scientific pipeline as understanding of the data grows.
+Once the pipeline settles down, <i>SphinxReport</i> permits an easy transition
+towards the automatic report generation needed when the pipeline is
+run on new data sets.
+<p>
+<i>SphinxReport</i> is easy to use and powerful
+enough to give all the flexibility needed during the development of computational pipelines and robustness during the
+production use of a pipeline.
+It is intended for developers and computational scientists with <a href="http://www.python.org">python</a>
+scripting experience.
+<p>
+<i>SphinxReport</i> comes with all the batteries included thanks to <a href="http://www.python.org">python</a> and <a href="http://sphinx.pocoo.org/">Sphinx</a>,
+in particular, it
+<ul>
+<li>uses simple markup in the form of <a href="http://docutils.sourceforge.net/rst.html">restructured text</a>,
+<li>supports both automated and narrative analysis,
+<li>keeps code, data and text together,
+<li>takes care of indexing and formatting to produce something presentable,
+<li>produces static html, latex, ps and pdf.
+</ul>
+  
+<h2> Documentation</h2>
+
+<table class="contentstable" align="center" style="margin-left: 30px"><tr>
+  <td width="50%">
+    <p class="biglink"><a class="biglink" href="contents.html">Contents</a><br/>
+    <span class="linkdescr">for a complete overview</span></p>
+    <p class="biglink"><a class="biglink" href="search.html">Search page</a><br/>
+    <span class="linkdescr">search the documentation</span></p>
+  </td><td width="50%">
+    
+    <p class="biglink"><a class="biglink" href="genindex.html">General Index</a><br/>
+    <span class="linkdescr">all functions, classes, terms</span></p>
+    <p class="biglink"><a class="biglink" href="modindex.html">Module Index</a><br/>
+    <span class="linkdescr">quick access to all documented modules</span></p>
+  </td></tr>
+</table>
+
+<h2>Examples</h2>
+
+None yet.
+
+<h2>Get SphinxReport</h2>
+
+<p>
+    <i>SphinxReport</i> is available as an <a href="http://peak.telecommunity.com/DevCenter/EasyInstall">easy-install</a>able
+    package on the <a href="http://pypi.python.org/pypi/Sphinx">Python Package
+    Index</a>.
+  </p>
+  <p>The code can be found at <a href="http://code.google.com/p/sphinx-report">Google Code</a>, at
+    <tt>http://code.google.com/p/sphinx-report/</tt>.
+</p>
+
+{% endblock %}
