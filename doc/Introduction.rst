@@ -10,6 +10,16 @@ within reStructured text.
 
 .. _Installation:
 
+Requirements
+************
+
+:mod:`SphinxReport` requires the following software
+
+   * `Python <http://www.python.org>`_ (2.5.2 or higher) 
+   * `SQLAlchemy <http://www.sqlalchemy.org/>`_ (0.4.8 or higher)
+   * `matplotlib <http://matplotlib.sourceforge.net/>`_ (0.98.1 or higher)
+   * `sphinx <http://sphinx.pocoo.org/>`_ (0.5-1 or higher)
+
 Installation
 ************
 
