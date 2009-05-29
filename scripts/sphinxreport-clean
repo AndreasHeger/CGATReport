@@ -48,11 +48,7 @@ def main():
 
     parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE )
 
-    parser.add_option( "-t", "--target", dest="target", type="choice",
-                        choices = ( "clean", "distclean", "tracker" ),
-                        help="cleaning target [default=%default]" )
-
-    parser.set_defaults( target = "tracker" )
+    parser.set_defaults()
         
     (options, args) = parser.parse_args()
 
@@ -62,13 +58,14 @@ def main():
 
     if len(args) == 1 and args[0] in ("clean", "distclean", "cache"):
         dirs = []
-        if options.target in ("clean", "distclean"):
+        target = args[0]
+        if target in ("clean", "distclean"):
             dirs.append( "_build" )
         
-        if options.target in ("cache", "distclean"):
+        if target in ("cache", "distclean"):
             dirs.append( "_cache" )
 
-        if options.target in ("distclean",):
+        if target in ("distclean",):
             dirs.append( "_static/report_directive" )
 
         for d in dirs:

@@ -27,7 +27,6 @@ in particular, it
   * keeps code, data and text together,
   * takes care of indexing and formatting to produce something presentable,
   * produces static html, latex, ps and pdf.
-
   
 =Documentation=
 
@@ -43,6 +42,6 @@ in particular, it
 =Get SphinxReport=
 
 SphinxReport is available as an <a href="http://peak.telecommunity.com/DevCenter/EasyInstall">easy-install</a>abl
-package on the <a href="http://pypi.python.org/pypi/Sphinx">Python Package Index</a>.
+package on the <a href="http://pypi.python.org/pypi/SphinxReport">Python Package Index</a>.
 
 The code can be found at <a href="http://code.google.com/p/sphinx-report">Google Code</a>, http://code.google.com/p/sphinx-report.

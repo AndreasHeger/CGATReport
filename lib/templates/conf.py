@@ -35,7 +35,10 @@ cachedir=os.path.abspath("_cache")
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.coverage', 
               'sphinx.ext.pngmath', 'sphinx.ext.ifconfig',
-              'SphinxReport.only_directives', 'SphinxReport.render_directive' ]
+              'SphinxReport.only_directives', 
+              'SphinxReport.report_directive',
+              'SphinxReport.inheritance_diagram',
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -1,21 +1,15 @@
 Metadata-Version: 1.0
 Name: SphinxReport
-Version: 0.1
-Summary: SphinxReport : a report generator extension for sphinx
-Home-page: http://TODO
+Version: 1.0.a2
+Summary: SphinxReport : a report generator in python based on Sphinx and matplotlib
+Home-page: http://code.google.com/p/sphinx-report/
 Author: Andreas Heger
 Author-email: andreas.heger@gmail.com
 License: BSD
-Download-URL: http://TODO
-Description: SphinxReport : extends sphinx with the ability to
-        create plots and tables from external data.
-        
-Platform: Windows
-Platform: Linux
-Platform: Solaris
-Platform: Mac OS-X
-Platform: Unix
-Classifier: Development Status :: 5 - Production/Stable
+Description: SphinxReport : a report generator in python based on Sphinx and matplotlib
+Keywords: report generator sphinx matplotlib sql
+Platform: any
+Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Science/Research
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved

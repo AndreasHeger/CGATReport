@@ -9,5 +9,4 @@ include INSTALL
 include README.txt
 include KNOWN_BUGS
 include THANKS.txt
-recursive-include doc/_build/html *
-
+include ez_setup.py

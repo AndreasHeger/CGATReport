@@ -7,6 +7,8 @@ SPHINXBUILD   = sphinxreport-build --num-jobs=4 sphinx-build
 SPHINXCLEAN   = sphinxreport-clean
 PAPER         =
 
+PUBLISH       = ~/public_html/SphinxReport
+
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
@@ -26,6 +28,7 @@ help:
 	@echo "  changes   to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck to check all external links for integrity"
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
+	@echo "  publish   to copy the html code to public_html"
 
 clean:
 	$(SPHINXCLEAN) clean
@@ -90,3 +93,8 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) _build/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in _build/doctest/output.txt."
+
+publish:
+	rm -rf $(PUBLISH)
+	mkdir $(PUBLISH)
+	cp -r _build/html/* $(PUBLISH)/

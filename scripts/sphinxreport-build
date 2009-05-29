@@ -142,13 +142,16 @@ def buildPlots( options, args ):
 
     if len(work) == 0: return
 
-    cs = len(work) // options.num_jobs
+    cs = max( 1, len(work) // options.num_jobs )
     processes = []
+
     for x in range( 0, len(work), cs ):
 
         p = Process( target = run, args = ( work[x:x+cs], ) )
         processes.append( p )
         p.start()
+
+    info( "started %i processes" % len(processes) )
 
     for p in processes: p.join()
 
