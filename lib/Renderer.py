@@ -879,9 +879,9 @@ class RendererHistogram(Renderer ):
             if len(vals) == 3: mi, ma, binsize = vals[0], vals[1], float(vals[2])
             elif len(vals) == 2: mi, ma, binsize = vals[0], vals[1], None
             elif len(vals) == 1: mi, ma, binsize = vals[0], None, None
-            if mi == None: mi = min(data)
+            if mi == None or mi == "": mi = min(data)
             else: mi = float(mi)
-            if ma == None: ma = max(data)
+            if ma == None or ma == "": ma = max(data)
             else: ma = float(ma)
         else:
             mi, ma= min( data ), max(data)
