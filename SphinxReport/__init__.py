@@ -4,5 +4,6 @@ __all__ = [ "Renderer",
             "CorrespondenceAnalysis",
             "Stats",
             "DataTypes",
+            "Logger",
             "only_directive",
             "report_directive" ]
