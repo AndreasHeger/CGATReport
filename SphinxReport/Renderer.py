@@ -21,8 +21,6 @@ import sqlalchemy
 import Stats
 import Histogram
 import collections
-from logging import warn, log, debug, info
-import logging
 
 from DataTypes import *
 
@@ -34,7 +32,9 @@ SUBSECTION_TOKEN = "^"
 
 VERBOSE=True
 
-logging.basicConfig(
+from logging import warn, log, debug, info
+import logging
+ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
     stream = open( "sphinxreport.log", "a" ) )
@@ -155,7 +155,7 @@ class Renderer:
                     debug( "key '%s' not found in cache" % key )
 
             except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError), msg:
-                self.warn( "could not get key '%s' in '%s': msg=%s" % (key,self.mCacheFile, msg) )
+                warn( "could not get key '%s' in '%s': msg=%s" % (key,self.mCacheFile, msg) )
 
         return result
 
@@ -221,7 +221,12 @@ class Renderer:
             return
 
         if self.mTracks != None:
-            tracks = self.mTracks
+            if self.mTracks[0].startswith("-"):
+                f = set(self.mTracks)
+                f.add( self.mTracks[0][1:] )
+                tracks = [ t for t in tracks if t not in f ]
+            else:
+                tracks = self.mTracks
 
         if len(tracks) == 0: 
             debug( "%s: no tracks found - no output" % self.mTracker )
@@ -266,7 +271,9 @@ class Renderer:
                 for track in tracks:
                     data = self.getData( track, slice )
                     if len(data) == 0: continue
-                    self.addData( "all", track + "_" + slice, data )
+                    if slice == None: key = track
+                    else: key = track + "_" + slice
+                    self.addData( "all", key , data )
 
         debug( "%s: collecting data finished for %i pairs, %i tracks, %i slices" % (self.mTracker, len(tracks) * len(slices), len(tracks), len(slices)) )
 
@@ -886,24 +893,33 @@ class RendererHistogram(Renderer ):
         else:
             mi, ma= min( data ), max(data)
 
-        if self.mBins.startswith("log"):
-            a,b = self.mBins.split( "-" )
-            nbins = float(b)
-            if ma < 0: raise ValueError( "can not bin logarithmically for negative values.")
-            if mi == 0: mi = numpy.MachAr().epsneg
-            ma = log10( ma )
-            mi = log10( mi )
-            bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
-        elif binsize != None:
-            bins = arange(mi, ma, binsize )
+        if self.mBins.startswith("dict"):
+            h = collections.defaultdict( int )
+            for x in data: h[x] += 1
+            bin_edges = sorted( h.keys() )
+            hist = numpy.zeros( len(bin_edges), numpy.int )
+            for x in range(len(bin_edges)): hist[x] = h[bin_edges[x]]
+            bin_edges.append( bin_edges[-1] + 1 )
         else:
-            bins = eval(self.mBins)
+            if self.mBins.startswith("log"):
+                a,b = self.mBins.split( "-" )
+                nbins = float(b)
+                if ma < 0: raise ValueError( "can not bin logarithmically for negative values.")
+                if mi == 0: mi = numpy.MachAr().epsneg
+                ma = log10( ma )
+                mi = log10( mi )
+                bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
+            elif binsize != None:
+                bins = arange(mi, ma, binsize )
+            else:
+                bins = eval(self.mBins)
 
-        if hasattr( bins, "__iter__") and len(bins) == 0:
-            warn( "empty bins from %s: %s: %s" % (str(self.mTracker), group, title) )
-            return
-
-        self.mData[group].append( (title, numpy.histogram( data, bins=bins, range=(mi,ma), new = True ), nremoved ) )
+            if hasattr( bins, "__iter__") and len(bins) == 0:
+                warn( "empty bins from %s: %s: %s" % (str(self.mTracker), group, title) )
+                return
+            hist, bin_edges = numpy.histogram( data, bins=bins, range=(mi,ma), new = True )
+        
+        self.mData[group].append( (title, (hist, bin_edges), nremoved ) )
 
     def cumulate( self, data ):
         return data.cumsum()
