@@ -72,7 +72,8 @@ map_image2file = collections.defaultdict( set )
 
 basedir = '_build/html'
 
-def main():
+def main( argv = sys.argv ):
+
     for root, dirs, files in os.walk(basedir):
         for f in files:
             if f.endswith( ".html" ):
@@ -187,4 +188,4 @@ def main():
     fh.close()
 
 if __name__ == "__main__":
-    sys.exit(main() )
+    sys.exit(main(sys.argv) )
