@@ -395,12 +395,20 @@ try:
 except ImportError:
     from docutils.parsers.rst.directives import _directives
 
-    def report_directive(name, arguments, options, content, lineno,
-                       content_offset, block_text, state, state_machine):
+    def report_directive(name, 
+                         arguments, 
+                         options, 
+                         content, lineno,
+                         content_offset, 
+                         block_text, 
+                         state, 
+                         state_machine):
         return run(arguments, options, lineno, content, state_machine )
+
     report_directive.__doc__ = __doc__
     report_directive.arguments = (1, 0, 1)
-    report_directive.options = options
+    report_directive.options = RENDER_OPTIONS.copy()
+    report_directive.options.update( DISPLAY_OPTIONS.copy() )
 
     _directives['report'] = report_directive
 else:
