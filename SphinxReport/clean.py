@@ -54,7 +54,7 @@ def main():
 
     if len(args) == 0: 
         print USAGE
-        raise UsageError("please supply at least one target.""")
+        raise ValueError("please supply at least one target.""")
 
     if len(args) == 1 and args[0] in ("clean", "distclean", "cache"):
         dirs = []
