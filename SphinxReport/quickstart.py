@@ -135,7 +135,7 @@ vi conf.py
 
 As a first attempt, try to build the skeleton book:
 
-make html gallery
+make html
 
 If all works, you can start adding text to files in the
 directories `analysis` and `pipeline` and pipeline.rst in the 

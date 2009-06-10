@@ -14,9 +14,7 @@ Building proceeds in three phases.
 import matplotlib
 import matplotlib.pyplot as plt
 
-
-
-from SphinxReport import report_directive
+from SphinxReport import report_directive, gallery
 
 try:
     from multiprocessing import Process
@@ -169,7 +167,7 @@ def runCommand( command ):
 def buildGallery( options, args ):
     """construct the gallery page.
     """
-    runCommand( "sphinxreport-gallery" )
+    gallery.main()
 
 @timeit( "buildDocument" )
 def buildDocument( options, args ):
