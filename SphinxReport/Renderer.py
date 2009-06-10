@@ -34,7 +34,7 @@ VERBOSE=True
 
 from logging import warn, log, debug, info
 import logging
- logging.basicConfig(
+logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
     stream = open( "sphinxreport.log", "a" ) )
