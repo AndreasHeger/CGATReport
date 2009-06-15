@@ -3,6 +3,7 @@ from __future__ import with_statement
 import os, sys, re, types, copy, warnings
 
 import sqlalchemy
+import sqlalchemy.exceptions
 
 # for sqldatabase
 if not os.path.exists("conf.py"):
@@ -11,6 +12,9 @@ if not os.path.exists("conf.py"):
 execfile( "conf.py" )
 
 from DataTypes import *
+
+class SQLError( Exception ):
+    pass
 
 class Tracker:
     """
@@ -140,7 +144,11 @@ class TrackerSQL(Tracker):
         raise IndexError( "table %s no found" % name )
 
     def execute(self, stmt ):
-        return self.db.execute(stmt)
+        try:
+            r = self.db.execute(stmt)
+        except sqlalchemy.exceptions.SQLError, msg:
+            raise SQLError(msg)
+        return r
 
     def getValue( self, stmt ):
         """return a single value from an SQL statement.
