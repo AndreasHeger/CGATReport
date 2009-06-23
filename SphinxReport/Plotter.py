@@ -130,6 +130,8 @@ class Plotter:
         This is a heuristic hack and is not guaranteed to always work.
         """
         # rescale plotting area if labels are more than 6 characters
+        if len(labels) == 0: return
+
         maxlen = max( [ len(x) for x in labels ] )
         if maxlen > cliplen:
             currentAxes = plt.gca()
@@ -216,6 +218,9 @@ class PlotterMatrix(Plotter):
         # offset=0: x=center,y=center
         # offset=0.5: y=top/x=right
         offset = 0.0
+
+        col_headers = [ str(x) for x in col_headers ]
+        row_headers = [ str(x) for x in row_headers ]
 
         plt.xticks( [ offset + x for x in range(len(col_headers)) ],
                       col_headers,
