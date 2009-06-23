@@ -98,28 +98,35 @@ class TrackerSQL(Tracker):
     def __init__(self, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
 
+        self.db = None
 
-        db = sqlalchemy.create_engine( sql_backend )
+    def __connect( self ):
+        """lazy connection function."""
 
-        if not db:
-            raise ValueError( "could not connect to database %s" % sql_backend)
+        if not self.db:
+            db = sqlalchemy.create_engine( sql_backend )
 
-        db.echo = False  
+            if not db:
+                raise ValueError( "could not connect to database %s" % sql_backend)
 
-        # ignore unknown type BigInt warnings
-        if db:
-            try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
+            db.echo = False  
+
+            # ignore unknown type BigInt warnings
+            if db:
+                try:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        self.metadata = sqlalchemy.MetaData(db, reflect = True)
+                except AttributeError:
                     self.metadata = sqlalchemy.MetaData(db, reflect = True)
-            except AttributeError:
-                self.metadata = sqlalchemy.MetaData(db, reflect = True)
 
-        self.db = db
+            self.db = db
+
 
     def getTables(self, pattern = None ):
         """return a list of table objects matching a :term:`track` pattern."""
         # old version of sqlalchemy have no sorted_tables attribute
+        self.__connect()
         try:
             sorted_tables = self.metadata.sorted_tables
         except AttributeError, msg:
@@ -135,6 +142,7 @@ class TrackerSQL(Tracker):
 
     def getTable( self, name ):
         """return table with name *name*."""
+        self.__connect()
         try:
             for table in self.metadata.sorted_tables:
                 if table.name == name: return table
@@ -144,6 +152,7 @@ class TrackerSQL(Tracker):
         raise IndexError( "table %s no found" % name )
 
     def execute(self, stmt ):
+        self.__connect()
         try:
             r = self.db.execute(stmt)
         except sqlalchemy.exceptions.SQLError, msg:
