@@ -41,14 +41,34 @@ import matplotlib.pyplot as plt
 import matplotlib.image as image
 from matplotlib import _pylab_helpers
 
-def getTracker( fullpath ):
-    """retrieve an instantiated tracker and its associated code.
-    
-    returns a tuple (code, tracker).
+class memoized(object):
+   """Decorator that caches a function's return value each time it is called.
+   If called later with the same arguments, the cached value is returned, and
+   not re-evaluated.
+   """
+   def __init__(self, func):
+      self.func = func
+      self.cache = {}
+   def __call__(self, *args):
+      try:
+         return self.cache[args]
+      except KeyError:
+         self.cache[args] = value = self.func(*args)
+         return value
+      except TypeError:
+         # uncachable -- for instance, passing a list as an argument.
+         # Better to not cache than to blow up entirely.
+         return self.func(*args)
+   def __repr__(self):
+      """Return the function's docstring."""
+      return self.func.__doc__
+
+@memoized
+def getModule( name ):
+    """load module in fullpath
     """
-    name, cls = os.path.splitext(fullpath)
     # remove leading '.'
-    cls = cls[1:]
+    logging.debug( "getModule %s" % name )
     (file, pathname, description) = imp.find_module( name )
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
@@ -59,6 +79,20 @@ def getTracker( fullpath ):
     finally:
         file.close()
         sys.stdout = stdout
+
+    return module, pathname
+
+@memoized
+def getTracker( fullpath ):
+    """retrieve an instantiated tracker and its associated code.
+    
+    returns a tuple (code, tracker).
+    """
+    name, cls = os.path.splitext(fullpath)
+    # remove leading '.'
+    cls = cls[1:]
+
+    module, pathname = getModule( name )
 
     # extract code
     code = []
@@ -74,6 +108,7 @@ def getTracker( fullpath ):
         code.append(line)
     infile.close()
 
+    logging.debug( "instantiating tracker %s" % cls )
     tracker =  getattr( module, cls)()
     return code, tracker
 
@@ -188,6 +223,8 @@ def exception_to_str(s = None):
 
 def run(arguments, options, lineno, content, state_machine = None, document = None):
 
+    logging.debug( "started: %s:%i" % (str(document), lineno) )
+
     # sort out the paths
     # reference is used for time-stamping
     reference = directives.uri(arguments[0])
@@ -214,17 +251,22 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         print 'reference="%s", basedir="%s", linkdir="%s", outdir="%s"'%(reference, basedir, linkdir, outdir)
 
 
-    if not os.path.exists(outdir): os.makedirs(outdir)
+    if not os.path.exists(outdir): 
+        os.makedirs(outdir)
 
     # check if we need to update. 
-
+    logging.debug( "collecting tracker." )
     code, tracker = getTracker( reference )
+    logging.debug( "collected tracker." )
+
     codename = quoted(fname) + ".code"
     linked_codename = re.sub( "\\\\", "/", os.path.join( linkdir, codename )) 
     if basedir != outdir:
         outfile = open( os.path.join(outdir, codename ), "w" )
         for line in code: outfile.write( line )
         outfile.close()
+
+    logging.debug( "invocating renderer." )
 
     # determine the renderer
     renderer_name = "stats"
@@ -264,6 +306,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # mentioned it the text element are present
     ###########################################################
     queries = [ re.compile( "%s(%s.+.%s)" % ("\.\./" * nparts, outdir,suffix ) ) for suffix in ("png", "pdf") ]
+
+    logging.debug( "checking for changed files." )
     
     # check if text element exists
     if os.path.exists( filename_text ):
