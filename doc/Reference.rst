@@ -23,8 +23,12 @@ ignored.
       it defines the bin edges, including the rightmost edge, allowing
       for non-uniform bin widths.
       (From the :mod:`numpy` documentation)
-      If bins is of the format "log-X" with X an integer number, X 
+      If bins is of the format ''log-X'' with X an integer number, X 
       logarithmig bins will be used. 
+      If bins is ''dict'', then the histogram will be computed using a
+      dictionary. Use this for large data sets, but make sure to round
+      values reasonably.
+
       Examples::
 
 	 :bins: 100
