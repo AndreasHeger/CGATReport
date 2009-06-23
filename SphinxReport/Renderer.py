@@ -1,4 +1,4 @@
-import os, sys, re, shelve, traceback
+import os, sys, re, shelve, traceback, cPickle
 
 from Plotter import *
 from Tracker import *
@@ -154,9 +154,8 @@ class Renderer:
                     result = None
                     debug( "key '%s' not found in cache" % key )
 
-            except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError), msg:
-                warn( "could not get key '%s' in '%s': msg=%s" % (key,self.mCacheFile, msg) )
-
+            except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, cPickle.UnpicklingError, ValueError), msg:
+                warn( "could not get key '%s' or value for key in '%s': msg=%s" % (key,self.mCacheFile, msg) )
         return result
 
     def saveDataInCache( self, key, data ):
@@ -233,7 +232,7 @@ class Renderer:
             return
 
         # first get all slices without subsets and check if all
-        # specified slices are available
+        # specified slices are available. 
         if self.mSlices:
             all_slices = set(self.mTracker.getSlices( subset = None ))
             for s in self.mSlices:
