@@ -165,6 +165,16 @@ class PlotterMatrix(Plotter):
        :term:`zrange`: restrict plot a part of the z-axis.
 
     """
+
+    mFontSize = 8
+
+    # after # characters, split into two
+    # lines
+    mSplitHeader = 20
+
+    # separators to use to split text
+    mSeparators = " :_"
+
     def __init__(self, *args, **kwargs ):
         Plotter.__init__(self, *args, **kwargs)
 
@@ -182,6 +192,48 @@ class PlotterMatrix(Plotter):
 
         self.mReversePalette = "reverse-palette" in kwargs
 
+    def buildHeaders( self, headers ):
+        """build headers. Long headers are split using
+        the \frac mathtext directive (mathtext does not
+        support multiline equations.
+
+        returns (fontsize, headers)
+        """
+
+        fontsize = self.mFontSize
+        maxlen = max( [ len(x) for x in headers ] )
+
+        if maxlen > self.mSplitHeader:
+            h = []
+            for header in headers:
+                if len(header) > self.mSplitHeader:
+                    # split txt into two equal parts trying
+                    # a list of separators
+                    t = len(header)
+                    for s in self.mSeparators:
+                        parts= header.split( s )
+                        if len(parts) < 2 : continue
+                        c = 0
+                        tt = t // 2
+                        ## collect first part such that length is 
+                        ## more than half
+                        for x, p in enumerate( parts ):
+                            if c > tt: break
+                            c += len(p)
+
+                        # accept if a good split (better than 2/3)
+                        if float(c) / t < 0.66:
+                            h.append( r"$\mathrm{\frac{ %s }{ %s }}$" % \
+                                          ( s.join(parts[:x]), s.join(parts[x:])))
+                            break
+                    else:
+                        h.append(header)
+                else:
+                    h.append(header)
+            headers = h
+
+        return fontsize, headers
+
     def plotMatrix( self, matrix, row_headers, col_headers ):
 
         self.startPlot( matrix )
@@ -189,12 +241,8 @@ class PlotterMatrix(Plotter):
         nrows, ncols = matrix.shape
         if self.mZRange:
             vmin, vmax = self.mZRange
-            for x in range(nrows):
-                for y in range(ncols):
-                    if matrix[x,y] < self.mZRange[0]:
-                        matrix[x,y] = self.mZRange[0]
-                    if matrix[x,y] > self.mZRange[1]:
-                        matrix[x,y] = self.mZRange[1]
+            matrix[ matrix < vmin ] = vmin
+            matrix[ matrix > vmax ] = vmax
         else:
             vmin, vmax = None, None
 
@@ -205,7 +253,6 @@ class PlotterMatrix(Plotter):
                 color_scheme = eval( "plt.cm.%s" % self.mPalette)
         else:
             color_scheme = None
-
 
         plt.imshow(matrix,
                    cmap=color_scheme,
@@ -222,14 +269,21 @@ class PlotterMatrix(Plotter):
         col_headers = [ str(x) for x in col_headers ]
         row_headers = [ str(x) for x in row_headers ]
 
+        xfontsize = self.mFontSize 
+        yfontsize = self.mFontSize 
+
+        # determine fontsize for labels
+        xfontsize, col_headers = self.buildHeaders( col_headers )
+        yfontsize, row_headers = self.buildHeaders( row_headers )
+
         plt.xticks( [ offset + x for x in range(len(col_headers)) ],
                       col_headers,
                       rotation="vertical",
-                      fontsize="8" )
+                      fontsize=xfontsize )
 
         plt.yticks( [ offset + y for y in range(len(row_headers)) ],
                       row_headers,
-                      fontsize="8" )
+                      fontsize=yfontsize )
 
         plt.colorbar( format = self.mBarFormat)        
 
