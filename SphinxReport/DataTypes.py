@@ -159,8 +159,8 @@ class MultipleColumnData(Data):
     def __init__(self, fn): Data.__init__(self, fn)
     def __check__( self ):
         assert type(self._data) in ContainerTypes, "returned type is not a collection: %s" % (type(self._data))
-        assert type(self._data[0]) in ContainerTypes, "first column is not a collection: %s" % (type(self._data[0]))
-        assert type(self._data[1]) in ContainerTypes, "second column is not a collection: %s" % (type(self._data[1]))
+        assert type(self._data[0]) in ContainerTypes, "first field is not a collection: %s" % (type(self._data[0]))
+        assert type(self._data[1]) in ContainerTypes, "second field is not a collection: %s" % (type(self._data[1]))
         for c in self._data[1]:
             assert type(c) in ContainerTypes, "column is not a collection: %s" % (type(c))
             for x in c:
