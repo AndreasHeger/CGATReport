@@ -154,7 +154,7 @@ class Renderer:
                     result = None
                     debug( "key '%s' not found in cache" % key )
 
-            except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, cPickle.UnpicklingError, ValueError), msg:
+            except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, cPickle.UnpicklingError, ValueError, EOFError), msg:
                 warn( "could not get key '%s' or value for key in '%s': msg=%s" % (key,self.mCacheFile, msg) )
         return result
 
@@ -1325,6 +1325,89 @@ class RendererScatterPlot(Renderer, Plotter):
             
         return self.endPlot( plts, legend )
 
+class RendererScatterPlotWithColor( Renderer, Plotter ):
+    """Scatter plot with individual colors for each dot.
+
+    Requires :class:`DataTypes.MultipleColumnData`.
+    and interpretes it as (x,y,color).
+
+    This class adds the following options to the :term:`render` directive:
+
+       :term:`colorbar-format`: numerical format for the colorbar.
+
+       :term:`palette`: numerical format for the colorbar.
+
+       :term:`zrange`: restrict plot a part of the z-axis.
+    
+    """
+
+    mRequiredType = type( MultipleColumnData( None ) )
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def prepare(self, *args, **kwargs):
+        Renderer.prepare( self, *args, **kwargs )
+        Plotter.prepare(self, *args, **kwargs )
+
+        try: self.mBarFormat = kwargs["colorbar-format"]
+        except KeyError: self.mBarFormat = "%1.1f"
+
+        try: self.mPalette = kwargs["palette"]
+        except KeyError: self.mPalette = "jet"
+
+        try: self.mZRange = map(float, kwargs["zrange"].split(",") )
+        except KeyError: self.mZRange = None
+
+        self.mReversePalette = "reverse-palette" in kwargs
+
+    def addData( self, group, title, data ):
+        self.mData[group].append( (title,data) )
+
+    def render(self, data):
+
+        result = []
+        nplotted = 0
+
+        if self.mPalette:
+            if self.mReversePalette:
+                color_scheme = eval( "plt.cm.%s_r" % self.mPalette)                    
+            else:
+                color_scheme = eval( "plt.cm.%s" % self.mPalette)
+        else:
+            color_scheme = None
+
+        for track, vv in data:
+
+            self.startPlot( data )
+            plts, legend = [], []
+
+            headers, values = vv
+            if len(values) == 0: continue
+
+            xvals, yvals, colors = values
+            if len(xvals) == 0 or len(yvals) == 0 or len(colors) == 0: continue
+
+            if self.mZRange:
+                vmin, vmax = self.mZRange
+                colors[ colors < vmin ] = vmin
+                colors[ colors > vmax ] = vmax
+            else:
+                vmin, vmax = None, None
+
+            plts.append(plt.scatter( xvals,
+                                     yvals,
+                                     c = colors,
+                                     vmax = vmax,
+                                     vmin = vmin ) )
+            
+            plt.colorbar( format = self.mBarFormat)        
+            nplotted += 1
+
+            result.extend( self.endPlot( plts ) )
+
+        return result
 
 class RendererMultiHistogramPlot(Renderer, Plotter):
     """Render histogram data as plot.
