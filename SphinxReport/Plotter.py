@@ -38,6 +38,11 @@ class Plotter:
        :term:`yrange`: restrict plot a part of the y-axis
 
     """
+
+    mLegendFontSize = 8
+    # number of chars to use to reduce legend font size
+    mMaxLegendSize = 100
+
     def __init__(self, tracker ):
         self.mTracker = tracker
 
@@ -98,6 +103,39 @@ class Plotter:
         if self.mXLabel: plt.xlabel( self.mXLabel )
         if self.mYLabel: plt.ylabel( self.mYLabel )
 
+    def wrapText( self, text, cliplen = 20, separators = " :_" ):
+        """wrap around text using the mathtext.
+
+        Currently this subroutine uses the \frac 
+        directive, so it is not pretty.
+        returns the wrapped text."""
+        
+        # split txt into two equal parts trying
+        # a list of separators
+        newtext = []
+        for txt in text:
+            t = len(txt)
+            if t > cliplen:
+                for s in separators:
+                    parts = txt.split( s )
+                    if len(parts) < 2 : continue
+                    c = 0
+                    tt = t // 2
+                    # collect first part such that length is 
+                    # more than half
+                    for x, p in enumerate( parts ):
+                        if c > tt: break
+                        c += len(p)
+
+                    # accept if a good split (better than 2/3)
+                    if float(c) / t < 0.66:
+                        newtext.append( r"$\mathrm{\frac{ %s }{ %s }}$" % \
+                                            ( s.join(parts[:x]), s.join(parts[x:])))
+                        break
+            else:
+                newtext.append(txt)
+        return newtext
+
     def endPlot( self, plts = None, legends = None ):
         """close a plot.
 
@@ -112,15 +150,24 @@ class Plotter:
                 plt.gca().set_xscale('log')
             if "y" in self.mLogScale:
                 plt.gca().set_yscale('log')
+
                 
         if self.mLegendLocation != "none" and plts and legends:
-            if self.mLegendLocation == "outer":
-                outer_legend( plts, legends )
-            else:
-                plt.figlegend( plts, 
-                               legends,
-                               loc = self.mLegendLocation )
+            maxlen = max( [ len(x) for x in legends ] )
+            # legends = self.wrapText( legends )
 
+            if self.mLegendLocation == "outer":
+                legend = outer_legend( plts, legends )
+            else:
+                legend = plt.figlegend( plts, 
+                                        legends,
+                                        loc = self.mLegendLocation )
+
+            # smaller font size for large legends
+            if maxlen > self.mMaxLegendSize:
+                ltext = legend.get_texts() # all the text.Text instance in the legend
+                plt.setp(ltext, fontsize='small') 
+            
         return [ "## Figure %i ##" % self.mFigure, "" ]
 
     def rescaleForVerticalLabels( self, labels, offset = 0.02, cliplen = 6 ):
@@ -149,7 +196,6 @@ class Plotter:
                                       currentAxesPos.height -offset))
 
 
-
 class PlotterMatrix(Plotter):
     """Plot a matrix.
 
@@ -171,6 +217,7 @@ class PlotterMatrix(Plotter):
     # after # characters, split into two
     # lines
     mSplitHeader = 20
+    mFontSizeSplit = 6
 
     # separators to use to split text
     mSeparators = " :_"
@@ -205,6 +252,8 @@ class PlotterMatrix(Plotter):
 
         if maxlen > self.mSplitHeader:
             h = []
+            fontsize = self.mFontSizeSplit
+
             for header in headers:
                 if len(header) > self.mSplitHeader:
                     # split txt into two equal parts trying
@@ -231,7 +280,7 @@ class PlotterMatrix(Plotter):
                 else:
                     h.append(header)
             headers = h
-
+            
         return fontsize, headers
 
     def plotMatrix( self, matrix, row_headers, col_headers ):
@@ -315,7 +364,7 @@ def outer_legend(*args, **kwargs):
 
     # scale plot by the part which is taken by the legend
     plotScaling = 0.75
-    
+
     # scale the plot
     currentAxes.set_position((currentAxesPos.xmin,
                               currentAxesPos.ymin,
