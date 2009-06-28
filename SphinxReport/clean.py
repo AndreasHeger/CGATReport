@@ -5,6 +5,8 @@ USAGE = """python %s [OPTIONS] target
 
 clean all data according to target.
 
+Targets can contain wild cards.
+
 """ % sys.argv[0]
 
 from SphinxReport.Tracker import Tracker
