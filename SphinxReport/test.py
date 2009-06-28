@@ -53,6 +53,8 @@ def getTrackers( fullpath ):
         print "could not find module %s" % name
         raise
 
+    if file == None: return []
+
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
     try:
@@ -73,6 +75,7 @@ def getTrackers( fullpath ):
             trackers.append( (name, obj, module_name) )
         elif isinstance(obj, (type, types.LambdaType)):
             trackers.append( (name, obj, module_name) )
+
 
     return trackers
 
