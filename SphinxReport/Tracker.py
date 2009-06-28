@@ -16,7 +16,7 @@ from DataTypes import *
 class SQLError( Exception ):
     pass
 
-class Tracker:
+class Tracker(object):
     """
     Base class for trackers. User trackers should be derived from this class.
 
@@ -84,7 +84,7 @@ class Tracker:
         """return a data structure for track :param: track and slice :slice:"""
         raise NotImplementedError("not implemented")
 
-class TrackerSQL(Tracker):
+class TrackerSQL( Tracker ):
     """Base class for trackers that fetch data from an SQL database.
     
     The basic tracker identifies tracks as tables that match a
@@ -97,7 +97,6 @@ class TrackerSQL(Tracker):
 
     def __init__(self, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
-
         self.db = None
 
     def __connect( self ):
