@@ -9,6 +9,10 @@ Planned features
 
 The following features are planned:
 
+colored scatter plotter
+   add individual coloring option for dots in a 
+   scatter plot
+
 error bars
    add error bars to bar plots and scatter plots
 
@@ -34,7 +38,8 @@ add :as-percent: option
 
 examine memory usage
     large datasets require a large amount of memory,
-    investigate if this can be optimized.
+    investigate if this can be optimized, for example
+    by using numpy more efficiently
 
 windows compatibility
     check windows installation process and compatibility.
@@ -45,25 +50,39 @@ load balancing:
     how long it will take.
 
 plugin architecture
-    Clean up Renderer.py so that adding custom renderers
+    clean up Renderer.py so that adding custom renderers
     will become easy. Consider adding a generic interface
     to matplotlib plotting functions.
 
 upload
-    Add upload to galaxy and/or UCSC
+    add upload to galaxy and/or UCSC
 
 rpy integration
-    Check if it is possible to use rpy as rendering engine and
-    for more statistical tests.
+    check if it is possible to use rpy as rendering engine and
+    for statistical tests.
 
 --force option
     add --clean or --force option to sphinxreport-test or build
-    automatically force a new build 
+    automatically force a new build. See also the corresponding
+    sphinx-build options.
 
 explorer output
     check output on windows explorer - frames do not appear on
     Chris' machine.
 
+optional pdf support
+    pdf rendering takes a while and could be post-poned until
+    final document is produced. Similarly, pdf scatter plots 
+    with many points take a long while to render and these should
+    be thinned.
+
+legend
+   fix dimensioning of outer legend. Maybe add a separate
+   legend plot.
+
+multi-figure layout
+   implement multi-figure layout using a new option
+   :layout: <>, where <> is column(default), row or grid.
 
 Completed features
 ==================
