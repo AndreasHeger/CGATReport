@@ -186,8 +186,8 @@ class Renderer:
             try:
                 # this messy code distinguishes between the result of functors
                 # and true functions that have been wrapped with the DataTypes
-                # decorators.
-                if type(self.mTracker) == types.InstanceType:
+                # decorators by checking if it has a __len__ method.
+                if not hasattr( self.mTracker, "__len__"):
                     result = self.mTracker( **kwargs )
                 else:
                     result = self.mTracker
