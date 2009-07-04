@@ -13,7 +13,7 @@ Additionally, if the :include-source: option is provided, the literal
 source will be included inline, as well as a link to the source.
 """
 
-import sys, os, glob, shutil, imp, warnings, cStringIO, hashlib, re, logging
+import sys, os, glob, shutil, imp, warnings, cStringIO, hashlib, re, logging, math
 import traceback
 
 from docutils.parsers.rst import directives
@@ -167,7 +167,11 @@ RENDER_OPTIONS = { 'cumulative': directives.flag,
                    'plot-value' : directives.unchanged,
                    'tracks': directives.unchanged,
                    'slices': directives.unchanged,
-                   'as-lines': directives.flag          
+                   'as-lines': directives.flag,  
+                   'mpl-figure' : directives.unchanged,
+                   'mpl-legend' : directives.unchanged,
+                   'mpl-subplot' : directives.unchanged,
+                   'mpl-rc' : directives.unchanged,
                    }
 
 TEMPLATE_PLOT = """
@@ -214,7 +218,6 @@ def out_of_date(original, derived):
     return (not os.path.exists(derived) \
         or os.stat(derived).st_mtime < os.stat(original).st_mtime)
 
-
 def exception_to_str(s = None):
 
     sh = cStringIO.StringIO()
@@ -222,9 +225,128 @@ def exception_to_str(s = None):
     traceback.print_exc(file=sh)
     return sh.getvalue()
 
-def run(arguments, options, lineno, content, state_machine = None, document = None):
+def collectImagesFromMatplotlib( blocks, template_name, outdir, linkdir, content,
+                                 display_options,
+                                 linked_codename ):
+    """collect one or more pylab figures and 
+        save as png, hires-png and pdf
+        save thumbnail
+        insert rendering code at placeholders in output
 
-    logging.debug( "started: %s:%i" % (str(document), lineno) )
+    returns True if images have been collected.
+    """
+    fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
+    if len(fig_managers) == 0: return None
+
+    for i, figman in enumerate(fig_managers):
+        for format, dpi in FORMATS:
+            if len(fig_managers) == 1:
+                outname = template_name
+            else:
+                outname = "%s_%02d" % (template_name, i)
+
+            outpath = os.path.join(outdir, '%s.%s' % (outname, format))
+
+            try:
+                figman.canvas.figure.savefig( outpath, dpi=dpi )
+            except:
+                s = exception_to_str("Exception running plot %s" % outpath)
+                warnings.warn(s)
+                return []
+
+            if format=='png':
+                thumbdir = os.path.join(outdir, 'thumbnails')
+                if not os.path.exists(thumbdir): os.makedirs(thumbdir)
+                thumbfile = str('%s.png' % os.path.join(thumbdir, outname) )
+                captionfile = str('%s.txt' % os.path.join(thumbdir, outname) )
+                if not os.path.exists(thumbfile):
+                    # thumbnail only available in matplotlib >= 0.98.4
+                    try:
+                        figthumb = image.thumbnail(str(outpath), str(thumbfile), scale=0.3)
+                    except AttributeError:
+                        pass
+                outfile = open(captionfile,"w")
+                outfile.write( "\n".join( content ) + "\n" )
+                outfile.close()
+
+        linkedname = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
+
+        ## replace placeholders in blocks to be output
+        new_blocks = []
+        for txt in blocks:
+            new_blocks.append( re.sub( "(## Figure %i ##)" % (i+1), 
+                                       TEMPLATE_PLOT % locals(),
+                                       txt))
+        blocks = new_blocks
+        ## if not found?
+        # output.append( TEMPLATE_PLOT % locals() )
+
+    return blocks
+
+def layoutBlocks( blocks, layout = "column"):
+    """layout blocks of rst text.
+
+    layout can be one of "column", "row", or "grid".
+
+    The layout uses an rst table.
+    """
+
+    lines = []
+    if layout == "column":
+        for block in blocks: 
+            lines.extend(block.split("\n"))
+        lines.extend( [ "", ] )
+        return lines
+    elif layout in ("row", "grid"):
+        if layout == "row": ncols = len(blocks)
+        elif layout == "grid": ncols = int(math.ceil(math.sqrt( len(blocks) )))
+    elif layout.startswith("column"):
+        ncols = min( len(blocks), int(layout.split("-")[1]))
+    else:
+        raise ValueError( "unknown layout %s " % layout )
+
+    # compute column widths
+    widths = [ max( [len(x) for x in y.split("\n")] )for y in blocks ]
+    heights = [ len(y.split("\n")) for y in blocks ]
+    columnwidths = []
+    for x in range(ncols):
+        columnwidths.append( max( [widths[y] for y in range( x, len(blocks), ncols ) ] ) )
+
+    separator = "+%s+" % "+".join( ["-" * x for x in columnwidths ] )
+
+    ## add empty blocks
+    if len(blocks) % ncols:
+        blocks = list(blocks)
+        blocks.extend( [""] * (ncols - len(blocks) % ncols) )
+
+    for x in range(0, len(blocks), ncols ):
+        lines.append( separator )
+        max_height = max( heights[x:x+ncols] )
+        new_blocks = []
+        
+        for xx in range(x, min(x+ncols,len(blocks))):
+            block, col = blocks[xx].split("\n"), xx % ncols
+
+            max_width = widths[col]
+            # add missig lins 
+            block.extend( [""] * (max_height - len(block)) )
+            # extend lines
+            block = [ x + " " * (max_width - len(x)) for x in block ]
+
+            new_blocks.append( block )
+
+        for l in zip( *new_blocks ):
+            lines.append( "|%s|" % "|".join( l ) )
+            
+    lines.append( separator )
+    lines.append( "" )
+    return lines
+
+            
+def run(arguments, options, lineno, content, state_machine = None, document = None):
+    """process :report: directive."""
+
+    logging.debug( "started report_directive.run: %s:%i" % (str(document), lineno) )
 
     # sort out the paths
     # reference is used for time-stamping
@@ -251,9 +373,15 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         print 'rstdir=%s, reldir=%s, relparts=%s, nparts=%d'%(rstdir, reldir, relparts, nparts)
         print 'reference="%s", basedir="%s", linkdir="%s", outdir="%s"'%(reference, basedir, linkdir, outdir)
 
+    # try to create. If several processes try to create it,
+    # testing with `if` will not work.
+    try:
+        os.makedirs(outdir)
+    except OSError, msg:
+        pass
 
     if not os.path.exists(outdir): 
-        os.makedirs(outdir)
+        raise OSError( "could not create directory %s: %s" % (outdir, msg ))
 
     # check if we need to update. 
     logging.debug( "collecting tracker." )
@@ -269,15 +397,23 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     logging.debug( "invocating renderer." )
 
+    ########################################################
+    # collect options
+    #
     # determine the renderer
     renderer_name = "stats"
     if options.has_key("render"): 
         renderer_name = options["render"]
         del options["render"]
+
     try:
         renderer = MAP_RENDERER[ renderer_name ]( tracker )
     except KeyError:
         raise KeyError("unknown renderer %s" % renderer_name)
+
+    # determine layout
+    try: layout = options["layout"]
+    except KeyError: layout = "column"
 
     # collect options for renderer and remove others
     render_options = {}
@@ -346,67 +482,24 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
         
     lines = []
-    output = renderer( **render_options )
+    input_blocks = renderer( **render_options )
+    ###########################################################
+    # collect images
+    ###########################################################
+    output_blocks = collectImagesFromMatplotlib( input_blocks, template_name, outdir, linkdir, 
+                                                 content, 
+                                                 display_options,
+                                                 linked_codename)
+
+    if not output_blocks:
+        # process text
+        output_blocks = []
+        for block in input_blocks:
+            output_blocks.append( TEMPLATE_TEXT % locals() + block )
 
     ###########################################################
-    # deal with one or more pylab figures
-    #    save as png, hires-png and pdf
-    #    save thumbnail
-    #    insert rendering code at placeholders
-    fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
-
-    if len(fig_managers) > 0:
-
-        if output: 
-            lines.extend( output )
-            lines.append( "" )
-
-        for i, figman in enumerate(fig_managers):
-            for format, dpi in FORMATS:
-                if len(fig_managers) == 1:
-                    outname = template_name
-                else:
-                    outname = "%s_%02d" % (template_name, i)
-
-                outpath = os.path.join(outdir, '%s.%s' % (outname, format))
-
-                try:
-                    figman.canvas.figure.savefig( outpath, dpi=dpi )
-                except:
-                    s = exception_to_str("Exception running plot %s" % outpath)
-                    warnings.warn(s)
-                    return []
-
-                if format=='png':
-                    thumbdir = os.path.join(outdir, 'thumbnails')
-                    if not os.path.exists(thumbdir): os.makedirs(thumbdir)
-                    thumbfile = str('%s.png' % os.path.join(thumbdir, outname) )
-                    captionfile = str('%s.txt' % os.path.join(thumbdir, outname) )
-                    if not os.path.exists(thumbfile):
-                        # thumbnail only available in matplotlib >= 0.98.4
-                        try:
-                            figthumb = image.thumbnail(str(outpath), str(thumbfile), scale=0.3)
-                        except AttributeError:
-                            pass
-                    outfile = open(captionfile,"w")
-                    outfile.write( "\n".join( content ) + "\n" )
-                    outfile.close()
-            linkedname = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
-            try:
-                l = lines.index( "## Figure %i ##" % (i+1) )
-                lines[l:l+1] = (TEMPLATE_PLOT % locals()).split('\n')
-            except IndexError:
-                lines.extend((TEMPLATE_PLOT % locals()).split('\n'))
-
-    else:
-        # process text
-        lines.extend( (TEMPLATE_TEXT % locals()).split( "\n") )
-
-        # add any text
-        if output: 
-            lines.extend( output )
-            lines.append( "" )
-        
+    ## render the output taking into account the layout
+    lines = layoutBlocks( output_blocks, layout )
 
     ###########################################################
     # add caption
@@ -490,3 +583,4 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
     stream = open( "sphinxreport.log", "a" ) )
+

@@ -66,16 +66,16 @@ def getTrackers( fullpath ):
         sys.stdout = stdout
 
     trackers = []
+
     for name in dir(module):
         obj = getattr(module, name)
         if isinstance(obj, (type, types.ClassType)) and \
-                issubclass(obj, Tracker):
+                issubclass(obj, Tracker) and hasattr(obj, "__call__"):
             trackers.append( (name, obj, module_name) )
         elif isinstance(obj, (type, types.FunctionType)):
             trackers.append( (name, obj, module_name) )
         elif isinstance(obj, (type, types.LambdaType)):
             trackers.append( (name, obj, module_name) )
-
 
     return trackers
 
@@ -137,7 +137,8 @@ def main():
     kwargs = {}
     for x in options.options:
         if "=" in x:
-            key,val = [ y.strip() for y in x.split("=") ]
+            data = x.split("=")
+            key,val = [ y.strip() for y in (data[0], "=".join(data[1:])) ]
         else:
             key, val = x.strip(), None
         kwargs[key] = val
@@ -145,15 +146,29 @@ def main():
     if options.tracks: kwargs["tracks"] = options.tracks
     if options.slices: kwargs["slices"] = options.slices
 
+    exclude = set( ("Tracker", 
+                    "TrackerSQL", 
+                    "returnLabeledData",
+                    "returnMultipleColumnData",
+                    "returnMultipleColumns",
+                    "returnSingleColumn",
+                    "returnSingleColumnData", 
+                    "SQLError", 
+                    "MultipleColumns", 
+                    "MultipleColumnData", 
+                    "LabeledData", 
+                    "DataSimple", 
+                    "Data"  ) )
+
     if options.tracker:
 
         trackers = []
         for filename in glob.glob( "python/*.py" ):
-            trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in ("Tracker", "TrackerSQL") ] )
+            trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in exclude ] )
 
         available_trackers = set( [ x[0] for x in trackers ] )
         if options.tracker not in available_trackers:
-            raise NameError( "unknown tracker '%s': available trackers are %s" % (options.tracker, ",".join( available_trackers) ) )
+            raise NameError( "unknown tracker '%s': possible trackers are\n %s" % (options.tracker, "\n".join( sorted(available_trackers)) ) )
 
         for name, tracker, modulename in trackers:
             if name == options.tracker: break

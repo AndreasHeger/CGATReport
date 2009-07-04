@@ -18,6 +18,7 @@ from SphinxReport import report_directive, gallery
 
 try:
     from multiprocessing import Process
+    from multiprocessing import Pool
 except ImportError:
     from threading import Thread as Process
 
@@ -65,6 +66,7 @@ def run( work ):
     """run a set of worker jobs."""
 
     for f, b in work:
+        debug( "starting: %s, %s" % (str(b.mArguments), str(b.mOptions) ) )
         report_directive.run(  b.mArguments,
                                b.mOptions,
                                lineno = 0,
@@ -122,7 +124,7 @@ class timeit:
 def buildPlots( options, args ):
     """build all plot elements and tables.
 
-    This can be done in parallel.
+    This can be done in parallel to some extent.
     """
     info( "building plot elements started" )
 
@@ -136,23 +138,14 @@ def buildPlots( options, args ):
     for f in rst_files:
         blocks = getBlocksFromRstFile( f )
         for b in blocks:
-            work.append( (f, b) )
+            work.append( ( (f, b), ) )
 
     if len(work) == 0: return
 
-    cs = max( 1, len(work) // options.num_jobs )
-    processes = []
-
-    for x in range( 0, len(work), cs ):
-
-        p = Process( target = run, args = ( work[x:x+cs], ) )
-        processes.append( p )
-        p.start()
-
-    info( "started %i processes" % len(processes) )
-
-    for p in processes: p.join()
-
+    pool = Pool( options.num_jobs )
+    pool.map( run, work )
+    pool.close()
+    pool.join()
 
 def runCommand( command ):
     try:

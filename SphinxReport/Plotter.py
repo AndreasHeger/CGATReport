@@ -1,7 +1,7 @@
 """Mixin classes for Renderers that plot.
 """
 
-import os, sys, re
+import os, sys, re, math
 
 import matplotlib
 import matplotlib.backends
@@ -37,11 +37,35 @@ class Plotter:
 
        :term:`yrange`: restrict plot a part of the y-axis
 
+    With some plots default layout options will result in plots 
+    that are misaligned (legends truncated, etc.). To fix this it might
+    be necessary to increase plot size, reduce font size, or others.
+    The following options will be passed on the matplotlib to permit
+    this control.
+
+       :term:`mpl-figure`: options for matplotlib
+           ``figure `` calls().
+
+       :term:`mpl-legend`: options for matplotlib
+           ``legend`` calls().
+
+       :term:`mpl-subplot`: options for matplotlib
+           ``subplots_adjust`` calls().
+
+       :term:`mpl-rc`: general environment settings for matplotlib.
+          See the matplotlib documentation. Multiple options can be
+          separated by ;, for example 
+          ``:mpl-rc: figure.figsize=(20,10);legend.fontsize=4``
+
     """
 
     mLegendFontSize = 8
     # number of chars to use to reduce legend font size
     mMaxLegendSize = 100
+
+    ## maximum number of rows per column. If there are more,
+    ## the legend is split into multiple columns
+    mLegendMaxRowsPerColumn = 30
 
     def __init__(self, tracker ):
         self.mTracker = tracker
@@ -93,12 +117,34 @@ class Plotter:
         try: self.mYRange = map(float, kwargs["yrange"].split(","))
         except: self.mYRange = None
 
-    def startPlot( self, data ):
+        def setupMPLOption( key ):
+            options = {}
+            try: 
+                for k in kwargs[ key ].split(";"):
+                    key,val = k.split("=")
+                    # convert unicode to string
+                    options[str(key)] = eval(val)
+            except KeyError: 
+                pass
+            return options
+
+        self.mMPLFigureOptions = setupMPLOption( "mpl-figure" )
+        self.mMPLLegendOptions = setupMPLOption( "mpl-legend" )
+        self.mMPLSubplotOptions = setupMPLOption( "mpl-subplot" )
+        self.mMPLRC = setupMPLOption( "mpl-rc" )
+
+    def startPlot( self, data, **kwargs ):
         """prepare everything for a plot."""
 
         self.mFigure +=1 
-        plt.figure( self.mFigure )
+
+        # go to defaults
+        matplotlib.rcdefaults()
+        # set parameters
+        matplotlib.rcParams.update(self.mMPLRC )
         
+        plt.figure( num = self.mFigure, **self.mMPLFigureOptions )
+
         if self.mTitle:  plt.title( self.mTitle )
         if self.mXLabel: plt.xlabel( self.mXLabel )
         if self.mYLabel: plt.ylabel( self.mYLabel )
@@ -145,14 +191,21 @@ class Plotter:
         if self.mXRange: plt.xlim( self.mXRange )
         if self.mYRange: plt.ylim( self.mYRange )
 
+
+
         if self.mLogScale:
             if "x" in self.mLogScale:
                 plt.gca().set_xscale('log')
             if "y" in self.mLogScale:
                 plt.gca().set_yscale('log')
 
-                
+        lines = [ "## Figure %i ##" % self.mFigure, "" ]
+
+        legend = None
+        maxlen = 0
+
         if self.mLegendLocation != "none" and plts and legends:
+
             maxlen = max( [ len(x) for x in legends ] )
             # legends = self.wrapText( legends )
 
@@ -161,14 +214,33 @@ class Plotter:
             else:
                 legend = plt.figlegend( plts, 
                                         legends,
-                                        loc = self.mLegendLocation )
+                                        loc = self.mLegendLocation,
+                                        **self.mMPLLegendOptions )
 
-            # smaller font size for large legends
-            if maxlen > self.mMaxLegendSize:
-                ltext = legend.get_texts() # all the text.Text instance in the legend
-                plt.setp(ltext, fontsize='small') 
-            
-        return [ "## Figure %i ##" % self.mFigure, "" ]
+
+        if self.mLegendLocation == "extra" and legends:
+            self.mFigure += 1
+            legend = plt.figure( self.mFigure, **self.mMPLFigureOptions )
+            lines.extend( ["## Figure %i ##" % self.mFigure, ""] )
+            lx = legend.add_axes( (0.1, 0.1, 0.9, 0.9) )
+            lx.set_title( "Legend" )
+            lx.set_axis_off()
+            plt.setp( lx.get_xticklabels(), visible=False)
+            if not plts:
+                plts = []
+                for x in legends:
+                    plts.append( plt.plot( (0,), (0,) ) )
+
+            lx.legend( plts, legends, 'center left', 
+                       ncol = int(math.ceil( float( len(legends) / self.mLegendMaxRowsPerColumn ) ) ) ,
+                       **self.mMPLLegendOptions )
+
+        # smaller font size for large legends
+        if legend and maxlen > self.mMaxLegendSize:
+            ltext = legend.get_texts() # all the text.Text instance in the legend
+            plt.setp(ltext, fontsize='small') 
+
+        return "\n".join( lines )
 
     def rescaleForVerticalLabels( self, labels, offset = 0.02, cliplen = 6 ):
         """rescale current plot so that vertical labels are displayed properly.
@@ -217,10 +289,13 @@ class PlotterMatrix(Plotter):
     # after # characters, split into two
     # lines
     mSplitHeader = 20
-    mFontSizeSplit = 6
+    mFontSizeSplit = 8
 
     # separators to use to split text
     mSeparators = " :_"
+
+    mMaxRows = 20
+    mMaxCols = 20
 
     def __init__(self, *args, **kwargs ):
         Plotter.__init__(self, *args, **kwargs)
@@ -303,42 +378,76 @@ class PlotterMatrix(Plotter):
         else:
             color_scheme = None
 
-        plt.imshow(matrix,
-                   cmap=color_scheme,
-                   origin='lower',
-                   vmax = vmax,
-                   vmin = vmin,
-                   interpolation='nearest')
+        plots = []
+        def addMatrix( matrix, row_headers, col_headers, vmin, vmax):
 
+            plot = plt.imshow(matrix,
+                              cmap=color_scheme,
+                              origin='lower',
+                              vmax = vmax,
+                              vmin = vmin,
+                              interpolation='nearest')
 
-        # offset=0: x=center,y=center
-        # offset=0.5: y=top/x=right
-        offset = 0.0
+            # offset=0: x=center,y=center
+            # offset=0.5: y=top/x=right
+            offset = 0.0
 
-        col_headers = [ str(x) for x in col_headers ]
-        row_headers = [ str(x) for x in row_headers ]
+            col_headers = [ str(x) for x in col_headers ]
+            row_headers = [ str(x) for x in row_headers ]
 
-        xfontsize = self.mFontSize 
-        yfontsize = self.mFontSize 
+            xfontsize = self.mFontSize 
+            yfontsize = self.mFontSize 
 
-        # determine fontsize for labels
-        xfontsize, col_headers = self.buildHeaders( col_headers )
-        yfontsize, row_headers = self.buildHeaders( row_headers )
+            # determine fontsize for labels
+            xfontsize, col_headers = self.buildHeaders( col_headers )
+            yfontsize, row_headers = self.buildHeaders( row_headers )
 
-        plt.xticks( [ offset + x for x in range(len(col_headers)) ],
-                      col_headers,
-                      rotation="vertical",
-                      fontsize=xfontsize )
+            plt.xticks( [ offset + x for x in range(len(col_headers)) ],
+                          col_headers,
+                          rotation="vertical",
+                          fontsize=xfontsize )
 
-        plt.yticks( [ offset + y for y in range(len(row_headers)) ],
-                      row_headers,
-                      fontsize=yfontsize )
+            plt.yticks( [ offset + y for y in range(len(row_headers)) ],
+                          row_headers,
+                          fontsize=yfontsize )
+            
+            return plot
 
-        plt.colorbar( format = self.mBarFormat)        
+        if nrows > self.mMaxRows:
+            vmin = matrix.min()
+            vmax = matrix.max()
+            nplots = int(math.ceil( float(nrows) / self.mMaxRows ))
+            new_headers = [ "%s" % (x + 1) for x in range(len(row_headers))]
+            for x in range(nplots):
+                plt.subplot( 1, nplots, x+1 )
+                start = x * self.mMaxRows
+                end = start+min(nrows,self.mMaxRows)
+                addMatrix( matrix[start:end,:], row_headers[start:end], row_headers, vmin, vmax )
+            labels = ["%s: %s" % x for x in zip( new_headers, row_headers) ]
+            self.mLegendLocation = "extra"
+            plt.subplots_adjust( **self.mMPLSubplotOptions )
 
-        self.rescaleForVerticalLabels( col_headers, cliplen = 12 )
+        elif ncols > self.mMaxCols :
+            vmin = matrix.min()
+            vmax = matrix.max()
+            nplots = int(math.ceil( float(ncols) / self.mMaxCols ))
+            new_headers = [ "%s" % (x + 1) for x in range(len(col_headers))]
+            for x in range(nplots):
+                plt.subplot( nplots, 1, x+1 )
+                start = x * self.mMaxCols
+                end = start+min(ncols,self.mMaxCols)
+                addMatrix( matrix[:,start:end], row_headers, new_headers[start:end], vmin, vmax ) 
+            labels = ["%s: %s" % x for x in zip( new_headers, col_headers) ]
+            self.mLegendLocation = "extra"
+            plt.subplots_adjust( **self.mMPLSubplotOptions )
 
-        return self.endPlot()
+        else:
+            addMatrix( matrix, row_headers, col_headers, vmin, vmax )
+            plt.colorbar( format = self.mBarFormat)        
+            plots, labels = None, None
+            self.rescaleForVerticalLabels( col_headers, cliplen = 12 )
+
+        return self.endPlot( plts = plots, legends = labels )
 
 def outer_legend(*args, **kwargs):
     """plot legend outside of plot by rescaling it.

@@ -9,10 +9,6 @@ Planned features
 
 The following features are planned:
 
-colored scatter plotter
-   add individual coloring option for dots in a 
-   scatter plot
-
 error bars
    add error bars to bar plots and scatter plots
 
@@ -26,12 +22,13 @@ data download
    add method to provide data from cache from the
    command line and possibly the web pages.
 
-add error counst
+add error counts
     report the number of warnings and errors on the 
     sphinxreport-build output.
 
 add automatic history
-    keep automatic track of releases
+    keep automatic track of releases/versions of
+    the document.
 
 add :as-percent: option
     display proportions optionally as percent
@@ -42,12 +39,7 @@ examine memory usage
     by using numpy more efficiently
 
 windows compatibility
-    check windows installation process and compatibility.
-
-load balancing:
-    achieve better load balancing between processes instead
-    of giving each process a fixed amount of work no matter
-    how long it will take.
+    check windows installation process and usage.
 
 plugin architecture
     clean up Renderer.py so that adding custom renderers
@@ -80,11 +72,36 @@ legend
    fix dimensioning of outer legend. Maybe add a separate
    legend plot.
 
+matrix plot legend
+   fix long legend text for matrix plots. The size of the legend
+   is too small.
+
 multi-figure layout
    implement multi-figure layout using a new option
    :layout: <>, where <> is column(default), row or grid.
 
+test
+   better output of available trackers - remove all
+   objects that are not trackers.
+
+add hinton plot
+   add hinton plot (see http://www.scipy.org/Cookbook/Matplotlib)
+
+investigate netCDF/HFS5 support
+   as data sources or as ways to store the data instead of shelve?
+
 Completed features
 ==================
+
+The following features have been added:
+
+colored scatter plotter
+   add individual coloring option for dots in a 
+   scatter plot
+
+load balancing:
+    achieve better load balancing between processes instead
+    of giving each process a fixed amount of work no matter
+    how long it will take.
 
 

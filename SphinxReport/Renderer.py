@@ -1,4 +1,4 @@
-import os, sys, re, shelve, traceback, cPickle
+import os, sys, re, shelve, traceback, cPickle, types
 
 from Plotter import *
 from Tracker import *
@@ -46,16 +46,23 @@ if not os.path.exists("conf.py"):
 execfile( "conf.py" )
 
 class Renderer:
-    """Base class of renderes that render data into restructured text.
+    """Base class of renderers that render data into restructured text.
 
     The subclasses define how to render the data by overloading the
     :meth:`render` method.
 
-    If a subclass creates images with matplotlib, then these are automatically
-    collected from matplotlib and saved to disc by the :term:`render` directive.
-    In this case, the :meth:`render` method return place-holders::
-    
-       return [ "## Figure 1 ##", "## Figure 2 ##" ]``.
+    When called, a Renderer and its subclasses will return blocks of
+    restructured text. Images are automatically collected from matplotlib
+    and inserted at place-holders in the format ``## Figure x ##``, where
+    ``x`` is number of the figure.
+
+    For example, a renderer might return two figures as::
+
+       return [ "## Figure 1 ##", "## Figure 2 ##" ]``
+
+    or just some text::
+
+       return [ "text element 1", "text element 2" ]
 
     The base class implements querying the :attr:`mTracker` for tracks and 
     slices and then asking the tracker for data grouped by tracks or slices.
@@ -77,10 +84,13 @@ class Renderer:
         self.mTracker = tracker
         global cachedir
         try:
-            if not os.path.exists(cachedir): os.mkdir(cachedir)
-        except (NameError, TypeError):
-            cachedir = None
-
+            if cachedir != None: os.mkdir(cachedir)
+        except OSError, msg:
+            pass
+        
+        if not os.path.exists(cachedir): 
+            raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
+            
         if cachedir:
             self.mCacheFile = os.path.join( cachedir, tracker.__class__.__name__ )
             self._cache = shelve.open(self.mCacheFile,"c", writeback = False)
@@ -231,6 +241,8 @@ class Renderer:
             debug( "%s: no tracks found - no output" % self.mTracker )
             return
 
+        # determine slices through the data
+        #
         # first get all slices without subsets and check if all
         # specified slices are available. 
         if self.mSlices:
@@ -286,12 +298,16 @@ class Renderer:
         result = []
         for group, data in self.mData.iteritems():
             lines = self.render( data ) 
-            if lines and len(self.mData) > 1 and SECTION_TOKEN:
-                result.extend( ["*%s*" % group, ""] )
-                # result.extend( [ SECTION_TOKEN * len(group), group, SECTION_TOKEN * len(group), "" ] )
-            if lines: result.extend( lines )
 
-        debug( "%s: rendering data finished with %i lines and %i plots" % (self.mTracker, len(result), len(_pylab_helpers.Gcf.get_all_fig_managers() ) ) )
+            if type(lines) not in types.StringTypes:
+                raise TypeError( "renderer %s did not return string, but %s:\n%s" % (self, type(lines), str(lines )))
+
+#            if lines and len(self.mData) > 1 and SECTION_TOKEN:
+#                result.extend( ["*%s*" % group, ""] )
+#                # result.extend( [ SECTION_TOKEN * len(group), group, SECTION_TOKEN * len(group), "" ] )
+            if lines: result.append( lines )
+
+        debug( "%s: rendering data finished with %i blocks and %i plots" % (self.mTracker, len(result), len(_pylab_helpers.Gcf.get_all_fig_managers() ) ) )
 
         return result
 
@@ -337,7 +353,7 @@ class RendererStats(Renderer):
             lines.append( '   "%s","%s"' % (track, '","'.join( str(stats).split("\t")) ) )
         lines.append( "") 
 
-        return lines
+        return "\n".join(lines)
 
 class RendererTable(Renderer):    
     """A table with numerical columns.
@@ -428,7 +444,7 @@ class RendererTable(Renderer):
         else:
             lines.append( '   :header: "track","%s" ' % '","'.join( sorted_headers ) )
 
-        lines.append( '')
+        lines.append( '' )
 
         def toValue( d, x):
             try:
@@ -449,7 +465,7 @@ class RendererTable(Renderer):
 
         lines.append( "") 
 
-        return lines
+        return "\n".join(lines)
 
 class RendererMatrix(RendererTable):    
     """A table with numerical columns.
@@ -579,7 +595,6 @@ class RendererMatrix(RendererTable):
 
         Returns a tuple (matrix, rows, colums).
         """
-
         rows = [ x[0] for x in data ]
         columns = []
         for t,vv in data: columns.extend( [x[0] for x in vv ] )
@@ -609,7 +624,7 @@ class RendererMatrix(RendererTable):
         for x in range(len(rows)):
             lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.mFormat % x for x in matrix[x,:] ] ) ) )
         lines.append( "") 
-        return lines
+        return "\n".join(lines)
 
 class RendererInterleavedBars(RendererTable, Plotter):
     """Stacked bars
@@ -777,11 +792,11 @@ class RendererMatrixPlot(RendererMatrix, PlotterMatrix):
     def render( self, data ):
         """render the data."""
 
-        result = []
+        lines = []
         matrix, rows, columns = self.buildMatrix( data )
-        result.extend(self.plotMatrix( matrix, rows, columns ) )
+        lines.append(self.plotMatrix( matrix, rows, columns ) )
 
-        return result
+        return "\n".join(lines)
 
 class RendererBoxPlot(Renderer, Plotter):        
     """Histogram as plot.
@@ -959,7 +974,7 @@ class RendererHistogram(Renderer ):
             lines.append( '   "%s","%s"' % (bin, '","'.join( [toValue(x) for x in values ] ) ) )
         lines.append( "") 
 
-        return lines
+        return "\n".join(lines)
 
 class RendererHistogramPlot(RendererHistogram, Plotter):        
     """Histogram as plot.
@@ -1091,7 +1106,7 @@ class RendererPairwiseStats(Renderer):
 
         lines.append( "" ) 
 
-        return lines
+        return "\n".join(lines)
 
 class RendererPairwiseStatsMatrixPlot(RendererPairwiseStats, PlotterMatrix ):    
     """
@@ -1145,16 +1160,16 @@ class RendererPairwiseStatsMatrixPlot(RendererPairwiseStats, PlotterMatrix ):
         Data is a list of tuples of the from (track, data).
         """
 
-        result = []
+        lines = []
 
         tests = self.getTestResults( data )
-        if len(tests) == 0: return result
+        if len(tests) == 0: return lines
 
         for track, vv in data:
 
             if SUBSECTION_TOKEN:
                 #result.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
-                result.extend( ["*%s*" % track, "" ] )
+                lines.extend( ["*%s*" % track, "" ] )
 
             headers, stats = vv
             if len(stats) == 0: continue
@@ -1170,9 +1185,9 @@ class RendererPairwiseStatsMatrixPlot(RendererPairwiseStats, PlotterMatrix ):
                     v = self.mPlotValue( r )
                     matrix[x,y] = matrix[y,x] = v
 
-            result.extend(self.plotMatrix( matrix, headers, headers ) )
+            lines.extend(self.plotMatrix( matrix, headers, headers ) )
 
-        return result
+        return "\n".join(lines)
 
 class RendererPairwiseStatsBarPlot(RendererPairwiseStats, Plotter ):    
     """
@@ -1226,14 +1241,14 @@ class RendererPairwiseStatsBarPlot(RendererPairwiseStats, Plotter ):
         Data is a list of tuples of the from (track, data).
         """
 
-        result = []
+        lines = []
 
         tests = self.getTestResults( data )
-        if len(tests) == 0: return result
+        if len(tests) == 0: return lines
 
         for track, vv in data:
             if SUBSECTION_TOKEN:
-                result.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
+                lines.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
 
             headers, stats = vv
             
@@ -1277,9 +1292,9 @@ class RendererPairwiseStatsBarPlot(RendererPairwiseStats, Plotter ):
         
             plt.xticks( xvals + 0.5, headers, rotation = rotation )
 
-            result.extend( self.endPlot( plts, headers) )
+            lines.extend( self.endPlot( plts, headers) )
 
-        return result
+        return "\n".join(lines)
 
 class RendererScatterPlot(Renderer, Plotter):
     """Scatter plot.
@@ -1527,7 +1542,7 @@ class RendererGroupedTable(Renderer):
                     dd = dict( zip( columns, row) )
                     result.append( '   "%s","*%s*","%s"' % ( g,track, '","'.join( [toValue( dd, x) for x in sorted_headers] )))
                     g = ""
-        return result
+        return "\n".join(result)
 
         
 

@@ -22,6 +22,7 @@ Contents:
    Glossary.rst
    Developing.rst
    Roadmap.rst
+   Test.rst
    FAQ.rst
 
 
