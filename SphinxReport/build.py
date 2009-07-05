@@ -3,6 +3,8 @@ import sys, os, imp, cStringIO, re, types, glob, optparse
 import subprocess, logging, time
 from logging import warn, log, debug, info
 
+import Logger
+
 USAGE = """python %s [OPTIONS] args
 
 build a sphinx report.
@@ -18,7 +20,7 @@ from SphinxReport import report_directive, gallery
 
 try:
     from multiprocessing import Process
-    from multiprocessing import Pool
+    from multiprocessing import Pool, Queue
 except ImportError:
     from threading import Thread as Process
 
@@ -142,10 +144,28 @@ def buildPlots( options, args ):
 
     if len(work) == 0: return
 
+    logQueue = Queue(100)
+    handler= Logger.MultiProcessingLogHandler(logging.FileHandler( "sphinxreport.log", "w"), logQueue)
+    logging.getLogger('').addHandler(handler)
+    logging.getLogger('').setLevel(logging.DEBUG)
+
+    logging.debug('starting main')
+
     pool = Pool( options.num_jobs )
     pool.map( run, work )
     pool.close()
     pool.join()
+    
+    counts = handler.getCounts()
+
+    print "SphinxReport: messages: %i critical, %i errors, %i warnings, %i info, %i debug" \
+        % (counts["CRITICAL"],
+           counts["ERROR"],
+           counts["WARNING"],
+           counts["INFO"],
+           counts["DEBUG"] )
+    
+    logging.shutdown()
 
 def runCommand( command ):
     try:

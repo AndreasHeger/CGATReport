@@ -22,10 +22,6 @@ data download
    add method to provide data from cache from the
    command line and possibly the web pages.
 
-add error counts
-    report the number of warnings and errors on the 
-    sphinxreport-build output.
-
 add automatic history
     keep automatic track of releases/versions of
     the document.
@@ -68,18 +64,6 @@ optional pdf support
     with many points take a long while to render and these should
     be thinned.
 
-legend
-   fix dimensioning of outer legend. Maybe add a separate
-   legend plot.
-
-matrix plot legend
-   fix long legend text for matrix plots. The size of the legend
-   is too small.
-
-multi-figure layout
-   implement multi-figure layout using a new option
-   :layout: <>, where <> is column(default), row or grid.
-
 test
    better output of available trackers - remove all
    objects that are not trackers.
@@ -90,18 +74,43 @@ add hinton plot
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
 
-Completed features
-==================
+Version 1.1
+===========
 
-The following features have been added:
+The following features have been added in version 1.1
+
+Completed features
+------------------
 
 colored scatter plotter
    add individual coloring option for dots in a 
    scatter plot
 
-load balancing:
+load balancing
     achieve better load balancing between processes instead
     of giving each process a fixed amount of work no matter
     how long it will take.
+
+logging
+    added summary of logging messages to ``sphinxreport-build``.
+
+multi-figure layout
+   implemented multi-figure layout using option
+   :layout: <>, where <> is column(default), row or grid.
+
+added mpl-* options
+   for fine-tuning plots, matplotlib configuration options
+   can be set on a per-plot basis.
+
+Known problems
+--------------
+
+matrix plot legend
+   fix long legend text for matrix plots. The size of the legend
+   is too small.
+
+legend
+   fix dimensioning of outer legend. Maybe add a separate
+   legend plot.
 
 

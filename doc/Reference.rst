@@ -171,4 +171,27 @@ ignored.
 
       restrict plot to part of the z-axis
 
+   mpl-figure
+      ``;`` separated ``key=value`` pairs
+
+      options for matplotlib ``figure`` calls().
+
+   mpl-legend
+      ``;`` separated ``key=value`` pairs   
+
+      options for matplotlib ``legend`` calls().
+
+   mpl-subplot
+      ``;`` separated ``key=value`` pairs
+
+      options for matplotlib ``subplots_adjust`` calls().
+
+   mpl-rc
+      ``;`` separated ``key=value`` pairs
+
+      general environment settings for matplotlib.
+      See the matplotlib documentation. Multiple options can be
+      separated by ;, for example 
+      ``:mpl-rc: figure.figsize=(20,10);legend.fontsize=4``
+
 

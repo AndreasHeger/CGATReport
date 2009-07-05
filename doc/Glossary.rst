@@ -52,3 +52,4 @@ Glossary
       The directory containing :file:`conf.py`.  By default, this is the same as
       the :term:`source directory`, but can be set differently with the **-c**
       command-line option.
+
