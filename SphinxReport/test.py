@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from SphinxReport.Tracker import Tracker
 from SphinxReport.Renderer import *
 from SphinxReport.report_directive import MAP_RENDERER
+import SphinxReport.report_directive
 
 try:
     from multiprocessing import Process
@@ -91,6 +92,9 @@ def main():
 
     parser.add_option( "-t", "--tracker", dest="tracker", type="string",
                           help="tracker to use [default=%default]" )
+
+    parser.add_option( "-p", "--page", dest="page", type="string",
+                          help="render an rst page [default=%default]" )
 
     parser.add_option( "-a", "--tracks", dest="tracks", type="string",
                           help="tracks to use [default=%default]" )
@@ -196,6 +200,15 @@ def main():
         if result: print "\n".join(result)
         if options.do_show: plt.show()
 
+    elif options.page:
+        import build
+        SphinxReport.report_directive.DEBUG = True
+        SphinxReport.report_directive.FORCE = True
+
+        blocks = build.rst_reader( open( options.page, "r") )
+        for block in blocks:
+            build.run( ( (options.page, block ),) )
+            
     else:
         for filename in glob.glob( "python/*.py" ):
             processes = []
