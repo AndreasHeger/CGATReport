@@ -31,7 +31,7 @@ string instead of a numeric value, for example ``(u'0.64425349087',)`` instead o
 These should be caught by the :mod:`SphinxReport.DataTypes`.
 
 sphinxreport-build freezes keyboard and mouse when run with multiple processes
-************************************************************************
+******************************************************************************
 
 When running sphinxreport-build, the keyboard and mouse freezes. The only remedy
 is to kill the processes remotely. Then, the following message appears::
@@ -46,13 +46,10 @@ other processes will then hang. The solutions are to either
    GTKAgg does not. To change the matplotlib backend, edit your :file:`matplotlibrc` file.
    Or, 
 
-2. only run sphinxreport, not sphinxreport-build. Instead of::
-   
-   sphinxreport-build --num-jobs=4 sphinx-build -b html -d _build/doctrees   . _build/html
-   
-   run::
-
-   sphinx-build -b html -d _build/doctrees   . _build/html
+2. only run sphinxreport, not sphinxreport-build. Instead of
+   ``sphinxreport-build --num-jobs=4 sphinx-build -b html -d _build/doctrees   . _build/html``
+   run
+   ``sphinx-build -b html -d _build/doctrees   . _build/html``
 
 
 

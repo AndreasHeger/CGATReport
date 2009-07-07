@@ -74,6 +74,10 @@ add hinton plot
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
 
+clean
+   also remove files in _build/html/_sources and _doctrees
+   that match to trackers.
+
 Version 1.1
 ===========
 
