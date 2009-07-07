@@ -29,6 +29,7 @@ import Renderer
 import matplotlib
 
 DEBUG = False
+FORCE = False
 
 SEPARATOR="@"
 
@@ -292,6 +293,8 @@ def layoutBlocks( blocks, layout = "column"):
     """
 
     lines = []
+    if len(blocks) == 0: return lines
+
     if layout == "column":
         for block in blocks: 
             lines.extend(block.split("\n"))
@@ -447,7 +450,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     logging.debug( "checking for changed files." )
     
     # check if text element exists
-    if os.path.exists( filename_text ):
+    if not FORCE and os.path.exists( filename_text ):
         lines = [ x[:-1] for x in open( filename_text, "r").readlines() ]
 
         filenames = []
@@ -486,7 +489,10 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     ###########################################################
     # collect images
     ###########################################################
-    output_blocks = collectImagesFromMatplotlib( input_blocks, template_name, outdir, linkdir, 
+    output_blocks = collectImagesFromMatplotlib( input_blocks, 
+                                                 template_name, 
+                                                 outdir, 
+                                                 linkdir, 
                                                  content, 
                                                  display_options,
                                                  linked_codename)
@@ -521,11 +527,12 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     outfile.close()
 
     if DEBUG: 
-        for x, l in enumerate( lines): print x, l
+        for x, l in enumerate( lines): print "%5i %s" % (x, l)
 
     if len(lines) and state_machine:
         state_machine.insert_input(
             lines, state_machine.input_lines.source(0))
+
     return []
 
 try:
