@@ -39,6 +39,8 @@ class MultiProcessingLogHandler(logging.Handler):
                 self.counts[record.levelname] += 1
             except Queue.Empty, e:
                 pass
+            except EOFError, e:
+                break
 
     def send(self, s):
         # send just puts it in the queue for the server to retrieve

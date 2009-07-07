@@ -70,7 +70,7 @@ class Renderer:
     This class adds the following options to the :term:`render` directive.
 
        :term:`groupby`: group data by :term:`track` or :term:`slice`.
-        
+
     """
     mRequiredType = None
 
@@ -299,13 +299,14 @@ class Renderer:
         for group, data in self.mData.iteritems():
             lines = self.render( data ) 
 
-            if type(lines) not in types.StringTypes:
-                raise TypeError( "renderer %s did not return string, but %s:\n%s" % (self, type(lines), str(lines )))
+            if not lines: continue
 
-#            if lines and len(self.mData) > 1 and SECTION_TOKEN:
-#                result.extend( ["*%s*" % group, ""] )
-#                # result.extend( [ SECTION_TOKEN * len(group), group, SECTION_TOKEN * len(group), "" ] )
-            if lines: result.append( lines )
+            if type(lines) in types.StringTypes:
+                result.append( lines )
+            elif type(lines) in (types.TupleType, types.ListType ):
+                result.extend( list( lines ) )
+            else:
+                raise TypeError( "renderer %s did not return string or list, but %s:\n%s" % (self, type(lines), str(lines )))
 
         debug( "%s: rendering data finished with %i blocks and %i plots" % (self.mTracker, len(result), len(_pylab_helpers.Gcf.get_all_fig_managers() ) ) )
 
@@ -794,9 +795,7 @@ class RendererMatrixPlot(RendererMatrix, PlotterMatrix):
 
         lines = []
         matrix, rows, columns = self.buildMatrix( data )
-        lines.append(self.plotMatrix( matrix, rows, columns ) )
-
-        return "\n".join(lines)
+        return self.plotMatrix( matrix, rows, columns )
 
 class RendererBoxPlot(Renderer, Plotter):        
     """Histogram as plot.
@@ -1441,13 +1440,6 @@ class RendererMultiHistogramPlot(Renderer, Plotter):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def binToX( self, bins ):
-        """convert bins to x-values."""
-        if self.bin_marker == "left": return bins[:-1]
-        elif self.bin_marker == "mean": 
-            return [ (bins[x] - bins[x-1]) / 2.0 for x in range(1,len(bins)) ]
-        elif self.bin_marker == "right": return bins[1:]
-
     def addData( self, group, title, data ):
         self.mData[group].append( (title,data) )
 
@@ -1467,7 +1459,7 @@ class RendererMultiHistogramPlot(Renderer, Plotter):
             headers, columns = vv
 
             # get and transform x/y values
-            xvals = self.binToX( columns[0] )
+            xvals = columns[0]
 
             plts, legend = [], []
             nplotted = 0
@@ -1478,7 +1470,7 @@ class RendererMultiHistogramPlot(Renderer, Plotter):
                 legend.append( headers[y] )
                 nplotted += 1
 
-            result.extend( self.endPlot( plts, legend ) )
+            result.extend( self.endPlot( plts, legend, title = track ) )
 
         return result
 
