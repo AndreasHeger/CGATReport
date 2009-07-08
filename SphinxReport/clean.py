@@ -19,8 +19,27 @@ execfile( "conf.py" )
 
 SEPARATOR="@"
 
+def deleteFiles( test_f, dirs_to_check = (".",) ):
+    """remove all files that test_f returns True for.
+    """
+    removed = []
+    for d in dirs_to_check:
+        for root, dirs, files in os.walk(d):
+            for f in files:
+                if test_f( f ):
+                    try:
+                        ff = os.path.join( root, f) 
+                        os.remove( ff )
+                        removed.append( ff )
+                    except OSError, msg:
+                        pass
+
+    return removed
+
 def removeTracker( tracker ):
-    
+    """remove all files created by :class:Renderer objects
+    that use tracker.
+    """
     # get locations
     dirs_to_check = ("_static", "_cache", "_build" )
 
@@ -31,20 +50,37 @@ def removeTracker( tracker ):
     # .code files
     rx3 = re.compile("-%s%s" % (tracker,".code") )
 
-    isTracker = lambda x: rx1.search(x) or rx2.search(x) or rx3.search(x)
+    test_f = lambda x: rx1.search(x) or rx2.search(x) or rx3.search(x)
 
+    return deleteFiles( test_f, dirs_to_check )
+
+def removeText( tracker ):
+    """remove all temporary files that reference the ``tracker``."""
+    
+    # find all .rst files that reference tracker
     nremoved = 0
-    for d in dirs_to_check:
-        for root, dirs, files in os.walk(d):
-            for f in files:
-                if isTracker( f ):
-                    try:
-                        os.remove( os.path.join( root, f) )
-                        nremoved += 1
-                    except OSError, msg:
-                        pass
+    rx_tracker = re.compile( tracker )
+    files_to_check = []
+    for root, dirs, files in os.walk("."):
+        for f in files:
+            if f.endswith( source_suffix ):
+                found = rx_tracker.search( "".join(open(f,"r").readlines()) )
+                if found:
+                    files_to_check.append( f )
 
-    return nremoved
+    patterns = []
+    for f in files_to_check:
+        p = f[:-len(source_suffix)]
+        patterns.append(re.compile( p ))
+    
+    def test_f(x):
+        for p in patterns:
+            if p.search(x): return True
+        return False
+
+    dirs_to_check = ("_build",)
+
+    return deleteFiles( test_f, dirs_to_check )
 
 def main():
 
@@ -77,8 +113,9 @@ def main():
     else:
         for tracker in args:
             print "cleaning up %s ..." % tracker,
-            nremoved = removeTracker( tracker )
-            print "%i files (done)" % nremoved
+            removed = removeTracker( tracker )
+            removed.extend( removeText( tracker ))
+            print "%i files (done)" % len(removed)
                   
 if __name__ == "__main__":
     sys.exit(main())
