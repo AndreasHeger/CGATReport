@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import numpy
 import CorrespondenceAnalysis
 
+from ResultBlock import ResultBlock
+
 class Plotter:
     """Base class for Renderers that do simple 2D plotting.
 
@@ -182,29 +184,27 @@ class Plotter:
                 newtext.append(txt)
         return newtext
 
-    def endPlot( self, plts = None, legends = None, title = None ):
+    def endPlot( self, plts = None, legends = None, title = ""):
         """close a plot.
 
         Returns a list of restructured text with place holders for the current 
         figure.
         """
 
-        if self.mXRange: plt.xlim( self.mXRange )
-        if self.mYRange: plt.ylim( self.mYRange )
-
+        # set logscale before the xlim, as it re-scales the plot.
         if self.mLogScale:
             if "x" in self.mLogScale:
                 plt.gca().set_xscale('log')
             if "y" in self.mLogScale:
                 plt.gca().set_yscale('log')
 
-        lines = [ "\n".join( ("## Figure %i ##" % self.mFigure, "")) ]
+        if self.mXRange: plt.xlim( self.mXRange )
+        if self.mYRange: plt.ylim( self.mYRange )
+
+        blocks = [ ResultBlock( "\n".join( ("## Figure %i ##" % self.mFigure, "")), title = title ) ]
 
         legend = None
         maxlen = 0
-
-        if title:
-            plt.title( title )
 
         if self.mLegendLocation != "none" and plts and legends:
 
@@ -223,7 +223,7 @@ class Plotter:
         if self.mLegendLocation == "extra" and legends:
             self.mFigure += 1
             legend = plt.figure( self.mFigure, **self.mMPLFigureOptions )
-            lines.append( "\n".join( ("## Figure %i ##" % self.mFigure, "")) )
+            blocks.append( ResultBlock( "\n".join( ("## Figure %i ##" % self.mFigure, ""))) )
             lx = legend.add_axes( (0.1, 0.1, 0.9, 0.9) )
             lx.set_title( "Legend" )
             lx.set_axis_off()
@@ -243,7 +243,7 @@ class Plotter:
             ltext = legend.get_texts() # all the text.Text instance in the legend
             plt.setp(ltext, fontsize='small') 
 
-        return lines
+        return blocks
 
     def rescaleForVerticalLabels( self, labels, offset = 0.02, cliplen = 6 ):
         """rescale current plot so that vertical labels are displayed properly.

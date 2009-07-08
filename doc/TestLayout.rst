@@ -5,6 +5,7 @@ Testing the layout option
    :render: histogram-plot
    :layout: row
    :mpl-rc: figure.figsize=(3,3)
+   :as-lines:
 
    Row layout
 
@@ -12,6 +13,7 @@ Testing the layout option
    :render: histogram-plot
    :layout: column
    :mpl-rc: figure.figsize=(3,3)
+   :as-lines:
 
    Column layout
 
@@ -19,5 +21,7 @@ Testing the layout option
    :render: histogram-plot
    :layout: grid
    :mpl-rc: figure.figsize=(3,3)
+   :as-lines:
 
    Grid layout
+

@@ -20,7 +20,7 @@ a table.
 .. report:: Trackers.LabeledDataExample
    :render: table
 
-   Table caption.
+   A table.
 
 Stacked Barplot
 ===============
@@ -31,7 +31,7 @@ as stacked bars.
 .. report:: Trackers.LabeledDataExample
    :render: stacked-bars
 
-   Figure caption.
+   A bar plot with stacked bars.
 
 Interleaved Barplot
 ===================
@@ -42,7 +42,7 @@ as interleaved bars. Both *interleaved-bars* and *bars* can be used.
 .. report:: Trackers.LabeledDataExample
    :render: interleaved-bars
 
-   Figure caption.
+   A bar plot with interleaved bars.
 
 Single column data
 ******************
@@ -60,7 +60,8 @@ of data and inserts it as a table.
    :render: histogram
    :bins: arange(0,10)
 
-   Table caption.
+   A histogram.
+
 
 HistogramPlot
 =============
@@ -72,7 +73,7 @@ of data and inserts a plot.
    :render: histogram-plot
    :bins: arange(0,10)
 
-   Figure caption.
+   A histogram plot.
 
 Stats
 =====
@@ -83,7 +84,7 @@ statistics and displays them in a table.
 .. report:: Trackers.SingleColumnDataExample
    :render: stats
 
-   Table caption.
+   A table.
 
 Boxplot
 =======
@@ -110,7 +111,7 @@ Compute correlation statistics between all columns.
 .. report:: Trackers.MultipleColumnDataExample
    :render: pairwise-stats
 
-   Figure caption.
+   A pairwise statistics table.
 
 Pairwise statistics plot
 ========================
@@ -120,7 +121,7 @@ Plot correlation coefficients between all columns.
 .. report:: Trackers.MultipleColumnDataExample
    :render: pairwise-stats-plot
 
-   Figure caption.
+   A pairwise statistics plot.
 
 Pairwise scatter plot
 ========================
@@ -130,7 +131,7 @@ A scatter plot.
 .. report:: Trackers.MultipleColumnDataExample
    :render: scatter-plot
 
-   Figure caption.
+   A scatter plot.
 
 
 Grouped table
@@ -141,4 +142,4 @@ A grouped table.
 .. report:: Trackers.MultipleColumnsExample
    :render: grouped-table
 
-   Figure caption.
+   A grouped table.

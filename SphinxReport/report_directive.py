@@ -226,7 +226,11 @@ def exception_to_str(s = None):
     traceback.print_exc(file=sh)
     return sh.getvalue()
 
-def collectImagesFromMatplotlib( blocks, template_name, outdir, linkdir, content,
+def collectImagesFromMatplotlib( blocks, 
+                                 template_name, 
+                                 outdir, 
+                                 linkdir, 
+                                 content,
                                  display_options,
                                  linked_codename ):
     """collect one or more pylab figures and 
@@ -273,15 +277,11 @@ def collectImagesFromMatplotlib( blocks, template_name, outdir, linkdir, content
         linkedname = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
 
         ## replace placeholders in blocks to be output
-        new_blocks = []
-        for txt in blocks:
-            new_blocks.append( re.sub( "(## Figure %i ##)" % (i+1), 
-                                       TEMPLATE_PLOT % locals(),
-                                       txt))
-        blocks = new_blocks
-        ## if not found?
-        # output.append( TEMPLATE_PLOT % locals() )
-
+        for block in blocks:
+            block.mText = re.sub( "(## Figure %i ##)" % (i+1), 
+                                  TEMPLATE_PLOT % locals(),
+                                  block.mText )
+        
     return blocks
 
 def layoutBlocks( blocks, layout = "column"):
@@ -297,7 +297,10 @@ def layoutBlocks( blocks, layout = "column"):
 
     if layout == "column":
         for block in blocks: 
-            lines.extend(block.split("\n"))
+            if block.mTitle:
+                lines.extend( block.mTitle.split("\n") )
+                lines.append( "" )
+            lines.extend(block.mText.split("\n"))
         lines.extend( [ "", ] )
         return lines
     elif layout in ("row", "grid"):
@@ -309,8 +312,10 @@ def layoutBlocks( blocks, layout = "column"):
         raise ValueError( "unknown layout %s " % layout )
 
     # compute column widths
-    widths = [ max( [len(x) for x in y.split("\n")] )for y in blocks ]
-    heights = [ len(y.split("\n")) for y in blocks ]
+    widths = [ x.getWidth() for x in blocks ]
+    text_heights = [ x.getTextHeight() for x in blocks ]
+    title_heights = [ x.getTitleHeight() for x in blocks ]
+
     columnwidths = []
     for x in range(ncols):
         columnwidths.append( max( [widths[y] for y in range( x, len(blocks), ncols ) ] ) )
@@ -320,26 +325,51 @@ def layoutBlocks( blocks, layout = "column"):
     ## add empty blocks
     if len(blocks) % ncols:
         blocks = list(blocks)
-        blocks.extend( [""] * (ncols - len(blocks) % ncols) )
+        blocks.extend( [ Renderer.ResultBlock( "" )]  * (ncols - len(blocks) % ncols) )
 
-    for x in range(0, len(blocks), ncols ):
+    for nblock in range(0, len(blocks), ncols ):
+
+        ## add text
         lines.append( separator )
-        max_height = max( heights[x:x+ncols] )
+        max_height = max( text_heights[nblock:nblock+ncols] )
         new_blocks = []
         
-        for xx in range(x, min(x+ncols,len(blocks))):
-            block, col = blocks[xx].split("\n"), xx % ncols
+        for xx in range(nblock, min(nblock+ncols,len(blocks))):
+            txt, col = blocks[xx].mText.split("\n"), xx % ncols
 
             max_width = widths[col]
-            # add missig lins 
-            block.extend( [""] * (max_height - len(block)) )
+            # add missig lines 
+            txt.extend( [""] * (max_height - len(txt)) )
             # extend lines
-            block = [ x + " " * (max_width - len(x)) for x in block ]
+            txt = [ x + " " * (max_width - len(x)) for x in txt ]
 
-            new_blocks.append( block )
+            new_blocks.append( txt )
 
         for l in zip( *new_blocks ):
             lines.append( "|%s|" % "|".join( l ) )
+
+        ## add subtitles
+        max_height = max( title_heights[nblock:nblock+ncols] )
+
+        if max_height > 0:
+
+            new_blocks = []
+            lines.append( separator )
+
+            for xx in range(nblock, min(nblock+ncols,len(blocks))):
+                
+                txt, col = blocks[xx].mTitle.split("\n"), xx % ncols
+
+                max_width = widths[col]
+                # add missig lines 
+                txt.extend( [""] * (max_height - len(txt) ) )
+                # extend lines
+                txt = [ x + " " * (max_width - len(x)) for x in txt ]
+
+                new_blocks.append( txt )
+
+            for l in zip( *new_blocks ):
+                lines.append( "|%s|" % "|".join( l ) )
             
     lines.append( separator )
     lines.append( "" )
@@ -486,6 +516,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         
     lines = []
     input_blocks = renderer( **render_options )
+
     ###########################################################
     # collect images
     ###########################################################
@@ -500,8 +531,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     if not output_blocks:
         # process text
         output_blocks = []
+
         for block in input_blocks:
-            output_blocks.append( TEMPLATE_TEXT % locals() + block )
+            output_blocks.append( Renderer.ResultBlock( TEMPLATE_TEXT % locals() + block.mText, block.mTitle ) )
 
     ###########################################################
     ## render the output taking into account the layout

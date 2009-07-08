@@ -197,7 +197,9 @@ def main():
             print RST_TEMPLATE % params
             print
             print "..Template ends"
-        if result: print "\n".join(result)
+        if result: 
+            for r in result:
+                print str(r)
         if options.do_show: plt.show()
 
     elif options.page:

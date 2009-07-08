@@ -13,7 +13,7 @@ class LongLabelsSmall( Tracker ):
     def __call__(self, track, slice = None):
         if slice == "small": ncolumns = 10
         elif slice == "large": ncolumns = 40
-        elif slice == "gigantic": ncolumns = 300
+        elif slice == "gigantic": ncolumns = 100
 
         data = []
         for x in range( 0, ncolumns):
@@ -52,3 +52,19 @@ class LayoutTest( Tracker ):
     @returnSingleColumnData
     def __call__(self, track, slice = None):
         return [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ]
+
+class MultipleHistogramTest( Tracker ):
+    """Layout testing."""
+    mNumSlices = 3
+    mNumTracks = 5
+    mNumSamples = 100
+
+    def getSlices( self, subset = None ): return ["slice%i" % i for i in range(self.mNumSlices)]
+    def getTracks( self ): return ["track%i" % i for i in range(self.mNumTracks)]
+
+    @returnMultipleColumnData
+    def __call__(self, track, slice = None):
+        return (("bin", "value-set1", "value-set2"),
+                (range(0,self.mNumSamples),
+                 [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ],
+                 [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ] ) )

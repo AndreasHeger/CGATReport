@@ -23,6 +23,7 @@ import Histogram
 import collections
 
 from DataTypes import *
+from ResultBlock import ResultBlock
 
 # Some renderers will build several objects.
 # Use these two rst levels to separate individual
@@ -44,6 +45,7 @@ if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
 
 execfile( "conf.py" )
+
 
 class Renderer:
     """Base class of renderers that render data into restructured text.
@@ -295,22 +297,45 @@ class Renderer:
         
         debug( "%s: rendering data started" % (self.mTracker,) )
 
-        result = []
+        results = []
         for group, data in self.mData.iteritems():
-            lines = self.render( data ) 
 
-            if not lines: continue
+            result = self.render( data ) 
 
-            if type(lines) in types.StringTypes:
-                result.append( lines )
-            elif type(lines) in (types.TupleType, types.ListType ):
-                result.extend( list( lines ) )
+            if not result: continue
+            
+            if len(self.mData) > 1: title = group
+            else: title = None
+
+            # be flexible with returned data
+            if type(result) in types.StringTypes:
+                results.append( ResultBlock( result ))
+            elif isinstance( result, ResultBlock):
+                results.append( result )
+            elif type(result) in (types.TupleType, types.ListType ):
+                for x in result:
+                    if type(x) in types.StringTypes:
+                        results.append( ResultBlock( x ))
+                    elif isinstance( x, ResultBlock):
+                        results.append( x )
+                    elif type(x) in (types.TupleType, types.ListType ):
+                        for xx in x:
+                            if not( isinstance( xx, ResultBlock)):
+                                raise TypeError( "renderer %s did not return ResultBlock, but %s:\n%s" % (self, type(xx), str(x)))
+                        results.extend( x )
+                    else:
+                        raise TypeError( "renderer %s did not return appropriate type but %s:\n%s" % (self, type(x), str(x)))
             else:
-                raise TypeError( "renderer %s did not return string or list, but %s:\n%s" % (self, type(lines), str(lines )))
+                raise TypeError( "renderer %s did not return appropriate type, but %s:\n%s" % (self, type(lines), str(lines )))
 
-        debug( "%s: rendering data finished with %i blocks and %i plots" % (self.mTracker, len(result), len(_pylab_helpers.Gcf.get_all_fig_managers() ) ) )
+        debug( "%s: rendering data finished with %i blocks and %i plots" % (self.mTracker, len(results), len(_pylab_helpers.Gcf.get_all_fig_managers() ) ) )
 
-        return result
+        ## assert that all is right and add the title
+        for x in results:
+            x.mTitle = "\n".join( (title , x.mTitle ) )
+            assert isinstance( x, ResultBlock), "malformed result in %s: %s" % (str(self),str(x))
+
+        return results
 
     def render(self, data):
         """return a list of lines in rst format.
@@ -1240,14 +1265,14 @@ class RendererPairwiseStatsBarPlot(RendererPairwiseStats, Plotter ):
         Data is a list of tuples of the from (track, data).
         """
 
-        lines = []
+        blocks = []
 
         tests = self.getTestResults( data )
-        if len(tests) == 0: return lines
+        if len(tests) == 0: return blocks
 
         for track, vv in data:
-            if SUBSECTION_TOKEN:
-                lines.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
+#            if SUBSECTION_TOKEN:
+#                lines.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
 
             headers, stats = vv
             
@@ -1291,9 +1316,9 @@ class RendererPairwiseStatsBarPlot(RendererPairwiseStats, Plotter ):
         
             plt.xticks( xvals + 0.5, headers, rotation = rotation )
 
-            lines.extend( self.endPlot( plts, headers) )
+            blocks.extend( self.endPlot( plts, headers) )
 
-        return "\n".join(lines)
+        return blocks
 
 class RendererScatterPlot(Renderer, Plotter):
     """Scatter plot.
@@ -1381,7 +1406,7 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
 
     def render(self, data):
 
-        result = []
+        blocks = []
         nplotted = 0
 
         if self.mPalette:
@@ -1419,9 +1444,9 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
             plt.colorbar( format = self.mBarFormat)        
             nplotted += 1
 
-            result.extend( self.endPlot( plts ) )
+            blocks.extend( self.endPlot( plts ) )
 
-        return result
+        return blocks
 
 class RendererMultiHistogramPlot(Renderer, Plotter):
     """Render histogram data as plot.
@@ -1451,7 +1476,7 @@ class RendererMultiHistogramPlot(Renderer, Plotter):
     def render(self, data):
         """returns a placeholder."""
         
-        result = []
+        blocks = []
 
         for track, vv in data:
 
@@ -1470,9 +1495,9 @@ class RendererMultiHistogramPlot(Renderer, Plotter):
                 legend.append( headers[y] )
                 nplotted += 1
 
-            result.extend( self.endPlot( plts, legend, title = track ) )
+            blocks.extend( self.endPlot( plts, legend, title = track ) )
 
-        return result
+        return blocks
 
 class RendererGroupedTable(Renderer):    
     """A table with grouped data.
@@ -1534,7 +1559,8 @@ class RendererGroupedTable(Renderer):
                     dd = dict( zip( columns, row) )
                     result.append( '   "%s","*%s*","%s"' % ( g,track, '","'.join( [toValue( dd, x) for x in sorted_headers] )))
                     g = ""
-        return "\n".join(result)
+
+        return [ ResultBlock( "\n".join(result) ), ]
 
         
 

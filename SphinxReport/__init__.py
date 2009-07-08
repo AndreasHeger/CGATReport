@@ -5,5 +5,6 @@ __all__ = [ "Renderer",
             "Stats",
             "DataTypes",
             "Logger",
+            "ResultBlock"
             "only_directive",
             "report_directive" ]
