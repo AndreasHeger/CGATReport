@@ -64,19 +64,11 @@ optional pdf support
     with many points take a long while to render and these should
     be thinned.
 
-test
-   better output of available trackers - remove all
-   objects that are not trackers.
-
 add hinton plot
    add hinton plot (see http://www.scipy.org/Cookbook/Matplotlib)
 
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
-
-clean
-   also remove files in _build/html/_sources and _doctrees
-   that match to trackers.
 
 Version 1.1
 ===========
@@ -105,6 +97,17 @@ multi-figure layout
 added mpl-* options
    for fine-tuning plots, matplotlib configuration options
    can be set on a per-plot basis.
+
+clean
+   also remove files in _build/html/_sources and _doctrees
+   that match to trackers.
+
+multiprocessing
+   better exception handling
+
+test
+   better output of available trackers - remove all
+   objects that are not trackers.
 
 Known problems
 --------------

@@ -1,4 +1,52 @@
 #!/bin/env python
+
+"""
+sphinxreport-test
+=================
+
+:file:`sphinxreport-test` permits testing :class:`Trackers` and
+:class:`Renderers` before using them in documents. The full list of
+command line options is available using the :option:`-h/--help` command line
+options.
+
+There are three main usages of :command:`sphinxreport-test`:
+
+Fine-tuning plots
+-----------------
+
+Given a :class:`Tracker` and :class:`Renderer`, sphinxreport-test
+will call the :class:`Tracker` and supply it to the :class:`Renderer`::
+
+   sphinxreport-test tracker renderer
+
+Use this method to fine-tune plots. Additional options can be supplied
+using the ``-o`` command line option. The script will output a template
+restructured text snippet that can be directly inserted into a document.
+
+Rendering a document
+--------------------
+
+With the ``-p/--page`` option, ``sphinxreport-test`` will create the restructured
+text document as it is supplied to sphinx::
+
+   sphinxreport-test --page=example.rst
+
+This functionality is useful for debugging.
+
+Testing trackers
+----------------
+
+Running sphinxreport-test without options::
+
+   sphinxreport-test
+
+will collect all :class:`Trackers` and will execute them.
+Use this method to see if all :class:`Trackers` can access
+their data sources.
+
+"""
+
+
 import sys, os, imp, cStringIO, re, types, glob, optparse
 
 USAGE = """python %s [OPTIONS] [tracker renderer]
@@ -41,7 +89,12 @@ RST_TEMPLATE = """.. _%(label)s:
 def getTrackers( fullpath ):
     """retrieve an instantiated tracker and its associated code.
     
-    returns a tuple (code, tracker).
+    returns a tuple (code, tracker, module, flag).
+
+    The flag indicates whether that tracker is derived from the 
+    tracker base class. If False, that tracker will not be listed
+    as an available tracker, though it might be specified at the
+    command line.
     """
     name, cls = os.path.splitext(fullpath)
     # remove leading '.'
@@ -72,11 +125,11 @@ def getTrackers( fullpath ):
         obj = getattr(module, name)
         if isinstance(obj, (type, types.ClassType)) and \
                 issubclass(obj, Tracker) and hasattr(obj, "__call__"):
-            trackers.append( (name, obj, module_name) )
+            trackers.append( (name, obj, module_name, True) )
         elif isinstance(obj, (type, types.FunctionType)):
-            trackers.append( (name, obj, module_name) )
+            trackers.append( (name, obj, module_name, False) )
         elif isinstance(obj, (type, types.LambdaType)):
-            trackers.append( (name, obj, module_name) )
+            trackers.append( (name, obj, module_name, False) )
 
     return trackers
 
@@ -133,8 +186,10 @@ def main():
     if options.renderer:
         try:
             renderer = MAP_RENDERER[options.renderer]
-        except IndexError:
-            raise IndexError("could not find renderer '%s'. Available are %s" % MAP_RENDERER.keys() )
+        except KeyError:
+            print "could not find renderer '%s'. Available Renderers:\n  %s" % \
+                (options.renderer, "\n  ".join(sorted(MAP_RENDERER.keys())))
+            sys.exit(1)
     else:
         renderer = Renderer
 
@@ -170,9 +225,10 @@ def main():
         for filename in glob.glob( "python/*.py" ):
             trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in exclude ] )
 
-        available_trackers = set( [ x[0] for x in trackers ] )
+        available_trackers = set( [ x[0] for x in trackers if x[3] ] )
         if options.tracker not in available_trackers:
-            raise NameError( "unknown tracker '%s': possible trackers are\n %s" % (options.tracker, "\n".join( sorted(available_trackers)) ) )
+            print "unknown tracker '%s': possible trackers are\n  %s" % (options.tracker, "\n  ".join( sorted(available_trackers)) ) 
+            sys.exit(1)
 
         for name, tracker, modulename in trackers:
             if name == options.tracker: break
@@ -212,17 +268,21 @@ def main():
             build.run( ( (options.page, block ),) )
             
     else:
+        trackers = []
         for filename in glob.glob( "python/*.py" ):
-            processes = []
-            for name, tracker, modulename in trackers:
-                obj = tracker()
-                r = renderer( obj )
-                p = Process( target = run, args= ( name,r,kwargs ) )
-                processes.append( (name, p) )
-                p.start()
+            trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in exclude ] )
 
-            for name, p in processes:
-                p.join()
+        processes = []
+        for name, tracker, modulename, is_derived in trackers:
+            if not is_derived: continue
+            obj = tracker()
+            r = renderer( obj )
+            p = Process( target = run, args= ( name,r,kwargs ) )
+            processes.append( (name, p) )
+            p.start()
+
+        for name, p in processes:
+            p.join()
 
 if __name__ == "__main__":
     sys.exit(main())

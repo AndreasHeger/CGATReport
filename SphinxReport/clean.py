@@ -1,4 +1,29 @@
 #!/bin/env python
+
+"""
+sphinxreport-clean
+==================
+
+:command:`sphinxreport-clean` removes all documents associated
+with :class:`Tracker` thus allowing it to be re-built the next
+time :command:`sphinx` is invoked as::
+
+   sphinxreport-clean [clean|distclean|cache|Tracker1] [Tracker2] [...]
+
+The full list of command line options is listed by suppling :option:`-h/--help`
+on the command line.
+
+If there is only one target and it is ``clean``, ``distclean``,
+the full build we cleaned up. If it is ``cache``, only the cache
+will be cleaned forcing newly built :class:`Tracker` objects to recompute
+their data.
+
+Alternatively, if one or more than one :class:`Tracker` is given, all 
+documents referencing these will be removed to force a re-built next
+time :command:`sphinx` is invoked. The names can contain shell like
+regulare expression patterns (see glob in the python reference).
+"""
+
 import sys, os, imp, cStringIO, re, types, glob, optparse, shutil
 
 USAGE = """python %s [OPTIONS] target

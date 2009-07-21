@@ -1,5 +1,21 @@
 #!/bin/env python
-import sys, os, imp, cStringIO, re, types, glob, optparse
+
+"""
+sphinxreport-build
+==================
+
+:command:`sphinxreport-build` is a pre-processor for restructured
+texts. It implements parallel data gathering to speed up the 
+sphinx document creation process. It is invoked by simply prefixing
+the :command:`sphinx` command line::
+
+   sphinxreport-build [OPTIONS] sphinx [SPHINX-OPTIONS]
+
+The full list of command line options is listed by suppling :option:`-h/--help`
+on the command line.
+"""
+
+import sys, os, imp, cStringIO, re, types, glob, optparse, traceback
 import subprocess, logging, time
 from logging import warn, log, debug, info
 
@@ -67,15 +83,22 @@ class ReportBlock:
 def run( work ):
     """run a set of worker jobs."""
 
-    for f, b in work:
-        debug( "starting: %s, %s" % (str(b.mArguments), str(b.mOptions) ) )
-        report_directive.run(  b.mArguments,
-                               b.mOptions,
-                               lineno = 0,
-                               content = b.mCaption,
-                               state_machine = None,
-                               document = os.path.abspath( f ) )
-    
+    try:
+        for f, b in work:
+            debug( "starting: %s, %s" % (str(b.mArguments), str(b.mOptions) ) )
+            report_directive.run(  b.mArguments,
+                                   b.mOptions,
+                                   lineno = 0,
+                                   content = b.mCaption,
+                                   state_machine = None,
+                                   document = os.path.abspath( f ) )
+        return None
+    except:
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        exception_stack  = traceback.format_exc(exceptionTraceback)
+        exception_name   = exceptionType.__module__ + '.' + exceptionType.__name__
+        exception_value  = str(exceptionValue)
+        return (exception_name, exception_value, exception_stack)
 
 def rst_reader(infile ):
     """parse infile and extract the :render: block."""
@@ -144,18 +167,39 @@ def buildPlots( options, args ):
 
     if len(work) == 0: return
 
-    logQueue = Queue(100)
-    handler= Logger.MultiProcessingLogHandler(logging.FileHandler( os.path.abspath( "sphinxreport.log" ), "w"), logQueue)
+    if options.num_jobs > 1:
+        logQueue = Queue(100)
+        handler= Logger.MultiProcessingLogHandler(logging.FileHandler( os.path.abspath( "sphinxreport.log" ), "w"), logQueue)
+    else:
+        handler= logging.FileHandler( os.path.abspath( "sphinxreport.log" ), "w")
+
+    handler.setFormatter(  
+        logging.Formatter( '# %(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                           datefmt='%m-%d %H:%M' ) )
+
     logging.getLogger('').addHandler(handler)
-    logging.getLogger('').setLevel(logging.DEBUG)
+    logging.getLogger('').setLevel(logging.INFO)
+    logging.info('starting %i jobs on %i work items' % (options.num_jobs, len(work)))
 
-    logging.debug('starting main')
+    if options.num_jobs > 1:
+        pool = Pool( options.num_jobs )
+        errors = pool.map( run, work )
+        pool.close()
+        pool.join()
+    else:
+        errors = []
+        for w in work: errors.append( run( w ) )
 
-    pool = Pool( options.num_jobs )
-    pool.map( run, work )
-    pool.close()
-    pool.join()
-    
+    errors = [ e for e in errors if e ]
+            
+    if errors:
+        print "SphinxReport caught %i exceptions" % (len(errors))
+        print "## start of exceptions"
+        for exception_name, exception_value, exception_stack in errors:
+            print exception_stack,
+        print "## end of exceptions"
+        sys.exit(1)
+
     counts = handler.getCounts()
 
     print "SphinxReport: messages: %i critical, %i errors, %i warnings, %i info, %i debug" \

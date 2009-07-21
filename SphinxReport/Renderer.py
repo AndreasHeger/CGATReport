@@ -1222,16 +1222,16 @@ class RendererPairwiseStatsMatrixPlot(RendererPairwiseStats, PlotterMatrix ):
         Data is a list of tuples of the from (track, data).
         """
 
-        lines = []
+        blocks = []
 
         tests = self.getTestResults( data )
         if len(tests) == 0: return lines
 
         for track, vv in data:
 
-            if SUBSECTION_TOKEN:
-                #result.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
-                lines.extend( ["*%s*" % track, "" ] )
+            #if SUBSECTION_TOKEN:
+            #    #result.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
+            #    lines.extend( ["*%s*" % track, "" ] )
 
             headers, stats = vv
             if len(stats) == 0: continue
@@ -1247,9 +1247,9 @@ class RendererPairwiseStatsMatrixPlot(RendererPairwiseStats, PlotterMatrix ):
                     v = self.mPlotValue( r )
                     matrix[x,y] = matrix[y,x] = v
 
-            lines.extend(self.plotMatrix( matrix, headers, headers ) )
+            blocks.extend(self.plotMatrix( matrix, headers, headers ) )
 
-        return "\n".join(lines)
+        return blocks
 
 class RendererPairwiseStatsBarPlot(RendererPairwiseStats, Plotter ):    
     """

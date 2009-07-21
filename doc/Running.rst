@@ -20,7 +20,8 @@ Steps 1-6 are repeated until the document is finished.
 Command line utilities
 ======================
 
-This page explains the various utilities that come with :mod:`SphinxReport`.
+This page explains the various utilities that come with :mod:`SphinxReport`. See :ref:`Utilities`
+for the complete documentation.
 
 .. _Makefile:
 

@@ -16,6 +16,7 @@ Contents:
    Introduction.rst   
    Overview.rst
    Running.rst
+   Utilities.rst
    Gallery.rst
    Tutorials.rst
    Reference.rst
