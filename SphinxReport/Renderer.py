@@ -93,14 +93,23 @@ class Renderer:
         if not os.path.exists(cachedir): 
             raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
             
+        self.mCacheFile = None
+        self._cache = None
+            
         if cachedir:
             self.mCacheFile = os.path.join( cachedir, tracker.__class__.__name__ )
-            self._cache = shelve.open(self.mCacheFile,"c", writeback = False)
-            debug( "using cache %s" % self.mCacheFile )
-            debug( "keys in cache: %s" % (str(self._cache.keys() ) ))
+            # on Windows XP, the shelve does not work, work without cache
+            try:
+                self._cache = shelve.open(self.mCacheFile,"c", writeback = False)
+                debug( "using cache %s" % self.mCacheFile )
+                debug( "keys in cache: %s" % (str(self._cache.keys() ) ))                
+            except bsddb.db.DBFileExistsError, msg:    
+                warn("could not open cache %s - continuing without. Error = %s" %\
+                     (self.mCacheFile, msg))
+                self.mCacheFile = None
+                self._cache = None
+
         else:
-            self.mCacheFile = None
-            self._cache = None
             debug( "not using cache" )
 
     def __del__(self):

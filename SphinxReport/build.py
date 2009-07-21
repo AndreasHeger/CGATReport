@@ -200,14 +200,15 @@ def buildPlots( options, args ):
         print "## end of exceptions"
         sys.exit(1)
 
-    counts = handler.getCounts()
+    if options.num_jobs > 1:
+        counts = handler.getCounts()
 
-    print "SphinxReport: messages: %i critical, %i errors, %i warnings, %i info, %i debug" \
-        % (counts["CRITICAL"],
-           counts["ERROR"],
-           counts["WARNING"],
-           counts["INFO"],
-           counts["DEBUG"] )
+        print "SphinxReport: messages: %i critical, %i errors, %i warnings, %i info, %i debug" \
+            % (counts["CRITICAL"],
+               counts["ERROR"],
+               counts["WARNING"],
+               counts["INFO"],
+               counts["DEBUG"] )
     
     logging.shutdown()
 

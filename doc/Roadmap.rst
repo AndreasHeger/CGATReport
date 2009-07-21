@@ -34,8 +34,6 @@ examine memory usage
     investigate if this can be optimized, for example
     by using numpy more efficiently
 
-windows compatibility
-    check windows installation process and usage.
 
 plugin architecture
     clean up Renderer.py so that adding custom renderers
@@ -53,10 +51,6 @@ rpy integration
     add --clean or --force option to sphinxreport-test or build
     automatically force a new build. See also the corresponding
     sphinx-build options.
-
-explorer output
-    check output on windows explorer - frames do not appear on
-    Chris' machine.
 
 optional pdf support
     pdf rendering takes a while and could be post-poned until
@@ -108,6 +102,15 @@ multiprocessing
 test
    better output of available trackers - remove all
    objects that are not trackers.
+
+windows compatibility
+    check windows installation process and usage.
+    Works in windows XP with python xy.
+
+explorer output
+    check output on windows explorer - frames do not appear on
+    Chris' machine. Works on Windows XP, IE 8.
+
 
 Known problems
 --------------
