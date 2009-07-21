@@ -64,7 +64,8 @@ def removeText( tracker ):
     for root, dirs, files in os.walk("."):
         for f in files:
             if f.endswith( source_suffix ):
-                found = rx_tracker.search( "".join(open(f,"r").readlines()) )
+                fn = os.path.join( root, f )
+                found = rx_tracker.search( "".join(open(fn,"r").readlines()) )
                 if found:
                     files_to_check.append( f )
 

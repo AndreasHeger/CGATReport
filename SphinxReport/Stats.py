@@ -84,16 +84,17 @@ class ChiSquaredTest:
         pass
 
 def doChiSquaredTest( matrix, significance_threshold = 0.05 ):
-    """perform chi-squared test on a matrix."""
+    """perform chi-squared test on a matrix.
+    """
     nrows, ncols = matrix.shape
     if nrows != 2 or ncols != 2:
         raise "chi-square currently only implemented for 2x2 tables."
 
     df = (nrows - 1) * (ncols -1 )
 
-    row_sums = [ sum(matrix[x,:]) for x in range( nrows ) ]
-    col_sums = [ sum(matrix[:,x]) for x in range( ncols ) ]
-    sample_size = sum(row_sums)
+    row_sums = [ matrix[x,:].sum() for x in range( nrows ) ]
+    col_sums = [ matrix[:,x].sum() for x in range( ncols ) ]
+    sample_size = float( sum(row_sums) )
 
     chi = 0.0
     for x in range(nrows):

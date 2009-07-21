@@ -188,6 +188,10 @@ class TrackerSQL( Tracker ):
         # convert to tuples
         return [ tuple(x) for x in self.execute(stmt).fetchall() ]
 
+    def getIter( self, stmt ):
+        """return an iterator of SQL results."""
+        return self.execute(stmt)
+
     def getTracks( self ):
         """return a list of all tracks that this tracker provides.
 

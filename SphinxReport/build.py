@@ -145,7 +145,7 @@ def buildPlots( options, args ):
     if len(work) == 0: return
 
     logQueue = Queue(100)
-    handler= Logger.MultiProcessingLogHandler(logging.FileHandler( "sphinxreport.log", "w"), logQueue)
+    handler= Logger.MultiProcessingLogHandler(logging.FileHandler( os.path.abspath( "sphinxreport.log" ), "w"), logQueue)
     logging.getLogger('').addHandler(handler)
     logging.getLogger('').setLevel(logging.DEBUG)
 

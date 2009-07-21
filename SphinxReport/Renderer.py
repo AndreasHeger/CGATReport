@@ -304,8 +304,10 @@ class Renderer:
 
             if not result: continue
             
-            if len(self.mData) > 1: title = group
-            else: title = None
+            if len(self.mData) > 1: 
+                title = group
+            else: 
+                title = ""
 
             # be flexible with returned data
             if type(result) in types.StringTypes:
@@ -449,7 +451,9 @@ class RendererTable(Renderer):
             columns = [x[0] for x in table] 
             if len(columns) == 0: continue
             values = numpy.array( [x[1] for x in table] )
-            if not values.any(): continue
+            if not values.any(): 
+                warn( "track %s omitted because it is empty" % track )
+                continue
             
             try:
                 for convert in self.mConverters: values = convert( values )
@@ -492,6 +496,39 @@ class RendererTable(Renderer):
         lines.append( "") 
 
         return "\n".join(lines)
+
+class RendererTextTable(RendererTable):    
+    """A table with text columns.
+
+    Requires :class:`DataTypes.LabeledData`.
+    """
+
+    mRequiredType = type( LabeledData( None ) )
+
+    def __init__(self, *args, **kwargs):
+        RendererTable.__init__(self, *args, **kwargs )
+
+    def prepare(self, *args, **kwargs):
+        Renderer.prepare( self, *args, **kwargs )
+
+    def render(self, data):
+        lines = []
+        if len(data) == 0: return lines
+
+        sorted_headers, headers = self.getHeaders(data)
+        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
+        lines.append( '   :header: "track","%s" ' % '","'.join( sorted_headers ) )
+
+        lines.append( '' )
+
+        for track, d in data:
+            dd = dict(d)
+            lines.append( '   "%s","%s"' % (track, '","'.join( [ str(dd[x]) for x in sorted_headers ] )))
+
+        lines.append( "") 
+
+        return "\n".join(lines)
+
 
 class RendererMatrix(RendererTable):    
     """A table with numerical columns.
@@ -670,8 +707,6 @@ class RendererInterleavedBars(RendererTable, Plotter):
 
     def render( self, data ):
         
-        self.startPlot( data )
-
         lines, legend = [], []
 
         nplotted = 0
@@ -685,7 +720,10 @@ class RendererInterleavedBars(RendererTable, Plotter):
         legend, plts = [], []
 
         tracks = [ x[0] for x in data ]
-        
+        if len(tracks) == 0: return []
+
+        self.startPlot( data )
+
         xvals = numpy.arange( 0, len(tracks) )
         offset = width / 2.0
         
