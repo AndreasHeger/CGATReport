@@ -230,7 +230,7 @@ def main():
             print "unknown tracker '%s': possible trackers are\n  %s" % (options.tracker, "\n  ".join( sorted(available_trackers)) ) 
             sys.exit(1)
 
-        for name, tracker, modulename in trackers:
+        for name, tracker, modulename, is_derived  in trackers:
             if name == options.tracker: break
 
         r = renderer( tracker() )

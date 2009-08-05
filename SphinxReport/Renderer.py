@@ -320,19 +320,22 @@ class Renderer:
 
             # be flexible with returned data
             if type(result) in types.StringTypes:
-                results.append( ResultBlock( result ))
+                results.append( ResultBlock( result, title=title ) )
             elif isinstance( result, ResultBlock):
+                result.mTitle = title
                 results.append( result )
             elif type(result) in (types.TupleType, types.ListType ):
                 for x in result:
                     if type(x) in types.StringTypes:
-                        results.append( ResultBlock( x ))
+                        results.append( ResultBlock( x, title=title ))
                     elif isinstance( x, ResultBlock):
+                        x.mTitle = title
                         results.append( x )
                     elif type(x) in (types.TupleType, types.ListType ):
                         for xx in x:
                             if not( isinstance( xx, ResultBlock)):
                                 raise TypeError( "renderer %s did not return ResultBlock, but %s:\n%s" % (self, type(xx), str(x)))
+                            xx.mTitle = title
                         results.extend( x )
                     else:
                         raise TypeError( "renderer %s did not return appropriate type but %s:\n%s" % (self, type(x), str(x)))
@@ -343,7 +346,7 @@ class Renderer:
 
         ## assert that all is right and add the title
         for x in results:
-            x.mTitle = "\n".join( (title , x.mTitle ) )
+            # x.mTitle = "\n".join( (title , x.mTitle ) )
             assert isinstance( x, ResultBlock), "malformed result in %s: %s" % (str(self),str(x))
 
         return results
