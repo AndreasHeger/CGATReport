@@ -15,8 +15,8 @@ The full list of command line options is listed by suppling :option:`-h/--help`
 on the command line.
 """
 
-import sys, os, imp, cStringIO, re, types, glob, optparse, traceback
-import subprocess, logging, time
+import sys, os, re, types, glob, optparse, traceback
+import subprocess, logging, time, collections
 from logging import warn, log, debug, info
 
 import Logger
@@ -159,11 +159,17 @@ def buildPlots( options, args ):
             if f.endswith( source_suffix ):
                 rst_files.append( os.path.join( root, f) )
     
-    work = []
+    # build work. Group trackers of the same name together as
+    # the python shelve module does not allow concurrent write
+    # access and the cache files will get mangled.
+    work_per_tracker = collections.defaultdict( list )
     for f in rst_files:
-        blocks = getBlocksFromRstFile( f )
-        for b in blocks:
-            work.append( ( (f, b), ) )
+        for b in getBlocksFromRstFile( f ):
+            work_per_tracker[b.mArguments].append( (f,b) )
+
+    work = []
+    for tracker,vals in work_per_tracker.iteritems():
+        work.append( vals )
 
     if len(work) == 0: return
 
@@ -178,7 +184,7 @@ def buildPlots( options, args ):
                            datefmt='%m-%d %H:%M' ) )
 
     logging.getLogger('').addHandler(handler)
-    logging.getLogger('').setLevel(logging.INFO)
+    logging.getLogger('').setLevel(options.loglevel)
     logging.info('starting %i jobs on %i work items' % (options.num_jobs, len(work)))
 
     if options.num_jobs > 1:
@@ -243,8 +249,12 @@ def main():
 
     parser.add_option( "-a", "--num-jobs", dest="num_jobs", type="int",
                        help="number of parallel jobs to run [default=%default]" )
-
-    parser.set_defaults( num_jobs = 2 )
+ 
+    parser.add_option( "-v", "--verbose", dest="loglevel", type="int",
+                       help="loglevel. The higher, the more output [default=%default]" )
+ 
+    parser.set_defaults( num_jobs = 2,
+                         loglevel = 10, )
 
     parser.disable_interspersed_args()
     
