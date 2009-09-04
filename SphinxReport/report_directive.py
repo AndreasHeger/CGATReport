@@ -136,7 +136,8 @@ MAP_RENDERER= { 'stats': Renderer.RendererStats,
                 'bars': Renderer.RendererInterleavedBars,
                 'histogram-plot': Renderer.RendererHistogramPlot,
                 'multihistogram-plot': Renderer.RendererMultiHistogramPlot,
-                'box-plot': Renderer.RendererBoxPlot }
+                'box-plot': Renderer.RendererBoxPlot,
+                'glossary' : Renderer.RendererGlossary }
 
 DISPLAY_OPTIONS = {'alt': directives.unchanged,
                   'height': directives.length_or_unitless,
@@ -165,6 +166,7 @@ RENDER_OPTIONS = { 'cumulative': directives.flag,
                    'zrange' : directives.unchanged,
                    'palette' : directives.unchanged,
                    'reverse-palette' : directives.flag,
+                   'transpose' : directives.flag,
                    'transform-matrix' : directives.unchanged,
                    'plot-value' : directives.unchanged,
                    'tracks': directives.unchanged,

@@ -64,6 +64,10 @@ add hinton plot
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
 
+datatypes
+   The current nomenclature of datatypes is non-intuitive. Do away with 
+   it and have each Renderer test for correctly formatted input?
+
 Version 1.1
 ===========
 

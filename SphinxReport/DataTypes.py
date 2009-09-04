@@ -170,7 +170,7 @@ class MultipleColumnData(Data):
 class LabeledData(Data):
     """Labeled data points.
 
-    All data are numerical values. There is only one value per label.
+    Data can be of any type.  There is only one value per label.
 
     Example: (("column1", 1), ("column2",2))
     """
@@ -180,6 +180,12 @@ class LabeledData(Data):
         for x in self._data:
             assert type(x) in ContainerTypes, "row is not a collection: %s" % str(x)
             assert len(x) == 2, "data is not a column, value tuple: %s" % str(x)
+
+def returnLabeledValue( Data ):
+    """decorator for Trackers returning :class:`LabeledValue`."""
+    def wrapped_f(*args, **kwargs):
+        return LabeledValue( f( *args, **kwargs) )
+    return wrapped_f
 
 def returnSingleColumn( f ):
     """decorator for Trackers returning :class:`SingleColumn`."""
@@ -206,6 +212,7 @@ def returnMultipleColumnData( f ):
     return wrapped_f
 
 def returnLabeledData( f ):
+    """decorator for Trackers returning :class:`LabeledData`."""
     def wrapped_f(*args, **kwargs):
         return LabeledData( f(*args, **kwargs) )
     return wrapped_f

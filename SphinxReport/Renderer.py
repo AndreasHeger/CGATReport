@@ -41,6 +41,7 @@ logging.basicConfig(
     stream = open( "sphinxreport.log", "a" ) )
 
 # for cachedir
+cachedir = None
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
 
@@ -85,18 +86,20 @@ class Renderer:
 
         self.mTracker = tracker
         global cachedir
-        try:
-            if cachedir != None: os.mkdir(cachedir)
-        except OSError, msg:
-            pass
-        
-        if not os.path.exists(cachedir): 
-            raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
-            
         self.mCacheFile = None
         self._cache = None
-            
+
         if cachedir:
+
+            try:
+                if cachedir != None: 
+                    os.mkdir(cachedir)
+            except OSError, msg:
+                pass
+        
+            if not os.path.exists(cachedir): 
+                raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
+
             self.mCacheFile = os.path.join( cachedir, tracker.__class__.__name__ )
             # on Windows XP, the shelve does not work, work without cache
             try:
@@ -238,6 +241,9 @@ class Renderer:
             # not a Tracker, simply call function:
             data = self.getData( None, None )
             self.addData( "all", "slice", data )
+            return
+        except:
+            warn( "Error while getting tracks." )
             return
 
         if self.mTracks != None:
@@ -395,18 +401,9 @@ class RendererStats(Renderer):
 
         return "\n".join(lines)
 
-class RendererTable(Renderer):    
-    """A table with numerical columns.
 
-    It only implements column wise transformations.
-
-    This class adds the following options to the :term:`render` directive.
-
-       :term:`normalized-max`: normalize data by maximum.
-
-       :term:`normalized-total`: normalize data by total.
-
-       :term:`add-total`: add a total field.
+class RendererTextTable(Renderer):    
+    """A table with text columns.
 
     Requires :class:`DataTypes.LabeledData`.
     """
@@ -418,19 +415,9 @@ class RendererTable(Renderer):
 
     def prepare(self, *args, **kwargs):
         Renderer.prepare( self, *args, **kwargs )
-        self.mFormat = "%i"
-        self.mConverters = []
-        self.mAddTotal = False
 
-        if "normalized-max" in kwargs:
-           self.mConverters.append( self.normalize_max )
-           self.mFormat = "%6.4f"
-        if "normalized-total" in kwargs:
-           self.mConverters.append( self.normalize_total )
-           self.mFormat = "%6.4f"
-        if "add-total" in kwargs:
-            self.mAddTotal = True
-
+        self.mTranspose = "transpose" in kwargs
+        
     def addData( self, group, title, data ):
         self.mData[group].append( (title, data ) )
 
@@ -447,6 +434,108 @@ class RendererTable(Renderer):
 
         return sorted_headers, headers
 
+    def buildTable( self, data ):
+        """build table from data.
+
+        returns matrix, row_headers, col_headers
+        """
+        if len(data) == 0: return None, None, None
+
+        sorted_col_headers, col_headers = self.getHeaders(data)
+        col_headers = sorted_col_headers
+
+        row_headers = []
+        matrix = []
+
+        for track, d in data:
+            dd = dict(d)
+            matrix.append( [ str(dd[x]) for x in sorted_col_headers ] )
+            row_headers.append( track )
+
+        if self.mTranspose:
+            row_headers, col_headers = col_headers, row_headers
+            matrix = zip( *matrix )
+
+        return matrix, row_headers, col_headers
+
+    def render(self, data):
+
+        lines = []
+        matrix, row_headers, col_headers = self.buildTable( data )
+        if matrix == None: return lines
+
+        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
+        lines.append( '   :header: "", "%s" ' % '","'.join( col_headers ) )
+        lines.append( '' )
+
+        for header, line in zip( row_headers, matrix ):
+            lines.append( '   "%s","%s"' % (header, '","'.join( line ) ) )
+
+        lines.append( "") 
+
+        return "\n".join(lines)
+
+class RendererGlossary( RendererTextTable ):
+    """output a table in the form of a glossary."""
+
+    def render(self, data):
+
+        lines = []
+        matrix, row_headers, col_headers = self.buildTable( data )
+
+        if matrix == None: return lines
+
+        lines.append( ".. glossary::" )
+
+        lines.append( "") 
+
+        for header, line in zip( row_headers, matrix ):
+            txt = "\n".join( line )
+            txt = "\n      ".join( [ x.strip() for x in txt.split("\n" ) ] )
+            lines.append( '   %s\n      %s' % ( header, txt ) )
+
+        lines.append( "") 
+
+        return "\n".join(lines)
+
+class RendererTable(RendererTextTable):    
+    """A table with numerical columns.
+
+    It only implements column wise transformations.
+
+    This class adds the following options to the :term:`render` directive.
+
+       :term:`normalized-max`: normalize data by maximum.
+
+       :term:`normalized-total`: normalize data by total.
+
+       :term:`add-total`: add a total field.
+
+       :term:`transpose`: exchange rows and columns
+
+    Requires :class:`DataTypes.LabeledData`.
+    """
+
+    mRequiredType = type( LabeledData( None ) )
+
+    def __init__(self, *args, **kwargs):
+        RendererTextTable.__init__(self, *args, **kwargs )
+
+    def prepare(self, *args, **kwargs):
+        RendererTextTable.prepare( self, *args, **kwargs )
+        self.mFormat = "%i"
+        self.mConverters = []
+        self.mAddTotal = False
+
+        if "normalized-max" in kwargs:
+           self.mConverters.append( self.normalize_max )
+           self.mFormat = "%6.4f"
+        if "normalized-total" in kwargs:
+           self.mConverters.append( self.normalize_total )
+           self.mFormat = "%6.4f"
+        if "add-total" in kwargs:
+            self.mAddTotal = True
+
     def convertData( self, data ):
         """apply converters to the data.
 
@@ -458,6 +547,7 @@ class RendererTable(Renderer):
         If there is an error during conversion, values will
         be set to None.
         """
+        if self.mConverters == []: return data
         new_data = []
         for track, table in data:
             columns = [x[0] for x in table] 
@@ -474,20 +564,19 @@ class RendererTable(Renderer):
             new_data.append( (track, zip( columns, values )) )
         return new_data
 
-    def render(self, data):
-        lines = []
+    def buildTable( self, data ):
+        """build table from data.
+
+        returns matrix, row_headers, col_headers
+        """
         data = self.convertData( data )
-        if len(data) == 0: return lines
+        if len(data) == 0: return None, None, None
 
-        sorted_headers, headers = self.getHeaders(data)
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        if self.mAddTotal:
-            lines.append( '   :header: "track","total","%s" ' % '","'.join( sorted_headers ) )
-        else:
-            lines.append( '   :header: "track","%s" ' % '","'.join( sorted_headers ) )
+        sorted_col_headers, col_headers = self.getHeaders(data)
+        col_headers = sorted_col_headers
 
-        lines.append( '' )
-
+        row_headers = []
+        matrix = []
         def toValue( d, x):
             try:
                 return self.mFormat % d[x]
@@ -499,47 +588,20 @@ class RendererTable(Renderer):
                 dd = dict(d)
                 try: total = self.mFormat % sum( dd.values() )
                 except TypeError: total = "na"
-                lines.append( '   "%s","%s","%s"' % (track, total, '","'.join( [ toValue(dd, x) for x in sorted_headers ] ) ) )
+                matrix.append( [total,] + [ toValue(dd, x) for x in sorted_col_headers ] )
+                row_headers.append( track )
+            col_headers = ["total"] + col_headers
         else:
             for track, d in data:
                 dd = dict(d)
-                lines.append( '   "%s","%s"' % (track, '","'.join( [ toValue(dd, x) for x in sorted_headers ] ) ) )
+                matrix.append( [ toValue(dd, x) for x in sorted_col_headers ] )
+                row_headers.append( track )
 
-        lines.append( "") 
+        if self.mTranspose:
+            row_headers, col_headers = col_headers, row_headers
+            matrix = zip( *matrix )
 
-        return "\n".join(lines)
-
-class RendererTextTable(RendererTable):    
-    """A table with text columns.
-
-    Requires :class:`DataTypes.LabeledData`.
-    """
-
-    mRequiredType = type( LabeledData( None ) )
-
-    def __init__(self, *args, **kwargs):
-        RendererTable.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-
-    def render(self, data):
-        lines = []
-        if len(data) == 0: return lines
-
-        sorted_headers, headers = self.getHeaders(data)
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        lines.append( '   :header: "track","%s" ' % '","'.join( sorted_headers ) )
-
-        lines.append( '' )
-
-        for track, d in data:
-            dd = dict(d)
-            lines.append( '   "%s","%s"' % (track, '","'.join( [ str(dd[x]) for x in sorted_headers ] )))
-
-        lines.append( "") 
-
-        return "\n".join(lines)
+        return matrix, row_headers, col_headers
 
 
 class RendererMatrix(RendererTable):    
