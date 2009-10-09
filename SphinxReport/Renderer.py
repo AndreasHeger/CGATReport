@@ -618,6 +618,8 @@ class RendererMatrix(RendererTable):
            * *normalized-column-max*: normalize by column maximum
            * *normalized-row-total*: normalize by row total
            * *normalized-row-max*: normalize by row maximum
+           * *normalized-total*: normalize over whole matrix
+           * *normalized-max*: normalize over whole matrix
 
     Requires :class:`DataTypes.LabeledData`
     """
@@ -631,7 +633,9 @@ class RendererMatrix(RendererTable):
             "normalized-row-total" : self.transformNormalizeRowTotal,
             "normalized-row-max" : self.transformNormalizeRowMax,
             "normalized-col-total" : self.transformNormalizeColumnTotal,
-            "normalized-col-max" : self.transformNormalizeColumnMax }
+            "normalized-col-max" : self.transformNormalizeColumnMax ,
+            "normalized-total" : self.transformNormalizeTotal,
+            "normalized-max" : self.transformNormalizeMax }
 
     def prepare(self, *args, **kwargs):
         RendererTable.prepare( self, *args, **kwargs )
@@ -669,6 +673,24 @@ class RendererMatrix(RendererTable):
 
 
         return matrix, row_headers, col_headers
+
+    def transformNormalizeTotal( self, matrix, rows, cols ):
+        """normalize a matrix by the total.
+
+        Returns the normalized matrix.
+        """
+        t = matrix.sum()
+        matrix /= t
+        return matrix, rows, cols
+
+    def transformNormalizeMax( self, matrix, rows, cols ):
+        """normalize a matrix by the max.
+
+        Returns the normalized matrix.
+        """
+        t = matrix.max()
+        matrix /= t
+        return matrix, rows, cols
 
     def transformNormalizeRowTotal( self, matrix, rows, cols ):
         """normalize a matrix row by the row total.
@@ -728,7 +750,6 @@ class RendererMatrix(RendererTable):
         """build a matrix from data.
 
         This method will also apply conversions.
-
 
         Returns a tuple (matrix, rows, colums).
         """
@@ -911,6 +932,42 @@ class RendererStackedBars(RendererTable, Plotter):
                     rotation = rotation )
 
         return self.endPlot( plts, sorted_headers )
+
+class RendererPiePlot(RendererTable, Plotter):
+    """Pie chart
+
+    Requires :class:`DataTypes.SingleColumnData`.
+    """
+
+    def __init__(self, *args, **kwargs):
+        RendererTable.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def prepare(self, *args, **kwargs):
+        RendererTable.prepare( self, *args, **kwargs )
+        Plotter.prepare( self, *args, **kwargs )
+
+        self.mFormat = "%i"
+
+        try: self.mPieMinimumPercentage = float(kwargs["pie-min-percentage"])
+        except KeyError: self.mPieMinPercentage = 0
+
+    def render( self, data ):
+        
+        lines, legend = [], []
+
+        blocks = []
+
+        for track, d in data:
+            self.startPlot( data )
+            plts = []
+
+            labels, values = zip( *d )
+
+            plts.append( plt.pie( values, labels = labels ) )
+            blocks.extend( self.endPlot( plts ) )
+
+        return blocks
 
 class RendererMatrixPlot(RendererMatrix, PlotterMatrix):
     """Render a matrix as a matrix plot.
@@ -1556,7 +1613,7 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
             plt.colorbar( format = self.mBarFormat)        
             nplotted += 1
 
-            blocks.extend( self.endPlot( plts ) )
+            blocks.extend( self.endPlot( plts, title = track ) )
 
         return blocks
 

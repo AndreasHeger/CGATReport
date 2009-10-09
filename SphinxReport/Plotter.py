@@ -297,9 +297,6 @@ class PlotterMatrix(Plotter):
     # separators to use to split text
     mSeparators = " :_"
 
-    mMaxRows = 20
-    mMaxCols = 20
-
     def __init__(self, *args, **kwargs ):
         Plotter.__init__(self, *args, **kwargs)
 
@@ -314,6 +311,12 @@ class PlotterMatrix(Plotter):
 
         try: self.mZRange = map(float, kwargs["zrange"].split(",") )
         except KeyError: self.mZRange = None
+
+        try: self.mMaxRows = kwargs["max-rows"]
+        except KeyError: self.mMaxRows = 20
+
+        try: self.mMaxCols = kwargs["max-cols"]
+        except KeyError: self.mMaxCols = 20
 
         self.mReversePalette = "reverse-palette" in kwargs
 

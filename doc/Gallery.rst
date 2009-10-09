@@ -44,6 +44,17 @@ as interleaved bars. Both *interleaved-bars* and *bars* can be used.
 
    A bar plot with interleaved bars.
 
+Pie plot
+========
+
+The :class:`Renderer.RendererPiePlot` class presents labeled data
+as pie charts.
+
+.. report:: Trackers.LabeledDataExample
+   :render: pie-plot
+
+   A pie plot
+
 Single column data
 ******************
 

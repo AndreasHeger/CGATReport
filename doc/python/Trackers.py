@@ -13,7 +13,8 @@ class LabeledDataExample( Tracker ):
                      ("column2", 20 ), ]
         elif slice == "slice2":
             return [ ("column1", 20),
-                     ("column2", 10 ), ]
+                     ("column2", 10),
+                     ("column3", 5), ]
 
 class SingleColumnDataExample( Tracker ):
     def getSlices( self, subset = None ): return "slice1", "slice2"
