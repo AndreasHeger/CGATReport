@@ -1314,7 +1314,7 @@ class RendererCorrelation(Renderer):
                     result = Stats.doCorrelationTest( xvals, yvals )                    
 
                     try:
-                        self.saveDataInCache( key, (result,) )
+                        self.saveDataInCache( key, result )
                     except ValueError, msg:
                         continue
 
@@ -1366,36 +1366,10 @@ class RendererCorrelationPlot(RendererCorrelation, PlotterMatrix ):
         RendererCorrelation.__init__(self, *args, **kwargs )
         PlotterMatrix.__init__(self, *args, **kwargs )
 
-    def getCaption( self ):
-        return """
-        Plot of the correlation matrix. For each Pearson pairwise correlation between two variables,
-        the plot shows the values of %s.
-        """ % (self.mPlotValueName)
-    
     def prepare(self, *args, **kwargs):
         RendererCorrelation.prepare( self, *args, **kwargs )
         PlotterMatrix.prepare( self, *args, **kwargs )
 
-        self.mPlotValue = self.getCoefficient
-        self.mPlotValueName = "the correlation coefficient"
-        if "plot-value" in kwargs:
-            v = kwargs["plot-value"]
-            if v == "coefficient": 
-                self.mPlotValue = self.getCoefficient
-                self.mPlotValueName = "the correlation coefficient"
-            elif v == "logP": 
-                self.mPlotValue = self.getLogP
-                self.mPlotValueName = "the logarithm of the P-Value. The minimum P-Value shown is 1e-10."
-            else: raise ValueError("unknown option for 'plot-value': %s" % v )
-            self.mPlotValueName = v
-
-    def getCoefficient( self, r ):
-        return r.mCoefficient
-
-    def getLogP( self, r ):
-        if r.mPValue > 1e-10: return math.log( r.mPValue )
-        else: return math.log( 1e-10 )
-    
     def render(self, data):
         """render the data.
 
@@ -1419,7 +1393,7 @@ class RendererCorrelationPlot(RendererCorrelation, PlotterMatrix ):
                 plts.append( plt.scatter( xvals, yvals ) )
                 blocks.append( self.endPlot( plts, legends = None, title="%s:%s" % (track1,track2) ) )
                 
-         return blocks
+        return blocks
 
 class RendererCorrelationMatrixPlot(RendererCorrelation, PlotterMatrix ):    
     """
@@ -1434,7 +1408,7 @@ class RendererCorrelationMatrixPlot(RendererCorrelation, PlotterMatrix ):
     """
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
+        RendererCorrelation.__init__(self, *args, **kwargs )
         PlotterMatrix.__init__(self, *args, **kwargs )
 
     def getCaption( self ):
