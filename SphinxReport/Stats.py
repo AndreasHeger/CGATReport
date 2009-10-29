@@ -495,5 +495,44 @@ def doCorrelationTest( xvals, yvals ):
 
     return result
 
+###################################################################
+###################################################################
+###################################################################
+## compute ROC curves from sorted values
+###################################################################
+def computeROC( values ):
+    '''return a roc curve for *values*. Values
+    is a sorted list of (value, bool) pairs.
+    '''
+    roc = []
+    
+    npositives = len( [x for x in values if x[1] ] )
+    if npositives == 0: 
+        raise ValueError( "no positives among values" )
+
+    ntotal = len(values)
+
+    last_value, last_fpr = None, None
+    tp, fp = 0, 0
+    tn, fn = ntotal - npositives, npositives 
+    for value, is_positive in values:
+
+        if is_positive: 
+            tp += 1
+            fn -= 1
+        else: 
+            fp += 1
+            tn -= 1
+
+        if last_value != value:
+            tpr = float(tp) / (tp + fn)
+            fpr = float(fp) / (fp + tn)
+            if last_fpr != fpr:
+                roc.append( (fpr,tpr) )
+                last_fpr = fpr
+
+        last_values = value
+
+    return roc
 
  

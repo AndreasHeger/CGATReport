@@ -49,8 +49,9 @@ class Tracker(object):
     def __init__(self):
         pass
 
-    def getTracks( self ):
+    def getTracks( self, subset = None ):
         """return a list of all tracks that this tracker provides."""
+        if subset: return subset
         return []
 
     def getSlices(self, subset = None):
@@ -192,13 +193,13 @@ class TrackerSQL( Tracker ):
         """return an iterator of SQL results."""
         return self.execute(stmt)
 
-    def getTracks( self ):
+    def getTracks( self, subset = None ):
         """return a list of all tracks that this tracker provides.
 
         The tracks are defined as tables matching the attribute :attr:`mPattern`.
         """
+        if subset: return subset
         rx = re.compile(self.mPattern)
-
         return sorted([ rx.sub( "", x.name ) for x in self.getTables() if rx.search( x.name ) ])
 
 class TrackerSQLCheckTables(TrackerSQL):

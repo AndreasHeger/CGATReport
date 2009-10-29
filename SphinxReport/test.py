@@ -66,6 +66,7 @@ from SphinxReport.Tracker import Tracker
 from SphinxReport.Renderer import *
 from SphinxReport.report_directive import MAP_RENDERER
 import SphinxReport.report_directive
+import SphinxReport.clean
 
 try:
     from multiprocessing import Process
@@ -158,6 +159,9 @@ def main():
     parser.add_option( "-r", "--renderer", dest="renderer", type="string",
                           help="renderer to use [default=%default]" )
 
+    parser.add_option( "-f", "--force", dest="force", action="store_true",
+                          help="force recomputation of data by deleting cached results [default=%default]" )
+
     parser.add_option( "-o", "--option", dest="options", type="string", action="append",
                        help="renderer options - supply as key=value pairs (without spaces). [default=%default]" )
 
@@ -175,6 +179,7 @@ def main():
         renderer = None,
         do_show = True,
         do_print = True,
+        force = False,
         label = "GenericLabel",
         caption = "add caption here" )
     
@@ -232,6 +237,11 @@ def main():
 
         for name, tracker, modulename, is_derived  in trackers:
             if name == options.tracker: break
+        
+        ## remove everything related to that tracker for a clean slate
+        if options.force:
+            removed = SphinxReport.clean.removeTracker( name )
+            print "removed all data for tracker %s: %i files" % (name, len(removed))
 
         r = renderer( tracker() )
         result = r( **kwargs)

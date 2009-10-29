@@ -187,8 +187,8 @@ class Plotter:
     def endPlot( self, plts = None, legends = None, title = ""):
         """close a plot.
 
-        Returns a list of restructured text with place holders for the current 
-        figure.
+        Returns blocks of restructured text with place holders for the current 
+        figure(s).
         """
 
         # set logscale before the xlim, as it re-scales the plot.

@@ -142,7 +142,8 @@ class Renderer:
         try: 
             self.mSlices = [ x.strip() for x in kwargs["slices"].split(",")]
             # if len(self.mSlices) == 1: self.mSlices = self.mSlices[0]
-        except KeyError: self.mSlices = None
+        except KeyError: 
+            self.mSlices = None
 
         self.mData = collections.defaultdict( list )
 
@@ -235,24 +236,29 @@ class Renderer:
 
     def collectData( self ):
 
+        #############################################
+        # first get all tracks
         try:
-            tracks = self.mTracker.getTracks()
+            tracks = self.mTracker.getTracks( subset = None )
         except AttributeError:
             # not a Tracker, simply call function:
             data = self.getData( None, None )
             self.addData( "all", "slice", data )
             return
-        except:
-            warn( "Error while getting tracks." )
-            return
+ #       except:
+#            warn( "Error while getting tracks." )
+ #           return
 
+        # do we have a subset specified
         if self.mTracks != None:
+            # if it starts with -, remove
             if self.mTracks[0].startswith("-"):
                 f = set(self.mTracks)
                 f.add( self.mTracks[0][1:] )
                 tracks = [ t for t in tracks if t not in f ]
             else:
-                tracks = self.mTracks
+                # get tracks again, this time with subset
+                tracks = self.mTracker.getTracks( subset = self.mTracks )
 
         if len(tracks) == 0: 
             debug( "%s: no tracks found - no output" % self.mTracker )
@@ -286,6 +292,7 @@ class Renderer:
                 for slice in slices:
                     data = self.getData( track, slice )
                     if len(data) == 0: continue
+                    if slice == None: slice = "all"
                     self.addData( track, slice, data )
         # group by slices
         elif self.mGroupBy == "slice":
@@ -310,7 +317,7 @@ class Renderer:
 
     def commit(self): 
         
-        debug( "%s: rendering data started" % (self.mTracker,) )
+        debug( "%s: rendering data started for %i items" % (self.mTracker,len(self.mData) ))
 
         results = []
         for group, data in self.mData.iteritems():
@@ -335,7 +342,11 @@ class Renderer:
                     if type(x) in types.StringTypes:
                         results.append( ResultBlock( x, title=title ))
                     elif isinstance( x, ResultBlock):
-                        x.mTitle = title
+                        if title: 
+                            if x.mTitle:
+                                x.mTitle = " ".join( (x.mTitle, title) )
+                            else:
+                                x.mTitle = title
                         results.append( x )
                     elif type(x) in (types.TupleType, types.ListType ):
                         for xx in x:
@@ -400,7 +411,6 @@ class RendererStats(Renderer):
         lines.append( "") 
 
         return "\n".join(lines)
-
 
 class RendererTextTable(Renderer):    
     """A table with text columns.
@@ -620,6 +630,9 @@ class RendererMatrix(RendererTable):
            * *normalized-row-max*: normalize by row maximum
            * *normalized-total*: normalize over whole matrix
            * *normalized-max*: normalize over whole matrix
+           * filter-by-rows: only take columns that are also present in rows
+           * filter-by-cols: only take columns that are also present in cols
+           * square: make square matrix (only take rows and columns present in both)
 
     Requires :class:`DataTypes.LabeledData`
     """
@@ -635,7 +648,12 @@ class RendererMatrix(RendererTable):
             "normalized-col-total" : self.transformNormalizeColumnTotal,
             "normalized-col-max" : self.transformNormalizeColumnMax ,
             "normalized-total" : self.transformNormalizeTotal,
-            "normalized-max" : self.transformNormalizeMax }
+            "normalized-max" : self.transformNormalizeMax,
+            "filter-by-rows" : self.transformFilterByRows,
+            "filter-by-cols" : self.transformFilterByColumns,
+            "square" : self.transformSquare,
+            }
+            
 
     def prepare(self, *args, **kwargs):
         RendererTable.prepare( self, *args, **kwargs )
@@ -648,6 +666,26 @@ class RendererMatrix(RendererTable):
                     self.mConverters.append( self.mMapKeywordToTransform[ kw ] )
                 except KeyError:
                     raise ValueError("unknown matrix transformation %s" % kw )
+
+    def transformFilterByRows( self, matrix, row_headers, col_headers ):
+        """only take columns that are also present in rows"""
+        take = [ x for x in xrange( len(col_headers) ) if col_headers[x] in row_headers ]
+        return matrix.take( take, axis=1), row_headers, [col_headers[x] for x in take ]
+
+    def transformFilterByColumns( self, matrix, row_headers, col_headers ):
+        """only take rows that are also present in columns"""
+        take = [ x for x in xrange( len(row_headers) ) if row_headers[x] in col_headers ]
+        return matrix.take( take, axis=0), [row_headers[x] for x in take ], col_headers 
+
+    def transformSquare( self, matrix, row_headers, col_headers ):
+        """only take rows and columns that are present in both giving a square matrix."""
+        take = set(row_headers).intersection( set(col_headers) )
+        row_indices = [ x for x in range( len(row_headers) ) if row_headers[x] in take ]
+        col_indices = [ x for x in range( len(col_headers) ) if col_headers[x] in take ]
+        m1 = matrix.take( row_indices, axis=0)
+        m2 = m1.take( col_indices, axis=1)
+
+        return m2, [row_headers[x] for x in row_indices], [col_headers[x] for x in col_indices]
 
     def transformTranspose( self, matrix, row_headers, col_headers ):
         """transpose the matrix."""
@@ -943,6 +981,10 @@ class RendererPiePlot(RendererTable, Plotter):
         RendererTable.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
+        # used to enforce consistency of colors between plots
+        self.mOrderedHeadersMap = {}
+        self.mOrderedHeaders = []
+
     def prepare(self, *args, **kwargs):
         RendererTable.prepare( self, *args, **kwargs )
         Plotter.prepare( self, *args, **kwargs )
@@ -961,10 +1003,22 @@ class RendererPiePlot(RendererTable, Plotter):
         for track, d in data:
             self.startPlot( data )
             plts = []
+            
+            for label, value in d:
+                if label not in self.mOrderedHeaders:
+                    self.mOrderedHeadersMap[label] = len(self.mOrderedHeaders)
+                    self.mOrderedHeaders.append( label )
 
-            labels, values = zip( *d )
+            sorted_vals = [0] * len(self.mOrderedHeaders)
+            for label, value in d:
+                sorted_vals[self.mOrderedHeadersMap[label]] = value
+            
+            sorted_headers = []
+            for h, v in zip( self.mOrderedHeaders, sorted_vals ):
+                if v == 0: sorted_headers.append("")
+                else: sorted_headers.append( h )
 
-            plts.append( plt.pie( values, labels = labels ) )
+            plts.append( plt.pie( sorted_vals, labels = sorted_headers ))
             blocks.extend( self.endPlot( plts ) )
 
         return blocks
@@ -1218,6 +1272,231 @@ class RendererHistogramPlot(RendererHistogram, Plotter):
             nplotted += 1
 
         return self.endPlot( plts, legend )
+
+class RendererCorrelation(Renderer):
+    """Basic pairwise statistical analysis.
+
+    Requires :class:`DataTypes.SingleColumnData`.
+    """
+
+    mRequiredType = type( SingleColumnData( None ) )
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+
+    def prepare(self, *args, **kwargs):
+        Renderer.prepare( self, *args, **kwargs )
+
+    def addData( self, group, title, data ):
+        self.mData[group].append( (title, data) )
+
+    def getTestResults( self, data ):
+        """perform pairwise statistical tests on data."""
+
+        debug( "started pairwise statistical computations" )
+        results = {}
+
+        for x in range(len(data)):
+            for y in range(x+1, len(data)):
+                track1, xvals = data[x]
+                track2, yvals = data[y]
+                key = str(":".join( ("correl", track1, track2 ) ))
+                result = self.getDataFromCache(key)
+                if result == None:
+                    if len(xvals) != len(yvals):
+                        warn( "tracks returned vectors of unequal lengths: %s:%i and %s:%i" % \
+                                  (track1,len(xvals),
+                                   track2,len(yvals)) )
+                    take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
+                    xvals = [xvals[i] for i in take ]
+                    yvals = [yvals[i] for i in take ]
+
+                    result = Stats.doCorrelationTest( xvals, yvals )                    
+
+                    try:
+                        self.saveDataInCache( key, (result,) )
+                    except ValueError, msg:
+                        continue
+
+                results[(track1,track2)] = result
+
+        debug( "finished pairwise statistical computations" )
+
+        return results
+
+    def render(self, data):
+        lines = []
+        if len(data) == 0: return lines
+
+        tests = self.getTestResults( data )
+        if len(tests) == 0: return lines
+
+        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
+        lines.append( '   :header: "track1","track2","%s" ' % '","'.join( Stats.CorrelationTest().getHeaders() ) )
+        lines.append( '' )
+
+        for x in range(len(data)):
+            for y in range(x+1, len(data)):
+                track1, xvals = data[x]
+                track2, yvals = data[y]
+
+                try:
+                    result = tests[(track1,track2)]
+                except KeyError:
+                    continue
+                lines.append( '   "%s","%s","%s"' % (track1, track2, '","'.join( [re.sub("[*]", "\*", i) for i in str(result).split("\t")]) ))
+
+        lines.append( "" ) 
+
+        return "\n".join(lines)
+
+class RendererCorrelationPlot(RendererCorrelation, PlotterMatrix ):    
+    """
+    Plot of correlation structure in several variables.
+
+    Options:
+
+        *plot-value*
+           value to plot ['coefficient', 'logP' ]
+
+    Requires :class:`DataTypes.SingleColumnData`.
+    """
+
+    def __init__(self, *args, **kwargs):
+        RendererCorrelation.__init__(self, *args, **kwargs )
+        PlotterMatrix.__init__(self, *args, **kwargs )
+
+    def getCaption( self ):
+        return """
+        Plot of the correlation matrix. For each Pearson pairwise correlation between two variables,
+        the plot shows the values of %s.
+        """ % (self.mPlotValueName)
+    
+    def prepare(self, *args, **kwargs):
+        RendererCorrelation.prepare( self, *args, **kwargs )
+        PlotterMatrix.prepare( self, *args, **kwargs )
+
+        self.mPlotValue = self.getCoefficient
+        self.mPlotValueName = "the correlation coefficient"
+        if "plot-value" in kwargs:
+            v = kwargs["plot-value"]
+            if v == "coefficient": 
+                self.mPlotValue = self.getCoefficient
+                self.mPlotValueName = "the correlation coefficient"
+            elif v == "logP": 
+                self.mPlotValue = self.getLogP
+                self.mPlotValueName = "the logarithm of the P-Value. The minimum P-Value shown is 1e-10."
+            else: raise ValueError("unknown option for 'plot-value': %s" % v )
+            self.mPlotValueName = v
+
+    def getCoefficient( self, r ):
+        return r.mCoefficient
+
+    def getLogP( self, r ):
+        if r.mPValue > 1e-10: return math.log( r.mPValue )
+        else: return math.log( 1e-10 )
+    
+    def render(self, data):
+        """render the data.
+
+        Data is a list of tuples of the from (track, data).
+        """
+
+        blocks = []
+
+        if len(data) == 0: return blocks
+
+
+        for x in range(len(data)):
+            for y in range(x+1, len(data)):
+                self.startPlot( data )
+                plts = []
+                track1, xvals = data[x]
+                track2, yvals = data[y]
+                take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
+                xvals = [xvals[i] for i in take ]
+                yvals = [yvals[i] for i in take ]
+                plts.append( plt.scatter( xvals, yvals ) )
+                blocks.append( self.endPlot( plts, legends = None, title="%s:%s" % (track1,track2) ) )
+                
+         return blocks
+
+class RendererCorrelationMatrixPlot(RendererCorrelation, PlotterMatrix ):    
+    """
+    Plot of correlation structure in several variables.
+
+    Options:
+
+        *plot-value*
+           value to plot ['coefficient', 'logP' ]
+
+    Requires :class:`DataTypes.SingleColumnData`.
+    """
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        PlotterMatrix.__init__(self, *args, **kwargs )
+
+    def getCaption( self ):
+        return """
+        Plot of the correlation matrix. For each Pearson pairwise correlation between two variables,
+        the plot shows the values of %s.
+        """ % (self.mPlotValueName)
+    
+    def prepare(self, *args, **kwargs):
+        Renderer.prepare( self, *args, **kwargs )
+        PlotterMatrix.prepare( self, *args, **kwargs )
+
+        self.mPlotValue = self.getCoefficient
+        self.mPlotValueName = "the correlation coefficient"
+        if "plot-value" in kwargs:
+            v = kwargs["plot-value"]
+            if v == "coefficient": 
+                self.mPlotValue = self.getCoefficient
+                self.mPlotValueName = "the correlation coefficient"
+            elif v == "logP": 
+                self.mPlotValue = self.getLogP
+                self.mPlotValueName = "the logarithm of the P-Value. The minimum P-Value shown is 1e-10."
+            else: raise ValueError("unknown option for 'plot-value': %s" % v )
+            self.mPlotValueName = v
+
+    def getCoefficient( self, r ):
+        return r.mCoefficient
+
+    def getLogP( self, r ):
+        if r.mPValue > 1e-10: return math.log( r.mPValue )
+        else: return math.log( 1e-10 )
+    
+    def render(self, data):
+        """render the data.
+
+        Data is a list of tuples of the from (track, data).
+        """
+
+        blocks = []
+
+        tests = self.getTestResults( data )
+        if len(tests) == 0: return lines
+
+        matrix = numpy.zeros( (len(data), len(data) ), numpy.float)
+
+        headers = [ x[0] for x in data ]
+        for x in range(len(data)):
+            for y in range(x+1, len(data)):
+                track1, xvals = data[x]
+                track2, yvals = data[y]
+
+                try:
+                    result = tests[(track1,track2)]
+                except KeyError:
+                    continue
+
+                v = self.mPlotValue( result )
+                matrix[x,y] = matrix[y,x] = v
+
+        blocks.extend(self.plotMatrix( matrix, headers, headers ) )
+
+        return blocks
 
 class RendererPairwiseStats(Renderer):
     """Basic pairwise statistical analysis.
@@ -1514,6 +1793,7 @@ class RendererScatterPlot(Renderer, Plotter):
         nplotted = 0
 
         plts, legend = [], []
+
         for track, vv in data:
 
             headers, values = vv

@@ -110,7 +110,12 @@ def getTracker( fullpath ):
     infile.close()
 
     logging.debug( "instantiating tracker %s" % cls )
-    tracker =  getattr( module, cls)()
+    try:
+        tracker =  getattr( module, cls)()
+    except AttributeError, msg:
+        logging.critical( "instantiating tracker %s.%s failed: %s" % (module, cls, msg))
+        tracker = None
+
     return code, tracker
 
 FORMATS = [('png', 80),
@@ -119,6 +124,9 @@ FORMATS = [('png', 80),
            ]
 
 MAP_RENDERER= { 'stats': Renderer.RendererStats,
+                'correlation': Renderer.RendererCorrelation,
+                'correlation-plot': Renderer.RendererCorrelationPlot,
+                'correlation-matrix-plot': Renderer.RendererCorrelationMatrixPlot,
                 'pairwise-stats': Renderer.RendererPairwiseStats,
                 'pairwise-stats-matrix-plot': Renderer.RendererPairwiseStatsMatrixPlot,
                 'pairwise-stats-bar-plot': Renderer.RendererPairwiseStatsBarPlot,
@@ -345,7 +353,8 @@ def layoutBlocks( blocks, layout = "column"):
         for xx in range(nblock, min(nblock+ncols,len(blocks))):
             txt, col = blocks[xx].mText.split("\n"), xx % ncols
 
-            max_width = widths[col]
+            max_width = columnwidths[col]
+
             # add missig lines 
             txt.extend( [""] * (max_height - len(txt)) )
             # extend lines
@@ -368,7 +377,7 @@ def layoutBlocks( blocks, layout = "column"):
                 
                 txt, col = blocks[xx].mTitle.split("\n"), xx % ncols
 
-                max_width = widths[col]
+                max_width = columnwidths[col]
                 # add missig lines 
                 txt.extend( [""] * (max_height - len(txt) ) )
                 # extend lines
@@ -427,6 +436,10 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # check if we need to update. 
     logging.debug( "collecting tracker." )
     code, tracker = getTracker( reference )
+    if not tracker: 
+        logging.debug( "no tracker - no output from %s " % str(document) )
+        return []
+
     logging.debug( "collected tracker." )
 
     codename = quoted(fname) + ".code"

@@ -125,7 +125,12 @@ def rst_reader(infile ):
 def getBlocksFromRstFile( rst_file ):
 
     blocks = []
-    infile = open( rst_file, "r" )
+    try:
+        infile = open( rst_file, "r" )
+    except IOError:
+        print "could not open %s - skipped" % rst_file 
+        return blocks
+
     for rst_block in rst_reader( infile ):
         blocks.append( rst_block )
     infile.close()
