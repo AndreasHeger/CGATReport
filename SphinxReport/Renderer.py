@@ -1476,7 +1476,7 @@ class RendererCorrelationMatrixPlot(RendererCorrelation, PlotterMatrix ):
         blocks = []
 
         tests = self.getTestResults( data )
-        if len(tests) == 0: return lines
+        if len(tests) == 0: return blocks
 
         matrix = numpy.zeros( (len(data), len(data) ), numpy.float)
 
