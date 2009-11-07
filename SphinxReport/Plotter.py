@@ -7,7 +7,6 @@ import matplotlib
 import matplotlib.backends
 import matplotlib.pyplot as plt
 import numpy
-import CorrespondenceAnalysis
 
 from ResultBlock import ResultBlock, ResultBlocks
 
@@ -179,7 +178,7 @@ class Plotter:
                 newtext.append(txt)
         return newtext
 
-    def endPlot( self, plts = None, legends = None, title = ""):
+    def endPlot( self, plts, legends, path ):
         """close a plot.
 
         Returns blocks of restructured text with place holders for the current 
@@ -196,7 +195,7 @@ class Plotter:
         if self.mXRange: plt.xlim( self.mXRange )
         if self.mYRange: plt.ylim( self.mYRange )
 
-        blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure-1), "")), title = title ) )
+        blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure-1), "")), title = "/".join(path) ) )
 
         legend = None
         maxlen = 0
@@ -217,7 +216,7 @@ class Plotter:
 
         if self.mLegendLocation == "extra" and legends:
             legend = plt.figure( self.mFigure, **self.mMPLFigureOptions )
-            blocks.append( ResultBlock( "\n".join( ("#$mpl %i$#" % self.mFigure, ""))) )
+            blocks.append( ResultBlock( "\n".join( ("#$mpl %i$#" % self.mFigure, "")), "legend" ) )
             self.mFigure += 1
             lx = legend.add_axes( (0.1, 0.1, 0.9, 0.9) )
             lx.set_title( "Legend" )
@@ -295,9 +294,6 @@ class PlotterMatrix(Plotter):
     def __init__(self, *args, **kwargs ):
         Plotter.__init__(self, *args, **kwargs)
 
-    def prepare( self,*args, **kwargs ):
-        Plotter.prepare(self, *args, **kwargs)
-
         try: self.mBarFormat = kwargs["colorbar-format"]
         except KeyError: self.mBarFormat = "%1.1f"
 
@@ -361,9 +357,43 @@ class PlotterMatrix(Plotter):
             
         return fontsize, headers
 
-    def plotMatrix( self, matrix, row_headers, col_headers ):
+    def plotMatrix( self, matrix, row_headers, col_headers, vmin, vmax, color_scheme = None):
 
-        self.startPlot( matrix )
+        plot = plt.imshow(matrix,
+                          cmap=color_scheme,
+                          origin='lower',
+                          vmax = vmax,
+                          vmin = vmin,
+                          interpolation='nearest')
+
+        # offset=0: x=center,y=center
+        # offset=0.5: y=top/x=right
+        offset = 0.0
+
+        col_headers = [ str(x) for x in col_headers ]
+        row_headers = [ str(x) for x in row_headers ]
+        
+        # determine fontsize for labels
+        xfontsize, col_headers = self.mFontSize, col_headers
+        yfontsize, row_headers = self.mFontSize, row_headers
+
+        plt.xticks( [ offset + x for x in range(len(col_headers)) ],
+                    col_headers,
+                    rotation="vertical",
+                    fontsize=xfontsize )
+
+        plt.yticks( [ offset + y for y in range(len(row_headers)) ],
+                    row_headers,
+                    fontsize=yfontsize )
+            
+        return plot
+
+    def plot( self,  matrix, row_headers, col_headers, path ):
+        '''plot matrix. 
+
+        Large matrices are split into several plots.
+        '''
+        self.startPlot()
 
         nrows, ncols = matrix.shape
         if self.mZRange:
@@ -382,43 +412,18 @@ class PlotterMatrix(Plotter):
             color_scheme = None
 
         plots = []
-        def addMatrix( matrix, row_headers, col_headers, vmin, vmax):
-
-            plot = plt.imshow(matrix,
-                              cmap=color_scheme,
-                              origin='lower',
-                              vmax = vmax,
-                              vmin = vmin,
-                              interpolation='nearest')
-
-            # offset=0: x=center,y=center
-            # offset=0.5: y=top/x=right
-            offset = 0.0
-
-            col_headers = [ str(x) for x in col_headers ]
-            row_headers = [ str(x) for x in row_headers ]
-
-            # determine fontsize for labels
-            xfontsize, col_headers = self.mFontSize, col_headers
-            yfontsize, row_headers = self.mFontSize, row_headers
-
-            plt.xticks( [ offset + x for x in range(len(col_headers)) ],
-                          col_headers,
-                          rotation="vertical",
-                          fontsize=xfontsize )
-
-            plt.yticks( [ offset + y for y in range(len(row_headers)) ],
-                          row_headers,
-                          fontsize=yfontsize )
-            
-            return plot
 
         split_row, split_col = nrows > self.mMaxRows, ncols > self.mMaxCols
 
         if (split_row and split_col) or not (split_row or split_col):
             # do not split small or symmetric matrices
-            addMatrix( matrix, row_headers, col_headers, vmin, vmax )
-            plt.colorbar( format = self.mBarFormat)        
+            self.plotMatrix( matrix, row_headers, col_headers, vmin, vmax, color_scheme )
+            try:
+                plt.colorbar( format = self.mBarFormat)        
+            except AttributeError:
+                # fails for hinton plots
+                pass
+
             plots, labels = None, None
             self.rescaleForVerticalLabels( col_headers, cliplen = 12 )
 
@@ -436,10 +441,11 @@ class PlotterMatrix(Plotter):
                         row_end = row_start+min(plot_nrows,self.mMaxRows)
                         col_start = col * self.mMaxRows
                         col_end = col_start+min(plot_ncols,self.mMaxCols)
-                        addMatrix( matrix[row_start:row_end,col_start:col_end], 
-                                   new_row_headers[row_start:row_end], 
-                                   new_col_headers[col_start:col_end], 
-                                   vmin, vmax )
+                        self.plotMatrix( matrix[row_start:row_end,col_start:col_end], 
+                                         new_row_headers[row_start:row_end], 
+                                         new_col_headers[col_start:col_end], 
+                                         vmin, vmax,
+                                         color_scheme )
 
                 labels = ["%s: %s" % x for x in zip( new_headers, row_headers) ]
                 self.mLegendLocation = "extra"
@@ -454,7 +460,11 @@ class PlotterMatrix(Plotter):
                 plt.subplot( 1, nplots, x+1 )
                 start = x * self.mMaxRows
                 end = start+min(nrows,self.mMaxRows)
-                addMatrix( matrix[start:end,:], new_headers[start:end], col_headers, vmin, vmax )
+                self.plotMatrix( matrix[start:end,:], 
+                                 new_headers[start:end], 
+                                 col_headers, 
+                                 vmin, vmax,
+                                 color_scheme )
             labels = ["%s: %s" % x for x in zip( new_headers, row_headers) ]
             self.mLegendLocation = "extra"
             plt.subplots_adjust( **self.mMPLSubplotOptions )
@@ -469,13 +479,26 @@ class PlotterMatrix(Plotter):
                 plt.subplot( nplots, 1, x+1 )
                 start = x * self.mMaxCols
                 end = start+min(ncols,self.mMaxCols)
-                addMatrix( matrix[:,start:end], row_headers, new_headers[start:end], vmin, vmax ) 
+                self.plotMatrix( matrix[:,start:end], 
+                                 row_headers, 
+                                 new_headers[start:end], 
+                                 vmin, vmax,
+                                 color_scheme ) 
             labels = ["%s: %s" % x for x in zip( new_headers, col_headers) ]
             self.mLegendLocation = "extra"
             plt.subplots_adjust( **self.mMPLSubplotOptions )
             plt.colorbar( format = self.mBarFormat)        
 
-        return self.endPlot( plts = plots, legends = labels )
+        return self.endPlot( plots, labels, path )
+
+class PlotterHinton(PlotterMatrix):
+    '''plot a hinton diagram.'''
+    
+    def __init__(self, *args, **kwargs ):
+        Plotter.__init__(self, *args, **kwargs)
+
+    def plotMatrix( self, matrix, row_headers, col_headers, vmin, vmax, color_scheme = None):
+        return hinton( matrix )
 
 def outer_legend(*args, **kwargs):
     """plot legend outside of plot by rescaling it.
@@ -512,3 +535,49 @@ def outer_legend(*args, **kwargs):
     leg._loc = (1 + .05, currentAxesPos.ymin )
 
     return leg
+
+# the following has been taken from http://www.scipy.org/Cookbook/Matplotlib/HintonDiagrams
+def hinton(W, maxWeight=None):
+    """
+    Draws a Hinton diagram for visualizing a weight matrix. 
+    Temporarily disables matplotlib interactive mode if it is on, 
+    otherwise this takes forever.
+    """
+    def _blob(x,y,area,colour):
+        """
+        Draws a square-shaped blob with the given area (< 1) at
+        the given coordinates.
+        """
+        hs = numpy.sqrt(area) / 2
+        xcorners = numpy.array([x - hs, x + hs, x + hs, x - hs])
+        ycorners = numpy.array([y - hs, y - hs, y + hs, y + hs])
+        plt.fill(xcorners, ycorners, colour, edgecolor=colour)
+
+    reenable = False
+    if plt.isinteractive(): 
+        reenable = True
+        plt.ioff()
+
+    plt.clf()
+
+    height, width = W.shape
+    if not maxWeight:
+        maxWeight = 2**numpy.ceil(numpy.log(numpy.max(numpy.abs(W)))/numpy.log(2))
+
+    plot = plt.fill(numpy.array([0,width,width,0]),numpy.array([0,0,height,height]),'gray')
+
+    plt.axis('off')
+    plt.axis('equal')
+    for x in xrange(width):
+        for y in xrange(height):
+            _x = x+1
+            _y = y+1
+            w = W[y,x]
+            if w > 0:
+                _blob(_x - 0.5, height - _y + 0.5, min(1,w/maxWeight),'white')
+            elif w < 0:
+                _blob(_x - 0.5, height - _y + 0.5, min(1,-w/maxWeight),'black')
+
+    if reenable: plt.ion()
+
+    return plot

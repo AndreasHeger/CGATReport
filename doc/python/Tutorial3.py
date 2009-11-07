@@ -6,10 +6,9 @@ import os
 class WordCounter(Tracker):
     """Counting word size."""
     
-    def getTracks( self ):
+    def getTracks( self, subset = None ):
         return ( "all", ".py", ".rst" )
 
-    @returnSingleColumnData
     def __call__(self, track, slice = None ):
         word_sizes = []
         
@@ -27,18 +26,17 @@ class WordCounter(Tracker):
                 word_sizes.extend( [ len(word) for word in words ] )
                 infile.close()
                     
-        return word_sizes
+        return { "word sizes" : word_sizes }
 
 class WordCounterWithSlices(Tracker):
     """Counting word size."""
     
-    def getTracks( self ):
+    def getTracks( self, subset = None ):
         return ( "all", ".py", ".rst" )
 
     def getSlices( self, subset = None ):
         return ( "all", "vocals", "consonants")
 
-    @returnSingleColumnData
     def __call__(self, track, slice = None ):
         word_sizes = []
         
@@ -63,5 +61,4 @@ class WordCounterWithSlices(Tracker):
                 word_sizes.extend( [ len(w) for w in words if test_f(w)] )
                 infile.close()
                     
-        return word_sizes
-
+        return { "word sizes" : word_sizes }

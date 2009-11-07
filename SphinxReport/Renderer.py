@@ -24,6 +24,7 @@ import collections
 
 from DataTypes import *
 from ResultBlock import ResultBlock, ResultBlocks
+import odict
 
 # Some renderers will build several objects.
 # Use these two rst levels to separate individual
@@ -81,7 +82,9 @@ class Renderer(object):
        :term:`groupby`: group data by :term:`track` or :term:`slice`.
 
     """
-    level = None
+
+    # required levels in nested dictionary
+    nlevels = None
 
     def __init__(self, tracker, *args, **kwargs ):
         """create an Renderer object using an instance of 
@@ -139,18 +142,22 @@ class Renderer(object):
 
         and call ``render`` method.
         '''
-        if self.level == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
+        if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
         labels = self.getLabels( data )        
-        assert len(labels) < self.level, "expected at least %i levels - got %i" % (self.level, len(labels))
+        assert len(labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
         
-        paths = list(itertools.product( *labels[:-self.levels] ))
+        paths = list(itertools.product( *labels[:-self.nlevels] ))
         
+        result = ResultBlocks( title = title )
+
         for path in paths:
             subtitle = "-".join( path )
             work = self.getLeaf( data, path )
             if not work: continue
-            self.render( work, path )
+            result.extend( self.render( work, path ) )
+
+        return result
             
 class RendererTable( Renderer ):
     '''a basic table. 
@@ -195,26 +202,28 @@ class RendererTable( Renderer ):
 
         col_headers = [""] * (len(labels)-2) + labels[-1]
         ncols = len(col_headers)
+
         row_headers = []
-        
-        nsubrows = len(labels)-2
-        for x in labels[0]: row_headers.extend( [x] + [""] * (nsubrows-1) )
+        paths = list(itertools.product( *labels[1:-1] ))                
+        npaths = len(paths)
+        for x in labels[0]: 
+            row_headers.extend( [x] + [""] * (npaths-1) )
         nrows = len(row_headers)
         
         offset = len(labels)-2
         matrix = [ [""] * ncols for x in range(nrows) ]
 
+        debug( "RendererTable: creating table with %i rows and %i columns" % (len(row_headers), len(col_headers)))
         ## the following can be made more efficient
         ## by better use of indices
         for x,row in enumerate(labels[0]):
-            paths = list(itertools.product( *labels[1:-1] ))
             for xx, path in enumerate(paths):
                 work = self.getLeaf( data, (row,) + path )
                 if not work: continue
                 for y, column in enumerate(labels[-1]):
-                    matrix[x*nsubrows+xx][y+offset] = str(work[column])
+                    matrix[x*npaths+xx][y+offset] = str(work[column])
                 for z, p in enumerate(path):
-                    matrix[x*nsubrows+xx][z] = p
+                    matrix[x*npaths+xx][z] = p
         if self.mTranspose:
             row_headers, col_headers = col_headers, row_headers
             matrix = zip( *matrix )
@@ -264,112 +273,8 @@ class RendererGlossary( RendererTable ):
 
         return ResultBlocks( "\n".join(lines), title = title )
 
-class RendererMyTable(RendererTable):    
-    """A table with numerical columns.
 
-    It only implements column wise transformations.
-
-    This class adds the following options to the :term:`render` directive.
-
-       :term:`normalized-max`: normalize data by maximum.
-
-       :term:`normalized-total`: normalize data by total.
-
-       :term:`add-total`: add a total field.
-
-       :term:`transpose`: exchange rows and columns
-
-    Requires :class:`DataTypes.LabeledData`.
-    """
-
-    mRequiredType = type( LabeledData( None ) )
-
-    def __init__(self, *args, **kwargs):
-        RendererTextTable.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        RendererTextTable.prepare( self, *args, **kwargs )
-        self.mFormat = "%i"
-        self.mConverters = []
-        self.mAddTotal = False
-
-        if "normalized-max" in kwargs:
-           self.mConverters.append( self.normalize_max )
-           self.mFormat = "%6.4f"
-        if "normalized-total" in kwargs:
-           self.mConverters.append( self.normalize_total )
-           self.mFormat = "%6.4f"
-        if "add-total" in kwargs:
-            self.mAddTotal = True
-
-    def convertData( self, data ):
-        """apply converters to the data.
-
-        The data is a tuple of (track, data) with each data
-        a tuple of (header, value).
-
-        The same data structure is returned.
-
-        If there is an error during conversion, values will
-        be set to None.
-        """
-        if self.mConverters == []: return data
-        new_data = []
-        for track, table in data:
-            columns = [x[0] for x in table] 
-            if len(columns) == 0: continue
-            values = numpy.array( [x[1] for x in table] )
-            if not values.any(): 
-                warn( "track %s omitted because it is empty" % track )
-                continue
-            
-            try:
-                for convert in self.mConverters: values = convert( values )
-            except ZeroDivisionError:
-                values = [ None ] * len(table) 
-            new_data.append( (track, zip( columns, values )) )
-        return new_data
-
-    def buildTable( self, data ):
-        """build table from data.
-
-        returns matrix, row_headers, col_headers
-        """
-        data = self.convertData( data )
-        if len(data) == 0: return None, None, None
-
-        sorted_col_headers, col_headers = self.getHeaders(data)
-        col_headers = sorted_col_headers
-
-        row_headers = []
-        matrix = []
-        def toValue( d, x):
-            try:
-                return self.mFormat % d[x]
-            except (KeyError, TypeError): 
-                return "na"
-
-        if self.mAddTotal:
-            for track, d in data:
-                dd = dict(d)
-                try: total = self.mFormat % sum( dd.values() )
-                except TypeError: total = "na"
-                matrix.append( [total,] + [ toValue(dd, x) for x in sorted_col_headers ] )
-                row_headers.append( track )
-            col_headers = ["total"] + col_headers
-        else:
-            for track, d in data:
-                dd = dict(d)
-                matrix.append( [ toValue(dd, x) for x in sorted_col_headers ] )
-                row_headers.append( track )
-
-        if self.mTranspose:
-            row_headers, col_headers = col_headers, row_headers
-            matrix = zip( *matrix )
-
-        return matrix, row_headers, col_headers
-
-class RendererMatrix(RendererTable):    
+class RendererMatrix(Renderer):    
     """A table with numerical columns.
 
     It implements column-wise and row-wise transformations.
@@ -391,11 +296,14 @@ class RendererMatrix(RendererTable):
            * *add-row-total* : add the row total at the bottom
            * *add-column-total* : add the column total as a last column
 
-    Requires :class:`DataTypes.LabeledData`
+    Requires two levels:
+    rows[dict] / columns[dict]
     """
 
+    nlevels = 2
+
     def __init__(self, *args, **kwargs):
-        RendererTable.__init__(self, *args, **kwargs )
+        Renderer.__init__(self, *args, **kwargs )
 
         self.mMapKeywordToTransform = {
         "correspondence-analysis": self.transformCorrespondenceAnalysis,
@@ -423,22 +331,6 @@ class RendererMatrix(RendererTable):
                     self.mConverters.append( self.mMapKeywordToTransform[ kw ] )
                 except KeyError:
                     raise ValueError("unknown matrix transformation %s" % kw )
-
-    def getHeaders( self, data ):
-        """return a list of headers and a mapping of header to column.
-        """
-        # preserve the order of columns
-        column_headers = {}
-        sorted_headers = []
-        try:
-            for row, r in data.iteritems():
-                for column, c in r.iteritems():
-                    column_headers[column] = len(column_headers)
-                    sorted_headers.append(column)
-        except AttributeError:
-            raise ValueError("mal-formatted data - RendererMatrix expected two level dictionary." )
-
-        return sorted_headers, column_headers
 
     def transformAddRowTotal( self, matrix, row_headers, col_headers ):
         raise NotImplementedError
@@ -563,7 +455,7 @@ class RendererMatrix(RendererTable):
                     matrix[x,y] /= m
         return matrix, rows, cols
 
-    def buildMatrix( self, data, missing_value = 0 ):
+    def buildMatrix( self, work, missing_value = 0 ):
         """build a matrix from data.
 
         This method will also apply conversions.
@@ -571,160 +463,176 @@ class RendererMatrix(RendererTable):
         Returns a list of tuples (title, matrix, rows, colums).
         """
 
-        matrices = []
-
-        labels = self.getLabels( data )
+        labels = self.getLabels( work )
         levels = len(labels )
-        if levels < 2: raise ValueError( "expected at least two levels" )
+        if levels != 2: raise ValueError( "expected two levels" )
 
-        rows, columns = labels[-2], labels[-1]
-        if levels == 2:
-            matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), numpy.float)
-            matrix.shape = (len(rows), len(columns) )
-            for x,row in enumerate(rows):
-                for y, column in enumerate(columns):
-                    try:
-                        matrix[x,y] = data[row][column]
-                    except KeyError:
-                        # ignore missing and malformatted data
-                        pass
-                    except ValueError:
-                        raise ValueError( "malformatted data: expected scalar, got '%s'" % str(data[row][column]) )
+        rows, columns = labels
 
-            matrices.append( (matrix, rows, columns, None ) )
-
-        else:
-            paths = list(itertools.product( *labels[:-2] ))
-
-            for path in paths:
-                subtitle = "-".join( path )
-                work = self.getLeaf( data, path )
-                if not work: continue
-                matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), numpy.float)
-                matrix.shape = (len(rows), len(columns) )
-                for x,row in enumerate(rows):
-                    for y, column in enumerate(columns):
-                        try:
-                            matrix[x,y] = work[row][column]
-                        except KeyError:
-                            # ignore missing and malformatted data
-                            pass
-                        except ValueError:
-                            raise ValueError( "malformatted data: expected scalar, got '%s'" % str(data[row][column]) )
-
-                matrices.append( (matrix, rows, columns, subtitle ) )
-            
+        matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), numpy.float)
+        matrix.shape = (len(rows), len(columns) )
+        for x,row in enumerate(rows):
+            for y, column in enumerate(columns):
+                try:
+                    matrix[x,y] = work[row][column]
+                except KeyError:
+                    # ignore missing and malformatted data
+                    pass
+                except ValueError:
+                    raise ValueError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
+                
         if self.mConverters:
-            new = []
-            for matrix, rows, columns, title in matrices:
-                for converter in self.mConverters: 
-                    matrix, rows, columns = converter(matrix, rows, columns)
-                new.append( (matrix, rows, columns, title ) )
-            matrices = new
+            for converter in self.mConverters: 
+                matrix, rows, columns = converter(matrix, rows, columns)
 
-        return matrices
+        return matrix, rows, columns
 
-    def __call__( self, data, title ):
+    def render( self, work, path ):
         """render the data.
         """
+        results = ResultBlocks( title = path )
+        matrix, rows, columns = self.buildMatrix( work )
 
-        results = ResultBlocks( title = title )
-        chunks = self.buildMatrix(data )
+        lines = []
+        if len(rows) == 0: return lines
 
-        for matrix, rows, columns, path in chunks:
-            lines = []
-            if len(rows) == 0: return lines
-
-            lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-            lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
-            lines.append( '')
-            for x in range(len(rows)):
-                lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.mFormat % x for x in matrix[x,:] ] ) ) )
-            lines.append( "") 
-            if not path: subtitle = ""
-            else: subtitle = path
-            results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
+        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
+        lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
+        lines.append( '')
+        for x in range(len(rows)):
+            lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.mFormat % x for x in matrix[x,:] ] ) ) )
+        lines.append( "") 
+        if not path: subtitle = ""
+        else: subtitle = path
+        results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
 
         return results
 
 class RendererLinePlot(Renderer, Plotter):        
-    """create a line plot.
-    """
+    '''create a line plot.
+
+    This :class:`Renderer` requires three levels:
+    line / data / coords
+    '''
+    nlevels = 3
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def __call__(self, data, title ):
+    def render(self, work, path ):
         
         self.startPlot()
 
         plts, legend = [], []
-
+        xlabels, ylabels = [], []
         nplotted = 0
-        xlabels = []
-        ylabels = []
 
-        labels = self.getLabels( data )
-        paths = list(itertools.product( *labels[:-1] ))
-        for path in paths:
-            work = self.getLeaf( data, path )
-            if not work: continue
+        for line, data in work.iteritems():
 
-            s = self.mSymbols[nplotted % len(self.mSymbols)]
+            assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
 
-            # get and transform x/y values
-            assert len(work) == 2, "multicolumn data not supported yet: %s" % str(work)
+            for label, coords in data.iteritems():
+                s = self.mSymbols[nplotted % len(self.mSymbols)]
 
-            xlabel, ylabel = work.keys()
-            xvals, yvals = work.values()
+                # get and transform x/y values
 
-            plts.append(plt.plot( xvals,
-                                  yvals,
-                                  s ) )
+                xlabel, ylabel = coords.keys()
+                xvals, yvals = coords.values()
 
-            legend.append( "/".join(path) )
-            nplotted += 1
+                plts.append(plt.plot( xvals,
+                                      yvals,
+                                      s ) )
+                
+                legend.append( "/".join((line,label) ))
+                nplotted += 1
 
-            xlabels.append(xlabel)
-            ylabels.append(ylabel)
+                xlabels.append(xlabel)
+                ylabels.append(ylabel)
 
         plt.xlabel( "-".join( set(xlabels) ) )
         plt.ylabel( "-".join( set(ylabels) ) )
         
-        return self.endPlot( plts, legend )
+        return self.endPlot( plts, legend, path )
 
-class RendererInterleavedBars(RendererTable, Plotter):
-    """A barplot with interleaved bars
+class RendererBarPlot( RendererMatrix, Plotter):
+    """A plot with interleaved bars.
+
+    This :class:`Renderer` requires two levels:
+    rows[dict] / cols[dict]
     """
 
     def __init__(self, *args, **kwargs):
-        RendererTable.__init__(self, *args, **kwargs )
+        RendererMatrix.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def __call__( self, data, title ):
+    def render( self, work, path ):
 
-        matrix, row_headers, col_headers = self.buildTable( data )
-        if matrix == None: return lines
+        matrix, rows, columns = self.buildMatrix( work )
 
-        nplotted = 0
-        nskipped = 0
-
-        width = 1.0 / (len(row_headers) + 1 )
-
-        legend, plts = [], []
+        plts = []
 
         self.startPlot()
 
-        xvals = numpy.arange( 0, len(col_headers) )
-        offset = width / 2.0
-        
-        y = 0
+        xvals = numpy.arange( 0, len(rows) )
 
         # plot by row
-        for x,header in enumerate(row_headers):
+        y = 0
+        for x,header in enumerate(columns):
             
-            vals = matrix[x,:]
+            vals = matrix[:,x]
+
+            # patch for wrong ylim. matplotlib will set the yrange
+            # inappropriately, if the first value is None or nan
+            # set to 0. Nan values elsewhere are fine.
+            if isnan(vals[0]) or isinf( vals[0] ): 
+                vals[0] = 0
+
+            plts.append( plt.bar( xvals, 
+                                  vals,
+                                  self.mWidth, 
+                                  color = self.mColors[ y % len(self.mColors) ],
+                                  )[0] )
+            
+            y += 1
+
+        if len( rows ) > 5 or max( [len(x) for x in rows] ) >= 8 : 
+            rotation = "vertical"
+            self.rescaleForVerticalLabels( rows )
+        else: 
+            rotation = "horizontal"
+        
+        plt.xticks( xvals + 0.5, rows, rotation = rotation )
+
+        return self.endPlot( plts, columns, path )
+
+class RendererInterleavedBarPlot(RendererBarPlot):
+    """A plot with interleaved bars.
+
+    This :class:`Renderer` requires two levels:
+    rows[dict] / cols[dict]
+    """
+
+    def __init__(self, *args, **kwargs):
+        RendererBarPlot.__init__(self, *args, **kwargs )
+
+    def render( self, work, path ):
+
+        matrix, rows, columns = self.buildMatrix( work )
+
+        width = 1.0 / (len(columns) + 1 )
+        plts = []
+
+        self.startPlot()
+
+        xvals = numpy.arange( 0, len(rows) )
+        offset = width / 2.0
+
+        # plot by row
+        y = 0
+        for x,header in enumerate(columns):
+            
+            vals = matrix[:,x]
 
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
@@ -734,180 +642,166 @@ class RendererInterleavedBars(RendererTable, Plotter):
 
             plts.append( plt.bar( xvals + offset, 
                                   vals,
-                                  width, 
+                                  width,
                                   color = self.mColors[ y % len(self.mColors) ],
                                   )[0] )
             
             offset += width
             y += 1
 
-        if len( tracks ) > 5 or max( [len(x) for x in tracks] ) >= 8 : 
+        if len( rows ) > 5 or max( [len(x) for x in rows] ) >= 8 : 
             rotation = "vertical"
-            self.rescaleForVerticalLabels( tracks )
+            self.rescaleForVerticalLabels( rows )
         else: 
             rotation = "horizontal"
         
-        plt.xticks( xvals + 0.5, tracks, rotation = rotation )
+        plt.xticks( xvals + 0.5, rows, rotation = rotation )
 
-        return self.endPlot( plts, sorted_headers )
+        return self.endPlot( plts, columns, path )
            
-class RendererStackedBars(RendererTable, Plotter):
-    """Stacked bars.
+class RendererStackedBarPlot(RendererBarPlot ):
+    """A plot with stacked bars.
 
-    Requires :class:`DataTypes.SingleColumnData`.
+    This :class:`Renderer` requires two levels:
+    rows[dict] / cols[dict]
     """
-
     def __init__(self, *args, **kwargs):
-        RendererTable.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        RendererBarPlot.__init__(self, *args, **kwargs )
 
-    def __call__( self, data, title ):
+    def render( self, work, path ):
 
-        if len(data) == 0: return results
+        matrix, rows, columns = self.buildMatrix( work )
         
         self.startPlot( )
 
-        lines, legend = [], []
+        plts = []
 
-        nplotted = 0
-        nskipped = 0
-        
-        legend, plts = [], []
-
-        tracks = [ x[0] for x in data ]
-
-        xvals = numpy.arange( (1.0 - self.mWidth) / 2., len(tracks) )
-        sums = numpy.zeros( len(tracks), numpy.float )
+        xvals = numpy.arange( (1.0 - self.mWidth) / 2., len(rows) )
+        sums = numpy.zeros( len(rows), numpy.float )
 
         y = 0
-        for header in sorted_headers:
-            
-            vals = numpy.zeros( len(tracks), numpy.float )
-            x = 0
-            for track, table in data:
-                dd = dict(table)
-                try: vals[x] = dd[header]
-                except KeyError: pass
-                x += 1
+        for x,header in enumerate(columns):
+
+            vals = matrix[:,x]            
 
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
             if isnan(vals[0]) or isinf( vals[0] ): 
                 vals[0] = 0
-
-            plts.append( plt.bar( xvals, vals, self.mWidth, 
+                
+            plts.append( plt.bar( xvals, 
+                                  vals, 
+                                  self.mWidth, 
                                   color = self.mColors[ y % len(self.mColors) ],
                                   bottom = sums )[0] )
             
             sums += vals
             y += 1
 
-        if len( tracks ) > 5 or max( [len(x) for x in tracks] ) >= 8 : 
+        if len( rows ) > 5 or max( [len(x) for x in rows] ) >= 8 : 
             rotation = "vertical"
-            self.rescaleForVerticalLabels( tracks )
+            self.rescaleForVerticalLabels( rows )
         else: 
             rotation = "horizontal"
         
         plt.xticks( xvals + self.mWidth / 2., 
-                    tracks,
+                    rows,
                     rotation = rotation )
 
-        return self.endPlot( plts, sorted_headers )
+        return self.endPlot( plts, columns, path )
 
-class RendererPiePlot(RendererTable, Plotter):
-    """Plot a pie chart
+class RendererPiePlot(Renderer, Plotter):
+    """A pie chart.
+
+    This :class:`Renderer` requires one level:
+    entries[dict] 
     """
-
+    nlevels = 1
     def __init__(self, *args, **kwargs):
-        RendererTable.__init__(self, *args, **kwargs )
+        Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
-
-        # used to enforce consistency of colors between plots
-        self.mOrderedHeadersMap = {}
-        self.mOrderedHeaders = []
 
         self.mFormat = "%i"
 
         try: self.mPieMinimumPercentage = float(kwargs["pie-min-percentage"])
         except KeyError: self.mPieMinPercentage = 0
 
-    def __call__( self, data, title ):
+        self.sorted_headers = odict.OrderedDict()
+
+    def render( self, work, path ):
         
-        lines, legend = [], []
+        self.startPlot()
 
-        blocks = ResultBlocks()
+        for x in work.keys(): 
+            if x not in self.sorted_headers: 
+                self.sorted_headers[x] = len(self.sorted_headers)
 
-        labels = self.getLabels( data )
-        paths = list(itertools.product( *labels[:-1] ))
-        parts = labels[-1]
-        for path in paths:
-            work = self.getLeaf( data, path )
-            if not work: continue
+        sorted_vals = [0] * len(self.sorted_headers)
 
-            self.startPlot()
-            plts = []
-            
-            sorted_vals = [0] * len(parts)
-            for x in range( len(parts) ):
-                try:
-                    sorted_vals[x] = work[parts[x]]
-                except KeyError:
-                    pass
-
-            plts.append( plt.pie( sorted_vals, labels = parts ))
-            blocks.extend( self.endPlot( plts ) )
-
-        return blocks
+        for key, value in work.iteritems():
+            sorted_vals[self.sorted_headers[key]] = value
+        
+        return self.endPlot( plt.pie( sorted_vals, labels = self.sorted_headers.keys() ), None, path )
 
 class RendererMatrixPlot(RendererMatrix, PlotterMatrix):
     """Render a matrix as a matrix plot.
-
-    Requires :class:`DataTypes.SingleColumnData`.
     """
 
     def __init__(self, *args, **kwargs):
         RendererMatrix.__init__(self, *args, **kwargs )
         PlotterMatrix.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        RendererMatrix.prepare( self, *args, **kwargs )
-        PlotterMatrix.prepare( self, *args, **kwargs )
         self.mFormat = "%i"
 
-    def render( self, data ):
+    def render( self, work, path ):
         """render the data."""
 
-        lines = []
-        matrix, rows, columns = self.buildMatrix( data )
-        return self.plotMatrix( matrix, rows, columns )
+        matrix, rows, columns = self.buildMatrix( work )
+        return self.plot( matrix, rows, columns, path )
+
+class RendererHintonPlot(RendererMatrix, PlotterHinton):
+    """Render a matrix as a hinton plot.
+    """
+
+    def __init__(self, *args, **kwargs):
+        RendererMatrix.__init__(self, *args, **kwargs )
+        PlotterMatrix.__init__(self, *args, **kwargs )
+        self.mFormat = "%i"
+
+    def render( self, work, path ):
+        """render the data."""
+
+        matrix, rows, columns = self.buildMatrix( work )
+        return self.plot( matrix, rows, columns, path )
 
 class RendererBoxPlot(Renderer, Plotter):        
     """Write a set of box plots.
+    
+    This :class:`Renderer` requires two levels.
 
+    labels[dict] / data[array]
     """
     
+    nlevels = 2
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def __call__(self, data, title ):
+    def render(self, work, path ):
 
         self.startPlot()
 
         plts, legend = [], []
-        nplotted = 0
-
-        labels = self.getLabels( data )
-        paths = list(itertools.product( *labels ))
-        
         all_data = []
-        for path in paths:
-            work = self.getLeaf( data, path )
-            if not work: continue
-            assert isArray( work ), "work is of type '%s'" % work
-            all_data.append( [ x for x in work if x != None ] )
-            legend.append( "-".join(path) )
+
+        for line, data in work.iteritems():
+
+            assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
+
+            for label, values in data.iteritems():
+                assert isArray( values ), "work is of type '%s'" % values
+                all_data.append( [ x for x in values if x != None ] )
+                legend.append( "/".join((line,label)))
 
         plts.append( plt.boxplot( all_data ) )
         
@@ -921,527 +815,60 @@ class RendererBoxPlot(Renderer, Plotter):
                     rotation = rotation,
                     fontsize="8" )
 
-        return self.endPlot( plts, title = title )
-
-class RendererCorrelation(Renderer):
-    """Basic pairwise statistical analysis.
-
-    Requires :class:`DataTypes.SingleColumnData`.
-    """
-
-    mRequiredType = type( SingleColumnData( None ) )
-
-    def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-
-    def addData( self, group, title, data ):
-        self.mData[group].append( (title, data) )
-
-    def getTestResults( self, data ):
-        """perform pairwise statistical tests on data."""
-
-        debug( "started pairwise statistical computations" )
-        results = {}
-
-        for x in range(len(data)):
-            for y in range(x+1, len(data)):
-                track1, xvals = data[x]
-                track2, yvals = data[y]
-                key = str(":".join( ("correl", track1, track2 ) ))
-                result = self.getDataFromCache(key)
-                if result == None:
-                    if len(xvals) != len(yvals):
-                        warn( "tracks returned vectors of unequal lengths: %s:%i and %s:%i" % \
-                                  (track1,len(xvals),
-                                   track2,len(yvals)) )
-                    take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
-                    xvals = [xvals[i] for i in take ]
-                    yvals = [yvals[i] for i in take ]
-
-                    result = Stats.doCorrelationTest( xvals, yvals )                    
-
-                    try:
-                        self.saveDataInCache( key, result )
-                    except ValueError, msg:
-                        continue
-
-                results[(track1,track2)] = result
-
-        debug( "finished pairwise statistical computations" )
-
-        return results
-
-    def render(self, data):
-        lines = []
-        if len(data) == 0: return lines
-
-        tests = self.getTestResults( data )
-        if len(tests) == 0: return lines
-
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        lines.append( '   :header: "track1","track2","%s" ' % '","'.join( Stats.CorrelationTest().getHeaders() ) )
-        lines.append( '' )
-
-        for x in range(len(data)):
-            for y in range(x+1, len(data)):
-                track1, xvals = data[x]
-                track2, yvals = data[y]
-
-                try:
-                    result = tests[(track1,track2)]
-                except KeyError:
-                    continue
-                lines.append( '   "%s","%s","%s"' % (track1, track2, '","'.join( [re.sub("[*]", "\*", i) for i in str(result).split("\t")]) ))
-
-        lines.append( "" ) 
-
-        return "\n".join(lines)
-
-class RendererCorrelationPlot(RendererCorrelation, PlotterMatrix ):    
-    """
-    Plot of correlation structure in several variables.
-
-    Options:
-
-        *plot-value*
-           value to plot ['coefficient', 'logP' ]
-
-    Requires :class:`DataTypes.SingleColumnData`.
-    """
-
-    def __init__(self, *args, **kwargs):
-        RendererCorrelation.__init__(self, *args, **kwargs )
-        PlotterMatrix.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        RendererCorrelation.prepare( self, *args, **kwargs )
-        PlotterMatrix.prepare( self, *args, **kwargs )
-
-    def render(self, data):
-        """render the data.
-
-        Data is a list of tuples of the from (track, data).
-        """
-
-        blocks = []
-
-        if len(data) == 0: return blocks
-
-
-        for x in range(len(data)):
-            for y in range(x+1, len(data)):
-                self.startPlot( data )
-                plts = []
-                track1, xvals = data[x]
-                track2, yvals = data[y]
-                take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
-                xvals = [xvals[i] for i in take ]
-                yvals = [yvals[i] for i in take ]
-                plts.append( plt.scatter( xvals, yvals ) )
-                blocks.append( self.endPlot( plts, legends = None, title="%s:%s" % (track1,track2) ) )
-                
-        return blocks
-
-class RendererCorrelationMatrixPlot(RendererCorrelation, PlotterMatrix ):    
-    """
-    Plot of correlation structure in several variables.
-
-    Options:
-
-        *plot-value*
-           value to plot ['coefficient', 'logP' ]
-
-    Requires :class:`DataTypes.SingleColumnData`.
-    """
-
-    def __init__(self, *args, **kwargs):
-        RendererCorrelation.__init__(self, *args, **kwargs )
-        PlotterMatrix.__init__(self, *args, **kwargs )
-
-    def getCaption( self ):
-        return """
-        Plot of the correlation matrix. For each Pearson pairwise correlation between two variables,
-        the plot shows the values of %s.
-        """ % (self.mPlotValueName)
-    
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-        PlotterMatrix.prepare( self, *args, **kwargs )
-
-        self.mPlotValue = self.getCoefficient
-        self.mPlotValueName = "the correlation coefficient"
-        if "plot-value" in kwargs:
-            v = kwargs["plot-value"]
-            if v == "coefficient": 
-                self.mPlotValue = self.getCoefficient
-                self.mPlotValueName = "the correlation coefficient"
-            elif v == "logP": 
-                self.mPlotValue = self.getLogP
-                self.mPlotValueName = "the logarithm of the P-Value. The minimum P-Value shown is 1e-10."
-            else: raise ValueError("unknown option for 'plot-value': %s" % v )
-            self.mPlotValueName = v
-
-    def getCoefficient( self, r ):
-        return r.mCoefficient
-
-    def getLogP( self, r ):
-        if r.mPValue > 1e-10: return math.log( r.mPValue )
-        else: return math.log( 1e-10 )
-    
-    def render(self, data):
-        """render the data.
-
-        Data is a list of tuples of the from (track, data).
-        """
-
-        blocks = []
-
-        tests = self.getTestResults( data )
-        if len(tests) == 0: return blocks
-
-        matrix = numpy.zeros( (len(data), len(data) ), numpy.float)
-
-        headers = [ x[0] for x in data ]
-        for x in range(len(data)):
-            for y in range(x+1, len(data)):
-                track1, xvals = data[x]
-                track2, yvals = data[y]
-
-                try:
-                    result = tests[(track1,track2)]
-                except KeyError:
-                    continue
-
-                v = self.mPlotValue( result )
-                matrix[x,y] = matrix[y,x] = v
-
-        blocks.extend(self.plotMatrix( matrix, headers, headers ) )
-
-        return blocks
-
-class RendererPairwiseStats(Renderer):
-    """Basic pairwise statistical analysis.
-
-    Requires :class:`DataTypes.MultipleColumnData`.
-    """
-
-    mRequiredType = type( MultipleColumnData( None ) )
-
-    def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-
-        Renderer.prepare( self, *args, **kwargs )
-
-    def addData( self, group, title, data ):
-        if len(data) < 2:
-            raise ValueError("requiring at least two columns of data, received %i" % len(data))
-        self.mData[group].append( (title, data) )
-
-    def getTestResults( self, data ):
-        """perform pairwise statistical tests on data."""
-
-        debug( "started pairwise statistical computations" )
-        results = {}
-
-        for track, xx in data:
-            headers, stats = xx
-            if len(stats) == 0: continue
-
-            for x in range(len(stats)):
-                for y in range(x+1,len(stats)):
-                    key = str(":".join( ("correl", track, headers[x], headers[y] ) ))
-                    result = self.getDataFromCache(key)
-                    if result == None:
-                        xvals, yvals = stats[x], stats[y]
-                        take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
-                        xvals = [xvals[i] for i in take ]
-                        yvals = [yvals[i] for i in take ]
-
-                        try:
-                            result = Stats.doCorrelationTest( xvals, yvals )
-                        except ValueError, msg:
-                            continue
-
-                        self.saveDataInCache( key, (result,) )
-                    else:
-                        result = result[0]
-
-                    results[(track,headers[x],headers[y])] = result
-
-        debug( "finished pairwise statistical computations" )
-
-        return results
-
-    def render(self, data):
-        lines = []
-        if len(data) == 0: return lines
-
-        tests = self.getTestResults( data )
-        if len(tests) == 0: return lines
-
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        lines.append( '   :header: "track","var1","var2","%s" ' % '","'.join( Stats.CorrelationTest().getHeaders() ) )
-        lines.append( '' )
-
-        for track, xx in data:
-            headers, stats = xx
-            if len(stats) == 0: continue
-
-            for x in range(len(stats)):
-                for y in range(x+1,len(stats)):
-                    try:
-                        result = tests[(track,headers[x],headers[y])]
-                    except KeyError:
-                        continue
-                    lines.append( '   "%s","%s","%s","%s"' % (track, headers[x], headers[y], '","'.join( [re.sub("[*]", "\*", i) for i in str(result).split("\t")]) ))
-
-        lines.append( "" ) 
-
-        return "\n".join(lines)
-
-class RendererPairwiseStatsMatrixPlot(RendererPairwiseStats, PlotterMatrix ):    
-    """
-    Plot of correlation structure in several variables.
-
-    Options:
-
-        *plot-value*
-           value to plot ['coefficient', 'logP' ]
-
-    Requires :class:`DataTypes.MultipleColumnData`.
-    """
-
-    def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        PlotterMatrix.__init__(self, *args, **kwargs )
-
-    def getCaption( self ):
-        return """
-        Plot of the correlation matrix. For each Pearson pairwise correlation between two variables,
-        the plot shows the values of %s.
-        """ % (self.mPlotValueName)
-    
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-        PlotterMatrix.prepare( self, *args, **kwargs )
-
-        self.mPlotValue = self.getCoefficient
-        self.mPlotValueName = "the correlation coefficient"
-        if "plot-value" in kwargs:
-            v = kwargs["plot-value"]
-            if v == "coefficient": 
-                self.mPlotValue = self.getCoefficient
-                self.mPlotValueName = "the correlation coefficient"
-            elif v == "logP": 
-                self.mPlotValue = self.getLogP
-                self.mPlotValueName = "the logarithm of the P-Value. The minimum P-Value shown is 1e-10."
-            else: raise ValueError("unknown option for 'plot-value': %s" % v )
-            self.mPlotValueName = v
-
-    def getCoefficient( self, r ):
-        return r.mCoefficient
-
-    def getLogP( self, r ):
-        if r.mPValue > 1e-10: return math.log( r.mPValue )
-        else: return math.log( 1e-10 )
-    
-    def render(self, data):
-        """render the data.
-
-        Data is a list of tuples of the from (track, data).
-        """
-
-        blocks = []
-
-        tests = self.getTestResults( data )
-        if len(tests) == 0: return lines
-
-        for track, vv in data:
-
-            #if SUBSECTION_TOKEN:
-            #    #result.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
-            #    lines.extend( ["*%s*" % track, "" ] )
-
-            headers, stats = vv
-            if len(stats) == 0: continue
-
-            matrix = numpy.zeros( (len( stats), len(stats) ), numpy.float)
-
-            for x in range(len(stats)):
-                for y in range(x+1,len(stats)):
-                    try:
-                        r = tests[(track,headers[x],headers[y])]
-                    except KeyError:
-                        continue
-                    v = self.mPlotValue( r )
-                    matrix[x,y] = matrix[y,x] = v
-
-            blocks.extend(self.plotMatrix( matrix, headers, headers ) )
-
-        return blocks
-
-class RendererPairwiseStatsBarPlot(RendererPairwiseStats, Plotter ):    
-    """
-    Plot of correlation structure in several variables as a series
-    of barplots.
-
-    Options:
-
-        *plot-value*
-           value to plot ['coefficient', 'logP' ]
-
-    Requires :class:`DataTypes.MultipleColumnData`.
-    """
-    def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
-
-    def getCaption( self ):
-        return """
-        Plot of the correlation matrix. For each Pearson pairwise correlation between two variables,
-        the plot shows the values of %s.
-        """ % (self.mPlotValueName)
-    
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-        Plotter.prepare( self, *args, **kwargs )
-
-        self.mPlotValue = self.getCoefficient
-        self.mPlotValueName = "the correlation coefficient"
-        if "plot-value" in kwargs:
-            v = kwargs["plot-value"]
-            if v == "coefficient": 
-                self.mPlotValue = self.getCoefficient
-                self.mPlotValueName = "the correlation coefficient"
-            elif v == "logP": 
-                self.mPlotValue = self.getLogP
-                self.mPlotValueName = "the logarithm of the P-Value. The minimum P-Value shown is 1e-10."
-            else: raise ValueError("unknown option for 'plot-value': %s" % v )
-            self.mPlotValueName = v
-
-    def getCoefficient( self, r ):
-        return r.mCoefficient
-
-    def getLogP( self, r ):
-        if r.mPValue > 1e-10: return math.log( r.mPValue )
-        else: return math.log( 1e-10 )
-    
-    def render(self, data):
-        """render the data.
-
-        Data is a list of tuples of the from (track, data).
-        """
-
-        blocks = []
-
-        tests = self.getTestResults( data )
-        if len(tests) == 0: return blocks
-
-        for track, vv in data:
-#            if SUBSECTION_TOKEN:
-#                lines.extend( [track, SUBSECTION_TOKEN * len(track), "" ] )
-
-            headers, stats = vv
-            
-            if len(stats) == 0: continue
-
-            matrix = numpy.zeros( (len( stats), len(stats) ), numpy.float)
-
-
-            for x in range(len(stats)):
-                for y in range(x+1,len(stats)):
-                    try:
-                        r = tests[(track,x,y)]
-                    except IndexError:
-                        continue
-                    v = self.mPlotValue( r )
-                    matrix[x,y] = matrix[y,x] = v
-
-            # plot interleaved bars for each track
-            self.startPlot( data )
-            plts = []
-            width = 1.0 / (len(stats) + 1)
-            offset = width / 2.0
-            xvals = arange( 0, len(stats) )
-
-            y = 0
-            for x in range(len(stats)):
-
-                plts.append( plt.bar( xvals + offset, matrix[:,y], 
-                                      width,
-                                      color = self.mColors[ y % len(self.mColors) ] )[0] )
-
-
-                offset += width
-                y += 1
-
-            if len( tracks ) > 5 or max( [len(x) for x in headers] ) >= 8 : 
-                rotation = "vertical"
-                self.rescaleForVerticalLabels( headers )
-            else: 
-                rotation = "horizontal"
-        
-            plt.xticks( xvals + 0.5, headers, rotation = rotation )
-
-            blocks.extend( self.endPlot( plts, headers) )
-
-        return blocks
+        return self.endPlot( plts, None, path )
 
 class RendererScatterPlot(Renderer, Plotter):
     """Scatter plot.
 
-    Requires :class:`DataTypes.MultipleColumnData`.
-    """
+    The different tracks will be displayed with different colours.
 
-    mRequiredType = type( MultipleColumnData( None ) )
+    This :class:`Renderer` requires two levels:
+    track[dict] / coords[dict]
+    """
+    
+    nlevels = 2
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-        Plotter.prepare(self, *args, **kwargs )
-
-    def addData( self, group, title, data ):
-        self.mData[group].append( (title,data) )
-
-    def render(self, data):
-        self.startPlot( data )
-
+    def render(self, work, path ):
+        
+        self.startPlot()
+        
         nplotted = 0
 
         plts, legend = [], []
+        xlabels, ylabels = [], []
 
-        for track, vv in data:
+        for label, coords in work.iteritems():
+            
+            assert len(coords) >= 2, "expected at least two arrays, got %i" % len(coords)
 
-            headers, values = vv
-            if len(values) == 0: continue
+            xlabel, ylabel = coords.keys()[:2]
+            xvals, yvals = coords.values()[:2]
 
             marker = self.mMarkers[nplotted % len(self.mMarkers)]
             color = self.mColors[nplotted % len(self.mColors)]
-            xvals, yvals = values
             if len(xvals) == 0 or len(yvals) == 0: continue
             plts.append(plt.scatter( xvals,
                                      yvals,
                                      marker = marker,
                                      c = color) )
-            legend.append( track )
+            legend.append( label )
 
             nplotted += 1
             
-        return self.endPlot( plts, legend )
+            xlabels.append( xlabel )
+            ylabels.append( ylabel )
+            
+        plt.xlabel( "-".join( set(xlabels) ) )
+        plt.ylabel( "-".join( set(ylabels) ) )
+        
+        return self.endPlot( plts, legend, path )
 
 class RendererScatterPlotWithColor( Renderer, Plotter ):
     """Scatter plot with individual colors for each dot.
-
-    Requires :class:`DataTypes.MultipleColumnData`.
-    and interpretes it as (x,y,color).
 
     This class adds the following options to the :term:`render` directive:
 
@@ -1450,18 +877,17 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
        :term:`palette`: numerical format for the colorbar.
 
        :term:`zrange`: restrict plot a part of the z-axis.
-    
+
+    This :class:`Renderer` requires one level:
+
+    coords[dict]
     """
 
-    mRequiredType = type( MultipleColumnData( None ) )
+    nlevels = 1
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-        Plotter.prepare(self, *args, **kwargs )
 
         try: self.mBarFormat = kwargs["colorbar-format"]
         except KeyError: self.mBarFormat = "%1.1f"
@@ -1474,13 +900,11 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
 
         self.mReversePalette = "reverse-palette" in kwargs
 
-    def addData( self, group, title, data ):
-        self.mData[group].append( (title,data) )
+    def render(self, work, path):
 
-    def render(self, data):
-
-        blocks = []
-        nplotted = 0
+        self.startPlot()
+        
+        plts = []
 
         if self.mPalette:
             if self.mReversePalette:
@@ -1490,36 +914,33 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
         else:
             color_scheme = None
 
-        for track, vv in data:
+        assert len(work) >= 3, "expected at least three arrays, got %i: %s" % (len(work), work.keys())
+        
+        xlabel, ylabel, zlabel = work.keys()[:3]
+        xvals, yvals, zvals = work.values()[:3]
+        if len(xvals) == 0 or len(yvals) == 0 or len(zvals) == 0: 
+            raise ValueError("no data" )
 
-            self.startPlot( data )
-            plts, legend = [], []
+        if self.mZRange:
+            vmin, vmax = self.mZRange
+            zvals[ zvals < vmin ] = vmin
+            zvals[ zvals > vmax ] = vmax
+        else:
+            vmin, vmax = None, None
 
-            headers, values = vv
-            if len(values) == 0: continue
-
-            xvals, yvals, colors = values
-            if len(xvals) == 0 or len(yvals) == 0 or len(colors) == 0: continue
-
-            if self.mZRange:
-                vmin, vmax = self.mZRange
-                colors[ colors < vmin ] = vmin
-                colors[ colors > vmax ] = vmax
-            else:
-                vmin, vmax = None, None
-
-            plts.append(plt.scatter( xvals,
-                                     yvals,
-                                     c = colors,
-                                     vmax = vmax,
-                                     vmin = vmin ) )
+        plts.append(plt.scatter( xvals,
+                                 yvals,
+                                 c = zvals,
+                                 vmax = vmax,
+                                 vmin = vmin ) )
             
-            plt.colorbar( format = self.mBarFormat)        
-            nplotted += 1
+        plt.xlabel( xlabel )
+        plt.ylabel( ylabel )
 
-            blocks.extend( self.endPlot( plts, title = track ) )
+        cb = plt.colorbar( format = self.mBarFormat)        
+        cb.ax.set_xlabel( zlabel )
 
-        return blocks
+        return self.endPlot( plts, None, path )
 
 class RendererMultiHistogramPlot(Renderer, Plotter):
     """Render histogram data as plot.
@@ -1553,7 +974,7 @@ class RendererMultiHistogramPlot(Renderer, Plotter):
 
         for track, vv in data:
 
-            self.startPlot( data )
+            self.startPlot()
             headers, columns = vv
 
             # get and transform x/y values
@@ -1571,69 +992,6 @@ class RendererMultiHistogramPlot(Renderer, Plotter):
             blocks.extend( self.endPlot( plts, legend, title = track ) )
 
         return blocks
-
-class RendererGroupedTable(Renderer):    
-    """A table with grouped data.
-
-    Requires :class:`DataTypes.MultipleColumns`.
-    """
-
-    mRequiredType = type( MultipleColumns( None ) )
-
-    def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-        self.mFormat = "%i"
-
-    def addData( self, group, title, data ):
-        self.mData[group].append( (title, data ) )
-
-    def getHeaders( self ):
-        """return a list of headers and a mapping of header to column."""
-        # preserve the order of columns
-        headers = {}
-        sorted_headers = []
-        for group, data in self.mData.iteritems():
-            for track, d in data:
-                columns, data = d
-                for h in columns:
-                    if h not in headers: 
-                        headers[h] = len(headers)
-                        sorted_headers.append(h)
-
-        return sorted_headers, headers
-
-    def commit(self): 
-        
-        debug( "%s: rendering data started" % (self.mTracker,) )
-        
-        result = []
-        
-        sorted_headers, headers = self.getHeaders()
-
-        result.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        result.append( '   :header: "group", "track","%s" ' % '","'.join( sorted_headers ) )
-        result.append( '')
-
-        def toValue( dd, x ):
-            if dd[x] == None:
-                return "na"
-            else:
-                return str(dd[x])
-
-        for group, data in self.mData.iteritems():
-            g = "*%s*" % group
-            for track, d in data:
-                columns, data = d
-                # tranpose to row-oriented format
-                for row in zip( *data ):
-                    dd = dict( zip( columns, row) )
-                    result.append( '   "%s","*%s*","%s"' % ( g,track, '","'.join( [toValue( dd, x) for x in sorted_headers] )))
-                    g = ""
-
-        return [ ResultBlock( "\n".join(result) ), ]
 
         
 

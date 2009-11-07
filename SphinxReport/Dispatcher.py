@@ -184,8 +184,7 @@ class Dispatcher:
             tracks = self.mTracker.getTracks( subset = None )
         except AttributeError:
             # not a Tracker, simply call function:
-            data = self.getData( None, None )
-            self.addData( "all", "slice", data )
+            self.mData[ "all" ][ "slice"] = self.getData( None, None )
             self.mTracks = []
             return
 
@@ -198,7 +197,7 @@ class Dispatcher:
                 tracks = [ t for t in tracks if t not in f ]
             else:
                 # get tracks again, this time with subset
-                tracks = self.mTracker.getTracks( subset = self.mTracks )
+                tracks = self.mTracker.getTracks( subset = self.mInputTracks )
         
         self.mTracks = tracks
 

@@ -7,20 +7,23 @@ Tutorial 3
 Using slices
 
 .. report:: Tutorial3.WordCounterWithSlices
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :range: 0,100,1
 
    Word sizes in .py and .rst files. 
 
 .. report:: Tutorial3.WordCounterWithSlices
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :range: 0,100,1
    :groupby: track
 
    Word sizes in .py and .rst files. 
 
 .. report:: Tutorial3.WordCounterWithSlices
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :range: 0,100,1
    :tracks: .py,.rst
    :slices: vocals

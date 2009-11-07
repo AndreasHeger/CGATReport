@@ -421,7 +421,7 @@ class CorrelationTest(Result):
         elif s_result:
             self.coefficient = s_result[0]
             self.pvalue = s_result[1]
-            self.nobservations = 0
+            self.nobservations = nobservations
             self.alternative = "two-sided"
 
         if self.pvalue != None:

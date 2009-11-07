@@ -2,7 +2,8 @@ Testing the layout option
 -------------------------
 
 .. report:: TestCases.LayoutTest
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :layout: row
    :mpl-rc: figure.figsize=(3,3)
    :as-lines:
@@ -10,7 +11,8 @@ Testing the layout option
    Row layout
 
 .. report:: TestCases.LayoutTest
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :layout: column
    :mpl-rc: figure.figsize=(3,3)
    :as-lines:
@@ -18,7 +20,8 @@ Testing the layout option
    Column layout
 
 .. report:: TestCases.LayoutTest
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :layout: grid
    :mpl-rc: figure.figsize=(3,3)
    :as-lines:

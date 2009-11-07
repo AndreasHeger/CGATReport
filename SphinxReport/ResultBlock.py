@@ -48,6 +48,15 @@ class ResultBlock:
                 self.text +\
                 map_old2new["default-suffix"]
 
+    def updateTitle( self, title, mode="prefix" ):
+        if not self.title: 
+            self.title = title
+        elif mode == "prefix":
+            self.title = "/".join( (title,self.title))
+        elif mode == "suffix":
+            self.title = "/".join( (self.title,title))
+        else:
+            self.title = title
     def __str__(self):
         return "\n\n".join( (self.title, self.text) )
 
@@ -61,6 +70,8 @@ class ResultBlocks(object):
         if block: self._data.append( block )
     def __iter__(self):
         return self._data.__iter__()
+    def __getitem__(self, key):
+        return self._data.__getitem__(key)
     def __len__(self):
         return self._data.__len__()
     def __str__(self):
@@ -71,6 +82,14 @@ class ResultBlocks(object):
         '''recursively apply lines in text.'''
         for block in self._data:
             block.updatePlaceholders( map_old2new )
+    def updateTitle( self, title, mode="prefix" ):
+        '''update title with *title*.
+
+        *mode* can be either ``prefix``, ``suffix``
+        or ``replace``.
+        '''
+        for block in self._data:
+            block.updateTitle( title, mode )
     def __getattr__(self, name):
         return getattr(self._data, name)
     def __setattr__(self, name, value):

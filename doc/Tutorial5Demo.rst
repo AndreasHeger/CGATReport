@@ -7,7 +7,8 @@ Tutorial 5
 The simplest plot:
 
 .. report:: Tutorial4.ExpressionLevelWithSlices
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :range: 0,100,4
 
    Expression level in house-keeping and regulatory genes
@@ -16,7 +17,8 @@ The simplest plot:
 A customized plot:
 
 .. report:: Tutorial4.ExpressionLevelWithSlices
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :range: 0,100,4
    :xtitle: expression level
    :groupby: all
@@ -28,7 +30,8 @@ A customized plot:
 The same data in tabular form:
 
 .. report:: Tutorial4.ExpressionLevelWithSlices
-   :render: stats
+   :render: table
+   :transform: stats
 
    Expression level in house-keeping and regulatory genes
    in two experiments.
@@ -46,7 +49,8 @@ as box plot:
 or as literal histogram:
 
 .. report:: Tutorial4.ExpressionLevelWithSlices
-   :render: histogram
+   :render: line-plot
+   :transform: histogram
    :range: 0,100,4
 
    Expression level in house-keeping and regulatory genes

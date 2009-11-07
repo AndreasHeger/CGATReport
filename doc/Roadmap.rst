@@ -34,7 +34,6 @@ examine memory usage
     investigate if this can be optimized, for example
     by using numpy more efficiently
 
-
 plugin architecture
     clean up Renderer.py so that adding custom renderers
     will become easy. Consider adding a generic interface
@@ -47,26 +46,16 @@ rpy integration
     check if it is possible to use rpy as rendering engine and
     for statistical tests.
 
---force option
-    add --clean or --force option to sphinxreport-test or build
-    automatically force a new build. See also the corresponding
-    sphinx-build options.
-
 optional pdf support
     pdf rendering takes a while and could be post-poned until
     final document is produced. Similarly, pdf scatter plots 
     with many points take a long while to render and these should
     be thinned.
 
-add hinton plot
-   add hinton plot (see http://www.scipy.org/Cookbook/Matplotlib)
 
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
 
-datatypes
-   The current nomenclature of datatypes is non-intuitive. Do away with 
-   it and have each Renderer test for correctly formatted input?
 
 Version 1.1
 ===========
@@ -115,6 +104,22 @@ explorer output
     check output on windows explorer - frames do not appear on
     Chris' machine. Works on Windows XP, IE 8.
 
+datatypes
+   The nomenclature of datatypes was non-intuitive. Did away with 
+   it and had each Renderer test for correctly formatted input.
+
+add hinton plot
+   added hinton plot (see http://www.scipy.org/Cookbook/Matplotlib)
+
+--force option
+   add --clean or --force option to sphinxreport-test or build
+   automatically force a new build. See also the corresponding
+   sphinx-build options.
+
+changed API
+   changed model to use Dispatcher, Renderer and Transformer
+   to disentangle figuring what to plot, plotting and data 
+   transformation.
 
 Known problems
 --------------

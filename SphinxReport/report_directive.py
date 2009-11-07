@@ -29,7 +29,7 @@ import Renderer
 import Transformer
 import Dispatcher
 import matplotlib
-import ResultBlock
+from ResultBlock import ResultBlock, ResultBlocks
 
 DEBUG = False
 FORCE = False
@@ -134,24 +134,25 @@ MAP_TRANSFORMER = {
 
 MAP_RENDERER= { 
     'line-plot': Renderer.RendererLinePlot,
-    'correlation': Renderer.RendererCorrelation,
-    'correlation-plot': Renderer.RendererCorrelationPlot,
-    'correlation-matrix-plot': Renderer.RendererCorrelationMatrixPlot,
-    'pairwise-stats': Renderer.RendererPairwiseStats,
-    'pairwise-stats-matrix-plot': Renderer.RendererPairwiseStatsMatrixPlot,
-    'pairwise-stats-bar-plot': Renderer.RendererPairwiseStatsBarPlot,
-    'pairwise-stats-plot': Renderer.RendererPairwiseStatsMatrixPlot,
+    # 'correlation': Renderer.RendererCorrelation,
+    # 'correlation-plot': Renderer.RendererCorrelationPlot,
+    # 'correlation-matrix-plot': Renderer.RendererCorrelationMatrixPlot,
+    # 'pairwise-stats': Renderer.RendererPairwiseStats,
+    # 'pairwise-stats-matrix-plot': Renderer.RendererPairwiseStatsMatrixPlot,
+    # 'pairwise-stats-bar-plot': Renderer.RendererPairwiseStatsBarPlot,
+    # 'pairwise-stats-plot': Renderer.RendererPairwiseStatsMatrixPlot,
     'pie-plot': Renderer.RendererPiePlot,
     'scatter-plot': Renderer.RendererScatterPlot,
     'scatter-rainbow-plot': Renderer.RendererScatterPlotWithColor,
     'table': Renderer.RendererTable,
-    'grouped-table': Renderer.RendererGroupedTable,
+    # 'grouped-table': Renderer.RendererGroupedTable,
     'matrix': Renderer.RendererMatrix,
     'matrix-plot': Renderer.RendererMatrixPlot,
-    'stacked-bars': Renderer.RendererStackedBars,
-    'interleaved-bars': Renderer.RendererInterleavedBars,
-    'bars': Renderer.RendererInterleavedBars,
-    'multihistogram-plot': Renderer.RendererMultiHistogramPlot,
+    'hinton-plot': Renderer.RendererHintonPlot,
+    'bar-plot': Renderer.RendererBarPlot,
+    'stacked-bar-plot': Renderer.RendererStackedBarPlot,
+    'interleaved-bar-plot': Renderer.RendererInterleavedBarPlot,
+    # 'multihistogram-plot': Renderer.RendererMultiHistogramPlot,
     'box-plot': Renderer.RendererBoxPlot,
     'glossary' : Renderer.RendererGlossary 
 }
@@ -317,8 +318,10 @@ def layoutBlocks( blocks, layout = "column"):
     if len(blocks) == 0: return lines
 
     # flatten blocks
-    x = ResultBlock.ResultBlocks()
-    for i in blocks: x.extend( i )
+    x = ResultBlocks()
+    for i in blocks: 
+        if i.title: i.updateTitle( i.title, "prefix" )
+        x.extend( i )
     blocks = x
 
     if layout == "column":
@@ -326,6 +329,9 @@ def layoutBlocks( blocks, layout = "column"):
             if block.title:
                 lines.extend( block.title.split("\n") )
                 lines.append( "" )
+            else:
+                logging.warn( "missing title" )
+
             lines.extend(block.text.split("\n"))
         lines.extend( [ "", ] )
         return lines
@@ -350,8 +356,7 @@ def layoutBlocks( blocks, layout = "column"):
 
     ## add empty blocks
     if len(blocks) % ncols:
-        blocks = list(blocks)
-        blocks.extend( [ Renderer.ResultBlock( "" )]  * (ncols - len(blocks) % ncols) )
+        blocks.extend( [ ResultBlock( "", "" )]  * (ncols - len(blocks) % ncols) )
 
     for nblock in range(0, len(blocks), ncols ):
 

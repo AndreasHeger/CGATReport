@@ -8,8 +8,7 @@ class LongLabelsSmall( Tracker ):
     mWordSize = 5
     mNumWords = 5
     def getSlices( self, subset = None ): return "small", "large", "gigantic"
-    def getTracks( self ): return "track1", "track2", "track3"
-    @returnLabeledData
+    def getTracks( self, subset = None ): return "track1", "track2", "track3"
     def __call__(self, track, slice = None):
         if slice == "small": ncolumns = 10
         elif slice == "large": ncolumns = 40
@@ -19,7 +18,7 @@ class LongLabelsSmall( Tracker ):
         for x in range( 0, ncolumns):
             label = "%s:%i %s" % ( slice, x, " ".join([ "a" * self.mWordSize for y in range(self.mNumWords) ] ))
             data.append( (label, random.randint( 0,100 )) )
-        return data
+        return dict( data )
 
 class LargeMatrix( Tracker ):
     """example of a large matrix with long labels."""
@@ -28,8 +27,7 @@ class LargeMatrix( Tracker ):
     mNumTracks = 50
 
     def getSlices( self, subset = None ): return "small", "large"
-    def getTracks( self ): return ["track%i" % i for i in range(self.mNumTracks)]
-    @returnLabeledData
+    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.mNumTracks)]
     def __call__(self, track, slice = None):
         if slice == "small": ncolumns = 10
         elif slice == "large": ncolumns = 40
@@ -38,7 +36,7 @@ class LargeMatrix( Tracker ):
         for x in range( 0, ncolumns):
             label = "%s:%i %s" % ( slice, x, " ".join([ "a" * self.mWordSize for y in range(self.mNumWords) ] ))
             data.append( (label, random.randint( 0,100 )) )
-        return data
+        return dict( data )
 
 class LayoutTest( Tracker ):
     """Layout testing."""
@@ -47,11 +45,10 @@ class LayoutTest( Tracker ):
     mNumSamples = 100
 
     def getSlices( self, subset = None ): return ["slice%i" % i for i in range(self.mNumSlices)]
-    def getTracks( self ): return ["track%i" % i for i in range(self.mNumTracks)]
+    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.mNumTracks)]
 
-    @returnSingleColumnData
     def __call__(self, track, slice = None):
-        return [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ]
+        return dict( ( ("data", [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ]),))
 
 class MultipleHistogramTest( Tracker ):
     """Layout testing."""
@@ -60,11 +57,10 @@ class MultipleHistogramTest( Tracker ):
     mNumSamples = 100
 
     def getSlices( self, subset = None ): return ["slice%i" % i for i in range(self.mNumSlices)]
-    def getTracks( self ): return ["track%i" % i for i in range(self.mNumTracks)]
+    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.mNumTracks)]
 
-    @returnMultipleColumnData
     def __call__(self, track, slice = None):
-        return (("bin", "value-set1", "value-set2"),
-                (range(0,self.mNumSamples),
-                 [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ],
-                 [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ] ) )
+        return dict( ( ("bin", "value-set1", "value-set2"),
+                       (range(0,self.mNumSamples),
+                        [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ],
+                        [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ] )))

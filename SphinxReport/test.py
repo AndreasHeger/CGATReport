@@ -285,7 +285,7 @@ def main():
             print "..Template ends"
         if result: 
             for r in result:
-                print "path", r.title
+                print r.title
                 for s in r:
                     print str(s)
         if options.do_show: plt.show()

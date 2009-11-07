@@ -109,3 +109,86 @@ The :class:`Renderer.RendererBoxplot` class computes boxplots.
 
    Figure caption.
 
+Multi-column data
+*****************
+
+Renderers that accept multiple columns of data of type :class:`DataTypes.SingleColumnData` 
+per :term:`track` and :term:`slice`. The data is asscociated with column headers, for example 
+``[ ('column1', 'column2'), ( ( 1,2,3), (4,5,6) )]``.
+
+Pairwise statistics table
+=========================
+
+Compute correlation statistics between all columns.
+
+.. report:: Trackers.MultipleColumnDataExample
+   :render: table
+   :transform: correlation
+
+   A pairwise statistics table.
+
+.. Pairwise statistics plot
+.. ========================
+
+.. Plot correlation coefficients between all columns.
+
+.. .. report:: Trackers.MultipleColumnDataExample
+..    :render: table
+..    :transform: filter
+
+..    A pairwise statistics plot.
+
+Pairwise scatter plot
+========================
+
+A scatter plot.
+
+.. report:: Trackers.MultipleColumnDataExample
+   :render: scatter-plot
+
+   A scatter plot.
+
+A scatter plot with colours
+
+.. report:: Trackers.MultipleColumnDataExample
+   :render: scatter-rainbow-plot
+
+   A scatter plot with colours.
+
+
+Grouped table
+=============
+
+A grouped table.
+
+.. report:: Trackers.MultipleColumnsExample
+   :render: table
+
+   A grouped table.
+
+Matrices
+========
+
+The :class:`Renderer.RendererMatrix` class inserts labeled data into
+a matrix:
+
+.. report:: Trackers.LabeledDataExample
+   :render: matrix
+
+   A matrix.
+
+The :class:`Renderer.RendererMatrixPlot` class inserts labeled data into
+a table.
+
+.. report:: Trackers.LabeledDataExample
+   :render: matrix-plot
+
+   A matrix.
+
+The :class:`Renderer.RendererHintonPlot` class inserts labeled data into
+a table.
+
+.. report:: Trackers.LabeledDataExample
+   :render: hinton-plot
+
+   A matrix.
