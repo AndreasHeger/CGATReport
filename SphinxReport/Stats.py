@@ -9,6 +9,7 @@ try:
     import rpy
 except ImportError:
     pass
+import odict
 
 def getSignificance( pvalue, thresholds=[0.05, 0.01, 0.001] ):
     """return cartoon of significance of a p-Value."""
@@ -18,11 +19,31 @@ def getSignificance( pvalue, thresholds=[0.05, 0.01, 0.001] ):
         n += 1
     return "*" * n
 
+class Result(object):
+    '''allow both member and dictionary access.'''
+    slots=("_data")
+    def __init__(self):
+        object.__setattr__(self, "_data", odict.OrderedDict())
+    def __getattr__(self, key):
+        if not key.startswith("_"):
+            try: return object.__getattribute__(self,"_data")[key]
+            except KeyError: pass
+        return getattr( self._data, key )
+    def __getitem__(self, key ):
+        return self._data[key]
+    def __setitem__(self, key, value ):
+        self._data[key] = value
+    def __setattr__(self, key, value):
+        if not key.startswith("_"):
+            self._data[key] = value
+        else:
+            object.__setattr__(self,key,value)
+
 #################################################################
 #################################################################
 #################################################################
 ## Perform log likelihood test
-class LogLikelihoodTest:
+class LogLikelihoodTest(Result):
 
     def __init__(self):
         pass
@@ -146,103 +167,61 @@ def doPearsonChiSquaredTest( p, sample_size, observed, significance_threshold = 
 #################################################################
 ## Convenience functions and objects for statistical analysis
 
-class DistributionalParameters:
+class Summary( Result ):
     """a collection of distributional parameters. Available properties
     are:
 
-    mMean, mMedian, mMin, mMax, mSampleStd, mSum, mCounts
+    mean, median, min, max, samplestd, sum, counts
     """
-    def __init__(self, values = None, format = "%6.4f", mode="float"):
-
-        self.mMean, self.mMedian, self.mMin, self.mMax, self.mSampleStd, self.mSum, self.mCounts, self.mQ1, self.mQ3 = \
+    def __init__(self, values = None, format = "%6.4f", mode="float" ):
+        Result.__init__(self)
+        self._format = format
+        self._mode = mode
+        # note that this determintes the order of the fields at output
+        self.counts, self.min, self.max, self.mean, self.median, self.samplestd, self.sum, self.q1, self.q3 = \
                     (0, 0, 0, 0, 0, 0, 0, 0, 0)
         
-        if values != None and len(values) > 0: self.updateProperties( values )
-        self.mFormat = format
-        self.mMode = mode
-        self.mNErrors = 0
+        if values != None:
 
-    def updateProperties( self, values):
-        """update properties.
+            values = [x for x in values if x != None ]
 
-        If values is an vector of strings, each entry will be converted
-        to float. Entries that can not be converted are ignored.
-        """
-        values = [x for x in values if x != None ]
+            if len(values) == 0:
+                raise ValueError( "no data for statistics" )
 
-        if len(values) == 0:
-            raise ValueError( "no data for statistics" )
+            # convert
+            self._nerrors = 0
+            if type(values[0]) not in (types.IntType, types.FloatType):
+                n = []
+                for x in values:
+                    try:
+                        n.append( float(x) )
+                    except ValueError:
+                        self._nerrors += 1
+            else:
+                n = values
 
-        ## convert
-        self.mNErrors = 0
-        if type(values[0]) not in (types.IntType, types.FloatType):
-            n = []
-            for x in values:
-                try:
-                    n.append( float(x) )
-                except ValueError:
-                    self.mNErrors += 1
-        else:
-            n = values
+            ## use a non-sort algorithm later.
+            n.sort()
+            self.q1 = n[len(n) / 4]
+            self.q3 = n[len(n) * 3 / 4]
 
-        ## use a non-sort algorithm later.
-        n.sort()
-        self.mQ1 = n[len(n) / 4]
-        self.mQ3 = n[len(n) * 3 / 4]
-        
-        self.mCounts = len(n)
-        self.mMin = min(n)
-        self.mMax = max(n)
-        self.mMean = scipy.mean( n )
-        self.mMedian = scipy.median( n )
-        self.mSampleStd = scipy.std( n )
-        self.mSum = reduce( lambda x, y: x+y, n )
+            self.counts = len(n)
+            self.min = min(n)
+            self.max = max(n)
+            self.mean = scipy.mean( n )
+            self.median = scipy.median( n )
+            self.samplestd = scipy.std( n )
+            self.sum = reduce( lambda x, y: x+y, n )
 
-    def getZScore( self, value ):
-        """return zscore for value."""
-        if self.mSampleStd > 0:
-            return (value - self.mMean) / self.mSampleStd
-        else:
-            return 0
-
-    def setFormat( self, format ):
-        """set number format."""
-        self.mFormat = format
-
-    def getHeaders( self ):
-        """returns header of column separated values."""
-        return ("nval", "min", "max", "mean", "median", "stddev", "sum", "q1", "q3")
-
-    def getHeader( self ):
-        """returns header of column separated values."""
-        return "\t".join( self.getHeaders())
-
-    def items(self):
-        return [ (x, self.__getitem__(x)) for x in self.getHeaders() ]
-
-    def __getitem__( self, key ):
-        
-        if key == "nval": return self.mCounts
-        if key == "min": return self.mMin
-        if key == "max": return self.mMax
-        if key == "mean": return self.mMean
-        if key == "median": return self.mMedian
-        if key == "stddev": return self.mSampleStd
-        if key == "sum": return self.mSum
-        if key == "q1": return self.mQ1
-        if key == "q3": return self.mQ3                
-
-        raise KeyError, key
-        
     def __str__( self ):
         """return string representation of data."""
         
-        if self.mMode == "int":
+        if self._mode == "int":
             format_vals = "%i"
             format_median = "%.1f"
         else:
-            format_vals = self.mFormat
-            format_median = self.mFormat
+            format_vals = self._format
+            format_median = self._format
 
         return "\t".join( ( "%i" % self.mCounts,
                             format_vals % self.mMin,
@@ -254,12 +233,6 @@ class DistributionalParameters:
                             format_vals % self.mQ1,
                             format_vals % self.mQ3,                            
                             ) )
-
-class Summary(DistributionalParameters):
-    """a shorter name for DistributionalParameters
-    """
-    pass
-
 
 class FDRResult:
     def __init__(self):
@@ -427,42 +400,42 @@ qvalues
 #################################################################
 #################################################################
 #################################################################
-class CorrelationTest:
+class CorrelationTest(Result):
     def __init__(self, 
                  r_result = None, 
                  s_result = None,
-                 method = None):
-        self.mPValue = None
-        self.mMethod = None
+                 method = None,
+                 nobservations = 0):
+        Result.__init__(self)
+
+        self.pvalue = None
+        self.method = method
+        self.nobservations = 0
 
         if r_result:
-            self.mCoefficient = r_result['estimate']['cor']
-            self.mPValue = float(r_result['p.value'])
-            self.mNObservations = r_result['parameter']['df']
-            self.mMethod = r_result['method']
-            self.mAlternative = r_result['alternative']
+            self.coefficient = r_result['estimate']['cor']
+            self.pvalue = float(r_result['p.value'])
+            self.nobservations = r_result['parameter']['df']
+            self.method = r_result['method']
+            self.alternative = r_result['alternative']
         elif s_result:
-            self.mCoefficient = s_result[0]
-            self.mPValue = s_result[1]
-            self.mNObservations = 0
-            self.mAlternative = "two-sided"
+            self.coefficient = s_result[0]
+            self.pvalue = s_result[1]
+            self.nobservations = 0
+            self.alternative = "two-sided"
 
-        if method: self.mMethod = method
-
-        if self.mPValue != None:
-            self.mSignificance = getSignificance( self.mPValue )
+        if self.pvalue != None:
+            self.significance = getSignificance( self.pvalue )
 
     def __str__(self):
         return "\t".join( (
-            "%6.4f" % self.mCoefficient,
-            "%e" % self.mPValue,
-            self.mSignificance,
-            "%i" % self.mNObservations,
-            self.mMethod,
-            self.mAlternative ) )
-    def getHeaders(self):
-        return ("coeff", "pvalue", "significance", "observations", "method", "alternative" )
-    
+            "%6.4f" % self.coefficient,
+            "%e" % self.pvalue,
+            self.significance,
+            "%i" % self.nobservations,
+            self.method,
+            self.alternative ) )
+
 def filterMasked( xvals, yvals, missing = ("na", "Nan", None, ""), dtype = numpy.float ):
     """convert xvals and yvals to numpy array skipping pairs with
     one or more missing values."""
@@ -490,8 +463,8 @@ def doCorrelationTest( xvals, yvals ):
     x, y = filterMasked( xvals, yvals )
 
     result = CorrelationTest( s_result = scipy.stats.pearsonr( x, y ),
-                              method = "pearson" )
-    result.mNObservations = len(x)
+                              method = "pearson",
+                              nobservations = len(x))
 
     return result
 

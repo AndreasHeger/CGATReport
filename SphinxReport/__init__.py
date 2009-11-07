@@ -5,6 +5,8 @@ __all__ = [ "Renderer",
             "Stats",
             "DataTypes",
             "Logger",
-            "ResultBlock"
+            "ResultBlock",
+            'Transformer',
+            'Dispatcher',
             "only_directive",
             "report_directive" ]

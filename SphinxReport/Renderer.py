@@ -1,4 +1,4 @@
-import os, sys, re, shelve, traceback, cPickle, types
+import os, sys, re, shelve, traceback, cPickle, types, itertools
 
 from Plotter import *
 from Tracker import *
@@ -23,7 +23,7 @@ import Histogram
 import collections
 
 from DataTypes import *
-from ResultBlock import ResultBlock
+from ResultBlock import ResultBlock, ResultBlocks
 
 # Some renderers will build several objects.
 # Use these two rst levels to separate individual
@@ -47,8 +47,14 @@ if not os.path.exists("conf.py"):
 
 execfile( "conf.py" )
 
+def unique( iterables ):
+    s = set()
+    for x in iterables:
+        if x not in s:
+            yield x
+            s.add(x)
 
-class Renderer:
+class Renderer(object):
     """Base class of renderers that render data into restructured text.
 
     The subclasses define how to render the data by overloading the
@@ -75,60 +81,14 @@ class Renderer:
        :term:`groupby`: group data by :term:`track` or :term:`slice`.
 
     """
-    mRequiredType = None
+    level = None
 
-    def __init__(self, tracker ):
+    def __init__(self, tracker, *args, **kwargs ):
         """create an Renderer object using an instance of 
         a :class:`Tracker.Tracker`.
         """
 
-        debug("starting renderer '%s' with tracker '%s'" % (str(self), str(tracker) ) )
-
-        self.mTracker = tracker
-        global cachedir
-        self.mCacheFile = None
-        self._cache = None
-
-        if cachedir:
-
-            try:
-                if cachedir != None: 
-                    os.mkdir(cachedir)
-            except OSError, msg:
-                pass
-        
-            if not os.path.exists(cachedir): 
-                raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
-
-            self.mCacheFile = os.path.join( cachedir, tracker.__class__.__name__ )
-            # on Windows XP, the shelve does not work, work without cache
-            try:
-                self._cache = shelve.open(self.mCacheFile,"c", writeback = False)
-                debug( "using cache %s" % self.mCacheFile )
-                debug( "keys in cache: %s" % (str(self._cache.keys() ) ))                
-            except bsddb.db.DBFileExistsError, msg:    
-                warn("could not open cache %s - continuing without. Error = %s" %\
-                     (self.mCacheFile, msg))
-                self.mCacheFile = None
-                self._cache = None
-
-        else:
-            debug( "not using cache" )
-
-    def __del__(self):
-        
-        if self._cache != None: 
-            return
-            debug("closing cache %s" % self.mCacheFile )
-            debug( "keys in cache %s" % (str(self._cache.keys() ) ))
-            self._cache.close()
-            self._cache = None
-
-    def getCaption( self ):
-        """return a caption string."""
-        return self.__doc__
-
-    def prepare(self, *args, **kwargs ): 
+        debug("starting renderer '%s'")
 
         try: self.mLayout = kwargs["layout"]
         except KeyError: self.mLayout = "column"
@@ -136,345 +96,141 @@ class Renderer:
         try: self.mGroupBy = kwargs["groupby"]
         except KeyError: self.mGroupBy = "slice"
 
-        try: self.mTracks = [ x.strip() for x in kwargs["tracks"].split(",")]
-        except KeyError: self.mTracks = None
+        self.mTracker = tracker
 
-        try: 
-            self.mSlices = [ x.strip() for x in kwargs["slices"].split(",")]
-            # if len(self.mSlices) == 1: self.mSlices = self.mSlices[0]
-        except KeyError: 
-            self.mSlices = None
+    def __call__(self):
+        return None
 
-        self.mData = collections.defaultdict( list )
+    def getLabels( self, data ):
+        '''extract labels from data.
 
-    def normalize_max( self, data ):
-        """normalize a data vector by maximum.
-        """
-        if data == None or len(data) == 0: return data
-        m = max(data)
-        data = data.astype( numpy.float )
-        # numpy does not throw at division by zero, but sets values to Inf
-        return data / m
-
-    def normalize_total( self, data ):
-        """normalize a data vector by the total"""
-        if data == None or len(data) == 0: return data
-        try:
-            m = sum(data)
-        except TypeError:
-            return data
-        data = data.astype( numpy.float )
-        # numpy does not throw at division by zero, but sets values to Inf
-        return data / m
-
-    def getDataFromCache( self, key ):
-
-        result = None
-        if self._cache != None:
-            try:
-                if key in self._cache: 
-                    result = self._cache[key]
-                    debug( "retrieved data for key '%s' from cache: %i" % (key, len(result)) )
-                else:
-                    result = None
-                    debug( "key '%s' not found in cache" % key )
-
-            except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, cPickle.UnpicklingError, ValueError, EOFError), msg:
-                warn( "could not get key '%s' or value for key in '%s': msg=%s" % (key,self.mCacheFile, msg) )
-        return result
-
-    def saveDataInCache( self, key, data ):
-
-        if self._cache != None:
-            try:
-                self._cache[key] = data
-                debug( "saved data for key '%s' in cache" % key )
-            except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError), msg:
-                warn( "could not save key '%s' from '%s': msg=%s" % (key,self.mCacheFile,msg) )
-            # The following sync call is absolutely necessary when using 
-            # the multiprocessing library (python 2.6.1). Otherwise the cache is emptied somewhere 
-            # before the final call to close(). Even necessary, if writeback = False
-            self._cache.sync()
-
-    def getData( self, track, slice):
-        """get data for track and slice. Save data in persistent cache for further use."""
-
-        key = ":".join( (str(track), str(slice)) )
-        result = self.getDataFromCache( key )
-
-        kwargs = {}
-        if track != None: kwargs['track'] = track
-        if slice != None: kwargs['slice'] = slice
+        returns a list of list with all labels within
+        the nested dictionary of data.
+        '''
+        labels = []
         
-        if result == None:
+        this_level = [data,]
 
+        while 1:
+            l, next_level = [], []
+            for x in [ x for x in this_level if hasattr( x, "keys")]:
+                l.extend( x.keys() )
+                next_level.extend( x.values() )
+            if not l: break
+            labels.append( list(unique(l)) )
+            this_level = next_level
+
+        debug( "%s: found the following labels: %s" % (str(self),labels))
+        return labels
+
+    def getLeaf( self, data, path ):
+        '''get leaf in hierarchy at path.'''
+        work = data
+        for x in path:
             try:
-                # this messy code distinguishes between the result of functors
-                # and true functions that have been wrapped with the DataTypes
-                # decorators by checking if it has a __len__ method.
-                if not hasattr( self.mTracker, "__len__"):
-                    result = self.mTracker( **kwargs )
-                else:
-                    result = self.mTracker
-                debug( "collected data for key '%s': %i" % (key, len(result)) )
-            except Exception, msg:
-                warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.mTracker), track, slice, msg) )
-                if VERBOSE: warn( traceback.format_exc() )
-                result = []
+                work = work[x]
+            except KeyError:
+                work = None
+                break
+        return work
+
+    def __call__(self, data, title ):
+        '''iterate over leaves in data structure.
+
+        and call ``render`` method.
+        '''
+        if self.level == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
+
+        labels = self.getLabels( data )        
+        assert len(labels) < self.level, "expected at least %i levels - got %i" % (self.level, len(labels))
+        
+        paths = list(itertools.product( *labels[:-self.levels] ))
+        
+        for path in paths:
+            subtitle = "-".join( path )
+            work = self.getLeaf( data, path )
+            if not work: continue
+            self.render( work, path )
             
-        self.saveDataInCache( key, result )
+class RendererTable( Renderer ):
+    '''a basic table. 
 
-        debug( "collected data for tracker '%s', track '%s' and slice '%s': %i" % (str(self.mTracker), track, slice, len(result)) )
-
-        ## check if data is correctly formatted
-        if result and self.mRequiredType != None:
-            if type(result) != self.mRequiredType:
-                warn( "tracker %s returned invalid type for %s: required=%s, returned=%s" % (str(self.mTracker), str(self), str(self.mRequiredType), type(result) ) )
-                return []
-
-        return result
-
-    def collectData( self ):
-
-        #############################################
-        # first get all tracks
-        try:
-            tracks = self.mTracker.getTracks( subset = None )
-        except AttributeError:
-            # not a Tracker, simply call function:
-            data = self.getData( None, None )
-            self.addData( "all", "slice", data )
-            return
- #       except:
-#            warn( "Error while getting tracks." )
- #           return
-
-        # do we have a subset specified
-        if self.mTracks != None:
-            # if it starts with -, remove
-            if self.mTracks[0].startswith("-"):
-                f = set(self.mTracks)
-                f.add( self.mTracks[0][1:] )
-                tracks = [ t for t in tracks if t not in f ]
-            else:
-                # get tracks again, this time with subset
-                tracks = self.mTracker.getTracks( subset = self.mTracks )
-
-        if len(tracks) == 0: 
-            debug( "%s: no tracks found - no output" % self.mTracker )
-            return
-
-        # determine slices through the data
-        #
-        # first get all slices without subsets and check if all
-        # specified slices are available. 
-        if self.mSlices:
-            all_slices = set(self.mTracker.getSlices( subset = None ))
-            for s in self.mSlices:
-                if s not in all_slices:
-                    slices = self.mTracker.getSlices( subset = self.mSlices )
-                    break
-            else:
-                slices = self.mSlices
-        else:
-            slices = self.mTracker.getSlices( subset = None )
-        
-        if type(slices) in types.StringTypes: slices=[slices,]
-        if len(slices) == 0: slices=[None,]
-
-        debug( "%s: collecting data started for %i pairs, %i tracks: %s, %i slices: %s" % (self.mTracker, len(tracks) * len(slices), 
-                                                                                           len(tracks), str(tracks),
-                                                                                           len(slices), str(slices) ) )
-
-        # group by tracks
-        if self.mGroupBy == "track":
-            for track in tracks:
-                for slice in slices:
-                    data = self.getData( track, slice )
-                    if len(data) == 0: continue
-                    if slice == None: slice = "all"
-                    self.addData( track, slice, data )
-        # group by slices
-        elif self.mGroupBy == "slice":
-            for slice in slices:
-                for track in tracks:
-                    data = self.getData( track, slice )
-                    if len(data) == 0: continue
-                    self.addData( slice, track, data )
-        else:
-            for slice in slices:
-                for track in tracks:
-                    data = self.getData( track, slice )
-                    if len(data) == 0: continue
-                    if slice == None: key = track
-                    else: key = track + "_" + slice
-                    self.addData( "all", key , data )
-
-        debug( "%s: collecting data finished for %i pairs, %i tracks, %i slices" % (self.mTracker, len(tracks) * len(slices), len(tracks), len(slices)) )
-
-    def addData( self, group, title, data ):
-        self.mData[group].append( (title,data) )
-
-    def commit(self): 
-        
-        debug( "%s: rendering data started for %i items" % (self.mTracker,len(self.mData) ))
-
-        results = []
-        for group, data in self.mData.iteritems():
-
-            result = self.render( data ) 
-
-            if not result: continue
-            
-            if len(self.mData) > 1: 
-                title = group
-            else: 
-                title = ""
-
-            # be flexible with returned data
-            if type(result) in types.StringTypes:
-                results.append( ResultBlock( result, title=title ) )
-            elif isinstance( result, ResultBlock):
-                result.mTitle = title
-                results.append( result )
-            elif type(result) in (types.TupleType, types.ListType ):
-                for x in result:
-                    if type(x) in types.StringTypes:
-                        results.append( ResultBlock( x, title=title ))
-                    elif isinstance( x, ResultBlock):
-                        if title: 
-                            if x.mTitle:
-                                x.mTitle = " ".join( (x.mTitle, title) )
-                            else:
-                                x.mTitle = title
-                        results.append( x )
-                    elif type(x) in (types.TupleType, types.ListType ):
-                        for xx in x:
-                            if not( isinstance( xx, ResultBlock)):
-                                raise TypeError( "renderer %s did not return ResultBlock, but %s:\n%s" % (self, type(xx), str(x)))
-                            xx.mTitle = title
-                        results.extend( x )
-                    else:
-                        raise TypeError( "renderer %s did not return appropriate type but %s:\n%s" % (self, type(x), str(x)))
-            else:
-                raise TypeError( "renderer %s did not return appropriate type, but %s:\n%s" % (self, type(lines), str(lines )))
-
-        debug( "%s: rendering data finished with %i blocks and %i plots" % (self.mTracker, len(results), len(_pylab_helpers.Gcf.get_all_fig_managers() ) ) )
-
-        ## assert that all is right and add the title
-        for x in results:
-            # x.mTitle = "\n".join( (title , x.mTitle ) )
-            assert isinstance( x, ResultBlock), "malformed result in %s: %s" % (str(self),str(x))
-
-        return results
-
-    def render(self, data):
-        """return a list of lines in rst format.
-
-        This is the principal method that should be re-defined
-        in subclasses of :class:`Renderer:Renderer`.
-        """
-        return []
-
-    def __call__(self, *args, **kwargs ):
-        self.prepare( *args, **kwargs )
-        self.collectData()
-        return self.commit()
-
-class RendererStats(Renderer):
-    """Basic statistical location parameters.
-
-    Requires :class:`DataTypes.SingleColumnData`.
-    """
-    mRequiredType = type( SingleColumnData( None ) )
-
-    def __init__(self, *args, **kwargs):
+    Values are either text or converted to text.
+    '''
+    def __init__( self, *args, **kwargs ):
         Renderer.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-
-    def addData( self, group, title, data ):
-        try:
-            self.mData[group].append( (title,Stats.Summary( data ) ) )
-        except ValueError, msg:
-            debug( "could not compute stats for %s: %s %s" % (group,title,msg) )
-
-    def render(self, data):
-        lines = []
-        if len(data) == 0: return lines
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        lines.append( '   :header: "track","%s" ' % '","'.join( Stats.Summary().getHeaders() ) )
-        lines.append( '')
-        for track, stats in data:
-            lines.append( '   "%s","%s"' % (track, '","'.join( str(stats).split("\t")) ) )
-        lines.append( "") 
-
-        return "\n".join(lines)
-
-class RendererTextTable(Renderer):    
-    """A table with text columns.
-
-    Requires :class:`DataTypes.LabeledData`.
-    """
-
-    mRequiredType = type( LabeledData( None ) )
-
-    def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs):
-        Renderer.prepare( self, *args, **kwargs )
-
         self.mTranspose = "transpose" in kwargs
-        
-    def addData( self, group, title, data ):
-        self.mData[group].append( (title, data ) )
 
     def getHeaders( self, data ):
-        """return a list of headers and a mapping of header to column."""
+        """return a list of headers and a mapping of header to column.
+        """
         # preserve the order of columns
-        headers = {}
+        column_headers = {}
         sorted_headers = []
-        for track, d in data:
-            for h, v in d:
-                if h not in headers: 
-                    headers[h] = len(headers)
-                    sorted_headers.append(h)
 
-        return sorted_headers, headers
+        try:
+            for row, r in data.iteritems():
+                for column, c in r.iteritems():
+                     for header, value in c.iteritems():
+                        if header not in column_headers: 
+                            column_headers[header] = len(column_headers)
+                            sorted_headers.append(header)
+        except AttributeError:
+            raise ValueError("mal-formatted data - RendererTable expected three level dictionary, got %s." % str(data) )
+
+        return sorted_headers, column_headers
 
     def buildTable( self, data ):
         """build table from data.
+
+        If there is more than one :term:`column`, additional subrows
+        are added for each.
 
         returns matrix, row_headers, col_headers
         """
         if len(data) == 0: return None, None, None
 
-        sorted_col_headers, col_headers = self.getHeaders(data)
-        col_headers = sorted_col_headers
+        labels = self.getLabels( data )        
+        assert len(labels) >= 2, "expected at least two levels for building table"
 
+        col_headers = [""] * (len(labels)-2) + labels[-1]
+        ncols = len(col_headers)
         row_headers = []
-        matrix = []
+        
+        nsubrows = len(labels)-2
+        for x in labels[0]: row_headers.extend( [x] + [""] * (nsubrows-1) )
+        nrows = len(row_headers)
+        
+        offset = len(labels)-2
+        matrix = [ [""] * ncols for x in range(nrows) ]
 
-        for track, d in data:
-            dd = dict(d)
-            matrix.append( [ str(dd[x]) for x in sorted_col_headers ] )
-            row_headers.append( track )
-
+        ## the following can be made more efficient
+        ## by better use of indices
+        for x,row in enumerate(labels[0]):
+            paths = list(itertools.product( *labels[1:-1] ))
+            for xx, path in enumerate(paths):
+                work = self.getLeaf( data, (row,) + path )
+                if not work: continue
+                for y, column in enumerate(labels[-1]):
+                    matrix[x*nsubrows+xx][y+offset] = str(work[column])
+                for z, p in enumerate(path):
+                    matrix[x*nsubrows+xx][z] = p
         if self.mTranspose:
             row_headers, col_headers = col_headers, row_headers
             matrix = zip( *matrix )
 
         return matrix, row_headers, col_headers
 
-    def render(self, data):
+    def __call__(self, data, title = None):
 
         lines = []
         matrix, row_headers, col_headers = self.buildTable( data )
         if matrix == None: return lines
 
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
+        if not title: mytitle = "title"
+        else: mytitle = title
+
+        lines.append( ".. csv-table:: %s" % mytitle )
         lines.append( '   :header: "", "%s" ' % '","'.join( col_headers ) )
         lines.append( '' )
 
@@ -483,12 +239,12 @@ class RendererTextTable(Renderer):
 
         lines.append( "") 
 
-        return "\n".join(lines)
+        return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
-class RendererGlossary( RendererTextTable ):
+class RendererGlossary( RendererTable ):
     """output a table in the form of a glossary."""
 
-    def render(self, data):
+    def __call__(self, data, title = None):
 
         lines = []
         matrix, row_headers, col_headers = self.buildTable( data )
@@ -506,9 +262,9 @@ class RendererGlossary( RendererTextTable ):
 
         lines.append( "") 
 
-        return "\n".join(lines)
+        return ResultBlocks( "\n".join(lines), title = title )
 
-class RendererTable(RendererTextTable):    
+class RendererMyTable(RendererTable):    
     """A table with numerical columns.
 
     It only implements column wise transformations.
@@ -613,7 +369,6 @@ class RendererTable(RendererTextTable):
 
         return matrix, row_headers, col_headers
 
-
 class RendererMatrix(RendererTable):    
     """A table with numerical columns.
 
@@ -633,6 +388,8 @@ class RendererMatrix(RendererTable):
            * filter-by-rows: only take columns that are also present in rows
            * filter-by-cols: only take columns that are also present in cols
            * square: make square matrix (only take rows and columns present in both)
+           * *add-row-total* : add the row total at the bottom
+           * *add-column-total* : add the column total as a last column
 
     Requires :class:`DataTypes.LabeledData`
     """
@@ -641,22 +398,22 @@ class RendererMatrix(RendererTable):
         RendererTable.__init__(self, *args, **kwargs )
 
         self.mMapKeywordToTransform = {
-            "correspondence-analysis": self.transformCorrespondenceAnalysis,
-            "transpose": self.transformTranspose,
-            "normalized-row-total" : self.transformNormalizeRowTotal,
-            "normalized-row-max" : self.transformNormalizeRowMax,
-            "normalized-col-total" : self.transformNormalizeColumnTotal,
-            "normalized-col-max" : self.transformNormalizeColumnMax ,
-            "normalized-total" : self.transformNormalizeTotal,
-            "normalized-max" : self.transformNormalizeMax,
-            "filter-by-rows" : self.transformFilterByRows,
-            "filter-by-cols" : self.transformFilterByColumns,
-            "square" : self.transformSquare,
-            }
-            
-
-    def prepare(self, *args, **kwargs):
-        RendererTable.prepare( self, *args, **kwargs )
+        "correspondence-analysis": self.transformCorrespondenceAnalysis,
+        "transpose": self.transformTranspose,
+        "normalized-row-total" : self.transformNormalizeRowTotal,
+        "normalized-row-max" : self.transformNormalizeRowMax,
+        "normalized-col-total" : self.transformNormalizeColumnTotal,
+        "normalized-col-max" : self.transformNormalizeColumnMax ,
+        "normalized-total" : self.transformNormalizeTotal,
+        "normalized-max" : self.transformNormalizeMax,
+        "filter-by-rows" : self.transformFilterByRows,
+        "filter-by-cols" : self.transformFilterByColumns,
+        "square" : self.transformSquare,
+        "add-row-total" : self.transformAddRowTotal,
+        "add-column-total" : self.transformAddColumnTotal,
+        }
+        
+        self.mFormat = "%i"
 
         self.mConverters = []        
         if "transform-matrix" in kwargs:
@@ -666,6 +423,28 @@ class RendererMatrix(RendererTable):
                     self.mConverters.append( self.mMapKeywordToTransform[ kw ] )
                 except KeyError:
                     raise ValueError("unknown matrix transformation %s" % kw )
+
+    def getHeaders( self, data ):
+        """return a list of headers and a mapping of header to column.
+        """
+        # preserve the order of columns
+        column_headers = {}
+        sorted_headers = []
+        try:
+            for row, r in data.iteritems():
+                for column, c in r.iteritems():
+                    column_headers[column] = len(column_headers)
+                    sorted_headers.append(column)
+        except AttributeError:
+            raise ValueError("mal-formatted data - RendererMatrix expected two level dictionary." )
+
+        return sorted_headers, column_headers
+
+    def transformAddRowTotal( self, matrix, row_headers, col_headers ):
+        raise NotImplementedError
+
+    def transformAddColumnTotal( self, matrix, row_headers, col_headers ):
+        raise NotImplementedError
 
     def transformFilterByRows( self, matrix, row_headers, col_headers ):
         """only take columns that are also present in rows"""
@@ -789,88 +568,163 @@ class RendererMatrix(RendererTable):
 
         This method will also apply conversions.
 
-        Returns a tuple (matrix, rows, colums).
+        Returns a list of tuples (title, matrix, rows, colums).
         """
-        rows = [ x[0] for x in data ]
-        columns = []
-        for t,vv in data: columns.extend( [x[0] for x in vv ] )
-        columns = sorted(list(set(columns)))
-        map_column2index = dict( [(x[1],x[0]) for x in enumerate( columns ) ] )
-        matrix = numpy.array( [missing_value] * (len( rows) * len(columns) ), numpy.float)
-        matrix.shape = (len(rows), len(columns) )
-        x = 0 
-        for track, vv in data:
-            for column, value in vv:
-                matrix[x, map_column2index[column]] = value
-            x += 1
 
-        for converter in self.mConverters: matrix, rows, columns = converter(matrix, rows, columns)
+        matrices = []
 
-        return matrix, rows, columns
+        labels = self.getLabels( data )
+        levels = len(labels )
+        if levels < 2: raise ValueError( "expected at least two levels" )
 
-    def render( self, data ):
-        """render the data."""
-        matrix, rows, columns = self.buildMatrix( data )
-        lines = []
-        if len(rows) == 0: return lines
+        rows, columns = labels[-2], labels[-1]
+        if levels == 2:
+            matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), numpy.float)
+            matrix.shape = (len(rows), len(columns) )
+            for x,row in enumerate(rows):
+                for y, column in enumerate(columns):
+                    try:
+                        matrix[x,y] = data[row][column]
+                    except KeyError:
+                        # ignore missing and malformatted data
+                        pass
+                    except ValueError:
+                        raise ValueError( "malformatted data: expected scalar, got '%s'" % str(data[row][column]) )
 
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
-        lines.append( '')
-        for x in range(len(rows)):
-            lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.mFormat % x for x in matrix[x,:] ] ) ) )
-        lines.append( "") 
-        return "\n".join(lines)
+            matrices.append( (matrix, rows, columns, None ) )
+
+        else:
+            paths = list(itertools.product( *labels[:-2] ))
+
+            for path in paths:
+                subtitle = "-".join( path )
+                work = self.getLeaf( data, path )
+                if not work: continue
+                matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), numpy.float)
+                matrix.shape = (len(rows), len(columns) )
+                for x,row in enumerate(rows):
+                    for y, column in enumerate(columns):
+                        try:
+                            matrix[x,y] = work[row][column]
+                        except KeyError:
+                            # ignore missing and malformatted data
+                            pass
+                        except ValueError:
+                            raise ValueError( "malformatted data: expected scalar, got '%s'" % str(data[row][column]) )
+
+                matrices.append( (matrix, rows, columns, subtitle ) )
+            
+        if self.mConverters:
+            new = []
+            for matrix, rows, columns, title in matrices:
+                for converter in self.mConverters: 
+                    matrix, rows, columns = converter(matrix, rows, columns)
+                new.append( (matrix, rows, columns, title ) )
+            matrices = new
+
+        return matrices
+
+    def __call__( self, data, title ):
+        """render the data.
+        """
+
+        results = ResultBlocks( title = title )
+        chunks = self.buildMatrix(data )
+
+        for matrix, rows, columns, path in chunks:
+            lines = []
+            if len(rows) == 0: return lines
+
+            lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
+            lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
+            lines.append( '')
+            for x in range(len(rows)):
+                lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.mFormat % x for x in matrix[x,:] ] ) ) )
+            lines.append( "") 
+            if not path: subtitle = ""
+            else: subtitle = path
+            results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
+
+        return results
+
+class RendererLinePlot(Renderer, Plotter):        
+    """create a line plot.
+    """
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def __call__(self, data, title ):
+        
+        self.startPlot()
+
+        plts, legend = [], []
+
+        nplotted = 0
+        xlabels = []
+        ylabels = []
+
+        labels = self.getLabels( data )
+        paths = list(itertools.product( *labels[:-1] ))
+        for path in paths:
+            work = self.getLeaf( data, path )
+            if not work: continue
+
+            s = self.mSymbols[nplotted % len(self.mSymbols)]
+
+            # get and transform x/y values
+            assert len(work) == 2, "multicolumn data not supported yet: %s" % str(work)
+
+            xlabel, ylabel = work.keys()
+            xvals, yvals = work.values()
+
+            plts.append(plt.plot( xvals,
+                                  yvals,
+                                  s ) )
+
+            legend.append( "/".join(path) )
+            nplotted += 1
+
+            xlabels.append(xlabel)
+            ylabels.append(ylabel)
+
+        plt.xlabel( "-".join( set(xlabels) ) )
+        plt.ylabel( "-".join( set(ylabels) ) )
+        
+        return self.endPlot( plts, legend )
 
 class RendererInterleavedBars(RendererTable, Plotter):
-    """Stacked bars
-
-    Requires :class:`DataTypes.SingleColumnData`.
+    """A barplot with interleaved bars
     """
 
     def __init__(self, *args, **kwargs):
         RendererTable.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def prepare(self, *args, **kwargs):
-        RendererTable.prepare( self, *args, **kwargs )
-        Plotter.prepare( self, *args, **kwargs )
+    def __call__( self, data, title ):
 
-        self.mFormat = "%i"
-
-    def render( self, data ):
-        
-        lines, legend = [], []
+        matrix, row_headers, col_headers = self.buildTable( data )
+        if matrix == None: return lines
 
         nplotted = 0
         nskipped = 0
 
-        sorted_headers, headers = self.getHeaders(data)
-
-        data = self.convertData( data )
-        width = 1.0 / (len(sorted_headers) + 1 )
+        width = 1.0 / (len(row_headers) + 1 )
 
         legend, plts = [], []
 
-        tracks = [ x[0] for x in data ]
-        if len(tracks) == 0: return []
+        self.startPlot()
 
-        self.startPlot( data )
-
-        xvals = numpy.arange( 0, len(tracks) )
+        xvals = numpy.arange( 0, len(col_headers) )
         offset = width / 2.0
         
         y = 0
 
-        for header in sorted_headers:
+        # plot by row
+        for x,header in enumerate(row_headers):
             
-            vals = numpy.zeros( len(tracks), numpy.float )
-            x = 0
-            for track, table in data:
-                dd = dict(table)
-                try: vals[x] = dd[header]
-                except KeyError: pass
-                x += 1
+            vals = matrix[x,:]
 
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
@@ -896,7 +750,6 @@ class RendererInterleavedBars(RendererTable, Plotter):
         plt.xticks( xvals + 0.5, tracks, rotation = rotation )
 
         return self.endPlot( plts, sorted_headers )
-
            
 class RendererStackedBars(RendererTable, Plotter):
     """Stacked bars.
@@ -908,20 +761,11 @@ class RendererStackedBars(RendererTable, Plotter):
         RendererTable.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def prepare(self, *args, **kwargs):
-        RendererTable.prepare( self, *args, **kwargs )
-        Plotter.prepare( self, *args, **kwargs )
+    def __call__( self, data, title ):
 
-        self.mFormat = "%i"
-
-    def render( self, data ):
-
-        sorted_headers, headers = self.getHeaders(data)
-        data = self.convertData( data )
-
-        if len(data) == 0: return []
+        if len(data) == 0: return results
         
-        self.startPlot( data )
+        self.startPlot( )
 
         lines, legend = [], []
 
@@ -972,9 +816,7 @@ class RendererStackedBars(RendererTable, Plotter):
         return self.endPlot( plts, sorted_headers )
 
 class RendererPiePlot(RendererTable, Plotter):
-    """Pie chart
-
-    Requires :class:`DataTypes.SingleColumnData`.
+    """Plot a pie chart
     """
 
     def __init__(self, *args, **kwargs):
@@ -985,40 +827,35 @@ class RendererPiePlot(RendererTable, Plotter):
         self.mOrderedHeadersMap = {}
         self.mOrderedHeaders = []
 
-    def prepare(self, *args, **kwargs):
-        RendererTable.prepare( self, *args, **kwargs )
-        Plotter.prepare( self, *args, **kwargs )
-
         self.mFormat = "%i"
 
         try: self.mPieMinimumPercentage = float(kwargs["pie-min-percentage"])
         except KeyError: self.mPieMinPercentage = 0
 
-    def render( self, data ):
+    def __call__( self, data, title ):
         
         lines, legend = [], []
 
-        blocks = []
+        blocks = ResultBlocks()
 
-        for track, d in data:
-            self.startPlot( data )
+        labels = self.getLabels( data )
+        paths = list(itertools.product( *labels[:-1] ))
+        parts = labels[-1]
+        for path in paths:
+            work = self.getLeaf( data, path )
+            if not work: continue
+
+            self.startPlot()
             plts = []
             
-            for label, value in d:
-                if label not in self.mOrderedHeaders:
-                    self.mOrderedHeadersMap[label] = len(self.mOrderedHeaders)
-                    self.mOrderedHeaders.append( label )
+            sorted_vals = [0] * len(parts)
+            for x in range( len(parts) ):
+                try:
+                    sorted_vals[x] = work[parts[x]]
+                except KeyError:
+                    pass
 
-            sorted_vals = [0] * len(self.mOrderedHeaders)
-            for label, value in d:
-                sorted_vals[self.mOrderedHeadersMap[label]] = value
-            
-            sorted_headers = []
-            for h, v in zip( self.mOrderedHeaders, sorted_vals ):
-                if v == 0: sorted_headers.append("")
-                else: sorted_headers.append( h )
-
-            plts.append( plt.pie( sorted_vals, labels = sorted_headers ))
+            plts.append( plt.pie( sorted_vals, labels = parts ))
             blocks.extend( self.endPlot( plts ) )
 
         return blocks
@@ -1046,35 +883,31 @@ class RendererMatrixPlot(RendererMatrix, PlotterMatrix):
         return self.plotMatrix( matrix, rows, columns )
 
 class RendererBoxPlot(Renderer, Plotter):        
-    """Histogram as plot.
+    """Write a set of box plots.
 
-    Requires :class:`DataTypes.SingleColumnData`.
     """
-    mRequiredType = type( SingleColumnData( None ) )
     
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def addData( self, group, title, data ):
-        self.mData[group].append( (title,data) )
+    def __call__(self, data, title ):
 
-    def prepare(self, *args, **kwargs ):
-
-        Renderer.prepare( self, *args, **kwargs )
-        Plotter.prepare(self, *args, **kwargs )
-        
-    def render(self, data ):
-
-        self.startPlot( data )
+        self.startPlot()
 
         plts, legend = [], []
         nplotted = 0
 
+        labels = self.getLabels( data )
+        paths = list(itertools.product( *labels ))
+        
         all_data = []
-        for track, values in data:
-            all_data.append( [ x for x in values if x != None ] )
-            legend.append( track )
+        for path in paths:
+            work = self.getLeaf( data, path )
+            if not work: continue
+            assert isArray( work ), "work is of type '%s'" % work
+            all_data.append( [ x for x in work if x != None ] )
+            legend.append( "-".join(path) )
 
         plts.append( plt.boxplot( all_data ) )
         
@@ -1088,190 +921,7 @@ class RendererBoxPlot(Renderer, Plotter):
                     rotation = rotation,
                     fontsize="8" )
 
-        return self.endPlot( plts, None )
-
-class RendererHistogram(Renderer ):        
-    """Histogram as table.
-
-    Requires :class:`DataTypes.SingleColumnData`.
-    """
-
-    bin_marker = "left"
-    mRequiredType = type( SingleColumnData( None ) )
-
-    def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs ):
-
-        Renderer.prepare( self, *args, **kwargs )
-
-        self.mConverters = []
-        self.mFormat = "%i"
-        self.mBins = "100"
-        self.mRange = None
-
-        if "normalized-max" in kwargs:
-           self.mConverters.append( self.normalize_max )
-           self.mFormat = "%6.4f"
-        if "normalized-total" in kwargs:
-           self.mConverters.append( self.normalize_total )
-           self.mFormat = "%6.4f"
-        if "cumulative" in kwargs:
-            self.mConverters.append( self.cumulate )
-        if "reverse-cumulative" in kwargs:
-            self.mConverters.append( self.reverse_cumulate )
-
-        if "bins" in kwargs: self.mBins = kwargs["bins"]
-        # removed eval
-        if "range" in kwargs: self.mRange = kwargs["range"]
-
-    def addData( self, group, title, data ):
-
-        # remove None values
-        ndata = [ x for x in data if x != None ]
-        nremoved = len(data) - len(ndata)
-        if nremoved:
-            warn( "removed %i None values from %s: %s: %s" % (nremoved, str(self.mTracker), group, title) )
-
-        data = ndata
-
-        if len(data) == 0: 
-            warn( "no data for %s: %s: %s" % (str(self.mTracker), group, title ) )
-            return
-
-        binsize = None
-
-        if self.mRange != None: 
-            vals = [ x.strip() for x in self.mRange.split(",") ]
-            if len(vals) == 3: mi, ma, binsize = vals[0], vals[1], float(vals[2])
-            elif len(vals) == 2: mi, ma, binsize = vals[0], vals[1], None
-            elif len(vals) == 1: mi, ma, binsize = vals[0], None, None
-            if mi == None or mi == "": mi = min(data)
-            else: mi = float(mi)
-            if ma == None or ma == "": ma = max(data)
-            else: ma = float(ma)
-        else:
-            mi, ma= min( data ), max(data)
-
-        if self.mBins.startswith("dict"):
-            h = collections.defaultdict( int )
-            for x in data: h[x] += 1
-            bin_edges = sorted( h.keys() )
-            hist = numpy.zeros( len(bin_edges), numpy.int )
-            for x in range(len(bin_edges)): hist[x] = h[bin_edges[x]]
-            bin_edges.append( bin_edges[-1] + 1 )
-        else:
-            if self.mBins.startswith("log"):
-                a,b = self.mBins.split( "-" )
-                nbins = float(b)
-                if ma < 0: raise ValueError( "can not bin logarithmically for negative values.")
-                if mi == 0: mi = numpy.MachAr().epsneg
-                ma = log10( ma )
-                mi = log10( mi )
-                bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
-            elif binsize != None:
-                bins = arange(mi, ma, binsize )
-            else:
-                bins = eval(self.mBins)
-
-            if hasattr( bins, "__iter__") and len(bins) == 0:
-                warn( "empty bins from %s: %s: %s" % (str(self.mTracker), group, title) )
-                return
-            hist, bin_edges = numpy.histogram( data, bins=bins, range=(mi,ma), new = True )
-        
-        self.mData[group].append( (title, (hist, bin_edges), nremoved ) )
-
-    def cumulate( self, data ):
-        return data.cumsum()
-    
-    def reverse_cumulate( self, data ):
-        return data[::-1].cumsum()[::-1]
-
-    def binToX( self, bins ):
-        """convert bins to x-values."""
-        if self.bin_marker == "left": return bins[:-1]
-        elif self.bin_marker == "mean": 
-            return [ (bins[x] - bins[x-1]) / 2.0 for x in range(1,len(bins)) ]
-        elif self.bin_marker == "right": return bins[1:]
-
-    def render(self, data):
-        
-        if len(data) == 0: return []
-
-        hh = []
-        for track, histogram, nremoved in data:
-            d, bins = histogram
-            for convert in self.mConverters: d = convert(d)
-            hh.append( Histogram.Convert( d, 
-                                          self.binToX(bins), 
-                                          no_empty_bins = True ) )
-
-        h = Histogram.Combine( hh, missing_value = "na" )
-        
-        def toValue( x ):
-            if x != "na": return self.mFormat % x
-            else: return x
-
-        lines = []
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
-        lines.append( '   :header: "bin","%s" ' % '","'.join( [x[0] for x in data]) )
-        lines.append( "")
-        for bin, values in h:
-            lines.append( '   "%s","%s"' % (bin, '","'.join( [toValue(x) for x in values ] ) ) )
-        lines.append( "") 
-
-        return "\n".join(lines)
-
-class RendererHistogramPlot(RendererHistogram, Plotter):        
-    """Histogram as plot.
-
-    Requires :class:`DataTypes.SingleColumnData`.
-    """
-
-    def __init__(self, *args, **kwargs):
-        RendererHistogram.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
-
-    def prepare(self, *args, **kwargs ):
-
-        RendererHistogram.prepare( self, *args, **kwargs )
-        Plotter.prepare(self, *args, **kwargs )
-        
-        f = []
-        if self.normalize_total in self.mConverters: f.append( "relative" )
-        else: f.append( "absolute" )
-        if self.cumulate in self.mConverters: f.append( "cumulative" )
-        if self.reverse_cumulate in self.mConverters: f.append( "cumulative" )
-        f.append("frequency")
-
-        self.mYLabel = " ".join(f)
-
-    def render(self, data):
-        """returns a placeholder."""
-        
-        self.startPlot( data )
-
-        plts, legend = [], []
-
-        nplotted = 0
-
-        for track, histogram, nremoved in data:
-
-            s = self.mSymbols[nplotted % len(self.mSymbols)]
-
-            # get and transform x/y values
-            yvals, bins = histogram
-            xvals = self.binToX( bins )
-            for convert in self.mConverters: yvals = convert( yvals )
-        
-            plts.append(plt.plot( xvals,
-                                  yvals,
-                                  s ) )
-            legend.append( track )
-            nplotted += 1
-
-        return self.endPlot( plts, legend )
+        return self.endPlot( plts, title = title )
 
 class RendererCorrelation(Renderer):
     """Basic pairwise statistical analysis.

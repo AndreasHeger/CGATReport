@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy
 import CorrespondenceAnalysis
 
-from ResultBlock import ResultBlock
+from ResultBlock import ResultBlock, ResultBlocks
 
 class Plotter:
     """Base class for Renderers that do simple 2D plotting.
@@ -69,10 +69,7 @@ class Plotter:
     ## the legend is split into multiple columns
     mLegendMaxRowsPerColumn = 30
 
-    def __init__(self, tracker ):
-        self.mTracker = tracker
-
-    def prepare(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs ):
         """parse option arguments."""
 
         self.mFormat = "%i"
@@ -135,7 +132,7 @@ class Plotter:
         self.mMPLSubplotOptions = setupMPLOption( "mpl-subplot" )
         self.mMPLRC = setupMPLOption( "mpl-rc" )
 
-    def startPlot( self, data, **kwargs ):
+    def startPlot( self, **kwargs ):
         """prepare everything for a plot."""
 
         self.mFigure +=1 
@@ -148,8 +145,6 @@ class Plotter:
         plt.figure( num = self.mFigure, **self.mMPLFigureOptions )
 
         if self.mTitle:  plt.title( self.mTitle )
-        if self.mXLabel: plt.xlabel( self.mXLabel )
-        if self.mYLabel: plt.ylabel( self.mYLabel )
 
     def wrapText( self, text, cliplen = 20, separators = " :_" ):
         """wrap around text using the mathtext.
@@ -201,7 +196,7 @@ class Plotter:
         if self.mXRange: plt.xlim( self.mXRange )
         if self.mYRange: plt.ylim( self.mYRange )
 
-        blocks = [ ResultBlock( "\n".join( ("## Figure %i ##" % self.mFigure, "")), title = title ) ]
+        blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure-1), "")), title = title ) )
 
         legend = None
         maxlen = 0
@@ -221,9 +216,9 @@ class Plotter:
 
 
         if self.mLegendLocation == "extra" and legends:
-            self.mFigure += 1
             legend = plt.figure( self.mFigure, **self.mMPLFigureOptions )
-            blocks.append( ResultBlock( "\n".join( ("## Figure %i ##" % self.mFigure, ""))) )
+            blocks.append( ResultBlock( "\n".join( ("#$mpl %i$#" % self.mFigure, ""))) )
+            self.mFigure += 1
             lx = legend.add_axes( (0.1, 0.1, 0.9, 0.9) )
             lx.set_title( "Legend" )
             lx.set_axis_off()

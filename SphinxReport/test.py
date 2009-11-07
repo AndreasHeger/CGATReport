@@ -64,9 +64,12 @@ import matplotlib.pyplot as plt
 
 from SphinxReport.Tracker import Tracker
 from SphinxReport.Renderer import *
-from SphinxReport.report_directive import MAP_RENDERER
+from SphinxReport.Transformer import *
+from SphinxReport.report_directive import MAP_RENDERER, MAP_TRANSFORMER
 import SphinxReport.report_directive
 import SphinxReport.clean
+from SphinxReport.Dispatcher import Dispatcher
+
 
 try:
     from multiprocessing import Process
@@ -153,6 +156,9 @@ def main():
     parser.add_option( "-a", "--tracks", dest="tracks", type="string",
                           help="tracks to use [default=%default]" )
 
+    parser.add_option( "-m", "--transformer", dest="transformers", type="string", action="append",
+                          help="add transformation [default=%default]" )
+
     parser.add_option( "-s", "--slices", dest="slices", type="string",
                           help="slices to use [default=%default]" )
 
@@ -173,6 +179,7 @@ def main():
 
     parser.set_defaults(
         tracker=None,
+        transformers = [],
         tracks=None,
         slices=None,
         options = [],
@@ -192,11 +199,20 @@ def main():
         try:
             renderer = MAP_RENDERER[options.renderer]
         except KeyError:
-            print "could not find renderer '%s'. Available Renderers:\n  %s" % \
+            print "could not find renderer '%s'. Available renderers:\n  %s" % \
                 (options.renderer, "\n  ".join(sorted(MAP_RENDERER.keys())))
             sys.exit(1)
     else:
         renderer = Renderer
+
+    transformers = []
+    for transformer in options.transformers:
+        try:
+            transformers.append( MAP_TRANSFORMER[transformer]() )
+        except KeyError:
+            print "could not find transformer '%s'. Available transformers:\n  %s" % \
+                (options.renderer, "\n  ".join(sorted(MAP_TRANSFORMER.keys())))
+            sys.exit(1)
 
     kwargs = {}
     for x in options.options:
@@ -243,8 +259,12 @@ def main():
             removed = SphinxReport.clean.removeTracker( name )
             print "removed all data for tracker %s: %i files" % (name, len(removed))
 
-        r = renderer( tracker() )
-        result = r( **kwargs)
+        t = tracker()
+        dispatcher = Dispatcher( t, renderer(t,**kwargs), transformers ) 
+        result = dispatcher()
+        
+        #r = renderer( tracker() )
+
         if options.do_print:                        
             options_rst = []
             for key,val in kwargs.items():
@@ -265,7 +285,9 @@ def main():
             print "..Template ends"
         if result: 
             for r in result:
-                print str(r)
+                print "path", r.title
+                for s in r:
+                    print str(s)
         if options.do_show: plt.show()
 
     elif options.page:

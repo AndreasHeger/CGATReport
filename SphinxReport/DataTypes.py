@@ -15,6 +15,10 @@ except AttributeError, msg:
                numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
                numpy.float32, numpy.float64 )
     
+
+def isArray( data ):
+    '''return True if data is an array.'''
+    return type(data) in ContainerTypes
     
 def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']

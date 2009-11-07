@@ -26,7 +26,10 @@ except ImportError:
     align = Image.align
 
 import Renderer
+import Transformer
+import Dispatcher
 import matplotlib
+import ResultBlock
 
 DEBUG = False
 FORCE = False
@@ -123,30 +126,35 @@ FORMATS = [('png', 80),
            ('pdf', 50),
            ]
 
-MAP_RENDERER= { 'stats': Renderer.RendererStats,
-                'correlation': Renderer.RendererCorrelation,
-                'correlation-plot': Renderer.RendererCorrelationPlot,
-                'correlation-matrix-plot': Renderer.RendererCorrelationMatrixPlot,
-                'pairwise-stats': Renderer.RendererPairwiseStats,
-                'pairwise-stats-matrix-plot': Renderer.RendererPairwiseStatsMatrixPlot,
-                'pairwise-stats-bar-plot': Renderer.RendererPairwiseStatsBarPlot,
-                'pairwise-stats-plot': Renderer.RendererPairwiseStatsMatrixPlot,
-                'pie-plot': Renderer.RendererPiePlot,
-                'histogram': Renderer.RendererHistogram,
-                'scatter-plot': Renderer.RendererScatterPlot,
-                'scatter-rainbow-plot': Renderer.RendererScatterPlotWithColor,
-                'table': Renderer.RendererTable,
-                'texttable': Renderer.RendererTextTable,
-                'grouped-table': Renderer.RendererGroupedTable,
-                'matrix': Renderer.RendererMatrix,
-                'matrix-plot': Renderer.RendererMatrixPlot,
-                'stacked-bars': Renderer.RendererStackedBars,
-                'interleaved-bars': Renderer.RendererInterleavedBars,
-                'bars': Renderer.RendererInterleavedBars,
-                'histogram-plot': Renderer.RendererHistogramPlot,
-                'multihistogram-plot': Renderer.RendererMultiHistogramPlot,
-                'box-plot': Renderer.RendererBoxPlot,
-                'glossary' : Renderer.RendererGlossary }
+MAP_TRANSFORMER = { 
+    'stats' : Transformer.TransformerStats, 
+    'correlation' : Transformer.TransformerCorrelation, 
+    'histogram' : Transformer.TransformerHistogram,
+    }
+
+MAP_RENDERER= { 
+    'line-plot': Renderer.RendererLinePlot,
+    'correlation': Renderer.RendererCorrelation,
+    'correlation-plot': Renderer.RendererCorrelationPlot,
+    'correlation-matrix-plot': Renderer.RendererCorrelationMatrixPlot,
+    'pairwise-stats': Renderer.RendererPairwiseStats,
+    'pairwise-stats-matrix-plot': Renderer.RendererPairwiseStatsMatrixPlot,
+    'pairwise-stats-bar-plot': Renderer.RendererPairwiseStatsBarPlot,
+    'pairwise-stats-plot': Renderer.RendererPairwiseStatsMatrixPlot,
+    'pie-plot': Renderer.RendererPiePlot,
+    'scatter-plot': Renderer.RendererScatterPlot,
+    'scatter-rainbow-plot': Renderer.RendererScatterPlotWithColor,
+    'table': Renderer.RendererTable,
+    'grouped-table': Renderer.RendererGroupedTable,
+    'matrix': Renderer.RendererMatrix,
+    'matrix-plot': Renderer.RendererMatrixPlot,
+    'stacked-bars': Renderer.RendererStackedBars,
+    'interleaved-bars': Renderer.RendererInterleavedBars,
+    'bars': Renderer.RendererInterleavedBars,
+    'multihistogram-plot': Renderer.RendererMultiHistogramPlot,
+    'box-plot': Renderer.RendererBoxPlot,
+    'glossary' : Renderer.RendererGlossary 
+}
 
 DISPLAY_OPTIONS = {'alt': directives.unchanged,
                   'height': directives.length_or_unitless,
@@ -155,6 +163,7 @@ DISPLAY_OPTIONS = {'alt': directives.unchanged,
                   'align': align,
                   'class': directives.class_option,
                   'render' : directives.unchanged,
+                  'transform' : directives.unchanged,
                   'include-source': directives.flag }
 
 RENDER_OPTIONS = { 'cumulative': directives.flag,
@@ -242,22 +251,22 @@ def exception_to_str(s = None):
     traceback.print_exc(file=sh)
     return sh.getvalue()
 
-def collectImagesFromMatplotlib( blocks, 
-                                 template_name, 
+def collectImagesFromMatplotlib( template_name, 
                                  outdir, 
                                  linkdir, 
                                  content,
                                  display_options,
                                  linked_codename ):
-    """collect one or more pylab figures and 
+    ''' collect one or more pylab figures and 
         save as png, hires-png and pdf
         save thumbnail
         insert rendering code at placeholders in output
 
-    returns True if images have been collected.
-    """
+    returns a map of place holder to placeholder text.
+    '''
     fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
-    if len(fig_managers) == 0: return None
+
+    map_figure2text = {}
 
     for i, figman in enumerate(fig_managers):
         for format, dpi in FORMATS:
@@ -292,13 +301,9 @@ def collectImagesFromMatplotlib( blocks,
 
         linkedname = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
 
-        ## replace placeholders in blocks to be output
-        for block in blocks:
-            block.mText = re.sub( "(## Figure %i ##)" % (i+1), 
-                                  TEMPLATE_PLOT % locals(),
-                                  block.mText )
-        
-    return blocks
+        map_figure2text[ "#$mpl %i$#" % i] = TEMPLATE_PLOT % locals()
+
+    return map_figure2text
 
 def layoutBlocks( blocks, layout = "column"):
     """layout blocks of rst text.
@@ -311,12 +316,17 @@ def layoutBlocks( blocks, layout = "column"):
     lines = []
     if len(blocks) == 0: return lines
 
+    # flatten blocks
+    x = ResultBlock.ResultBlocks()
+    for i in blocks: x.extend( i )
+    blocks = x
+
     if layout == "column":
         for block in blocks: 
-            if block.mTitle:
-                lines.extend( block.mTitle.split("\n") )
+            if block.title:
+                lines.extend( block.title.split("\n") )
                 lines.append( "" )
-            lines.extend(block.mText.split("\n"))
+            lines.extend(block.text.split("\n"))
         lines.extend( [ "", ] )
         return lines
     elif layout in ("row", "grid"):
@@ -348,10 +358,10 @@ def layoutBlocks( blocks, layout = "column"):
         ## add text
         lines.append( separator )
         max_height = max( text_heights[nblock:nblock+ncols] )
-        new_blocks = []
+        new_blocks = ResultBlocks()
         
         for xx in range(nblock, min(nblock+ncols,len(blocks))):
-            txt, col = blocks[xx].mText.split("\n"), xx % ncols
+            txt, col = blocks[xx].text.split("\n"), xx % ncols
 
             max_width = columnwidths[col]
 
@@ -370,12 +380,12 @@ def layoutBlocks( blocks, layout = "column"):
 
         if max_height > 0:
 
-            new_blocks = []
+            new_blocks = ResultBlocks()
             lines.append( separator )
 
             for xx in range(nblock, min(nblock+ncols,len(blocks))):
                 
-                txt, col = blocks[xx].mTitle.split("\n"), xx % ncols
+                txt, col = blocks[xx].title.split("\n"), xx % ncols
 
                 max_width = columnwidths[col]
                 # add missig lines 
@@ -433,7 +443,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     if not os.path.exists(outdir): 
         raise OSError( "could not create directory %s: %s" % (outdir, msg ))
 
-    # check if we need to update. 
+    ########################################################
+    # find the tracker
     logging.debug( "collecting tracker." )
     code, tracker = getTracker( reference )
     if not tracker: 
@@ -452,18 +463,13 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     logging.debug( "invocating renderer." )
 
     ########################################################
-    # collect options
-    #
     # determine the renderer
-    renderer_name = "stats"
     if options.has_key("render"): 
         renderer_name = options["render"]
         del options["render"]
-
-    try:
-        renderer = MAP_RENDERER[ renderer_name ]( tracker )
-    except KeyError:
-        raise KeyError("unknown renderer %s" % renderer_name)
+        if renderer_name not in MAP_RENDERER:
+            raise KeyError("unknown renderer %s" % renderer_name)
+        renderer = MAP_RENDERER[renderer_name]
 
     # determine layout
     try: layout = options["layout"]
@@ -478,6 +484,18 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         try: del options[k]
         except KeyError: pass
 
+    ########################################################
+    # determine the transformer
+    transformers = []
+    if options.has_key("transform"): 
+        transformer_names = options["transform"].split(",")
+        del options["transform"]
+        for transformer in transformer_names:
+            if transformer not in MAP_TRANSFORMER: 
+                raise KeyError('unknown transformer %s' % transformer )
+            else: transformers.append( MAP_TRANSFORMER[transformer](**options)) 
+
+    ########################################################
     # add sphinx options for image display
     display_options = "\n".join( ['      :%s: %s' % (key, val) for key, val in
                                   options.items()] )
@@ -536,29 +554,32 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
         
     lines = []
-    input_blocks = renderer( **render_options )
+
+    dispatcher = Dispatcher.Dispatcher( tracker, renderer(tracker, **options), transformers )     
+    blocks = dispatcher( **render_options )
 
     ###########################################################
     # collect images
     ###########################################################
-    output_blocks = collectImagesFromMatplotlib( input_blocks, 
-                                                 template_name, 
-                                                 outdir, 
-                                                 linkdir, 
-                                                 content, 
-                                                 display_options,
-                                                 linked_codename)
+    map_figure2text = collectImagesFromMatplotlib( template_name, 
+                                                   outdir, 
+                                                   linkdir, 
+                                                   content, 
+                                                   display_options,
+                                                   linked_codename)
 
-    if not output_blocks:
-        # process text
-        output_blocks = []
-
-        for block in input_blocks:
-            output_blocks.append( Renderer.ResultBlock( TEMPLATE_TEXT % locals() + block.mText, block.mTitle ) )
+    ###########################################################
+    # replace place holders or add text
+    ###########################################################
+    ## add default for text-only output
+    map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
+    map_figure2text["default-suffix"] = ""
+    
+    blocks.updatePlaceholders( map_figure2text )
 
     ###########################################################
     ## render the output taking into account the layout
-    lines = layoutBlocks( output_blocks, layout )
+    lines = layoutBlocks( blocks, layout )
 
     ###########################################################
     # add caption

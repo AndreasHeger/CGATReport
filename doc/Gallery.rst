@@ -68,20 +68,21 @@ The :class:`Renderer.RendererHistogram` class computes a histogram
 of data and inserts it as a table.
 
 .. report:: Trackers.SingleColumnDataExample
-   :render: histogram
+   :render: table
+   :transform: histogram
    :bins: arange(0,10)
 
    A histogram.
 
-
 HistogramPlot
 =============
 
-The :class:`Renderer.RendererHistogramPlot` class computes a histogram
+The :class:`Renderer.RendererLinePlot` class computes a histogram
 of data and inserts a plot.
 
 .. report:: Trackers.SingleColumnDataExample
-   :render: histogram-plot
+   :render: line-plot
+   :transform: histogram
    :bins: arange(0,10)
 
    A histogram plot.
@@ -89,11 +90,12 @@ of data and inserts a plot.
 Stats
 =====
 
-The :class:`Renderer.RendererStats` class computes summary
+The :class:`Transformer.TransformerStats` class computes summary
 statistics and displays them in a table.
 
 .. report:: Trackers.SingleColumnDataExample
-   :render: stats
+   :render: table
+   :transform: stats
 
    A table.
 
@@ -107,50 +109,3 @@ The :class:`Renderer.RendererBoxplot` class computes boxplots.
 
    Figure caption.
 
-Multi-column data
-*****************
-
-Renderers that accept multiple columns of data of type :class:`DataTypes.SingleColumnData` 
-per :term:`track` and :term:`slice`. The data is asscociated with column headers, for example 
-``[ ('column1', 'column2'), ( ( 1,2,3), (4,5,6) )]``.
-
-Pairwise statistics table
-=========================
-
-Compute correlation statistics between all columns.
-
-.. report:: Trackers.MultipleColumnDataExample
-   :render: pairwise-stats
-
-   A pairwise statistics table.
-
-Pairwise statistics plot
-========================
-
-Plot correlation coefficients between all columns.
-
-.. report:: Trackers.MultipleColumnDataExample
-   :render: pairwise-stats-plot
-
-   A pairwise statistics plot.
-
-Pairwise scatter plot
-========================
-
-A scatter plot.
-
-.. report:: Trackers.MultipleColumnDataExample
-   :render: scatter-plot
-
-   A scatter plot.
-
-
-Grouped table
-=============
-
-A grouped table.
-
-.. report:: Trackers.MultipleColumnsExample
-   :render: grouped-table
-
-   A grouped table.
