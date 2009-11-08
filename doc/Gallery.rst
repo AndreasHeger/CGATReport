@@ -4,6 +4,7 @@ Gallery
 
 The gallery lists examples of all plots and available renderers.
 
+
 Labeled data
 ************
 
@@ -22,25 +23,36 @@ a table.
 
    A table.
 
-Stacked Barplot
-===============
+Barplot
+=======
 
-The :class:`Renderer.RendererStackedBars` class presents labeled data
+The :class:`Renderer.RendererBarPlot` class presents labeled data
 as stacked bars.
 
 .. report:: Trackers.LabeledDataExample
-   :render: stacked-bars
+   :render: bar-plot
+
+   A bar plot with stacked bars.
+
+Stacked Barplot
+===============
+
+The :class:`Renderer.RendererStackedBarPlot` class presents labeled data
+as stacked bars.
+
+.. report:: Trackers.LabeledDataExample
+   :render: stacked-bar-plot
 
    A bar plot with stacked bars.
 
 Interleaved Barplot
 ===================
 
-The :class:`Renderer.RendererInterleavedBars` class presents labeled data
+The :class:`Renderer.RendererInterleavedBarPlot` class presents labeled data
 as interleaved bars. Both *interleaved-bars* and *bars* can be used.
 
 .. report:: Trackers.LabeledDataExample
-   :render: interleaved-bars
+   :render: interleaved-bar-plot
 
    A bar plot with interleaved bars.
 
@@ -116,27 +128,6 @@ Renderers that accept multiple columns of data of type :class:`DataTypes.SingleC
 per :term:`track` and :term:`slice`. The data is asscociated with column headers, for example 
 ``[ ('column1', 'column2'), ( ( 1,2,3), (4,5,6) )]``.
 
-Pairwise statistics table
-=========================
-
-Compute correlation statistics between all columns.
-
-.. report:: Trackers.MultipleColumnDataExample
-   :render: table
-   :transform: correlation
-
-   A pairwise statistics table.
-
-.. Pairwise statistics plot
-.. ========================
-
-.. Plot correlation coefficients between all columns.
-
-.. .. report:: Trackers.MultipleColumnDataExample
-..    :render: table
-..    :transform: filter
-
-..    A pairwise statistics plot.
 
 Pairwise scatter plot
 ========================
@@ -150,7 +141,7 @@ A scatter plot.
 
 A scatter plot with colours
 
-.. report:: Trackers.MultipleColumnDataExample
+.. report:: Trackers.MultipleColumnDataFullExample
    :render: scatter-rainbow-plot
 
    A scatter plot with colours.
@@ -192,3 +183,32 @@ a table.
    :render: hinton-plot
 
    A matrix.
+
+
+Transformers
+************
+
+Correlation
+===========
+
+Compute correlation statistics between all columns.
+
+.. report:: Trackers.MultipleColumnDataExample
+   :render: table
+   :transform: correlation
+
+   A pairwise statistics table.
+
+Filter
+======
+
+Compute correlation statistics between all columns.
+
+.. report:: Trackers.MultipleColumnDataExample
+   :render: matrix
+   :transform: correlation,select
+   :tf-fields: coefficient
+   :format: %6.4f
+
+   Matrix of correlation coefficients
+

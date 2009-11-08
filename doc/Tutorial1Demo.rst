@@ -7,7 +7,7 @@ Tutorial 1
 My first bar blot:
 
 .. report:: Tutorial1.MyDataFunction
-   :render: bars
+   :render: interleaved-bar-plot
 
    My first bar plot.
 

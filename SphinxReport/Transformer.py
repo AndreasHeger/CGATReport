@@ -3,24 +3,101 @@ from logging import warn, log, debug, info
 import itertools
 import numpy
 import odict
+from DataTree import DataTree
 
 class Transformer(object):
+
+    nlevels = None
 
     def __init__(self,*args,**kwargs):
         pass
 
+    def __call__(self, data ):
+
+        if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
+
+        labels = data.getPaths()        
+        assert len(labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
+        
+        paths = list(itertools.product( *labels[:-self.nlevels] ))
+
+        for path in paths:
+            work = data.getLeaf( path )
+            if not work: continue
+            data.setLeaf( path,
+                          self.transform( work, path ) )
+
+        return data
+
+        
+class TransformerFilter( Transformer ):
+    '''select columns in the deepest dictionary.
+    '''
+    
+    nlevels = 1
+    default = 0
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        try: self.filter = set(kwargs["tf-fields"].split(","))
+        except KeyError: 
+            raise KeyError( "TransformerFilter requires the `tf-fields` option to be set." )
+
+        try: self.nlevels = int(kwargs["tf-level"])
+        except KeyError: 
+            pass
+                          
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        for v in data.keys():
+            if v not in self.filter:
+                del data[v]
+            
+        return data
+
+class TransformerSelect( Transformer ):
+    '''replace the lowest hierarchy with a single value.
+
+    '''
+    
+    nlevels = 2
+    default = 0
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        try: self.fields = kwargs["tf-fields"]
+        except KeyError: 
+            raise KeyError( "TransformerSelect requires the `tf-fields` option to be set." )
+                          
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        for v in data.keys():
+            try:
+                data[v] = data[v][self.fields]
+            except KeyError:
+                data[v] = self.default
+            
+        return data
+
+
 class TransformerStats( Transformer ):
     '''compute stats on each column.'''
+    nlevels = 1
 
-    def __call__(self, data ):
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+    def transform(self, data, path ):
         debug( "%s: called" % str(self))
-        for track,slices in data.iteritems():
-            for slice, columns in slices.iteritems():
-                for header,values in columns.iteritems():
-                    try:
-                        data[track][slice][header] = Stats.Summary( values )
-                    except TypeError:
-                        warn("%s: could not compute stats: expected an array of values, but got '%s'" % (str(self), str(values)) )
+        for header, values in data.iteritems():
+            try:
+                data[header] =  Stats.Summary( values )
+            except TypeError:
+                warn("%s: could not compute stats: expected an array of values, but got '%s'" % (str(self), str(values)) )
         return data
 
 class TransformerCorrelation( Transformer ):
@@ -28,29 +105,40 @@ class TransformerCorrelation( Transformer ):
     the correlation coefficient and other stats.
     '''
 
-    def __call__(self, data ):
-        debug( "%s: called" % str(self))
-        for track,slices in data.iteritems():
-            for slice, columns in slices.iteritems():
-                pairs = itertools.combinations( columns.keys(), 2)
-                new = {}
-                for x,y in pairs:
-                    xvals, yvals = data[track][slice][x], data[track][slice][y]
-                    take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
-                    xvals = [xvals[i] for i in take ]
-                    yvals = [yvals[i] for i in take ]
-                    
-                    try:
-                        result = Stats.doCorrelationTest( xvals, yvals )
-                    except ValueError, msg:
-                        continue
-                    new[ "%s vs %s" % (x,y)] = result
-                data[track][slice]=new
-        return data
+    nlevels = 1
 
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+    def transform(self, data, path ):
+        debug( "%s: called" % str(self))
+
+        if len(data.keys()) < 2:
+            raise ValueError( "can not compute correlation with only a single array." )
+
+        pairs = itertools.combinations( data.keys(), 2)
+
+        new_data = odict.OrderedDict()
+
+        for x,y in pairs:
+            xvals, yvals = data[x], data[y]
+            take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
+            xvals = [xvals[i] for i in take ]
+            yvals = [yvals[i] for i in take ]
+
+            try:
+                result = Stats.doCorrelationTest( xvals, yvals )
+            except ValueError, msg:
+                continue
+            new_data[ "%s vs %s" % (x,y)] = result
+
+        return new_data
 
 class TransformerHistogram( Transformer ):
     '''compute a histogram of values.'''
+
+    nlevels = 1
+
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
@@ -168,16 +256,14 @@ class TransformerHistogram( Transformer ):
             if hasattr( bins, "__iter__") and len(bins) == 0:
                 warn( "empty bins from %s: %s: %s" % (str(self.mTracker), group, title) )
                 return
-            hist, bin_edges = numpy.histogram( data, bins=bins, range=(mi,ma), new = True )
+            hist, bin_edges = numpy.histogram( data, bins=bins, range=(mi,ma) )
         
         return self.binToX(bin_edges), hist
 
-    def __call__(self, data ):
+    def transform(self, data, path):
         debug( "%s: called" % str(self))
-        for track,slices in data.iteritems():
-            for slice, columns in slices.iteritems():
-                for header,values in columns.iteritems():
-                    bins, values = self.toHistogram(data[track][slice][header])
-                    data[track][slice][header] = odict.OrderedDict( ((header,bins), ("frequency", values)) )
+
+        for header, values in data.iteritems():
+            bins, values = self.toHistogram(values)
+            data[header] =  odict.OrderedDict( ((header,bins), ("frequency", values)) )
         return data
-    

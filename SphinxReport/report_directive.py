@@ -130,29 +130,22 @@ MAP_TRANSFORMER = {
     'stats' : Transformer.TransformerStats, 
     'correlation' : Transformer.TransformerCorrelation, 
     'histogram' : Transformer.TransformerHistogram,
+    'filter' : Transformer.TransformerFilter,
+    'select' : Transformer.TransformerSelect,
     }
 
 MAP_RENDERER= { 
     'line-plot': Renderer.RendererLinePlot,
-    # 'correlation': Renderer.RendererCorrelation,
-    # 'correlation-plot': Renderer.RendererCorrelationPlot,
-    # 'correlation-matrix-plot': Renderer.RendererCorrelationMatrixPlot,
-    # 'pairwise-stats': Renderer.RendererPairwiseStats,
-    # 'pairwise-stats-matrix-plot': Renderer.RendererPairwiseStatsMatrixPlot,
-    # 'pairwise-stats-bar-plot': Renderer.RendererPairwiseStatsBarPlot,
-    # 'pairwise-stats-plot': Renderer.RendererPairwiseStatsMatrixPlot,
     'pie-plot': Renderer.RendererPiePlot,
     'scatter-plot': Renderer.RendererScatterPlot,
     'scatter-rainbow-plot': Renderer.RendererScatterPlotWithColor,
     'table': Renderer.RendererTable,
-    # 'grouped-table': Renderer.RendererGroupedTable,
     'matrix': Renderer.RendererMatrix,
     'matrix-plot': Renderer.RendererMatrixPlot,
     'hinton-plot': Renderer.RendererHintonPlot,
     'bar-plot': Renderer.RendererBarPlot,
     'stacked-bar-plot': Renderer.RendererStackedBarPlot,
     'interleaved-bar-plot': Renderer.RendererInterleavedBarPlot,
-    # 'multihistogram-plot': Renderer.RendererMultiHistogramPlot,
     'box-plot': Renderer.RendererBoxPlot,
     'glossary' : Renderer.RendererGlossary 
 }
@@ -169,6 +162,8 @@ DISPLAY_OPTIONS = {'alt': directives.unchanged,
 
 RENDER_OPTIONS = { 'cumulative': directives.flag,
                    'reverse-cumulative': directives.flag,
+                   'error' : directives.unchanged,
+                   'label' : directives.unchanged,
                    'normalized-max': directives.flag,
                    'normalized-total': directives.flag,
                    'groupby' : directives.unchanged,
@@ -191,15 +186,21 @@ RENDER_OPTIONS = { 'cumulative': directives.flag,
                    'tracks': directives.unchanged,
                    'slices': directives.unchanged,
                    'as-lines': directives.flag,  
+                   'format' : directives.unchanged,
                    'colorbar-format' : directives.unchanged,
+                   'filename' : directives.unchanged,
                    'pie-min-percentage' : directives.unchanged,
                    'max-rows' : directives.unchanged,
                    'max-cols' : directives.unchanged,
                    'mpl-figure' : directives.unchanged,
                    'mpl-legend' : directives.unchanged,
                    'mpl-subplot' : directives.unchanged,
-                   'mpl-rc' : directives.unchanged,
-                   }
+                   'mpl-rc' : directives.unchanged, }
+
+TRANSFORM_OPTIONS = {
+    'tf-fields' : directives.unchanged,
+    'tf-level' : directives.length_or_unitless,
+    }
 
 TEMPLATE_PLOT = """
 .. htmlonly::
@@ -407,7 +408,15 @@ def layoutBlocks( blocks, layout = "column"):
     lines.append( "" )
     return lines
 
-            
+def selectAndDeleteOptions( options, select ):
+    '''collect options in select.'''
+    new_options = {}
+    for k, v in options.items():
+        if k in select:
+            new_options[k] = v
+            del options[k]
+    return new_options
+
 def run(arguments, options, lineno, content, state_machine = None, document = None):
     """process :report: directive."""
 
@@ -447,7 +456,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     if not os.path.exists(outdir): 
         raise OSError( "could not create directory %s: %s" % (outdir, msg ))
-
+    
     ########################################################
     # find the tracker
     logging.debug( "collecting tracker." )
@@ -468,26 +477,12 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     logging.debug( "invocating renderer." )
 
     ########################################################
-    # determine the renderer
-    if options.has_key("render"): 
-        renderer_name = options["render"]
-        del options["render"]
-        if renderer_name not in MAP_RENDERER:
-            raise KeyError("unknown renderer %s" % renderer_name)
-        renderer = MAP_RENDERER[renderer_name]
-
-    # determine layout
+    # determine options
+    render_options = selectAndDeleteOptions( options, RENDER_OPTIONS )
+    transform_options = selectAndDeleteOptions( options, TRANSFORM_OPTIONS)
+    # get layout option
     try: layout = options["layout"]
     except KeyError: layout = "column"
-
-    # collect options for renderer and remove others
-    render_options = {}
-    for k, v in options.items():
-        if k in RENDER_OPTIONS: render_options[k] = v
-
-    for k in RENDER_OPTIONS.keys():
-        try: del options[k]
-        except KeyError: pass
 
     ########################################################
     # determine the transformer
@@ -498,14 +493,23 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         for transformer in transformer_names:
             if transformer not in MAP_TRANSFORMER: 
                 raise KeyError('unknown transformer %s' % transformer )
-            else: transformers.append( MAP_TRANSFORMER[transformer](**options)) 
+            else: transformers.append( MAP_TRANSFORMER[transformer](**transform_options)) 
+
+    ########################################################
+    # determine the renderer
+    if options.has_key("render"): 
+        renderer_name = options["render"]
+        del options["render"]
+        if renderer_name not in MAP_RENDERER:
+            raise KeyError("unknown renderer %s" % renderer_name)
+        renderer = MAP_RENDERER[renderer_name]
 
     ########################################################
     # add sphinx options for image display
     display_options = "\n".join( ['      :%s: %s' % (key, val) for key, val in
                                   options.items()] )
 
-    options_hash = hashlib.md5( str(render_options) ).hexdigest()
+    options_hash = hashlib.md5( str(render_options) + str(transform_options) ).hexdigest()
 
     template_name = quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
     filename_text = os.path.join( outdir, "%s.txt" % (template_name))
@@ -519,7 +523,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # for presence/absence of text element and if all figures
     # mentioned it the text element are present
     ###########################################################
-    queries = [ re.compile( "%s(%s.+.%s)" % ("\.\./" * nparts, outdir,suffix ) ) for suffix in ("png", "pdf") ]
+    queries = [ re.compile( "%s(%s\S+.%s)" % ("\.\./" * nparts, outdir,suffix ) ) for suffix in ("png", "pdf") ]
 
     logging.debug( "checking for changed files." )
     
@@ -560,7 +564,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         
     lines = []
 
-    dispatcher = Dispatcher.Dispatcher( tracker, renderer(tracker, **options), transformers )     
+    dispatcher = Dispatcher.Dispatcher( tracker, renderer(tracker, **render_options), transformers )     
     blocks = dispatcher( **render_options )
 
     ###########################################################
@@ -631,8 +635,7 @@ except ImportError:
 
     report_directive.__doc__ = __doc__
     report_directive.arguments = (1, 0, 1)
-    report_directive.options = RENDER_OPTIONS.copy()
-    report_directive.options.update( DISPLAY_OPTIONS.copy() )
+    report_directive.options = dict( RENDER_OPTIONS.items() + TRANSFORM_OPTIONS.items() + DISPLAY_OPTIONS.items() )
 
     _directives['report'] = report_directive
 else:
@@ -641,8 +644,7 @@ else:
         optional_arguments = 0
         has_content = True
         final_argument_whitespace = True
-        option_spec = RENDER_OPTIONS.copy()
-        option_spec.update( DISPLAY_OPTIONS )
+        option_spec = dict( RENDER_OPTIONS.items() + TRANSFORM_OPTIONS.items() + DISPLAY_OPTIONS.items() )
         def run(self):
             document = self.state.document.current_source
             logging.info( "starting: %s:%i" % (str(document), self.lineno) )

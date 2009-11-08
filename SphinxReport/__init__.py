@@ -8,5 +8,6 @@ __all__ = [ "Renderer",
             "ResultBlock",
             'Transformer',
             'Dispatcher',
+            'DataTree',
             "only_directive",
             "report_directive" ]

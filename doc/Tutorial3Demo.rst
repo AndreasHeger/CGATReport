@@ -5,6 +5,7 @@ Tutorial 3
 ==========
 
 Using slices
+============
 
 .. report:: Tutorial3.WordCounterWithSlices
    :render: line-plot
@@ -12,6 +13,9 @@ Using slices
    :range: 0,100,1
 
    Word sizes in .py and .rst files. 
+
+Using tracks
+============
 
 .. report:: Tutorial3.WordCounterWithSlices
    :render: line-plot
@@ -20,6 +24,9 @@ Using slices
    :groupby: track
 
    Word sizes in .py and .rst files. 
+
+Selecting slices
+================
 
 .. report:: Tutorial3.WordCounterWithSlices
    :render: line-plot

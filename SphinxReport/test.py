@@ -195,6 +195,18 @@ def main():
     if len(args) == 2:
         options.tracker, options.renderer = args
 
+    kwargs = {}
+    for x in options.options:
+        if "=" in x:
+            data = x.split("=")
+            key,val = [ y.strip() for y in (data[0], "=".join(data[1:])) ]
+        else:
+            key, val = x.strip(), None
+        kwargs[key] = val
+    
+    if options.tracks: kwargs["tracks"] = options.tracks
+    if options.slices: kwargs["slices"] = options.slices
+
     if options.renderer:
         try:
             renderer = MAP_RENDERER[options.renderer]
@@ -208,23 +220,11 @@ def main():
     transformers = []
     for transformer in options.transformers:
         try:
-            transformers.append( MAP_TRANSFORMER[transformer]() )
-        except KeyError:
-            print "could not find transformer '%s'. Available transformers:\n  %s" % \
-                (options.renderer, "\n  ".join(sorted(MAP_TRANSFORMER.keys())))
+            transformers.append( MAP_TRANSFORMER[transformer]( *args, **kwargs) )
+        except KeyError, msg:
+            print "could not instantiate transformer '%s': %s.\nAvailable transformers:\n  %s" % \
+                (transformer, msg, "\n  ".join(sorted(MAP_TRANSFORMER.keys())))
             sys.exit(1)
-
-    kwargs = {}
-    for x in options.options:
-        if "=" in x:
-            data = x.split("=")
-            key,val = [ y.strip() for y in (data[0], "=".join(data[1:])) ]
-        else:
-            key, val = x.strip(), None
-        kwargs[key] = val
-    
-    if options.tracks: kwargs["tracks"] = options.tracks
-    if options.slices: kwargs["slices"] = options.slices
 
     exclude = set( ("Tracker", 
                     "TrackerSQL", 

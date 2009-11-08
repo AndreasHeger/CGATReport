@@ -71,7 +71,6 @@ class Plotter:
     def __init__(self, *args, **kwargs ):
         """parse option arguments."""
 
-        self.mFormat = "%i"
         self.mFigure = 0
         self.mColors = "bgrcmk"
         self.mSymbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
@@ -141,7 +140,7 @@ class Plotter:
         # set parameters
         matplotlib.rcParams.update(self.mMPLRC )
         
-        plt.figure( num = self.mFigure, **self.mMPLFigureOptions )
+        self.mCurrentFigure = plt.figure( num = self.mFigure, **self.mMPLFigureOptions )
 
         if self.mTitle:  plt.title( self.mTitle )
 

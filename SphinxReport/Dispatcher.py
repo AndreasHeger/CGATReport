@@ -5,6 +5,7 @@ import sqlalchemy
 import collections
 
 from ResultBlock import ResultBlock, ResultBlocks
+import DataTree
 
 # Some renderers will build several objects.
 # Use these two rst levels to separate individual
@@ -25,7 +26,7 @@ if not os.path.exists("conf.py"):
 
 execfile( "conf.py" )
 
-
+from odict import OrderedDict as odict
 
 class Dispatcher:
     """Dispatch the directives in the ``:report:`` directive
@@ -88,6 +89,8 @@ class Dispatcher:
         else:
             debug( "not using cache" )
 
+        self.mData = DataTree.DataTree()
+
     def __del__(self):
         
         if self._cache != None: 
@@ -115,8 +118,6 @@ class Dispatcher:
 
         try: self.mColumns = [ x.strip() for x in kwargs["columns"].split(",")]
         except KeyError: self.mColumns = None
-
-        self.mData = collections.defaultdict( dict )
 
     def getDataFromCache( self, key ):
 
@@ -243,12 +244,12 @@ class Dispatcher:
                                                                                            len(tracks) * len(slices), 
                                                                                            len(tracks), str(tracks),
                                                                                            len(slices), str(slices) ) )
-
+        self.mData = DataTree.DataTree()
         for track in tracks:
             for slice in slices:
                 d = self.getData( track, slice )
                 if not d: continue
-                self.mData[track][slice] = d
+                self.mData[track][slice] = DataTree.DataTree( d )
 
         debug( "%s: collecting data finished for %i pairs, %i tracks: %s, %i slices: %s" % (self.mTracker, 
                                                                                             len(tracks) * len(slices), 
@@ -258,7 +259,6 @@ class Dispatcher:
     def transform(self): 
         '''call data transformers
         '''
-
         for transformer in self.mTransformers:
             debug( "%s: applying %s" % (self.mRenderer, transformer ))
             self.mData = transformer( self.mData )
@@ -274,19 +274,17 @@ class Dispatcher:
 
         results = ResultBlocks()
 
-        all_tracks = self.mData.keys()
-        all_slices = []
-        for x in self.mData.values(): all_slices.extend( x.keys() )
-        all_slices = list(set(all_slices))
+        labels = self.mData.getPaths()
+        all_tracks, all_slices = labels[0], labels[1]
 
         if self.mGroupBy == "track":
             for track in all_tracks:
                 # slices can be absent
-                vals = dict( [ (x,self.mData[track][x]) for x in all_slices if x in self.mData[track] ] )
+                vals = DataTree.DataTree( odict( [ (x,self.mData[track][x]) for x in all_slices if x in self.mData[track] ] ))
                 results.append( self.mRenderer( vals, title = track ) )
         elif self.mGroupBy == "slice":
             for slice in all_slices:
-                vals = dict( [ (x,self.mData[x][slice]) for x in all_tracks ] )
+                vals = DataTree.DataTree( odict( [ (x,self.mData[x][slice]) for x in all_tracks ] ))
                 results.append( self.mRenderer( vals, title = slice ) )
 
         debug( "%s: rendering data finished with %i blocks and %i plots" % (self.mTracker, len(results), len(results)))

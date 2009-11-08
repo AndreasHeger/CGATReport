@@ -8,6 +8,7 @@ from math import *
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
+import matplotlib.transforms
 
 import bsddb.db
 
@@ -22,9 +23,10 @@ import Stats
 import Histogram
 import collections
 
-from DataTypes import *
 from ResultBlock import ResultBlock, ResultBlocks
 import odict
+
+from DataTree import DataTree
 
 # Some renderers will build several objects.
 # Use these two rst levels to separate individual
@@ -48,12 +50,6 @@ if not os.path.exists("conf.py"):
 
 execfile( "conf.py" )
 
-def unique( iterables ):
-    s = set()
-    for x in iterables:
-        if x not in s:
-            yield x
-            s.add(x)
 
 class Renderer(object):
     """Base class of renderers that render data into restructured text.
@@ -86,56 +82,22 @@ class Renderer(object):
     # required levels in nested dictionary
     nlevels = None
 
+    # default number format
+    format = "%i"
+
     def __init__(self, tracker, *args, **kwargs ):
         """create an Renderer object using an instance of 
         a :class:`Tracker.Tracker`.
         """
 
-        debug("starting renderer '%s'")
-
-        try: self.mLayout = kwargs["layout"]
-        except KeyError: self.mLayout = "column"
-
-        try: self.mGroupBy = kwargs["groupby"]
-        except KeyError: self.mGroupBy = "slice"
+        debug("starting renderer '%s'"% (str(self)))
+        try: self.format = kwargs["format"]
+        except KeyError: pass
 
         self.mTracker = tracker
 
     def __call__(self):
         return None
-
-    def getLabels( self, data ):
-        '''extract labels from data.
-
-        returns a list of list with all labels within
-        the nested dictionary of data.
-        '''
-        labels = []
-        
-        this_level = [data,]
-
-        while 1:
-            l, next_level = [], []
-            for x in [ x for x in this_level if hasattr( x, "keys")]:
-                l.extend( x.keys() )
-                next_level.extend( x.values() )
-            if not l: break
-            labels.append( list(unique(l)) )
-            this_level = next_level
-
-        debug( "%s: found the following labels: %s" % (str(self),labels))
-        return labels
-
-    def getLeaf( self, data, path ):
-        '''get leaf in hierarchy at path.'''
-        work = data
-        for x in path:
-            try:
-                work = work[x]
-            except KeyError:
-                work = None
-                break
-        return work
 
     def __call__(self, data, title ):
         '''iterate over leaves in data structure.
@@ -144,8 +106,9 @@ class Renderer(object):
         '''
         if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
-        labels = self.getLabels( data )        
-        assert len(labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
+        labels = data.getPaths()
+        assert len(labels) >= self.nlevels, "expected at least %i levels - got %i: %s" %\
+            (self.nlevels, len(labels), str(labels))
         
         paths = list(itertools.product( *labels[:-self.nlevels] ))
         
@@ -153,9 +116,9 @@ class Renderer(object):
 
         for path in paths:
             subtitle = "-".join( path )
-            work = self.getLeaf( data, path )
+            work = data.getLeaf( path )
             if not work: continue
-            result.extend( self.render( work, path ) )
+            result.extend( self.render( DataTree(work), path ) )
 
         return result
             
@@ -197,7 +160,7 @@ class RendererTable( Renderer ):
         """
         if len(data) == 0: return None, None, None
 
-        labels = self.getLabels( data )        
+        labels = data.getPaths()        
         assert len(labels) >= 2, "expected at least two levels for building table"
 
         col_headers = [""] * (len(labels)-2) + labels[-1]
@@ -218,7 +181,7 @@ class RendererTable( Renderer ):
         ## by better use of indices
         for x,row in enumerate(labels[0]):
             for xx, path in enumerate(paths):
-                work = self.getLeaf( data, (row,) + path )
+                work = data.getLeaf( (row,) + path )
                 if not work: continue
                 for y, column in enumerate(labels[-1]):
                     matrix[x*npaths+xx][y+offset] = str(work[column])
@@ -273,7 +236,6 @@ class RendererGlossary( RendererTable ):
 
         return ResultBlocks( "\n".join(lines), title = title )
 
-
 class RendererMatrix(Renderer):    
     """A table with numerical columns.
 
@@ -306,27 +268,25 @@ class RendererMatrix(Renderer):
         Renderer.__init__(self, *args, **kwargs )
 
         self.mMapKeywordToTransform = {
-        "correspondence-analysis": self.transformCorrespondenceAnalysis,
-        "transpose": self.transformTranspose,
-        "normalized-row-total" : self.transformNormalizeRowTotal,
-        "normalized-row-max" : self.transformNormalizeRowMax,
-        "normalized-col-total" : self.transformNormalizeColumnTotal,
-        "normalized-col-max" : self.transformNormalizeColumnMax ,
-        "normalized-total" : self.transformNormalizeTotal,
-        "normalized-max" : self.transformNormalizeMax,
-        "filter-by-rows" : self.transformFilterByRows,
-        "filter-by-cols" : self.transformFilterByColumns,
-        "square" : self.transformSquare,
-        "add-row-total" : self.transformAddRowTotal,
-        "add-column-total" : self.transformAddColumnTotal,
+            "correspondence-analysis": self.transformCorrespondenceAnalysis,
+            "transpose": self.transformTranspose,
+            "normalized-row-total" : self.transformNormalizeRowTotal,
+            "normalized-row-max" : self.transformNormalizeRowMax,
+            "normalized-col-total" : self.transformNormalizeColumnTotal,
+            "normalized-col-max" : self.transformNormalizeColumnMax ,
+            "normalized-total" : self.transformNormalizeTotal,
+            "normalized-max" : self.transformNormalizeMax,
+            "filter-by-rows" : self.transformFilterByRows,
+            "filter-by-cols" : self.transformFilterByColumns,
+            "square" : self.transformSquare,
+            "add-row-total" : self.transformAddRowTotal,
+            "add-column-total" : self.transformAddColumnTotal,
         }
         
-        self.mFormat = "%i"
-
         self.mConverters = []        
         if "transform-matrix" in kwargs:
             for kw in [x.strip() for x in kwargs["transform-matrix"].split(",")]:
-                if kw.startswith( "normalized" ): self.mFormat = "%6.4f"
+                if kw.startswith( "normalized" ): self.format = "%6.4f"
                 try:
                     self.mConverters.append( self.mMapKeywordToTransform[ kw ] )
                 except KeyError:
@@ -455,33 +415,45 @@ class RendererMatrix(Renderer):
                     matrix[x,y] /= m
         return matrix, rows, cols
 
-    def buildMatrix( self, work, missing_value = 0 ):
-        """build a matrix from data.
+    def buildMatrix( self, work, 
+                     missing_value = 0, 
+                     apply_transformations = True,
+                     take = None,
+                     dtype = numpy.float ):
+        """build a matrix from work, a two-level nested dictionary.
 
-        This method will also apply conversions.
+        If *take* is given, then the matrix will be built from
+        level 3, taking *take* from the deepest level only.
 
-        Returns a list of tuples (title, matrix, rows, colums).
+        This method will also apply conversions if apply_transformations
+        is set.
         """
 
-        labels = self.getLabels( work )
-        levels = len(labels )
-        if levels != 2: raise ValueError( "expected two levels" )
+        labels = work.getPaths()
+        levels = len(labels)
+        if take:
+            if levels != 3: raise ValueError( "expected three labels" )
+            if take not in labels[-1]: raise ValueError( "no data on `%s`" % take )
+            take_f = lambda row,column: work[row][column][take]
+        else:
+            if levels != 2: raise ValueError( "expected two levels" )
+            take_f = lambda row,column: work[row][column]
 
-        rows, columns = labels
+        rows, columns = labels[:2]
 
-        matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), numpy.float)
+        matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), dtype )
         matrix.shape = (len(rows), len(columns) )
         for x,row in enumerate(rows):
             for y, column in enumerate(columns):
                 try:
-                    matrix[x,y] = work[row][column]
+                    matrix[x,y] = take_f( row, column )
                 except KeyError:
                     # ignore missing and malformatted data
                     pass
                 except ValueError:
                     raise ValueError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
                 
-        if self.mConverters:
+        if self.mConverters and apply_transformations:
             for converter in self.mConverters: 
                 matrix, rows, columns = converter(matrix, rows, columns)
 
@@ -500,7 +472,7 @@ class RendererMatrix(Renderer):
         lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
         lines.append( '')
         for x in range(len(rows)):
-            lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.mFormat % x for x in matrix[x,:] ] ) ) )
+            lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.format % x for x in matrix[x,:] ] ) ) )
         lines.append( "") 
         if not path: subtitle = ""
         else: subtitle = path
@@ -511,6 +483,7 @@ class RendererMatrix(Renderer):
 class RendererLinePlot(Renderer, Plotter):        
     '''create a line plot.
 
+    
     This :class:`Renderer` requires three levels:
     line / data / coords
     '''
@@ -529,8 +502,6 @@ class RendererLinePlot(Renderer, Plotter):
         nplotted = 0
 
         for line, data in work.iteritems():
-
-            assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
 
             for label, coords in data.iteritems():
                 s = self.mSymbols[nplotted % len(self.mSymbols)]
@@ -555,32 +526,97 @@ class RendererLinePlot(Renderer, Plotter):
         
         return self.endPlot( plts, legend, path )
 
+
 class RendererBarPlot( RendererMatrix, Plotter):
-    """A plot with interleaved bars.
+    '''A bar plot.
 
     This :class:`Renderer` requires two levels:
     rows[dict] / cols[dict]
-    """
+    '''
+
+    # column to use for error bars
+    error = None
+
+    # column to use for labels
+    label = None
+
+    label_offset_x = 10
+    label_offset_y = 5
 
     def __init__(self, *args, **kwargs):
         RendererMatrix.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
+        try: self.error = kwargs["error"]
+        except KeyError: pass
+
+        try: self.label = kwargs["label"]
+        except KeyError: pass
+
+        if self.error or self.label:
+            self.nlevels += 1
+
+    def addLabels( self, xvals, yvals, labels ):
+        '''add labels at x,y at current plot.'''
+
+        def coord_offset(ax, fig, x, y):
+            return matplotlib.transforms.offset_copy(ax.transData, fig, x=x, y=y, units='dots')
+
+            ax = plt.gca()
+            trans=coord_offset(ax, self.mCurrentFigure, self.label_offset_x, self.label_offset_y)
+            for xval, yval, label in zip(xvals,vals,labels):
+                ax.text(xval, yval, label, transform=trans)
+
+
+
+
+    def buildMatrices( self, work ):
+        '''build matrices necessary for plotting.
+
+        '''
+        self.error_matrix = None
+        self.label_matrix = None
+        
+        if self.error or self.label:
+            # select label to take
+            labels = work.getPaths()
+            label = list(set(labels[-1]).difference( set(("error", "label")) ))[0]
+            self.matrix, self.rows, self.columns = self.buildMatrix( work, 
+                                                                     apply_transformations = True, 
+                                                                     take = label
+                                                                     )
+            if self.error and self.error in labels[-1]:
+                self.error_matrix, rows, colums = self.buildMatrix( work, 
+                                                                    apply_transformations = False, 
+                                                                    take = self.error
+                                                                    )
+            if self.label and self.label in labels[-1]:
+                self.label_matrix, rows, colums = self.buildMatrix( work, 
+                                                                    apply_transformations = False, 
+                                                                    missing_value = "",
+                                                                    take = self.label,
+                                                                    dtype = "S20",
+                                                                    )
+
+        else:
+            self.matrix, self.rows, self.columns = self.buildMatrix( work )
+                    
+
     def render( self, work, path ):
 
-        matrix, rows, columns = self.buildMatrix( work )
-
+        self.buildMatrices( work )
         plts = []
 
         self.startPlot()
 
-        xvals = numpy.arange( 0, len(rows) )
+        xvals = numpy.arange( 0, len(self.rows) )
 
         # plot by row
-        y = 0
-        for x,header in enumerate(columns):
+        y, error = 0, None
+        for column,header in enumerate(self.columns):
             
-            vals = matrix[:,x]
+            vals = self.matrix[:,column]
+            if self.error: error = self.error_matrix[:,column]
 
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
@@ -591,20 +627,25 @@ class RendererBarPlot( RendererMatrix, Plotter):
             plts.append( plt.bar( xvals, 
                                   vals,
                                   self.mWidth, 
+                                  yerr = error,
+                                  ecolor = "black",
                                   color = self.mColors[ y % len(self.mColors) ],
                                   )[0] )
+
+            if self.label and self.label_matrix != None: 
+                self.addLabels( xvals, vals, self.label_matrix[:,column] )
             
             y += 1
 
-        if len( rows ) > 5 or max( [len(x) for x in rows] ) >= 8 : 
+        if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
             rotation = "vertical"
-            self.rescaleForVerticalLabels( rows )
+            self.rescaleForVerticalLabels( self.rows )
         else: 
             rotation = "horizontal"
         
-        plt.xticks( xvals + 0.5, rows, rotation = rotation )
+        plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
 
-        return self.endPlot( plts, columns, path )
+        return self.endPlot( plts, self.columns, path )
 
 class RendererInterleavedBarPlot(RendererBarPlot):
     """A plot with interleaved bars.
@@ -618,22 +659,22 @@ class RendererInterleavedBarPlot(RendererBarPlot):
 
     def render( self, work, path ):
 
-        matrix, rows, columns = self.buildMatrix( work )
-
-        width = 1.0 / (len(columns) + 1 )
-        plts = []
+        self.buildMatrices( work )
 
         self.startPlot()
 
-        xvals = numpy.arange( 0, len(rows) )
+        width = 1.0 / (len(self.columns) + 1 )
+        plts, error = [], None
+        xvals = numpy.arange( 0, len(self.rows) )
         offset = width / 2.0
 
         # plot by row
-        y = 0
-        for x,header in enumerate(columns):
-            
-            vals = matrix[:,x]
+        row = 0
 
+        for column,header in enumerate(self.columns):
+            
+            vals = self.matrix[:,column]
+            if self.error: error = self.error_matrix[:,column]
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
@@ -643,21 +684,27 @@ class RendererInterleavedBarPlot(RendererBarPlot):
             plts.append( plt.bar( xvals + offset, 
                                   vals,
                                   width,
-                                  color = self.mColors[ y % len(self.mColors) ],
-                                  )[0] )
+                                  yerr = error,
+                                  align = "edge",
+                                  ecolor = "black",
+                                  color = self.mColors[ row % len(self.mColors) ],
+                                  )[0])
             
-            offset += width
-            y += 1
+            if self.label and self.label_matrix != None: 
+                self.addLabels( xvals+offset, vals, self.label_matrix[:,column] )
 
-        if len( rows ) > 5 or max( [len(x) for x in rows] ) >= 8 : 
+            offset += width
+            row += 1
+
+        if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
             rotation = "vertical"
-            self.rescaleForVerticalLabels( rows )
+            self.rescaleForVerticalLabels( self.rows )
         else: 
             rotation = "horizontal"
         
-        plt.xticks( xvals + 0.5, rows, rotation = rotation )
+        plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
 
-        return self.endPlot( plts, columns, path )
+        return self.endPlot( plts, self.columns, path )
            
 class RendererStackedBarPlot(RendererBarPlot ):
     """A plot with stacked bars.
@@ -670,19 +717,20 @@ class RendererStackedBarPlot(RendererBarPlot ):
 
     def render( self, work, path ):
 
-        matrix, rows, columns = self.buildMatrix( work )
+        self.buildMatrices( work)
         
         self.startPlot( )
 
         plts = []
 
-        xvals = numpy.arange( (1.0 - self.mWidth) / 2., len(rows) )
-        sums = numpy.zeros( len(rows), numpy.float )
+        xvals = numpy.arange( (1.0 - self.mWidth) / 2., len(self.rows) )
+        sums = numpy.zeros( len(self.rows), numpy.float )
 
-        y = 0
-        for x,header in enumerate(columns):
+        y, error = 0, None
+        for column,header in enumerate(self.columns):
 
-            vals = matrix[:,x]            
+            vals = self.matrix[:,column]            
+            if self.error: error = self.error_matrix[:,column]
 
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
@@ -693,23 +741,28 @@ class RendererStackedBarPlot(RendererBarPlot ):
             plts.append( plt.bar( xvals, 
                                   vals, 
                                   self.mWidth, 
+                                  yerr = error,
                                   color = self.mColors[ y % len(self.mColors) ],
+                                  ecolor = "black",
                                   bottom = sums )[0] )
-            
+
+            if self.label and self.label_matrix != None: 
+                self.addLabels( xvals, vals, self.label_matrix[:,column] )
+
             sums += vals
             y += 1
 
-        if len( rows ) > 5 or max( [len(x) for x in rows] ) >= 8 : 
+        if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
             rotation = "vertical"
-            self.rescaleForVerticalLabels( rows )
+            self.rescaleForVerticalLabels( self.rows )
         else: 
             rotation = "horizontal"
         
         plt.xticks( xvals + self.mWidth / 2., 
-                    rows,
+                    self.rows,
                     rotation = rotation )
 
-        return self.endPlot( plts, columns, path )
+        return self.endPlot( plts, self.columns, path )
 
 class RendererPiePlot(Renderer, Plotter):
     """A pie chart.
@@ -721,8 +774,6 @@ class RendererPiePlot(Renderer, Plotter):
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
-
-        self.mFormat = "%i"
 
         try: self.mPieMinimumPercentage = float(kwargs["pie-min-percentage"])
         except KeyError: self.mPieMinPercentage = 0
@@ -751,7 +802,6 @@ class RendererMatrixPlot(RendererMatrix, PlotterMatrix):
     def __init__(self, *args, **kwargs):
         RendererMatrix.__init__(self, *args, **kwargs )
         PlotterMatrix.__init__(self, *args, **kwargs )
-        self.mFormat = "%i"
 
     def render( self, work, path ):
         """render the data."""
@@ -766,7 +816,6 @@ class RendererHintonPlot(RendererMatrix, PlotterHinton):
     def __init__(self, *args, **kwargs):
         RendererMatrix.__init__(self, *args, **kwargs )
         PlotterMatrix.__init__(self, *args, **kwargs )
-        self.mFormat = "%i"
 
     def render( self, work, path ):
         """render the data."""
@@ -941,57 +990,6 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
         cb.ax.set_xlabel( zlabel )
 
         return self.endPlot( plts, None, path )
-
-class RendererMultiHistogramPlot(Renderer, Plotter):
-    """Render histogram data as plot.
-
-    The data should be already histgrammed and the first
-    column is taken as the bins.
-
-    Requires :class:`DataTypes.MultipleColumnData`.
-    """
-
-    bin_marker = "left"
-
-    mRequiredType = type( MultipleColumnData( None ) )
-
-    def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
-
-    def addData( self, group, title, data ):
-        self.mData[group].append( (title,data) )
-
-    def prepare(self, *args, **kwargs ):
-
-        Renderer.prepare( self, *args, **kwargs )
-        Plotter.prepare(self, *args, **kwargs )
-        
-    def render(self, data):
-        """returns a placeholder."""
-        
-        blocks = []
-
-        for track, vv in data:
-
-            self.startPlot()
-            headers, columns = vv
-
-            # get and transform x/y values
-            xvals = columns[0]
-
-            plts, legend = [], []
-            nplotted = 0
-            for y in range( 1, len(columns) ):
-                s = self.mSymbols[nplotted % len(self.mSymbols)]        
-                yvals = columns[y]
-                plts.append(plt.plot( xvals, yvals, s ) )
-                legend.append( headers[y] )
-                nplotted += 1
-
-            blocks.extend( self.endPlot( plts, legend, title = track ) )
-
-        return blocks
 
         
 

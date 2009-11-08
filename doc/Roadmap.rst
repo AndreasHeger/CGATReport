@@ -52,7 +52,6 @@ optional pdf support
     with many points take a long while to render and these should
     be thinned.
 
-
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
 

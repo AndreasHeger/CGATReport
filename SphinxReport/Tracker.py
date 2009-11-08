@@ -85,6 +85,23 @@ class Tracker(object):
         """return a data structure for track :param: track and slice :slice:"""
         raise NotImplementedError("not implemented")
 
+class TrackerCSV( Tracker ):
+    """Base class for trackers that fetch data from an CSV file.
+    
+    """
+    def __init__(self, *args, **kwargs ):
+        Tracker.__init__(self, *args, **kwargs )
+        try: self.filename = kwargs["filename"]
+        except KeyError: pass
+
+    def getTracks(self, subset = None ):
+        return ["all",]
+    def getSlices(self, subset = None ):
+        return []
+    def __call__(self, track, slice = None):
+        """return a data structure for track :param: track and slice :slice:"""
+        raise NotImplementedError("not implemented")
+
 class TrackerSQL( Tracker ):
     """Base class for trackers that fetch data from an SQL database.
     
@@ -121,7 +138,6 @@ class TrackerSQL( Tracker ):
                     self.metadata = sqlalchemy.MetaData(db, reflect = True)
 
             self.db = db
-
 
     def getTables(self, pattern = None ):
         """return a list of table objects matching a :term:`track` pattern."""

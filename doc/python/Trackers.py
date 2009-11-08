@@ -9,11 +9,35 @@ class LabeledDataExample( Tracker ):
     def __call__(self, track, slice = None):
         if slice == "slice1":
             return odict( (("column1", 10),
-                          ("column2", 20 ),) )
+                           ("column2", 20 ),) )
         elif slice == "slice2":
             return odict ( (("column1", 20),
-                           ("column2", 10),
-                           ("column3", 5),) )
+                            ("column2", 10),
+                            ("column3", 5),) )
+
+class LabeledDataWithErrorsExample( Tracker ):
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    def __call__(self, track, slice = None):
+        if slice == "slice1":
+            return odict( ( 
+                    ("column1", dict( ( ('data', 20), 
+                                        ('error',5), 
+                                        ('label','**' ) ) )),
+                    ("column2", dict( ( ('data', 10), 
+                                        ('error',2), 
+                                        ('label', '*' ) ) ) )
+                    )) 
+        elif slice == "slice2":
+            return odict( ( 
+                    ("column1", dict( ( ('data', 20), 
+                                        ('error',5),
+                                        ('label','***' ) ) )),
+                    ("column2", dict( ( ('data', 10), 
+                                        ('error',1))) ),
+                    ("column3", dict( ( ('data', 30), 
+                                        ('error',4))) ),
+                    ) )
 
 class SingleColumnDataExample( Tracker ):
     def getSlices( self, subset = None ): return "slice1", "slice2"
