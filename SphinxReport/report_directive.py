@@ -131,6 +131,8 @@ MAP_TRANSFORMER = {
     'histogram' : Transformer.TransformerHistogram,
     'filter' : Transformer.TransformerFilter,
     'select' : Transformer.TransformerSelect,
+    'combinations': Transformer.TransformerCombinations,
+    'combine': Transformer.TransformerCombinations,
     }
 
 MAP_RENDERER= { 
@@ -159,13 +161,18 @@ DISPLAY_OPTIONS = {'alt': directives.unchanged,
                   'transform' : directives.unchanged,
                   'include-source': directives.flag }
 
+DISPATCHER_OPTIONS = {
+                       'groupby' : directives.unchanged,
+                       'tracks': directives.unchanged,
+                       'slices': directives.unchanged,
+                       }
+
 RENDER_OPTIONS = { 'cumulative': directives.flag,
                    'reverse-cumulative': directives.flag,
                    'error' : directives.unchanged,
                    'label' : directives.unchanged,
                    'normalized-max': directives.flag,
                    'normalized-total': directives.flag,
-                   'groupby' : directives.unchanged,
                    'layout' : directives.unchanged,
                    'bins' : directives.unchanged,
                    'logscale' : directives.unchanged,
@@ -182,8 +189,6 @@ RENDER_OPTIONS = { 'cumulative': directives.flag,
                    'transpose' : directives.flag,
                    'transform-matrix' : directives.unchanged,
                    'plot-value' : directives.unchanged,
-                   'tracks': directives.unchanged,
-                   'slices': directives.unchanged,
                    'as-lines': directives.flag,  
                    'format' : directives.unchanged,
                    'colorbar-format' : directives.unchanged,
@@ -475,9 +480,11 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     render_options = selectAndDeleteOptions( options, RENDER_OPTIONS )
     transform_options = selectAndDeleteOptions( options, TRANSFORM_OPTIONS)
+    dispatcher_options = selectAndDeleteOptions( options, DISPATCHER_OPTIONS)
 
-    logging.debug( "render options: %s" % str(render_options))
-    logging.debug( "transform options: %s" % str(transform_options))
+    logging.debug( "renderer options: %s" % str(render_options))
+    logging.debug( "transformer options: %s" % str(transform_options))
+    logging.debug( "dispatcher options: %s" % str(dispatcher_options))
 
     if options.has_key("transform"): 
         transformer_names = options["transform"].split(",")
@@ -592,7 +599,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
         logging.debug( "creating dispatcher" )
         dispatcher = Dispatcher.Dispatcher( tracker, renderer(tracker, **render_options), transformers )     
-        blocks = dispatcher( **render_options )
+        blocks = dispatcher( **dispatcher_options )
     except:
         blocks = Renderer.buildException( "invocation" )
         code = None

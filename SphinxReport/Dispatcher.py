@@ -292,7 +292,6 @@ class Dispatcher:
         labels = self.mData.getPaths()
         all_tracks, all_slices = labels[0], labels[1]
         tracks, slices = self.mTracks, self.mSlices
-        
         if not self.mSlices or len(labels) == 2:
             results.append( self.mRenderer( self.mData, title = "all" ) )
         elif self.mGroupBy == "track":

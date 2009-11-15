@@ -57,7 +57,6 @@ class TransformerFilter( Transformer ):
 
 class TransformerSelect( Transformer ):
     '''replace the lowest hierarchy with a single value.
-
     '''
     
     nlevels = 2
@@ -81,6 +80,40 @@ class TransformerSelect( Transformer ):
             
         return data
 
+class TransformerCombinations( Transformer ):
+    '''build combinations of the second lowest level.
+    '''
+    
+    nlevels = 2
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        try: self.fields = kwargs["tf-fields"]
+        except KeyError: 
+            raise KeyError( "TransformerCombinations requires the `tf-fields` option to be set." )
+
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        vals =  data.keys()
+        new_data = odict.OrderedDict()
+        for x1 in range(len(vals)-1):
+            n1 = vals[x1]
+            d1 = data[n1][self.fields]
+            for x2 in range(x1+1, len(vals)):
+                n2 = vals[x2]
+                d2 = data[n2][self.fields]
+                if len(d1) != len(d2):
+                    raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
+                key = "%s vs %s" % (n1,n2)
+                new_data[key] =\
+                    odict.OrderedDict( (\
+                        ("%s/%s" % (n1,self.fields), d1),
+                        ("%s/%s" % (n2,self.fields), d2), ) )
+        print new_data.keys()
+
+        return new_data
 
 class TransformerStats( Transformer ):
     '''compute stats on each column.'''

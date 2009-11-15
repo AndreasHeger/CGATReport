@@ -132,7 +132,7 @@ per :term:`track` and :term:`slice`. The data is asscociated with column headers
 Pairwise scatter plot
 ========================
 
-A scatter plot.
+A scatter plot plotting multiple values
 
 .. report:: Trackers.MultipleColumnDataExample
    :render: scatter-plot
@@ -146,6 +146,24 @@ A scatter plot with colours
 
    A scatter plot with colours.
 
+A scatter plot with pairwise variables, multiple plots:
+
+.. report:: Trackers.SingleColumnDataExample
+   :render: scatter-plot
+   :transform: combine
+   :tf-fields: data
+   :groupby: track
+
+   A scatter plot from single columns
+
+A scatter plot with pairwise variables, single plot:
+
+.. report:: Trackers.SingleColumnDataExample
+   :render: scatter-plot
+   :transform: combine
+   :tf-fields: data
+
+   A scatter plot from single columns
 
 Grouped table
 =============

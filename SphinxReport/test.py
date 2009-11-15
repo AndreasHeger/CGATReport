@@ -261,7 +261,8 @@ def main():
 
         t = tracker()
         dispatcher = Dispatcher( t, renderer(t,**kwargs), transformers ) 
-        result = dispatcher()
+        ## needs to be resolved between renderer and dispatcher options
+        result = dispatcher( **kwargs )
         
         #r = renderer( tracker() )
 
