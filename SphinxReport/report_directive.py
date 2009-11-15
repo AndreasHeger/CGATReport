@@ -476,6 +476,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     render_options = selectAndDeleteOptions( options, RENDER_OPTIONS )
     transform_options = selectAndDeleteOptions( options, TRANSFORM_OPTIONS)
 
+    logging.debug( "render options: %s" % str(render_options))
+    logging.debug( "transform options: %s" % str(transform_options))
+
     if options.has_key("transform"): 
         transformer_names = options["transform"].split(",")
         del options["transform"]
@@ -494,12 +497,13 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         display_options = "\n".join( ['      :%s: %s' % (key, val) for key, val in
                                       options.items()] )
     else:
-        display_options = ""
+        display_options = ''
 
     ########################################################        
     # check for missing files
     if renderer_name != None:
-        options_hash = hashlib.md5( str(render_options) + str(transform_options) ).hexdigest()
+        
+        options_hash = hashlib.md5( str(render_options) + str(transform_options) + str(transformer_names) ).hexdigest()
 
         template_name = quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
         filename_text = os.path.join( outdir, "%s.txt" % (template_name))
@@ -650,6 +654,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     if len(lines) and state_machine:
         state_machine.insert_input(
             lines, state_machine.input_lines.source(0))
+
+    logging.debug( "finished report_directive.run: %s:%i" % (str(document), lineno) )
 
     return []
 

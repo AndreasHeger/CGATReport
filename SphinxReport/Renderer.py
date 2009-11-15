@@ -190,9 +190,9 @@ class RendererTable( Renderer ):
 
         returns matrix, row_headers, col_headers
         """
-        if len(data) == 0: return None, None, None
+        # if len(data) == 0: return None, None, None
 
-        labels = data.getPaths()        
+        labels = data.getPaths()
         assert len(labels) >= 2, "expected at least two levels for building table"
 
         col_headers = [""] * (len(labels)-2) + labels[-1]
@@ -204,7 +204,7 @@ class RendererTable( Renderer ):
         for x in labels[0]: 
             row_headers.extend( [x] + [""] * (npaths-1) )
         nrows = len(row_headers)
-        
+
         offset = len(labels)-2
         matrix = [ [""] * ncols for x in range(nrows) ]
 
@@ -219,6 +219,7 @@ class RendererTable( Renderer ):
                     matrix[x*npaths+xx][y+offset] = str(work[column])
                 for z, p in enumerate(path):
                     matrix[x*npaths+xx][z] = p
+
         if self.mTranspose:
             row_headers, col_headers = col_headers, row_headers
             matrix = zip( *matrix )

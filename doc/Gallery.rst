@@ -27,12 +27,12 @@ Barplot
 =======
 
 The :class:`Renderer.RendererBarPlot` class presents labeled data
-as stacked bars.
+as overlapping bars.
 
 .. report:: Trackers.LabeledDataExample
    :render: bar-plot
 
-   A bar plot with stacked bars.
+   A bar plot with overlapping bars.
 
 Stacked Barplot
 ===============
@@ -191,11 +191,35 @@ Transformers
 Correlation
 ===========
 
-Compute correlation statistics between all columns.
+Compute correlation statistics between all columns within a tracker.
 
 .. report:: Trackers.MultipleColumnDataExample
    :render: table
    :transform: correlation
+
+   A pairwise statistics table.
+
+Correlation
+===========
+
+Compute correlation statistics between tracks/slices for a single column
+
+.. report:: Trackers.SingleColumnDataExample
+   :render: table
+   :transform: select,correlation
+   :tf-fields: data
+
+   A pairwise statistics table.
+
+Correlation
+===========
+
+Compute correlation statistics between tracks/slices for a single column
+
+.. report:: Trackers.SingleColumnDataExampleWithoutSlices
+   :render: table
+   :transform: select,correlation
+   :tf-fields: data
 
    A pairwise statistics table.
 

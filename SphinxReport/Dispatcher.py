@@ -230,7 +230,7 @@ class Dispatcher:
             slices = self.mTracker.getSlices( subset = None )
         
         if type(slices) in types.StringTypes: slices=[slices,]
-        if len(slices) == 0: slices=[None,]
+        # if len(slices) == 0: slices=[None,]
         
         self.mSlices = slices
 
@@ -257,10 +257,14 @@ class Dispatcher:
                                                                                            len(slices), str(slices) ) )
         self.mData = DataTree.DataTree()
         for track in tracks:
-            for slice in slices:
-                d = self.getData( track, slice )
-                if not d: continue
-                self.mData[track][slice] = DataTree.DataTree( d )
+            if slices:
+                for slice in slices:
+                    d = self.getData( track, slice )
+                    if not d: continue
+                    self.mData[track][slice] = DataTree.DataTree( d )
+            else:
+                d = self.getData( track, None )
+                self.mData[track] = DataTree.DataTree( d )
 
         debug( "%s: collecting data finished for %i pairs, %i tracks: %s, %i slices: %s" % (self.mTracker, 
                                                                                             len(tracks) * len(slices), 
@@ -287,8 +291,11 @@ class Dispatcher:
 
         labels = self.mData.getPaths()
         all_tracks, all_slices = labels[0], labels[1]
-
-        if self.mGroupBy == "track":
+        tracks, slices = self.mTracks, self.mSlices
+        
+        if not self.mSlices or len(labels) == 2:
+            results.append( self.mRenderer( self.mData, title = "all" ) )
+        elif self.mGroupBy == "track":
             for track in all_tracks:
                 # slices can be absent
                 vals = DataTree.DataTree( odict( [ (x,self.mData[track][x]) for x in all_slices if x in self.mData[track] ] ))
@@ -297,7 +304,7 @@ class Dispatcher:
             for slice in all_slices:
                 vals = DataTree.DataTree( odict( [ (x,self.mData[x][slice]) for x in all_tracks ] ))
                 results.append( self.mRenderer( vals, title = slice ) )
-
+                
         if len(results) == 0:
             warn("tracker returned no data.")
             raise ValueError( "tracker returned no data." )

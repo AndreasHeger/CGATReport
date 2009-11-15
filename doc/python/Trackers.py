@@ -48,6 +48,15 @@ class SingleColumnDataExample( Tracker ):
         random.shuffle( s )
         return odict( (("data", s),) )
 
+class SingleColumnDataExampleWithoutSlices( Tracker ):
+    '''return a single column of data.'''
+    def getSlices( self, subset = None ): return []
+    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    def __call__(self, track, slice = None):
+        s = [random.randint(0,10) for x in range(20)]
+        random.shuffle( s )
+        return odict( (("data", s),) )
+
 class MultipleColumnDataExample( Tracker ):
     '''multiple columns each with a column with data.'''
     mColumns = [ "col1", "col2", "col3" ]

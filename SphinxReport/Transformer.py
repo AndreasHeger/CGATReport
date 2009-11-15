@@ -20,7 +20,6 @@ class Transformer(object):
         assert len(labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
         
         paths = list(itertools.product( *labels[:-self.nlevels] ))
-
         for path in paths:
             work = data.getLeaf( path )
             if not work: continue
@@ -28,7 +27,6 @@ class Transformer(object):
                           self.transform( work, path ) )
 
         return data
-
         
 class TransformerFilter( Transformer ):
     '''select columns in the deepest dictionary.

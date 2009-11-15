@@ -63,14 +63,18 @@ class DataTree( object ):
 
     def setLeaf( self, path, data ):
         '''set leaf.'''
-        work = self._data
-        for x in path[:-1]:
-            try:
-                work = work[x]
-            except KeyError:
-                work = None
-                break
-        work[path[-1]] = data
+        if len(path) == 0:
+            object.__setattr__( self, "_data", data)
+        else:
+            work = self._data
+            for x in path[:-1]:
+                try:
+                    work = work[x]
+                except KeyError:
+                    work = None
+                    break
+            work[path[-1]] = data
+        
     def __str__(self):
         return "< datatree: _data=%s>" % str(self._data)
 
