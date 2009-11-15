@@ -280,6 +280,10 @@ def main():
                        "label" : options.label,
                        "options": ("\n   ").join(options_rst),
                        "caption" : options.caption }
+            if options.transformers:                                                                  
+                params["options"] = ":transform: %s\n   %s" %\
+                    (",".join(options.transformers), params["options"] )
+
             print RST_TEMPLATE % params
             print
             print "..Template ends"
