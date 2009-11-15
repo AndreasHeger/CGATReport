@@ -106,12 +106,13 @@ class TransformerCombinations( Transformer ):
                 d2 = data[n2][self.fields]
                 if len(d1) != len(d2):
                     raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
+                ## check if array?
+
                 key = "%s vs %s" % (n1,n2)
                 new_data[key] =\
                     odict.OrderedDict( (\
                         ("%s/%s" % (n1,self.fields), d1),
                         ("%s/%s" % (n2,self.fields), d2), ) )
-        print new_data.keys()
 
         return new_data
 

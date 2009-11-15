@@ -510,7 +510,10 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # check for missing files
     if renderer_name != None:
         
-        options_hash = hashlib.md5( str(render_options) + str(transform_options) + str(transformer_names) ).hexdigest()
+        options_hash = hashlib.md5( str(render_options) +\
+                                        str(transform_options) +\
+                                        str(dispatcher_options) +\
+                                        str(transformer_names) ).hexdigest()
 
         template_name = quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
         filename_text = os.path.join( outdir, "%s.txt" % (template_name))
@@ -683,7 +686,10 @@ except ImportError:
 
     report_directive.__doc__ = __doc__
     report_directive.arguments = (1, 0, 1)
-    report_directive.options = dict( RENDER_OPTIONS.items() + TRANSFORM_OPTIONS.items() + DISPLAY_OPTIONS.items() )
+    report_directive.options = dict( RENDER_OPTIONS.items() +\
+                                TRANSFORM_OPTIONS.items() +\
+                                DISPLAY_OPTIONS.items() +\
+                                DISPATCHER_OPTIONS.items() )
 
     _directives['report'] = report_directive
 else:
@@ -692,7 +698,10 @@ else:
         optional_arguments = 0
         has_content = True
         final_argument_whitespace = True
-        option_spec = dict( RENDER_OPTIONS.items() + TRANSFORM_OPTIONS.items() + DISPLAY_OPTIONS.items() )
+        option_spec = dict( RENDER_OPTIONS.items() +\
+                                TRANSFORM_OPTIONS.items() +\
+                                DISPLAY_OPTIONS.items() +\
+                                DISPATCHER_OPTIONS.items() )
         def run(self):
             document = self.state.document.current_source
             logging.info( "starting: %s:%i" % (str(document), self.lineno) )
