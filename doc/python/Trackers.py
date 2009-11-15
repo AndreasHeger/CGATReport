@@ -92,5 +92,27 @@ class MultipleColumnsExample( Tracker ):
                 data.append( x+1 )
         return odict( zip(self.mColumns, data) )
 
+class ErrorInTracker1( Tracker ):
+    '''A tracker that creates an error - problems while collecting data.'''
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): return "track1", "track2"
+    def __call__(self, track, slice = None):
+        raise ValueError("testing: could not collect data")
+    
+class ErrorInTracker2( Tracker ):
+    '''A tracker that creates an error - problems while returning tracks.'''
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): raise ValueError("testing: did not return trackers.")
+    def __call__(self, track, slice = None):
+        return odict( (("data", range(0,10)),) )
+
+class ErrorInTracker3( Tracker ):
+    '''A tracker that creates an error - problems while returning tracks.'''
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): return "track1", "track2"
+    def __call__(self, track, slice = None):
+        return None
+
 
     
+

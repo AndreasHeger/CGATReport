@@ -28,6 +28,9 @@ cachedir=os.path.abspath("_cache")
 # The Database backend. Possible values are mysql, psql and sqlite
 sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 
+# add warnings into the document
+sphinxreport_add_warnings = True
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions

@@ -50,6 +50,41 @@ if not os.path.exists("conf.py"):
 
 execfile( "conf.py" )
 
+def buildException( stage ):
+    '''build an exception text element.
+    
+    It uses the last exception.
+    '''
+        
+    if sphinxreport_add_warnings:
+        EXCEPTION_TEMPLATE = '''
+.. warning:: 
+   * stage: %(stage)s
+   * exception: %(exception_name)s
+   * message: %(exception_value)s
+   * traceback: 
+%(exception_stack)s
+'''
+
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        lines = traceback.format_tb( exceptionTraceback )
+        # remove all the ones relate to Dispatcher.py
+        xlines = filter( lambda x: not re.search( "Dispatcher.py", x ), lines )
+        # if nothing left, use the full traceback
+        if len(xlines) > 0: lines = xlines
+        # add prefix of 6 spaces
+        prefix = "\n" + " " * 6
+        exception_stack  = prefix + prefix.join( "".join(lines).split("\n") )
+        exception_name   = exceptionType.__module__ + '.' + exceptionType.__name__
+        exception_value  = str(exceptionValue)
+
+        return ResultBlocks( 
+            ResultBlocks( 
+            ResultBlock( EXCEPTION_TEMPLATE % locals(), 
+                         title = "" ) ) )
+    else:
+        return ResultBlocks()
+
 
 class Renderer(object):
     """Base class of renderers that render data into restructured text.

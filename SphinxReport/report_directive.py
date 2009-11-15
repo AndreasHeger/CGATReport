@@ -31,8 +31,7 @@ import Dispatcher
 import matplotlib
 from ResultBlock import ResultBlock, ResultBlocks
 
-DEBUG = False
-FORCE = False
+SPHINXREPORT_DEBUG = False
 
 SEPARATOR="@"
 
@@ -117,14 +116,14 @@ def getTracker( fullpath ):
         tracker =  getattr( module, cls)()
     except AttributeError, msg:
         logging.critical( "instantiating tracker %s.%s failed: %s" % (module, cls, msg))
-        tracker = None
+        raise
 
     return code, tracker
 
-FORMATS = [('png', 80),
-           ('hires.png', 200),
-           ('pdf', 50),
-           ]
+FORMATS = [ ('png', 80),
+            ('hires.png', 200),
+            ('pdf', 50),
+            ]
 
 MAP_TRANSFORMER = { 
     'stats' : Transformer.TransformerStats, 
@@ -228,11 +227,13 @@ TEMPLATE_TEXT = """
 EXCEPTION_TEMPLATE = """
 .. htmlonly::
 
-   [`source code <%(linkdir)s/%(basename)s.py>`__]
+   [`source code <%(linked_codename)s.py>`__]
 
-Exception occurred rendering plot.
+.. warning::
 
+   %%(title)s
 """
+
 
 # latex does not permit a "." for image files - replace it with "-"
 def quoted( fn ):
@@ -437,15 +438,15 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     outdir = os.path.join('_static', 'report_directive', basedir)
     linkdir = ('../' * (nparts)) + outdir
 
-    if DEBUG:
-        print "arguments=", arguments
-        print "options=", options
-        print "lineno", lineno
-        print "content=", content
-        print "document=", document
-        print 'plotdir=', reference, "basename=", basename, "ext=", ext, "fname=", fname
-        print 'rstdir=%s, reldir=%s, relparts=%s, nparts=%d'%(rstdir, reldir, relparts, nparts)
-        print 'reference="%s", basedir="%s", linkdir="%s", outdir="%s"'%(reference, basedir, linkdir, outdir)
+    logging.debug( "arguments=%s, options=%s, lineno=%s, content=%s, document=%s" % (str(arguments),
+                                                                                     str(options),
+                                                                                     str(lineno),
+                                                                                     str(content),
+                                                                                     str(document)))
+
+    logging.debug( "plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, reldir=%s, relparts=%s, nparts=%d" %\
+                       (reference, basename, ext, fname, rstdir, reldir, relparts, nparts) )
+    logging.debug( "reference=%s, basedir=%s, linkdir=%s, outdir=%s" % (reference, basedir, linkdir, outdir))
 
     # try to create. If several processes try to create it,
     # testing with `if` will not work.
@@ -456,105 +457,79 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     if not os.path.exists(outdir): 
         raise OSError( "could not create directory %s: %s" % (outdir, msg ))
-    
-    ########################################################
-    # find the tracker
-    logging.debug( "collecting tracker." )
-    code, tracker = getTracker( reference )
-    if not tracker: 
-        logging.debug( "no tracker - no output from %s " % str(document) )
-        return []
-
-    logging.debug( "collected tracker." )
-
-    codename = quoted(fname) + ".code"
-    linked_codename = re.sub( "\\\\", "/", os.path.join( linkdir, codename )) 
-    if basedir != outdir:
-        outfile = open( os.path.join(outdir, codename ), "w" )
-        for line in code: outfile.write( line )
-        outfile.close()
-
-    logging.debug( "invocating renderer." )
 
     ########################################################
-    # determine options
+    # collect options
+    transformer_names = []
+    renderer_name = None
+
     render_options = selectAndDeleteOptions( options, RENDER_OPTIONS )
     transform_options = selectAndDeleteOptions( options, TRANSFORM_OPTIONS)
+    if options.has_key("transform"): 
+        transformer_names = options["transform"].split(",")
+        del options["transform"]
+
+    if options.has_key("render"): 
+        renderer_name = options["render"]
+        del options["render"]
+
     # get layout option
     try: layout = options["layout"]
     except KeyError: layout = "column"
 
     ########################################################
-    # determine the transformer
-    transformers = []
-    if options.has_key("transform"): 
-        transformer_names = options["transform"].split(",")
-        del options["transform"]
-        for transformer in transformer_names:
-            if transformer not in MAP_TRANSFORMER: 
-                raise KeyError('unknown transformer %s' % transformer )
-            else: transformers.append( MAP_TRANSFORMER[transformer](**transform_options)) 
-
-    ########################################################
-    # determine the renderer
-    if options.has_key("render"): 
-        renderer_name = options["render"]
-        del options["render"]
-        if renderer_name not in MAP_RENDERER:
-            raise KeyError("unknown renderer %s" % renderer_name)
-        renderer = MAP_RENDERER[renderer_name]
-
-    ########################################################
     # add sphinx options for image display
-    display_options = "\n".join( ['      :%s: %s' % (key, val) for key, val in
-                                  options.items()] )
+    if options.items:
+        display_options = "\n".join( ['      :%s: %s' % (key, val) for key, val in
+                                      options.items()] )
+    else:
+        display_options = ""
+        
+    if renderer_name != None:
+        options_hash = hashlib.md5( str(render_options) + str(transform_options) ).hexdigest()
 
-    options_hash = hashlib.md5( str(render_options) + str(transform_options) ).hexdigest()
+        template_name = quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
+        filename_text = os.path.join( outdir, "%s.txt" % (template_name))
 
-    template_name = quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
-    filename_text = os.path.join( outdir, "%s.txt" % (template_name))
+        logging.debug( "options_hash=%s" %  options_hash)
 
-    if DEBUG:
-        print "options_hash=", options_hash
+        ###########################################################
+        # check for existing files
+        # update strategy does not use file stamps, but checks
+        # for presence/absence of text element and if all figures
+        # mentioned it the text element are present
+        ###########################################################
+        queries = [ re.compile( "%s(%s\S+.%s)" % ("\.\./" * nparts, outdir,suffix ) ) for suffix in ("png", "pdf") ]
 
-    ###########################################################
-    # check for existing files
-    # update strategy does not use file stamps, but checks
-    # for presence/absence of text element and if all figures
-    # mentioned it the text element are present
-    ###########################################################
-    queries = [ re.compile( "%s(%s\S+.%s)" % ("\.\./" * nparts, outdir,suffix ) ) for suffix in ("png", "pdf") ]
+        logging.debug( "checking for changed files." )
 
-    logging.debug( "checking for changed files." )
-    
-    # check if text element exists
-    if not FORCE and os.path.exists( filename_text ):
-        lines = [ x[:-1] for x in open( filename_text, "r").readlines() ]
+        # check if text element exists
+        if os.path.exists( filename_text ):
+            lines = [ x[:-1] for x in open( filename_text, "r").readlines() ]
 
-        filenames = []
+            filenames = []
 
-        # check if all figures are present
-        for line in lines:
-            for query in queries:
-                x = query.search( line )
-                if x: filenames.extend( list( x.groups()) )
+            # check if all figures are present
+            for line in lines:
+                for query in queries:
+                    x = query.search( line )
+                    if x: filenames.extend( list( x.groups()) )
 
-        logging.debug( "checking for %s" % str(filenames))
-        for filename in filenames:
-            if not os.path.exists( filename ):
-                logging.info( "redo: %s missing" % filename )
-                break
-        else:
-            logging.info( "no redo: all files are present" )
-            ## all is present - save text and return
-            if lines and state_machine:
-                state_machine.insert_input(
-                    lines, state_machine.input_lines.source(0) )
-            return []
-
-    ###########################################################
-    # collect output
-    ###########################################################
+            logging.debug( "checking for %s" % str(filenames))
+            for filename in filenames:
+                if not os.path.exists( filename ):
+                    logging.info( "redo: %s missing" % filename )
+                    break
+            else:
+                logging.info( "no redo: all files are present" )
+                ## all is present - save text and return
+                if lines and state_machine:
+                    state_machine.insert_input(
+                        lines, state_machine.input_lines.source(0) )
+                return []
+    else:
+        template_name = ""
+        filename_text = None
 
     # we need to clear between runs
     plt.close('all')    
@@ -562,10 +537,58 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # set a figure size that doesn't overflow typical browser windows
     matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
         
-    lines = []
 
-    dispatcher = Dispatcher.Dispatcher( tracker, renderer(tracker, **render_options), transformers )     
-    blocks = dispatcher( **render_options )
+    ##########################################################
+    ## instantiate trackers, renderers and transformers
+    ## and collect output
+    ###########################################################
+
+    try:
+        ########################################################
+        # find the tracker
+        logging.debug( "collecting tracker." )
+        code, tracker = getTracker( reference )
+        if not tracker: 
+            logging.debug( "no tracker - no output from %s " % str(document) )
+            raise ValueError( "tracker `%s` not found" % reference )
+
+        logging.debug( "collected tracker." )
+
+        ########################################################
+        # determine the transformer
+        transformers = []
+        logging.debug( "creating transformers." )
+        for transformer in transformer_names:
+            if transformer not in MAP_TRANSFORMER: 
+                raise KeyError('unknown transformer %s' % transformer )
+            else: transformers.append( MAP_TRANSFORMER[transformer](**transform_options)) 
+
+        ########################################################
+        # determine the renderer
+        logging.debug( "creating renderer." )
+        if renderer_name == None:
+            raise ValueError("the report directive requires a renderer.")
+
+        if renderer_name not in MAP_RENDERER:
+            raise KeyError("unknown renderer %s" % renderer_name)
+
+        renderer = MAP_RENDERER[renderer_name]
+        
+        logging.debug( "creating dispatcher" )
+        dispatcher = Dispatcher.Dispatcher( tracker, renderer(tracker, **render_options), transformers )     
+        blocks = dispatcher( **render_options )
+    except:
+        blocks = Renderer.buildException( "invocation" )
+        code = None
+
+    ########################################################
+    ## write code output
+    codename = quoted(fname) + ".code"
+    linked_codename = re.sub( "\\\\", "/", os.path.join( linkdir, codename )) 
+    if code and basedir != outdir:
+        outfile = open( os.path.join(outdir, codename ), "w" )
+        for line in code: outfile.write( line )
+        outfile.close()
 
     ###########################################################
     # collect images
@@ -583,9 +606,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     ## add default for text-only output
     map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
     map_figure2text["default-suffix"] = ""
-    
-    blocks.updatePlaceholders( map_figure2text )
 
+    blocks.updatePlaceholders( map_figure2text )
+    
     ###########################################################
     ## render the output taking into account the layout
     lines = layoutBlocks( blocks, layout )
@@ -605,11 +628,12 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     lines.append( "" )
 
     # output rst text for this renderer
-    outfile = open( filename_text, "w" )
-    outfile.write("\n".join(lines) )
-    outfile.close()
+    if filename_text:
+        outfile = open( filename_text, "w" )
+        outfile.write("\n".join(lines) )
+        outfile.close()
 
-    if DEBUG: 
+    if SPHINXREPORT_DEBUG:
         for x, l in enumerate( lines): print "%5i %s" % (x, l)
 
     if len(lines) and state_machine:

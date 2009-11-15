@@ -6,6 +6,7 @@ import collections
 
 from ResultBlock import ResultBlock, ResultBlocks
 import DataTree
+import Renderer
 
 # Some renderers will build several objects.
 # Use these two rst levels to separate individual
@@ -159,20 +160,26 @@ class Dispatcher:
         if slice != None: kwargs['slice'] = slice
         
         if result == None:
-
             try:
-                # this messy code distinguishes between the result of functors
-                # and true functions that have been wrapped with the DataTypes
-                # decorators by checking if it has a __len__ method.
-                if not hasattr( self.mTracker, "__len__"):
-                    result = self.mTracker( **kwargs )
-                else:
-                    result = self.mTracker
-                debug( "collected data for key '%s': %i" % (key, len(result)) )
+                result = self.mTracker( **kwargs )
             except Exception, msg:
                 warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.mTracker), track, slice, msg) )
                 if VERBOSE: warn( traceback.format_exc() )
-                result = []
+                raise
+
+            # try:
+            #     # this messy code distinguishes between the result of functors
+            #     # and true functions that have been wrapped with the DataTypes
+            #     # decorators by checking if it has a __len__ method.
+            #     if not hasattr( self.mTracker, "__len__"):
+            #         result = self.mTracker( **kwargs )
+            #     else:
+            #         result = self.mTracker
+            #     debug( "collected data for key '%s': %i" % (key, len(result)) )
+            # except Exception, msg:
+            #     warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.mTracker), track, slice, msg) )
+            #     if VERBOSE: warn( traceback.format_exc() )
+            #     result = []
             
         self.saveDataInCache( key, result )
 
@@ -234,7 +241,7 @@ class Dispatcher:
 
         if len(self.mTracks) == 0: 
             debug( "%s: no tracks found - no output" % self.mTracker )
-            return []
+            raise ValueError( "no tracks found from %s" % (str(self.mTracker)))
 
         self.buildSlices()
 
@@ -273,6 +280,8 @@ class Dispatcher:
         debug( "%s: rendering data started for %i items" % (self.mTracker,len(self.mData) ))
 
         results = ResultBlocks()
+        if len(results) == 0:
+            raise ValueError( "tracker returned no data." )
 
         labels = self.mData.getPaths()
         all_tracks, all_slices = labels[0], labels[1]
@@ -287,24 +296,26 @@ class Dispatcher:
                 vals = DataTree.DataTree( odict( [ (x,self.mData[x][slice]) for x in all_tracks ] ))
                 results.append( self.mRenderer( vals, title = slice ) )
 
-        debug( "%s: rendering data finished with %i blocks and %i plots" % (self.mTracker, len(results), len(results)))
-        # len(_pylab_helpers.Gcf.get_all_fig_managers() ) ) )
-
-        ## assert that all is right and add the title
-        for x in results:
-            continue
-            # x.mTitle = "\n".join( (title , x.mTitle ) )
-            assert isinstance( x, ResultBlocks), "malformed result in %s: %s" % (str(self),type(x))
+        debug( "%s: rendering data finished with %i blocks" % (self.mTracker, len(results)))
 
         return results
 
-    def __call__(self, *args, **kwargs ):
-        self.parseArguments( *args, **kwargs )
-        self.collect()
-        self.transform()
-        return self.render()
-        
 
+    def __call__(self, *args, **kwargs ):
+
+        try: self.parseArguments( *args, **kwargs )
+        except: return Renderer.buildException( "parsing" )
+
+        try: self.collect()
+        except: return Renderer.buildException( "collection" )
+        
+        try: self.transform()
+        except: return Renderer.buildException( "transformation" )
+
+        try: result = self.render()
+        except: return Renderer.buildException( "rendering" )
+        
+        return result
 
         
 

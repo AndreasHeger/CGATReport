@@ -120,6 +120,10 @@ changed API
    to disentangle figuring what to plot, plotting and data 
    transformation.
 
+exceptions
+   exceptions in trackers and renderers are added as .. warning
+   blocks.
+
 Known problems
 --------------
 

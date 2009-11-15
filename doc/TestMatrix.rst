@@ -7,7 +7,6 @@ Plotting large matrices
 
    Rendering small/large matrices with long/short labels
 
-
 Maybe with some customizing:
 
 .. report:: TestCases.LongLabelsSmall
