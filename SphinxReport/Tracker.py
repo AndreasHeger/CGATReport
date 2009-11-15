@@ -156,6 +156,11 @@ class TrackerSQL( Tracker ):
         else:
             return sorted_tables
 
+    def hasTable( self, name ):
+        """return table with name *name*."""
+        self.__connect()
+        return name in set( [x.name for x in self.metadata.sorted_tables])
+
     def getTable( self, name ):
         """return table with name *name*."""
         self.__connect()
