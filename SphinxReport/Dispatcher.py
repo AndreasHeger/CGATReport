@@ -76,9 +76,10 @@ class Dispatcher:
             if not os.path.exists(cachedir): 
                 raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
             
+            modulename = os.path.split(tracker.__class__.__module__)[1]
             self.mCacheFile = os.path.join( cachedir, 
-                                            report_directive.quoted( ".".join((tracker.__class__.__module__, 
-                                                                              tracker.__class__.__name__ ))))
+                                            report_directive.quoted( ".".join((modulename,
+                                                                               tracker.__class__.__name__ ))))
             # on Windows XP, the shelve does not work, work without cache
             try:
                 self._cache = shelve.open(self.mCacheFile,"c", writeback = False)
@@ -282,7 +283,7 @@ class Dispatcher:
         '''
         debug( "%s: rendering data started for %i items" % (self.mTracker,len(self.mData) ))
 
-        results = ResultBlocks()
+        results = ResultBlocks( title="main" )
 
         labels = self.mData.getPaths()
         all_tracks, all_slices = labels[0], labels[1]

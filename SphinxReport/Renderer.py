@@ -243,7 +243,7 @@ class RendererTable( Renderer ):
 
         lines.append( "") 
 
-        return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
+        return ResultBlocks( ResultBlock( "\n".join(lines), title = mytitle) )
 
 class RendererGlossary( RendererTable ):
     """output a table in the form of a glossary."""
@@ -266,7 +266,7 @@ class RendererGlossary( RendererTable ):
 
         lines.append( "") 
 
-        return ResultBlocks( "\n".join(lines), title = title )
+        return ResultBlocks( "\n".join(lines), title = mytitle )
 
 class RendererMatrix(Renderer):    
     """A table with numerical columns.

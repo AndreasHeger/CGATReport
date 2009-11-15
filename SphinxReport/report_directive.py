@@ -122,7 +122,7 @@ def getTracker( fullpath ):
 
 FORMATS = [ ('png', 80),
             ('hires.png', 200),
-            ('pdf', 50),
+#            ('pdf', 50),
             ]
 
 MAP_TRANSFORMER = { 
