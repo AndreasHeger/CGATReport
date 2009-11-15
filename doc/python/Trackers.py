@@ -40,6 +40,7 @@ class LabeledDataWithErrorsExample( Tracker ):
                     ) )
 
 class SingleColumnDataExample( Tracker ):
+    '''return a single column of data.'''
     def getSlices( self, subset = None ): return "slice1", "slice2"
     def getTracks( self, subset = None ): return "track1", "track2", "track3"
     def __call__(self, track, slice = None):
@@ -93,7 +94,7 @@ class MultipleColumnsExample( Tracker ):
         return odict( zip(self.mColumns, data) )
 
 class ErrorInTracker1( Tracker ):
-    '''A tracker that creates an error - problems while collecting data.'''
+    '''A tracker that creates an error - exception while collecting data.'''
     def getSlices( self, subset = None ): return "slice1", "slice2"
     def getTracks( self, subset = None ): return "track1", "track2"
     def __call__(self, track, slice = None):

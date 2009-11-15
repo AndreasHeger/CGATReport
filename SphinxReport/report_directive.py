@@ -418,6 +418,16 @@ def selectAndDeleteOptions( options, select ):
             del options[k]
     return new_options
 
+def buildPaths( reference ):
+    '''return paths.'''
+
+    basedir, fname = os.path.split(reference)
+    basename, ext = os.path.splitext(fname)
+    outdir = os.path.join('_static', 'report_directive', basedir)
+    codename = quoted(reference) + ".code"
+
+    return basedir, fname, basename, ext, outdir, codename
+
 def run(arguments, options, lineno, content, state_machine = None, document = None):
     """process :report: directive."""
 
@@ -426,8 +436,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # sort out the paths
     # reference is used for time-stamping
     reference = directives.uri(arguments[0])
-    basedir, fname = os.path.split(reference)
-    basename, ext = os.path.splitext(fname)
+
+    basedir, fname, basename, ext, outdir, codename = buildPaths( reference )
 
     # get the directory of the rst file
     rstdir, rstfile = os.path.split( document ) # state_machine.document.attributes['source'])
@@ -435,7 +445,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     reldir = rstdir[len(os.path.abspath( os.getcwd() ))+1:]
     relparts = [p for p in os.path.split(reldir) if p.strip()]
     nparts = len(relparts)
-    outdir = os.path.join('_static', 'report_directive', basedir)
+
     linkdir = ('../' * (nparts)) + outdir
 
     logging.debug( "arguments=%s, options=%s, lineno=%s, content=%s, document=%s" % (str(arguments),
@@ -446,7 +456,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     logging.debug( "plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, reldir=%s, relparts=%s, nparts=%d" %\
                        (reference, basename, ext, fname, rstdir, reldir, relparts, nparts) )
-    logging.debug( "reference=%s, basedir=%s, linkdir=%s, outdir=%s" % (reference, basedir, linkdir, outdir))
+    logging.debug( "reference=%s, basedir=%s, linkdir=%s, outdir=%s, codename=%s" % (reference, basedir, linkdir, outdir, codename))
 
     # try to create. If several processes try to create it,
     # testing with `if` will not work.
@@ -465,6 +475,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     render_options = selectAndDeleteOptions( options, RENDER_OPTIONS )
     transform_options = selectAndDeleteOptions( options, TRANSFORM_OPTIONS)
+
     if options.has_key("transform"): 
         transformer_names = options["transform"].split(",")
         del options["transform"]
@@ -484,7 +495,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                                       options.items()] )
     else:
         display_options = ""
-        
+
+    ########################################################        
+    # check for missing files
     if renderer_name != None:
         options_hash = hashlib.md5( str(render_options) + str(transform_options) ).hexdigest()
 
@@ -536,13 +549,11 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # matplotlib.rcdefaults()
     # set a figure size that doesn't overflow typical browser windows
     matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
-        
 
     ##########################################################
-    ## instantiate trackers, renderers and transformers
+    ## instantiate tracker, dispatcher, renderer and transformers
     ## and collect output
     ###########################################################
-
     try:
         ########################################################
         # find the tracker
@@ -558,9 +569,10 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         # determine the transformer
         transformers = []
         logging.debug( "creating transformers." )
+
         for transformer in transformer_names:
             if transformer not in MAP_TRANSFORMER: 
-                raise KeyError('unknown transformer %s' % transformer )
+                raise KeyError('unknown transformer `%s`' % transformer )
             else: transformers.append( MAP_TRANSFORMER[transformer](**transform_options)) 
 
         ########################################################
@@ -570,10 +582,10 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
             raise ValueError("the report directive requires a renderer.")
 
         if renderer_name not in MAP_RENDERER:
-            raise KeyError("unknown renderer %s" % renderer_name)
+            raise KeyError("unknown renderer `%s`" % renderer_name)
 
         renderer = MAP_RENDERER[renderer_name]
-        
+
         logging.debug( "creating dispatcher" )
         dispatcher = Dispatcher.Dispatcher( tracker, renderer(tracker, **render_options), transformers )     
         blocks = dispatcher( **render_options )
@@ -583,7 +595,6 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     ########################################################
     ## write code output
-    codename = quoted(fname) + ".code"
     linked_codename = re.sub( "\\\\", "/", os.path.join( linkdir, codename )) 
     if code and basedir != outdir:
         outfile = open( os.path.join(outdir, codename ), "w" )

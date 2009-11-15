@@ -10,7 +10,7 @@ Planned features
 The following features are planned:
 
 error bars
-   add error bars to bar plots and scatter plots
+   add error bars to scatter plots
 
 web server
    implement setting up and http server with web.py
@@ -63,6 +63,9 @@ The following features have been added in version 1.1
 
 Completed features
 ------------------
+
+error bars
+   added error bars to bar plots
 
 colored scatter plotter
    add individual coloring option for dots in a 

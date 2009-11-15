@@ -20,8 +20,8 @@ their data.
 
 Alternatively, if one or more than one :class:`Tracker` is given, all 
 documents referencing these will be removed to force a re-built next
-time :command:`sphinx` is invoked. The names can contain shell like
-regulare expression patterns (see glob in the python reference).
+time :command:`sphinx` is invoked. The names can contain shell-like
+regular expression patterns (see glob in the python reference).
 """
 
 import sys, os, imp, cStringIO, re, types, glob, optparse, shutil
@@ -69,11 +69,11 @@ def removeTracker( tracker ):
     dirs_to_check = ("_static", "_cache", "_build" )
 
     # image and text files
-    rx1 = re.compile("-%s%s" % (tracker,SEPARATOR) )
+    rx1 = re.compile("-*%s%s" % (tracker,SEPARATOR) )
     # files in cache
     rx2 = re.compile("^%s$" % (tracker) )
     # .code files
-    rx3 = re.compile("-%s%s" % (tracker,".code") )
+    rx3 = re.compile("-*%s%s" % (tracker,".code") )
 
     test_f = lambda x: rx1.search(x) or rx2.search(x) or rx3.search(x)
 
@@ -112,8 +112,11 @@ def main():
 
     parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE )
 
-    parser.set_defaults()
-        
+    parser.add_option( "-v", "--verbose", dest="loglevel", type="int",
+                       help="loglevel. The higher, the more output [default=%default]" )
+
+    parser.set_defaults( loglevel = 2 )
+
     (options, args) = parser.parse_args()
 
     if len(args) == 0: 
@@ -142,6 +145,8 @@ def main():
             removed = removeTracker( tracker )
             removed.extend( removeText( tracker ))
             print "%i files (done)" % len(removed)
-                  
+            if options.loglevel >= 3:
+                print "\n".join( removed )
+
 if __name__ == "__main__":
     sys.exit(main())

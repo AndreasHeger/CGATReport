@@ -15,7 +15,7 @@ The full list of command line options is listed by suppling :option:`-h/--help`
 on the command line.
 """
 
-import sys, os, re, types, glob, optparse, traceback
+import sys, os, re, types, glob, optparse, traceback, hashlib
 import subprocess, logging, time, collections
 from logging import warn, log, debug, info
 
@@ -32,7 +32,7 @@ Building proceeds in three phases.
 import matplotlib
 import matplotlib.pyplot as plt
 
-from SphinxReport import report_directive, gallery
+from SphinxReport import report_directive, gallery, clean
 
 try:
     from multiprocessing import Process
@@ -60,7 +60,7 @@ logging.basicConfig(
     stream = open( "sphinxreport.log", "a" ) )
 
 class ReportBlock:
-    """quick and dirty parsing of rst of a report block."""
+    '''quick and dirty parsing of rst of a report block.'''
     def __init__(self): 
         self.mLines = []
         self.mOptions = {}
@@ -81,7 +81,8 @@ class ReportBlock:
         self.mLines.append( v )
         
 def run( work ):
-    """run a set of worker jobs."""
+    """run a set of worker jobs.
+    """
 
     try:
         for f, b in work:
@@ -103,25 +104,23 @@ def run( work ):
 def rst_reader(infile ):
     """parse infile and extract the :render: block."""
     
-    result = ReportBlock()
+    result = None
     keep = 0
     for line in infile:
         if line.startswith( ".. report::" ):
+            if result: yield result
             keep = True
+            result = ReportBlock()
             result.append( line )
-            continue
+        else:
+            if keep: 
+                if re.match( "^\S", line ):
+                    keep = False
+                else:
+                    result.append( line )
 
-        if keep: 
-            if re.match( "^\S", line ):
-                keep = False
-                # result.append( line ) 
-                yield result
-                result = ReportBlock()
-            else:
-                result.append( line )
-
-    if keep: yield result
-
+    if result: yield result
+    
 def getBlocksFromRstFile( rst_file ):
 
     blocks = []
@@ -150,20 +149,25 @@ class timeit:
             return result
         return wrapped
 
-@timeit( "buildPlots" )
-def buildPlots( options, args ):
-    """build all plot elements and tables.
-
-    This can be done in parallel to some extent.
-    """
-    info( "building plot elements started" )
-
+@timeit( "getDirectives" )
+def getDirectives( options, args ):
+    ''' getting directives.
+    '''
     rst_files = []
     for root, dirs, files in os.walk('.'):
         for f in files:
             if f.endswith( source_suffix ):
                 rst_files.append( os.path.join( root, f) )
-    
+    return rst_files
+
+@timeit( "buildPlots" )
+def buildPlots( rst_files, options, args ):
+    '''build all plot elements and tables.
+
+    This can be done in parallel to some extent.
+    '''
+    info( "building plot elements started" )
+
     # build work. Group trackers of the same name together as
     # the python shelve module does not allow concurrent write
     # access and the cache files will get mangled.
@@ -185,7 +189,7 @@ def buildPlots( options, args ):
         handler= logging.FileHandler( os.path.abspath( "sphinxreport.log" ), "w")
 
     handler.setFormatter(  
-        logging.Formatter( '# %(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        logging.Formatter( '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                            datefmt='%m-%d %H:%M' ) )
 
     logging.getLogger('').addHandler(handler)
@@ -223,6 +227,39 @@ def buildPlots( options, args ):
     
     logging.shutdown()
 
+@timeit( "cleanTrackers" )
+def cleanTrackers( rst_files, options, args ):
+    '''instantiate trackers and get code.'''
+    trackers = set()
+    for f in rst_files:
+        for b in getBlocksFromRstFile( f ):
+            trackers.add(b.mArguments[0])
+            
+    ntested, ncleaned, nskipped = 0, 0, 0
+    for reference in trackers:
+
+        try:
+            code, tracker = report_directive.getTracker( reference )
+        except AttributeError:
+            # ignore missing trackers
+            nskipped += 1
+            continue
+
+        new_codehash = hashlib.md5("".join(code)).hexdigest()
+        basedir, fname, basename, ext, outdir, codename = report_directive.buildPaths( reference )
+        codefilename = os.path.join( outdir, codename )
+        ntested += 1
+        if not os.path.exists( codefilename ): 
+            nskipped += 1
+            continue
+        old_codehash = hashlib.md5("".join(open(codefilename, "r").readlines())).hexdigest()
+        if new_codehash != old_codehash:
+            removed = clean.removeTracker( reference )
+            removed.extend( clean.removeText( reference ))
+            print "code has changed for %s: %i files removed" % (reference, len(removed))
+            ncleaned += 1
+    print "SphinxReport: %i Trackers changed (%i tested, %i skipped)" % (ncleaned, ntested, nskipped)
+                                   
 def runCommand( command ):
     try:
         retcode = subprocess.call( command, shell=True)
@@ -265,7 +302,11 @@ def main():
     
     (options, args) = parser.parse_args()
 
-    buildPlots( options, args )
+    rst_files = getDirectives( options, args )
+
+    cleanTrackers( rst_files, options, args )
+
+    buildPlots( rst_files, options, args )
 
     buildGallery( options, args )
 

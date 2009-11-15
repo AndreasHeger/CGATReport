@@ -7,6 +7,7 @@ import collections
 from ResultBlock import ResultBlock, ResultBlocks
 import DataTree
 import Renderer
+import report_directive
 
 # Some renderers will build several objects.
 # Use these two rst levels to separate individual
@@ -74,8 +75,10 @@ class Dispatcher:
         
             if not os.path.exists(cachedir): 
                 raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
-
-            self.mCacheFile = os.path.join( cachedir, tracker.__class__.__name__ )
+            
+            self.mCacheFile = os.path.join( cachedir, 
+                                            report_directive.quoted( ".".join((tracker.__class__.__module__, 
+                                                                              tracker.__class__.__name__ ))))
             # on Windows XP, the shelve does not work, work without cache
             try:
                 self._cache = shelve.open(self.mCacheFile,"c", writeback = False)
@@ -240,7 +243,7 @@ class Dispatcher:
         self.buildTracks()
 
         if len(self.mTracks) == 0: 
-            debug( "%s: no tracks found - no output" % self.mTracker )
+            warn( "%s: no tracks found - no output" % self.mTracker )
             raise ValueError( "no tracks found from %s" % (str(self.mTracker)))
 
         self.buildSlices()
@@ -280,8 +283,6 @@ class Dispatcher:
         debug( "%s: rendering data started for %i items" % (self.mTracker,len(self.mData) ))
 
         results = ResultBlocks()
-        if len(results) == 0:
-            raise ValueError( "tracker returned no data." )
 
         labels = self.mData.getPaths()
         all_tracks, all_slices = labels[0], labels[1]
@@ -296,10 +297,13 @@ class Dispatcher:
                 vals = DataTree.DataTree( odict( [ (x,self.mData[x][slice]) for x in all_tracks ] ))
                 results.append( self.mRenderer( vals, title = slice ) )
 
+        if len(results) == 0:
+            warn("tracker returned no data.")
+            raise ValueError( "tracker returned no data." )
+
         debug( "%s: rendering data finished with %i blocks" % (self.mTracker, len(results)))
 
         return results
-
 
     def __call__(self, *args, **kwargs ):
 

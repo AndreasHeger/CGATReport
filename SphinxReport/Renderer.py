@@ -44,10 +44,8 @@ logging.basicConfig(
     stream = open( "sphinxreport.log", "a" ) )
 
 # for cachedir
-cachedir = None
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
-
 execfile( "conf.py" )
 
 def buildException( stage ):
@@ -84,7 +82,6 @@ def buildException( stage ):
                          title = "" ) ) )
     else:
         return ResultBlocks()
-
 
 class Renderer(object):
     """Base class of renderers that render data into restructured text.
@@ -537,8 +534,9 @@ class RendererLinePlot(Renderer, Plotter):
         nplotted = 0
 
         for line, data in work.iteritems():
-
+            
             for label, coords in data.iteritems():
+
                 s = self.mSymbols[nplotted % len(self.mSymbols)]
 
                 # get and transform x/y values
@@ -546,9 +544,9 @@ class RendererLinePlot(Renderer, Plotter):
                 xlabel, ylabel = coords.keys()
                 xvals, yvals = coords.values()
 
-                plts.append(plt.plot( xvals,
-                                      yvals,
-                                      s ) )
+                plts.append( plt.plot( xvals,
+                                       yvals,
+                                       s ) )
                 
                 legend.append( "/".join((line,label) ))
                 nplotted += 1
