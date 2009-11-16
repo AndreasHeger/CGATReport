@@ -47,7 +47,6 @@ class DataTree( object ):
             labels.append( list(unique(l)) )
             this_level = next_level
 
-        debug( "%s: found the following labels: %s" % (str(self),labels))
         return labels
 
     def getLeaf( self, path ):
@@ -76,7 +75,7 @@ class DataTree( object ):
             work[path[-1]] = data
         
     def __str__(self):
-        return "< datatree: _data=%s>" % str(self._data)
+        return "< datatree: %s >" % str(self.getPaths() )
 
     def __getattr__(self, name):
         return getattr(self._data, name)

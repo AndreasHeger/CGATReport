@@ -5,6 +5,12 @@ import numpy
 import odict
 from DataTree import DataTree
 
+# ignore numpy histogram warnings in versions 1.3
+import warnings
+
+
+
+
 class Transformer(object):
 
     nlevels = None
@@ -17,6 +23,7 @@ class Transformer(object):
         if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
         labels = data.getPaths()        
+        debug( "transform: started with paths: %s" % labels)
         assert len(labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
         
         paths = list(itertools.product( *labels[:-self.nlevels] ))
@@ -25,6 +32,8 @@ class Transformer(object):
             if not work: continue
             data.setLeaf( path,
                           self.transform( work, path ) )
+
+        debug( "transform: ended with paths: %s" % data.getPaths())
 
         return data
         
@@ -43,8 +52,7 @@ class TransformerFilter( Transformer ):
             raise KeyError( "TransformerFilter requires the `tf-fields` option to be set." )
 
         try: self.nlevels = int(kwargs["tf-level"])
-        except KeyError: 
-            pass
+        except KeyError: pass
                           
     def transform(self, data, path):
         debug( "%s: called" % str(self))
@@ -65,19 +73,28 @@ class TransformerSelect( Transformer ):
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
 
-        try: self.fields = kwargs["tf-fields"]
+        try: self.fields = kwargs["tf-fields"].split(",")
         except KeyError: 
             raise KeyError( "TransformerSelect requires the `tf-fields` option to be set." )
                           
     def transform(self, data, path):
         debug( "%s: called" % str(self))
 
+        nfound = 0
         for v in data.keys():
-            try:
-                data[v] = data[v][self.fields]
-            except KeyError:
+            for field in self.fields:
+                try:
+                    data[v] = data[v][field]
+                    nfound += 1
+                    break
+                except KeyError: 
+                    pass
+            else:
                 data[v] = self.default
-            
+                    
+        if nfound == 0:
+            raise ValueError("could not find any field from `%s` in %s" % (str(self.fields), path))
+
         return data
 
 class TransformerCombinations( Transformer ):
@@ -98,6 +115,8 @@ class TransformerCombinations( Transformer ):
 
         vals =  data.keys()
         new_data = odict.OrderedDict()
+        for x in vals: new_data[x] = odict.OrderedDict()
+
         for x1 in range(len(vals)-1):
             n1 = vals[x1]
             d1 = data[n1][self.fields]
@@ -108,8 +127,7 @@ class TransformerCombinations( Transformer ):
                     raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
                 ## check if array?
 
-                key = "%s vs %s" % (n1,n2)
-                new_data[key] =\
+                new_data[n1][n2] =\
                     odict.OrderedDict( (\
                         ("%s/%s" % (n1,self.fields), d1),
                         ("%s/%s" % (n2,self.fields), d2), ) )
@@ -152,6 +170,8 @@ class TransformerCorrelation( Transformer ):
 
         new_data = odict.OrderedDict()
 
+        for x in data.keys(): new_data[x] = odict.OrderedDict()
+        
         for x,y in pairs:
             xvals, yvals = data[x], data[y]
             take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
@@ -162,7 +182,9 @@ class TransformerCorrelation( Transformer ):
                 result = Stats.doCorrelationTest( xvals, yvals )
             except ValueError, msg:
                 continue
-            new_data[ "%s vs %s" % (x,y)] = result
+
+            new_data[x][y] = result
+            new_data[y][x] = result
 
         return new_data
 
@@ -242,7 +264,7 @@ class TransformerHistogram( Transformer ):
         ndata = [ x for x in data if x != None ]
         nremoved = len(data) - len(ndata)
         if nremoved:
-            warn( "removed %i None values from %s: %s: %s" % (nremoved, str(self.mTracker), group, title) )
+            warn( "removed %i None values" % nremoved )
 
         data = ndata
 
@@ -288,6 +310,10 @@ class TransformerHistogram( Transformer ):
             if hasattr( bins, "__iter__") and len(bins) == 0:
                 warn( "empty bins from %s: %s: %s" % (str(self.mTracker), group, title) )
                 return
+
+        # ignore histogram semantics warning
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
             hist, bin_edges = numpy.histogram( data, bins=bins, range=(mi,ma) )
         
         return self.binToX(bin_edges), hist

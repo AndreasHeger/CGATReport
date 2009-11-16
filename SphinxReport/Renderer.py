@@ -22,9 +22,10 @@ import sqlalchemy
 import Stats
 import Histogram
 import collections
+import CorrespondenceAnalysis
 
 from ResultBlock import ResultBlock, ResultBlocks
-import odict
+from odict import OrderedDict as odict
 
 from DataTree import DataTree
 
@@ -73,7 +74,11 @@ def buildException( stage ):
         # add prefix of 6 spaces
         prefix = "\n" + " " * 6
         exception_stack  = prefix + prefix.join( "".join(lines).split("\n") )
-        exception_name   = exceptionType.__module__ + '.' + exceptionType.__name__
+        if exceptionType.__module__ == "exceptions":
+            exception_name   = exceptionType.__name__
+        else:
+            exception_name   = exceptionType.__module__ + '.' + exceptionType.__name__
+
         exception_value  = str(exceptionValue)
 
         return ResultBlocks( 
@@ -159,6 +164,9 @@ class RendererTable( Renderer ):
 
     Values are either text or converted to text.
     '''
+
+    nlevels = 2
+
     def __init__( self, *args, **kwargs ):
         Renderer.__init__(self, *args, **kwargs )
         self.mTranspose = "transpose" in kwargs
@@ -193,7 +201,9 @@ class RendererTable( Renderer ):
         # if len(data) == 0: return None, None, None
 
         labels = data.getPaths()
-        assert len(labels) >= 2, "expected at least two levels for building table"
+        if len(labels) < 2:
+            raise ValueError( "expected at least two levels for building table, got %i: %s" %\
+                                  (len(labels), str(labels)))
 
         col_headers = [""] * (len(labels)-2) + labels[-1]
         ncols = len(col_headers)
@@ -325,8 +335,16 @@ class RendererMatrix(Renderer):
                 except KeyError:
                     raise ValueError("unknown matrix transformation %s" % kw )
 
+
     def transformAddRowTotal( self, matrix, row_headers, col_headers ):
-        raise NotImplementedError
+        '''add row total to the matrix.'''
+        nrows, ncols = matrix.shape
+
+        totals = numpy.zeros( nrows )
+        for x in range(nrows): totals[x] = sum(matrix[x,:])
+        col_headers.append( "total" )
+        totals.shape=(nrows,1)
+        return numpy.hstack( numpy.hsplit(matrix,ncols) + [totals,] ), row_headers, col_headers
 
     def transformAddColumnTotal( self, matrix, row_headers, col_headers ):
         raise NotImplementedError
@@ -402,10 +420,10 @@ class RendererMatrix(Renderer):
         nrows, ncols = matrix.shape
 
         for x in range(nrows) :
-            s = sum(matrix[x,:])
+            m = sum(matrix[x,:])
             if m != 0:
                 for y in range(ncols):
-                    matrix[x,y] /= s
+                    matrix[x,y] /= m
         return matrix, rows, cols
 
     def transformNormalizeRowMax( self, matrix, rows, cols ):
@@ -517,8 +535,10 @@ class RendererLinePlot(Renderer, Plotter):
     '''create a line plot.
 
     
-    This :class:`Renderer` requires three levels:
-    line / data / coords
+    This :class:`Renderer` requires at least three levels:
+
+    line / data / coords.
+    
     '''
     nlevels = 3
 
@@ -812,7 +832,7 @@ class RendererPiePlot(Renderer, Plotter):
         try: self.mPieMinimumPercentage = float(kwargs["pie-min-percentage"])
         except KeyError: self.mPieMinPercentage = 0
 
-        self.sorted_headers = odict.OrderedDict()
+        self.sorted_headers = odict()
 
     def render( self, work, path ):
         
@@ -929,11 +949,12 @@ class RendererScatterPlot(Renderer, Plotter):
             assert len(coords) >= 2, "expected at least two arrays, got %i" % len(coords)
 
             xlabel, ylabel = coords.keys()[:2]
-            xvals, yvals = coords.values()[:2]
+            xvals, yvals = Stats.filterNone( coords.values()[:2])
 
             marker = self.mMarkers[nplotted % len(self.mMarkers)]
             color = self.mColors[nplotted % len(self.mColors)]
             if len(xvals) == 0 or len(yvals) == 0: continue
+
             plts.append(plt.scatter( xvals,
                                      yvals,
                                      marker = marker,

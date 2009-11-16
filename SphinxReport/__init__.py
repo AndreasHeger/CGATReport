@@ -9,6 +9,7 @@ __all__ = [ "Renderer",
             'Transformer',
             'Dispatcher',
             'DataTree',
+            'odict',
             "only_directive",
             "report_directive" ]
 

@@ -71,7 +71,7 @@ def removeTracker( tracker ):
     # image and text files
     rx1 = re.compile("-*%s%s" % (tracker,SEPARATOR) )
     # files in cache
-    rx2 = re.compile("^%s$" % (tracker) )
+    rx2 = re.compile("-*%s$" % (tracker) )
     # .code files
     rx3 = re.compile("-*%s%s" % (tracker,".code") )
 

@@ -285,24 +285,45 @@ class Dispatcher:
 
         return resultblocks
         '''
-        debug( "%s: rendering data started for %i items" % (self.mTracker,len(self.mData) ))
+        debug( "%s: rendering data started for %i items" % (self,len(self.mData)))
 
         results = ResultBlocks( title="main" )
 
         labels = self.mData.getPaths()
-        all_tracks, all_slices = labels[0], labels[1]
+        debug( "%s: rendering data started: %i labels, %i required, %s" %\
+                   (self, len(labels), self.mRenderer.nlevels, str(labels)))
+
+        if len(labels) >= 2:
+            all_tracks, all_slices = labels[0], labels[1]
+        elif len(labels) == 1:
+            all_tracks, all_slices = labels[0], []
+
+        debug( "%s: rendering: input: tracks=%s, slices=%s; output: tracks=%s, slices=%s" %\
+                   (self, self.mTracks, self.mSlices, all_tracks, all_slices))
+
         tracks, slices = self.mTracks, self.mSlices
-        if not self.mSlices or len(labels) == 2:
+
+        if len(labels) == self.mRenderer.nlevels:
             results.append( self.mRenderer( self.mData, title = "all" ) )
-        elif self.mGroupBy == "track":
-            for track in all_tracks:
-                # slices can be absent
-                vals = DataTree.DataTree( odict( [ (x,self.mData[track][x]) for x in all_slices if x in self.mData[track] ] ))
-                results.append( self.mRenderer( vals, title = track ) )
-        elif self.mGroupBy == "slice":
-            for slice in all_slices:
-                vals = DataTree.DataTree( odict( [ (x,self.mData[x][slice]) for x in all_tracks ] ))
-                results.append( self.mRenderer( vals, title = slice ) )
+        elif len(labels) < self.mRenderer.nlevels:
+            d = self.mData
+            for x in range( self.mRenderer.nlevels - len(labels)):
+                d = odict( (("all", d ),))
+            results.append( self.mRenderer( DataTree.DataTree(d), title = "all" ) )
+        elif len(labels) > self.mRenderer.nlevels:
+            if self.mGroupBy == "track":
+                for track in all_tracks:
+                    # slices can be absent
+                    d = [ (x,self.mData[track][x]) for x in all_slices if x in self.mData[track] ]
+                    if len(d) == 0: continue
+                    vals = DataTree.DataTree( odict( d ) )
+                    results.append( self.mRenderer( vals, title = track ) )
+            elif self.mGroupBy == "slice":
+                for slice in all_slices:
+                    d = [ (x,self.mData[x][slice]) for x in all_tracks if slice in self.mData[x] ]
+                    if len(d) == 0: continue
+                    vals = DataTree.DataTree( odict( d ) )
+                    results.append( self.mRenderer( vals, title = slice ) )
                 
         if len(results) == 0:
             warn("tracker returned no data.")
@@ -319,9 +340,15 @@ class Dispatcher:
 
         try: self.collect()
         except: return Renderer.buildException( "collection" )
+
+        labels = self.mData.getPaths()
+        debug( "%s: after collection: %i labels: %s" % (self,len(labels), str(labels)))
         
         try: self.transform()
         except: return Renderer.buildException( "transformation" )
+
+        labels = self.mData.getPaths()
+        debug( "%s: after transformation: %i labels: %s" % (self,len(labels), str(labels)))
 
         try: result = self.render()
         except: return Renderer.buildException( "rendering" )

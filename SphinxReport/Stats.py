@@ -31,6 +31,8 @@ class Result(object):
         return getattr( self._data, key )
     def __getitem__(self, key ):
         return self._data[key]
+    def __delitem__(self, key ):
+        del self._data[key]
     def __setitem__(self, key, value ):
         self._data[key] = value
     def __setattr__(self, key, value):
@@ -443,6 +445,23 @@ def filterMasked( xvals, yvals, missing = ("na", "Nan", None, ""), dtype = numpy
     ymask = [ i in missing for i in yvals ]
     return (numpy.array( [xvals[i] for i in range(len(xvals)) if not xmask[i]], dtype = dtype  ),
             numpy.array( [yvals[i] for i in range(len(yvals)) if not ymask[i]], dtype = dtype) )
+
+def filterNone( args, missing = ("na", "Nan", None, ""), dtype = numpy.float ):
+    '''convert arrays in 'args' to numpy arrays of 'dtype', skipping where any of
+    the columns have a value of missing.
+
+    >>> Stats.filterNone( ((1,2,3), (4,5,6)) )
+    [array([ 1.,  2.,  3.]), array([ 4.,  5.,  6.])]
+    >>> Stats.filterNone( ((1,2,3), (4,None,6)) )
+    [array([ 1.,  3.]), array([ 4.,  6.])]
+    >>> Stats.filterNone( ((None,2,3), (4,None,6)) )
+    [array([ 3.]), array([ 6.])]
+    '''
+    assert min([len(x) for x in args]) == max([len(x) for x in args]), "arrays have unequal length to start with."
+    
+    mask = [ sum( [z in missing for z in x] ) for x in zip(*args) ]
+
+    return [ numpy.array( [x[i] for i in range(len(x)) if not mask[i]], dtype = dtype) for x in args ]
 
 def doCorrelationTest( xvals, yvals ):
     """compute correlation between x and y.
