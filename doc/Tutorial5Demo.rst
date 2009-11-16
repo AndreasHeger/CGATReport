@@ -9,7 +9,7 @@ The simplest plot:
 .. report:: Tutorial4.ExpressionLevelWithSlices
    :render: line-plot
    :transform: histogram
-   :range: 0,100,4
+   :tf-range: 0,100,4
 
    Expression level in house-keeping and regulatory genes
    in two experiments.
@@ -19,7 +19,7 @@ A customized plot:
 .. report:: Tutorial4.ExpressionLevelWithSlices
    :render: line-plot
    :transform: histogram
-   :range: 0,100,4
+   :tf-range: 0,100,4
    :xtitle: expression level
    :groupby: all
    :as-lines:
@@ -51,7 +51,7 @@ or as literal histogram:
 .. report:: Tutorial4.ExpressionLevelWithSlices
    :render: line-plot
    :transform: histogram
-   :range: 0,100,4
+   :tf-range: 0,100,4
 
    Expression level in house-keeping and regulatory genes
    in two experiments.

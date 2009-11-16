@@ -129,7 +129,7 @@ a single report directive block::
 
     .. report:: Tutorial3.WordCounterWithSlices
        :render: histogram-plot
-       :range: 0,100,1
+       :tf-range: 0,100,1
 
        Word sizes in .py and .rst files grouped by slice
 
@@ -137,7 +137,7 @@ Additionally you can add the plots grouped by tracks::
 
     .. report:: Tutorial3.WordCounterWithSlices
        :render: histogram-plot
-       :range: 0,100,1
+       :tf-range: 0,100,1
        :groupby: track
 
        Word sizes in .py and .rst files grouped
@@ -147,7 +147,7 @@ More fine grained control is possible. The following only shows a single plot::
 
     .. report:: Tutorial3.WordCounterWithSlices
        :render: histogram-plot
-       :range: 0,100,1
+       :tf-range: 0,100,1
        :tracks: .py,.rst
        :slices: vocals
 

@@ -8,7 +8,9 @@ Here are various examples to test pathological plots.
 
    TestMatrix.rst
    TestLayout.rst
+   TestHistogram.rst
    TestMultiHistogram.rst
    TestMultilinePlot.rst
    TestErrors.rst
    TestExceptions.rst
+   TestSandbox.rst

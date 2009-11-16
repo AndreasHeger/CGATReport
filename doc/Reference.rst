@@ -31,9 +31,9 @@ ignored.
 
       Examples::
 
-	 :bins: 100
-	 :bins: arange(0,1,0.1)
-	 :bins: log-100
+	 :tf-bins: 100
+	 :tf-bins: arange(0,1,0.1)
+	 :tf-bins: log-100
 
    range
       float[,float[,float]], optional

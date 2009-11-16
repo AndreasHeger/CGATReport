@@ -9,7 +9,7 @@ Connecting to SQL:
 .. report:: Tutorial4.ExpressionLevelWithSlices
    :render: line-plot
    :transform: histogram
-   :range: 0,100,4
+   :tf-range: 0,100,4
 
    Expression level in house-keeping and regulatory genes
    in two experiments.

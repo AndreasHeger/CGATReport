@@ -151,59 +151,58 @@ MAP_RENDERER= {
     'glossary' : Renderer.RendererGlossary 
 }
 
-DISPLAY_OPTIONS = {'alt': directives.unchanged,
-                  'height': directives.length_or_unitless,
-                  'width': directives.length_or_percentage_or_unitless,
-                  'scale': directives.nonnegative_int,
-                  'align': align,
-                  'class': directives.class_option,
-                  'render' : directives.unchanged,
-                  'transform' : directives.unchanged,
-                  'include-source': directives.flag }
+DISPLAY_OPTIONS = {
+    'alt': directives.unchanged,
+    'height': directives.length_or_unitless,
+    'width': directives.length_or_percentage_or_unitless,
+    'scale': directives.nonnegative_int,
+    'align': align,
+    'class': directives.class_option,
+    'render' : directives.unchanged,
+    'transform' : directives.unchanged,
+    'include-source': directives.flag 
+    }
 
 DISPATCHER_OPTIONS = {
-                       'groupby' : directives.unchanged,
-                       'tracks': directives.unchanged,
-                       'slices': directives.unchanged,
-                       }
+    'groupby' : directives.unchanged,
+    'tracks': directives.unchanged,
+    'slices': directives.unchanged,
+    }
 
-RENDER_OPTIONS = { 'cumulative': directives.flag,
-                   'reverse-cumulative': directives.flag,
-                   'error' : directives.unchanged,
-                   'label' : directives.unchanged,
-                   'normalized-max': directives.flag,
-                   'normalized-total': directives.flag,
-                   'layout' : directives.unchanged,
-                   'bins' : directives.unchanged,
-                   'logscale' : directives.unchanged,
-                   'title' : directives.unchanged,
-                   'xtitle' : directives.unchanged,
-                   'ytitle' : directives.unchanged,
-                   'range' : directives.unchanged,
-                   'add-total': directives.flag,
-                   'xrange' : directives.unchanged,
-                   'yrange' : directives.unchanged,
-                   'zrange' : directives.unchanged,
-                   'palette' : directives.unchanged,
-                   'reverse-palette' : directives.flag,
-                   'transpose' : directives.flag,
-                   'transform-matrix' : directives.unchanged,
-                   'plot-value' : directives.unchanged,
-                   'as-lines': directives.flag,  
-                   'format' : directives.unchanged,
-                   'colorbar-format' : directives.unchanged,
-                   'filename' : directives.unchanged,
-                   'pie-min-percentage' : directives.unchanged,
-                   'max-rows' : directives.unchanged,
-                   'max-cols' : directives.unchanged,
-                   'mpl-figure' : directives.unchanged,
-                   'mpl-legend' : directives.unchanged,
-                   'mpl-subplot' : directives.unchanged,
-                   'mpl-rc' : directives.unchanged, }
+RENDER_OPTIONS = { 
+    'layout' : directives.unchanged,
+    'error' : directives.unchanged,
+    'label' : directives.unchanged,
+    'logscale' : directives.unchanged,
+    'title' : directives.unchanged,
+    'xtitle' : directives.unchanged,
+    'ytitle' : directives.unchanged,
+    'xrange' : directives.unchanged,
+    'yrange' : directives.unchanged,
+    'zrange' : directives.unchanged,
+    'palette' : directives.unchanged,
+    'reverse-palette' : directives.flag,
+    'transpose' : directives.flag,
+    'transform-matrix' : directives.unchanged,
+    'as-lines': directives.flag,  
+    'format' : directives.unchanged,
+    'colorbar-format' : directives.unchanged,
+    'filename' : directives.unchanged,
+    'pie-min-percentage' : directives.unchanged,
+    'max-rows' : directives.unchanged,
+    'max-cols' : directives.unchanged,
+    'mpl-figure' : directives.unchanged,
+    'mpl-legend' : directives.unchanged,
+    'mpl-subplot' : directives.unchanged,
+    'mpl-rc' : directives.unchanged, 
+}
 
 TRANSFORM_OPTIONS = {
     'tf-fields' : directives.unchanged,
     'tf-level' : directives.length_or_unitless,
+    'tf-bins' : directives.unchanged,
+    'tf-range' : directives.unchanged,
+    'tf-aggregate': directives.unchanged,
     }
 
 TEMPLATE_PLOT = """
@@ -228,17 +227,6 @@ TEMPLATE_TEXT = """
    [`source code <%(linked_codename)s>`__]
 
 """
-
-EXCEPTION_TEMPLATE = """
-.. htmlonly::
-
-   [`source code <%(linked_codename)s.py>`__]
-
-.. warning::
-
-   %%(title)s
-"""
-
 
 # latex does not permit a "." for image files - replace it with "-"
 def quoted( fn ):
@@ -478,13 +466,20 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     transformer_names = []
     renderer_name = None
 
+    # get layout option
+    try: 
+        layout = options["layout"]
+        del options["layout"]
+    except KeyError: 
+        layout = "column"
+    
     render_options = selectAndDeleteOptions( options, RENDER_OPTIONS )
     transform_options = selectAndDeleteOptions( options, TRANSFORM_OPTIONS)
     dispatcher_options = selectAndDeleteOptions( options, DISPATCHER_OPTIONS)
 
-    logging.debug( "renderer options: %s" % str(render_options))
-    logging.debug( "transformer options: %s" % str(transform_options))
-    logging.debug( "dispatcher options: %s" % str(dispatcher_options))
+    logging.debug( "renderer options: %s" % str(render_options) )
+    logging.debug( "transformer options: %s" % str(transform_options) )
+    logging.debug( "dispatcher options: %s" % str(dispatcher_options) )
 
     if options.has_key("transform"): 
         transformer_names = options["transform"].split(",")
@@ -493,10 +488,6 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     if options.has_key("render"): 
         renderer_name = options["render"]
         del options["render"]
-
-    # get layout option
-    try: layout = options["layout"]
-    except KeyError: layout = "column"
 
     ########################################################
     # add sphinx options for image display

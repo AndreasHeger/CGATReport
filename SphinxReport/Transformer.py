@@ -8,9 +8,6 @@ from DataTree import DataTree
 # ignore numpy histogram warnings in versions 1.3
 import warnings
 
-
-
-
 class Transformer(object):
 
     nlevels = None
@@ -202,19 +199,24 @@ class TransformerHistogram( Transformer ):
         self.mRange = None
         self.mBinMarker = "left"
 
-        if "normalized-max" in kwargs:
-           self.mConverters.append( self.normalize_max )
-           self.mFormat = "%6.4f"
-        if "normalized-total" in kwargs:
-           self.mConverters.append( self.normalize_total )
-           self.mFormat = "%6.4f"
-        if "cumulative" in kwargs:
-            self.mConverters.append( self.cumulate )
-        if "reverse-cumulative" in kwargs:
-            self.mConverters.append( self.reverse_cumulate )
+        self.mMapKeyword = {
+            "normalized-max" : self.normalize_max,
+            "normalized-total" : self.normalize_total,
+            "cumulative" : self.cumulate,
+            "reverse-cumulative": self.reverse_cumulate,
+            }
+
+        if "tf-aggregate" in kwargs:
+            for x in kwargs["tf-aggregate"].split(","):
+                try:
+                    self.mConverters.append( self.mMapKeyword[x ] )
+                except KeyError:
+                    raise KeyError("unknown keyword `%s`" % x)
+                
+        if self.normalize_total in self.mConverters or self.normalize_max in self.mConverters:
+           self.mFormat = "%6.4f" 
 
         if "bins" in kwargs: self.mBins = kwargs["bins"]
-        # removed eval
         if "range" in kwargs: self.mRange = kwargs["range"]
 
         f = []
@@ -323,5 +325,6 @@ class TransformerHistogram( Transformer ):
 
         for header, values in data.iteritems():
             bins, values = self.toHistogram(values)
+            for converter in self.mConverters: values = converter(values)
             data[header] =  odict.OrderedDict( ((header,bins), ("frequency", values)) )
         return data

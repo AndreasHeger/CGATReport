@@ -15,6 +15,7 @@ class ResultBlock:
 
     def __init__( self, text, title ):
         assert type(text) in types.StringTypes, "created ResultBlock without txt, but %s" % str(text)
+        assert type(title) in types.StringTypes, "created ResultBlock without txt, but %s" % str(title)
         assert title != None
         assert text != None
         self.text = text

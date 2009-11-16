@@ -24,7 +24,7 @@ If you are satisfied, add the following text to your document::
 
    .. report:: Tutorial4.ExpressionLevelWithSlices
       :render: histogram-plot
-      :range: 0,100,4
+      :tf-range: 0,100,4
       :xtitle: expression level
       :groupby: all
       :as-lines:
@@ -53,6 +53,6 @@ or might want to present the histogram literally::
 
    .. report:: Tutorial4.ExpressionLevelWithSlices
       :render: histogram
-      :range: 0,100,4
+      :tf-range: 0,100,4
 
 See :ref:`Tutorial5Demo` to check how the result should look like.

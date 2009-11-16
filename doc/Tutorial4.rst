@@ -123,7 +123,7 @@ The plot is concorporated into a restructured text document as usual::
 
    .. report:: Tutorial4.ExpressionLevelWithSlices
       :render: histogram-plot
-      :range: 0,100,4
+      :tf-range: 0,100,4
 
       Expression level in house-keeping and regulatory genes
       in two experiments.

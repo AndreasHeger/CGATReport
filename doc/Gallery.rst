@@ -82,7 +82,7 @@ of data and inserts it as a table.
 .. report:: Trackers.SingleColumnDataExample
    :render: table
    :transform: histogram
-   :bins: arange(0,10)
+   :tf-bins: arange(0,10)
 
    A histogram.
 
@@ -95,7 +95,7 @@ of data and inserts a plot.
 .. report:: Trackers.SingleColumnDataExample
    :render: line-plot
    :transform: histogram
-   :bins: arange(0,10)
+   :tf-bins: arange(0,10)
 
    A histogram plot.
 
