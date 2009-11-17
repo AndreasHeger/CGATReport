@@ -10,12 +10,19 @@ def unique( iterables ):
             s.add(x)
 
 class DataTree( object ):
+    '''a DataTree.
+
+    Note that it will never return a KeyError, but
+    return and empty dictionary.
+    '''
+    
     slots = "_data"
 
     def __init__(self, data = None ):
         # do not put this in argument list, as
         # it will always refer to the same object.
-        if not data: data = collections.defaultdict( odict )
+        # if not data: data = collections.defaultdict( odict )
+        if not data: data = odict()
         object.__setattr__( self, "_data", data)
 
     def __iter__(self):

@@ -50,7 +50,7 @@ Normalized max
    A histogram plot.
 
 Normalized total and cumulative
------------------------------
+-------------------------------
 
 .. report:: Trackers.SingleColumnDataExample
    :render: line-plot

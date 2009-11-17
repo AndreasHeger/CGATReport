@@ -1,4 +1,4 @@
-import os, sys, re, shelve, traceback, cPickle, types
+import os, sys, re, shelve, traceback, cPickle, types, itertools
 
 import bsddb.db
 import sqlalchemy
@@ -257,6 +257,7 @@ class Dispatcher:
                                                                                            len(slices), str(slices) ) )
         self.mData = DataTree.DataTree()
         for track in tracks:
+            self.mData[track] =  DataTree.DataTree()
             if slices:
                 for slice in slices:
                     d = self.getData( track, slice )
@@ -290,41 +291,61 @@ class Dispatcher:
         results = ResultBlocks( title="main" )
 
         labels = self.mData.getPaths()
-        debug( "%s: rendering data started: %i labels, %i required, %s" %\
-                   (self, len(labels), self.mRenderer.nlevels, str(labels)))
+        nlevels = len(labels)
+        debug( "%s: rendering data started: %i labels, %i minimum, %s" %\
+                   (self, nlevels, self.mRenderer.nlevels, str(labels)))
 
-        if len(labels) >= 2:
+        if nlevels >= 2:
             all_tracks, all_slices = labels[0], labels[1]
-        elif len(labels) == 1:
+        elif nlevels == 1:
             all_tracks, all_slices = labels[0], []
 
-        debug( "%s: rendering: input: tracks=%s, slices=%s; output: tracks=%s, slices=%s" %\
-                   (self, self.mTracks, self.mSlices, all_tracks, all_slices))
+        debug( "%s: rendering: groupby=%s, input: tracks=%s, slices=%s; output: tracks=%s, slices=%s" %\
+                   (self, self.mGroupBy, self.mTracks, self.mSlices, all_tracks, all_slices))
 
         tracks, slices = self.mTracks, self.mSlices
 
-        if len(labels) == self.mRenderer.nlevels:
-            results.append( self.mRenderer( self.mData, title = "all" ) )
-        elif len(labels) < self.mRenderer.nlevels:
+        if nlevels < self.mRenderer.nlevels:
+            # add some dummy levels if levels is not enough
             d = self.mData
-            for x in range( self.mRenderer.nlevels - len(labels)):
+            for x in range( self.mRenderer.nlevels - nlevels):
                 d = odict( (("all", d ),))
             results.append( self.mRenderer( DataTree.DataTree(d), title = "all" ) )
-        elif len(labels) > self.mRenderer.nlevels:
-            if self.mGroupBy == "track":
+
+        elif nlevels >= self.mRenderer.nlevels:
+            if self.mGroupBy == "none":
+                paths = list(itertools.product( *labels[:-self.mRenderer.nlevels] ))
+                for path in paths:
+                    subtitle = "/".join( path )
+                    work = self.mData.getLeaf( path )
+                    if not work: continue
+                    for key,value in work.iteritems():
+                        vals = DataTree.DataTree( odict( ((key,value),) ))
+                        results.append( self.mRenderer( vals, title="/".join((subtitle,key))))
+            elif nlevels == self.mRenderer.nlevels and self.mGroupBy == "track":
+                for track in all_tracks:
+                    vals = DataTree.DataTree( odict( ((track, self.mData[track]),)))
+                    results.append( self.mRenderer( vals, title = track ) )
+                
+            elif nlevels > self.mRenderer.nlevels and self.mGroupBy == "track":
                 for track in all_tracks:
                     # slices can be absent
                     d = [ (x,self.mData[track][x]) for x in all_slices if x in self.mData[track] ]
                     if len(d) == 0: continue
                     vals = DataTree.DataTree( odict( d ) )
                     results.append( self.mRenderer( vals, title = track ) )
-            elif self.mGroupBy == "slice":
+
+            elif nlevels > self.mRenderer.nlevels and self.mGroupBy == "slice" and len(self.mSlices) > 0:
                 for slice in all_slices:
                     d = [ (x,self.mData[x][slice]) for x in all_tracks if slice in self.mData[x] ]
                     if len(d) == 0: continue
                     vals = DataTree.DataTree( odict( d ) )
                     results.append( self.mRenderer( vals, title = slice ) )
-                
+            elif self.mGroupBy == "all":
+                results.append( self.mRenderer( self.mData, title = "all" ) )
+            else:
+                results.append( self.mRenderer( self.mData, title = "all" ) )
+
         if len(results) == 0:
             warn("tracker returned no data.")
             raise ValueError( "tracker returned no data." )

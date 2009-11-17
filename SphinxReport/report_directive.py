@@ -120,10 +120,13 @@ def getTracker( fullpath ):
 
     return code, tracker
 
-FORMATS = [ ('png', 80),
-            ('hires.png', 200),
-#            ('pdf', 50),
-            ]
+HTML_IMAGE_FORMAT = ('main', 'png', 80)
+LATEX_IMAGE_FORMAT = () # ('pdf', 'pdf' 50)
+
+ADDITIONAL_FORMATS = [
+    ('hires', 'hires.png', 200 ),
+    # ('pdf', 'pdf', 50 ),
+    ]
 
 MAP_TRANSFORMER = { 
     'stats' : Transformer.TransformerStats, 
@@ -205,21 +208,6 @@ TRANSFORM_OPTIONS = {
     'tf-aggregate': directives.unchanged,
     }
 
-TEMPLATE_PLOT = """
-.. htmlonly::
-
-   .. image:: %(linkedname)s.png
-%(display_options)s
-
-   [`source code <%(linked_codename)s>`__,
-   `rst <%(linkedname)s.txt>`__,
-   `png <%(linkedname)s.hires.png>`__,
-   `pdf <%(linkedname)s.pdf>`__]
-
-.. latexonly::
-   .. image:: %(linkedname)s.pdf
-%(display_options)s
-"""
 
 TEMPLATE_TEXT = """
 .. htmlonly::
@@ -265,7 +253,9 @@ def collectImagesFromMatplotlib( template_name,
     map_figure2text = {}
 
     for i, figman in enumerate(fig_managers):
-        for format, dpi in FORMATS:
+        # create all images
+        
+        for id, format, dpi in [HTML_IMAGE_FORMAT + LATEX_IMAGE_FORMAT] + ADDITIONAL_FORMATS:
             if len(fig_managers) == 1:
                 outname = template_name
             else:
@@ -295,9 +285,42 @@ def collectImagesFromMatplotlib( template_name,
                 outfile.write( "\n".join( content ) + "\n" )
                 outfile.close()
 
-        linkedname = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
+        # create the text element
+        rst_output = ""
+        imagepath = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
+        linked_text = imagepath + ".txt"
+        if HTML_IMAGE_FORMAT:
+            id, format, dpi = HTML_IMAGE_FORMAT
+            template = '''
+.. htmlonly::
 
-        map_figure2text[ "#$mpl %i$#" % i] = TEMPLATE_PLOT % locals()
+   .. image:: %(linked_image)s
+%(display_options)s
+
+   [`source code <%(linked_codename)s>`__ `rst <%(linked_text)s>`__ %(extra_images)s]
+'''
+        
+            linked_image = imagepath + ".%s" % format
+            extra_images=[]
+            for id, format, dpi in ADDITIONAL_FORMATS:
+                extra_images.append( "`%(id)s <%(imagepath)s.%(format)s>`__" % locals())
+            if extra_images: extra_images = " " + " ".join( extra_images)
+            else: extra_images = ""
+
+            rst_output += template % locals()
+            
+        if LATEX_IMAGE_FORMAT:
+            id, format, dpi = LATEX_IMAGE_FORMAT
+            template = '''
+.. latexonly::
+
+   .. image:: %(linked_image)s
+%(display_options)s
+'''
+            linked_image = imagepath + ".%s" % format
+            rst_output += template % locals()
+        
+        map_figure2text[ "#$mpl %i$#" % i] = rst_output
 
     return map_figure2text
 
@@ -545,10 +568,12 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                     state_machine.insert_input(
                         lines, state_machine.input_lines.source(0) )
                 return []
+        else:
+            logging.debug( "no check performed: %s missing" % str(filename_text))
     else:
         template_name = ""
         filename_text = None
-
+            
     # we need to clear between runs
     plt.close('all')    
     # matplotlib.rcdefaults()

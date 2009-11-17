@@ -88,6 +88,10 @@ def buildException( stage ):
     else:
         return ResultBlocks()
 
+def quote( text ):
+    '''quote text for restructured text.'''
+    return re.sub( r"([*])", r"\\\1", str(text))
+
 class Renderer(object):
     """Base class of renderers that render data into restructured text.
 
@@ -208,27 +212,36 @@ class RendererTable( Renderer ):
         col_headers = [""] * (len(labels)-2) + labels[-1]
         ncols = len(col_headers)
 
-        row_headers = []
         paths = list(itertools.product( *labels[1:-1] ))                
-        npaths = len(paths)
-        for x in labels[0]: 
-            row_headers.extend( [x] + [""] * (npaths-1) )
-        nrows = len(row_headers)
+        header_offset = len(labels)-2
+        matrix = []
 
-        offset = len(labels)-2
-        matrix = [ [""] * ncols for x in range(nrows) ]
-
-        debug( "RendererTable: creating table with %i rows and %i columns" % (len(row_headers), len(col_headers)))
+        debug( "RendererTable: creating table with %i columns" % (len(col_headers)))
         ## the following can be made more efficient
         ## by better use of indices
-        for x,row in enumerate(labels[0]):
+        row_offset = 0
+        row_headers = []
+        for x, row in enumerate(labels[0]):
+            first = True
             for xx, path in enumerate(paths):
+                row_data = [""] * ncols 
                 work = data.getLeaf( (row,) + path )
                 if not work: continue
+                for z, p in enumerate(path): 
+                    row_data[z] = p
+
                 for y, column in enumerate(labels[-1]):
-                    matrix[x*npaths+xx][y+offset] = str(work[column])
-                for z, p in enumerate(path):
-                    matrix[x*npaths+xx][z] = p
+                    try:
+                        row_data[y+header_offset] = quote(work[column])
+                    except KeyError:
+                        pass
+
+                if first: 
+                    row_headers.append( row )
+                    first = False
+                else:
+                    row_headers.append("")
+                matrix.append( row_data )
 
         if self.mTranspose:
             row_headers, col_headers = col_headers, row_headers
@@ -496,13 +509,13 @@ class RendererMatrix(Renderer):
         matrix.shape = (len(rows), len(columns) )
         for x,row in enumerate(rows):
             for y, column in enumerate(columns):
+                # deal with empty values from DataTree
                 try:
                     matrix[x,y] = take_f( row, column )
                 except KeyError:
-                    # ignore missing and malformatted data
                     pass
-                except ValueError:
-                    raise ValueError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
+                except TypeError:
+                    raise TypeError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
                 
         if self.mConverters and apply_transformations:
             for converter in self.mConverters: 
@@ -526,7 +539,7 @@ class RendererMatrix(Renderer):
             lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.format % x for x in matrix[x,:] ] ) ) )
         lines.append( "") 
         if not path: subtitle = ""
-        else: subtitle = path
+        else: subtitle = "/".join(path)
         results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
 
         return results
@@ -620,8 +633,6 @@ class RendererBarPlot( RendererMatrix, Plotter):
             trans=coord_offset(ax, self.mCurrentFigure, self.label_offset_x, self.label_offset_y)
             for xval, yval, label in zip(xvals,vals,labels):
                 ax.text(xval, yval, label, transform=trans)
-
-
 
 
     def buildMatrices( self, work ):
