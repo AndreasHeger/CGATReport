@@ -215,7 +215,7 @@ def main():
                 (options.renderer, "\n  ".join(sorted(MAP_RENDERER.keys())))
             sys.exit(1)
     else:
-        renderer = Renderer
+        renderer = RendererTable
 
     transformers = []
     for transformer in options.transformers:
