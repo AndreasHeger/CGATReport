@@ -178,6 +178,7 @@ RENDER_OPTIONS = {
     'label' : directives.unchanged,
     'logscale' : directives.unchanged,
     'title' : directives.unchanged,
+    'add-title' : directives.flag,
     'xtitle' : directives.unchanged,
     'ytitle' : directives.unchanged,
     'xrange' : directives.unchanged,
