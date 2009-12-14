@@ -110,8 +110,13 @@ class TrackerSQL( Tracker ):
 
     This tracker connects to the database. Each tracker will establish
     its own connection for multi-processing.
+
+    If :attr:`mAsTable` is set, the returned tracks correspond to
+    tables.
+
     """
     mPattern = ""
+    mAsTables = False
 
     def __init__(self, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
@@ -172,6 +177,11 @@ class TrackerSQL( Tracker ):
 
         raise IndexError( "table %s no found" % name )
 
+    def getColumns( self, name ):
+        '''return a list of column names.'''
+        c = self.getTable( name ).columns
+        return [ re.sub( "%s[.]" % name, "", x.name) for x in c ]
+
     def execute(self, stmt ):
         self.__connect()
         try:
@@ -221,7 +231,16 @@ class TrackerSQL( Tracker ):
         """
         if subset: return subset
         rx = re.compile(self.mPattern)
-        return sorted([ rx.sub( "", x.name ) for x in self.getTables() if rx.search( x.name ) ])
+        if self.mAsTables:
+            return sorted([ x.name for x in self.getTables() if rx.search( x.name ) ])
+        else: 
+            result = []
+            for x in self.getTables():
+                if rx.search(x.name):
+                    n = rx.sub( "", x.name )
+                    if n == "": n = x.name
+                    result.append( n )
+            return result
 
 class TrackerSQLCheckTables(TrackerSQL):
     """Tracker that examines the presence/absence of a certain
@@ -278,7 +297,7 @@ class TrackerSQLCheckTable(TrackerSQL):
 
     mExcludePattern = None
     mPattern = "_evol$"
-
+    
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
 

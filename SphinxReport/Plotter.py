@@ -28,7 +28,9 @@ class Plotter:
 
        :term:`ytitle`: add a label to the Y axis
 
-       :term:`title`: add a title to the plot
+       :term:`title`:  title of the plot
+       
+       :term:`add-title`: add title to each plot
 
        :term:`legend-location`: specify the location of the legend
 
@@ -83,6 +85,9 @@ class Plotter:
 
         try: self.mTitle = kwargs["title"]
         except KeyError: self.mTitle = None
+
+        if "add-title" in kwargs: self.mAddTitle = True
+        else: self.mAddTitle = False
 
         try: self.mXLabel = kwargs["xtitle"]
         except KeyError: 
@@ -194,6 +199,8 @@ class Plotter:
         if self.mXRange: plt.xlim( self.mXRange )
         if self.mYRange: plt.ylim( self.mYRange )
 
+        if self.mAddTitle: plt.suptitle( "/".join(path) )
+
         blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure-1), "")), title = "/".join(path) ) )
 
         legend = None
@@ -214,9 +221,10 @@ class Plotter:
 
 
         if self.mLegendLocation == "extra" and legends:
-            legend = plt.figure( self.mFigure, **self.mMPLFigureOptions )
+
             blocks.append( ResultBlock( "\n".join( ("#$mpl %i$#" % self.mFigure, "")), "legend" ) )
             self.mFigure += 1
+            legend = plt.figure( self.mFigure, **self.mMPLFigureOptions )
             lx = legend.add_axes( (0.1, 0.1, 0.9, 0.9) )
             lx.set_title( "Legend" )
             lx.set_axis_off()

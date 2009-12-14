@@ -4,6 +4,7 @@ import itertools
 import numpy
 import odict
 from DataTree import DataTree
+from numpy import arange
 
 # ignore numpy histogram warnings in versions 1.3
 import warnings
@@ -27,8 +28,12 @@ class Transformer(object):
         for path in paths:
             work = data.getLeaf( path )
             if not work: continue
-            data.setLeaf( path,
-                          self.transform( work, path ) )
+            new_data = self.transform( work, path )
+            if new_data:
+                data.setLeaf( path, new_data )
+            else:
+                warn( "no data at %s - removing branch" % str(path))
+                data.removeLeaf( path )
 
         debug( "transform: ended with paths: %s" % data.getPaths())
 
@@ -141,6 +146,10 @@ class TransformerStats( Transformer ):
     def transform(self, data, path ):
         debug( "%s: called" % str(self))
         for header, values in data.iteritems():
+            if len(values) == 0: 
+                warn( "empty histogram" )
+                continue
+
             try:
                 data[header] =  Stats.Summary( values )
             except TypeError:
@@ -272,7 +281,7 @@ class TransformerHistogram( Transformer ):
 
         if len(data) == 0: 
             warn( "empty histogram" )
-            return
+            return None, None
 
         binsize = None
 
@@ -311,7 +320,7 @@ class TransformerHistogram( Transformer ):
 
             if hasattr( bins, "__iter__") and len(bins) == 0:
                 warn( "empty bins from %s: %s: %s" % (str(self.mTracker), group, title) )
-                return
+                return None, None
 
         # ignore histogram semantics warning
         with warnings.catch_warnings():
@@ -325,6 +334,9 @@ class TransformerHistogram( Transformer ):
 
         for header, values in data.iteritems():
             bins, values = self.toHistogram(values)
-            for converter in self.mConverters: values = converter(values)
-            data[header] =  odict.OrderedDict( ((header,bins), ("frequency", values)) )
+            if bins != None:
+                for converter in self.mConverters: values = converter(values)
+                data[header] =  odict.OrderedDict( ((header,bins), ("frequency", values)) )
+            else:
+                del data[header]
         return data

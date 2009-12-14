@@ -37,17 +37,19 @@ SUBSECTION_TOKEN = "^"
 
 VERBOSE=True
 
-from logging import warn, log, debug, info
-import logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(message)s',
-    stream = open( "sphinxreport.log", "a" ) )
+# from logging import warn, log, debug, info
+# import logging
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s %(levelname)s %(message)s',
+#     stream = open( "sphinxreport.log", "a" ) )
 
-# for cachedir
-if not os.path.exists("conf.py"):
-    raise IOError( "could not find conf.py" )
-execfile( "conf.py" )
+# # for cachedir
+# if not os.path.exists("conf.py"):
+#     raise IOError( "could not find conf.py" )
+# execfile( "conf.py" )
+
+from Reporter import *
 
 def buildException( stage ):
     '''build an exception text element.
@@ -83,7 +85,7 @@ def buildException( stage ):
 
         return ResultBlocks( 
             ResultBlocks( 
-            ResultBlock( EXCEPTION_TEMPLATE % locals(), 
+                ResultBlock( EXCEPTION_TEMPLATE % locals(), 
                          title = "" ) ) )
     else:
         return ResultBlocks()
@@ -92,7 +94,7 @@ def quote( text ):
     '''quote text for restructured text.'''
     return re.sub( r"([*])", r"\\\1", str(text))
 
-class Renderer(object):
+class Renderer(Reporter):
     """Base class of renderers that render data into restructured text.
 
     The subclasses define how to render the data by overloading the
@@ -131,7 +133,8 @@ class Renderer(object):
         a :class:`Tracker.Tracker`.
         """
 
-        debug("starting renderer '%s'"% (str(self)))
+        debug("%s: starting renderer '%s'"% (id(self), str(self)))
+
         try: self.format = kwargs["format"]
         except KeyError: pass
 
@@ -140,7 +143,7 @@ class Renderer(object):
     def __call__(self):
         return None
 
-    def __call__(self, data, title ):
+    def __call__(self, data, path ):
         '''iterate over leaves in data structure.
 
         and call ``render`` method.
@@ -148,19 +151,22 @@ class Renderer(object):
         if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
         labels = data.getPaths()
-        assert len(labels) >= self.nlevels, "expected at least %i levels - got %i: %s" %\
-            (self.nlevels, len(labels), str(labels))
+        assert len(labels) >= self.nlevels, "at %s: expected at least %i levels - got %i: %s" %\
+            (str(path), self.nlevels, len(labels), str(labels))
         
         paths = list(itertools.product( *labels[:-self.nlevels] ))
         
-        result = ResultBlocks( title = title )
+        result = ResultBlocks( title = "/".join(path) )
 
-        for path in paths:
-            subtitle = "-".join( path )
-            work = data.getLeaf( path )
+        for p in paths:
+            work = data.getLeaf( p )
             if not work: continue
-            result.extend( self.render( DataTree(work), path ) )
-
+            try:
+                result.extend( self.render( DataTree(work), path + p ) )
+            except:
+                warn("exeception raised in rendering for path: %s" % str(path+p))
+                raise 
+            
         return result
             
 class RendererTable( Renderer ):
@@ -216,7 +222,7 @@ class RendererTable( Renderer ):
         header_offset = len(labels)-2
         matrix = []
 
-        debug( "RendererTable: creating table with %i columns" % (len(col_headers)))
+        debug( "%s: RendererTable: creating table with %i columns" % (id(self), len(col_headers)))
         ## the following can be made more efficient
         ## by better use of indices
         row_offset = 0
@@ -249,16 +255,15 @@ class RendererTable( Renderer ):
 
         return matrix, row_headers, col_headers
 
-    def __call__(self, data, title = None):
+    def __call__(self, data, path):
 
         lines = []
         matrix, row_headers, col_headers = self.buildTable( data )
         if matrix == None: return lines
 
-        if not title: mytitle = "title"
-        else: mytitle = title
+        title = "/".join(path)
 
-        lines.append( ".. csv-table:: %s" % mytitle )
+        lines.append( ".. csv-table:: %s" % title )
         lines.append( '   :header: "", "%s" ' % '","'.join( col_headers ) )
         lines.append( '' )
 
@@ -267,17 +272,19 @@ class RendererTable( Renderer ):
 
         lines.append( "") 
 
-        return ResultBlocks( ResultBlock( "\n".join(lines), title = mytitle) )
+        return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
 class RendererGlossary( RendererTable ):
     """output a table in the form of a glossary."""
 
-    def __call__(self, data, title = None):
+    def __call__(self, data, path ):
 
         lines = []
         matrix, row_headers, col_headers = self.buildTable( data )
 
         if matrix == None: return lines
+
+        title = "/".join(path)
 
         lines.append( ".. glossary::" )
 
@@ -290,7 +297,7 @@ class RendererGlossary( RendererTable ):
 
         lines.append( "") 
 
-        return ResultBlocks( "\n".join(lines), title = mytitle )
+        return ResultBlocks( "\n".join(lines), title = title )
 
 class RendererMatrix(Renderer):    
     """A table with numerical columns.
@@ -308,6 +315,7 @@ class RendererMatrix(Renderer):
            * *normalized-row-max*: normalize by row maximum
            * *normalized-total*: normalize over whole matrix
            * *normalized-max*: normalize over whole matrix
+           * *sort* : sort matrix rows and columns alphanumerically.
            * filter-by-rows: only take columns that are also present in rows
            * filter-by-cols: only take columns that are also present in cols
            * square: make square matrix (only take rows and columns present in both)
@@ -332,11 +340,16 @@ class RendererMatrix(Renderer):
             "normalized-col-max" : self.transformNormalizeColumnMax ,
             "normalized-total" : self.transformNormalizeTotal,
             "normalized-max" : self.transformNormalizeMax,
+            "symmetric-max" : self.transformSymmetricMax,
+            "symmetric-min" : self.transformSymmetricMin,
+            "symmetric-avg" : self.transformSymmetricAverage,
+            "symmetric-sum" : self.transformSymmetricSum,
             "filter-by-rows" : self.transformFilterByRows,
             "filter-by-cols" : self.transformFilterByColumns,
             "square" : self.transformSquare,
             "add-row-total" : self.transformAddRowTotal,
             "add-column-total" : self.transformAddColumnTotal,
+            "sort" : self.transformSort,
         }
         
         self.mConverters = []        
@@ -406,6 +419,78 @@ class RendererMatrix(Renderer):
 
 
         return matrix, row_headers, col_headers
+
+    def transformSort( self, matrix, row_headers, col_headers ):
+        """apply correspondence analysis to a matrix.
+        """
+
+        map_row_new2old = [x[0] for x in sorted(enumerate( row_headers ), key=lambda x: x[1])]
+        map_col_new2old = [x[0] for x in sorted(enumerate( col_headers ), key=lambda x: x[1])]
+
+        matrix, row_headers, col_headers =  CorrespondenceAnalysis.GetPermutatedMatrix( matrix,
+                                                                                        map_row_new2old,
+                                                                                        map_col_new2old,
+                                                                                        row_headers = row_headers,
+                                                                                        col_headers = col_headers)
+
+
+        return matrix, row_headers, col_headers
+
+    def transformSymmetricMax( self, matrix, rows, cols ):
+        """symmetrize a matrix.
+
+        returns the normalized matrix.
+        """
+        if len(rows) != len(cols):
+            raise ValueError( "matrix not square - can not be symmetrized" )
+        
+        for x in xrange(len(rows)):
+            for y in xrange(x+1,len(cols)):
+                matrix[x,y] = matrix[y,x] = max(matrix[x,y], matrix[y,x])
+
+        return matrix, rows, cols
+
+    def transformSymmetricMin( self, matrix, rows, cols ):
+        """symmetrize a matrix.
+
+        returns the normalized matrix.
+        """
+        if len(rows) != len(cols):
+            raise ValueError( "matrix not square - can not be symmetrized" )
+        
+        for x in xrange(len(rows)):
+            for y in xrange(x+1,len(cols)):
+                matrix[x,y] = matrix[y,x] = min(matrix[x,y], matrix[y,x])
+
+        return matrix, rows, cols
+
+    def transformSymmetricSum( self, matrix, rows, cols ):
+        """symmetrize a matrix.
+
+        returns the normalized matrix.
+        """
+        if len(rows) != len(cols):
+            raise ValueError( "matrix not square - can not be symmetrized" )
+        
+        for x in xrange(len(rows)):
+            for y in xrange(x+1,len(cols)):
+                matrix[x,y] = matrix[y,x] = sum(matrix[x,y], matrix[y,x])
+
+        return matrix, rows, cols
+
+    def transformSymmetricAverage( self, matrix, rows, cols ):
+        """symmetrize a matrix.
+
+        returns the normalized matrix.
+        """
+        if len(rows) != len(cols):
+            raise ValueError( "matrix not square - can not be symmetrized" )
+        
+        for x in xrange(len(rows)):
+            for y in xrange(x+1,len(cols)):
+                matrix[x,y] = matrix[y,x] = sum(matrix[x,y], matrix[y,x]) / 2
+
+        return matrix, rows, cols
 
     def transformNormalizeTotal( self, matrix, rows, cols ):
         """normalize a matrix by the total.
@@ -571,12 +656,16 @@ class RendererLinePlot(Renderer, Plotter):
             
             for label, coords in data.iteritems():
 
-                s = self.mSymbols[nplotted % len(self.mSymbols)]
-
                 # get and transform x/y values
+                try:
+                    xlabel, ylabel = coords.keys()
+                except AttributeError:
+                    warn("could not plot %s: %s" % (label, str(coords) ))
+                    continue
 
-                xlabel, ylabel = coords.keys()
                 xvals, yvals = coords.values()
+
+                s = self.mSymbols[nplotted % len(self.mSymbols)]
 
                 plts.append( plt.plot( xvals,
                                        yvals,
@@ -1038,6 +1127,7 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
 
         if self.mZRange:
             vmin, vmax = self.mZRange
+            zvals = numpy.array( zvals )
             zvals[ zvals < vmin ] = vmin
             zvals[ zvals > vmax ] = vmax
         else:
