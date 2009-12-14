@@ -1,7 +1,7 @@
 import ez_setup
 ez_setup.use_setuptools()
 
-import glob, sys
+import glob, sys, os
 # from distutils.core import setup
 
 from setuptools import setup, find_packages
@@ -55,3 +55,11 @@ setup(name='SphinxReport',
         ],
     },
       )
+
+# fix file permission for executables
+# set to "group writeable" 
+# also updates the "sphinx" permissions
+import distutils.sysconfig, stat, glob
+print "updating file permissions for scripts"
+for x in glob.glob( os.path.join(distutils.sysconfig.project_base, "sphinx*")):
+    os.chmod( x, os.stat(x).st_mode | stat.S_IWGRP ) 
