@@ -25,5 +25,7 @@ Contents:
    Roadmap.rst
    Test.rst
    FAQ.rst
+   Errors.rst
+
 
 
