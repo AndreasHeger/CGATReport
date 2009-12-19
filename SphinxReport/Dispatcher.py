@@ -76,11 +76,18 @@ class Dispatcher(Reporter):
         
             if not os.path.exists(cachedir): 
                 raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
-            
+
+                
             modulename = os.path.split(tracker.__class__.__module__)[1]
+
+            if hasattr( tracker, "func_name" ):
+                name = tracker.func_name
+            else:
+                name = tracker.__class__.__name__
+
             self.mCacheFile = os.path.join( cachedir, 
-                                            report_directive.quoted( ".".join((modulename,
-                                                                               tracker.__class__.__name__ ))))
+                                            report_directive.quoted( ".".join((modulename,name))))
+                                                                               
             # on Windows XP, the shelve does not work, work without cache
             try:
                 self._cache = shelve.open(self.mCacheFile,"c", writeback = False)
@@ -96,7 +103,6 @@ class Dispatcher(Reporter):
             debug( "disp%s: not using cache"% (id(self),) )
 
         self.mData = DataTree.DataTree()
-
 
     def __del__(self):
         
@@ -197,10 +203,9 @@ class Dispatcher(Reporter):
         if hasattr( self.mTracker, "getTracks" ):
             tracks = self.mTracker.getTracks( subset = None )
         else:
-            # not a Tracker, simply call function:
-            self.mData[ "all" ][ "slice"] = self.getData( None, None )
+            # not a Tracker, hence no tracks
             self.mTracks = []
-            return
+            return True
 
         # do we have a subset specified
         if self.mInputTracks != None:
@@ -214,13 +219,18 @@ class Dispatcher(Reporter):
                 tracks = self.mTracker.getTracks( subset = self.mInputTracks )
         
         self.mTracks = tracks
+        return False
 
     def buildSlices( self ):
         '''determine the slices through the data'''
 
         # first get all slices without subsets and check if all
         # specified slices are available. 
-        if self.mInputSlices:
+
+        if not hasattr( self.mTracker, "getSlices" ):
+            # not a tracker, hence no slices
+            slices = []
+        elif self.mInputSlices:
             all_slices = set(self.mTracker.getSlices( subset = None ))
             for s in self.mInputSlices:
                 if s not in all_slices:
@@ -243,7 +253,17 @@ class Dispatcher(Reporter):
         the first level and slice as the second level.
         '''
 
-        self.buildTracks()
+        self.mData = DataTree.DataTree()
+        self.mTracks = []
+        self.mSlices = []
+
+        is_function = self.buildTracks()
+
+        if is_function:
+            d = self.getData( None, None )
+            self.mData[ "all" ] = odict( (( "all", d),))
+            self.debug( "%s: collecting data finished for function." % (self.mTracker))
+            return
 
         if len(self.mTracks) == 0: 
             self.warn( "%s: no tracks found - no output" % self.mTracker )

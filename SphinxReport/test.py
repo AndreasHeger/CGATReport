@@ -9,6 +9,43 @@ sphinxreport-test
 command line options is available using the :option:`-h/--help` command line
 options.
 
+The options are:
+
+**-t/--tracker** tracker
+   :class:`Tracker` to use.
+
+**-r/--renderer** renderer
+   :class:`Renderer` to use.
+
+**-f/--force** 
+   force update of :class:`Tracker`a.
+
+**-m/--transformer** transformer
+   :class:`Transformer` to use.
+
+**-a/--tracks** tracks
+   Tracks to display as a comma-separated list.
+
+**-s/--slices** slices
+   Slices to display as a comma-separated list.
+
+**-o/--option** option
+   Options for the renderer/transformer. These correspond to options
+   within restructured text directives, but supplied as key=value pairs (without spaces). 
+   For example: ``:width: 300`` will become ``-o width=300``. Several **-o** options can
+   be supplied on the command line.
+
+**--no-print**
+   Do not print an rst text template corresponding to the displayed plots.
+
+**--no-plot**
+   Do not plot.
+
+If no command line arguments are given all :class:`Tracker` are build in parallel. 
+
+Usage
+-----
+
 There are three main usages of :command:`sphinxreport-test`:
 
 Fine-tuning plots
@@ -134,7 +171,7 @@ def getTrackers( fullpath ):
             trackers.append( (name, obj, module_name, False) )
         elif isinstance(obj, (type, types.LambdaType)):
             trackers.append( (name, obj, module_name, False) )
-
+            
     return trackers
 
 def run( name, t, kwargs ):
@@ -246,20 +283,25 @@ def main():
         for filename in glob.glob( "python/*.py" ):
             trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in exclude ] )
 
-        available_trackers = set( [ x[0] for x in trackers if x[3] ] )
-        if options.tracker not in available_trackers:
-            print "unknown tracker '%s': possible trackers are\n  %s" % (options.tracker, "\n  ".join( sorted(available_trackers)) ) 
-            sys.exit(1)
-
+        
         for name, tracker, modulename, is_derived  in trackers:
             if name == options.tracker: break
-        
+        else:
+            available_trackers = set( [ x[0] for x in trackers if x[3] ] )
+            print "unknown tracker '%s': possible trackers are\n  %s" % (options.tracker, "\n  ".join( sorted(available_trackers)) ) 
+            print "(the list above does not contain functions)."
+            sys.exit(1)
+
         ## remove everything related to that tracker for a clean slate
         if options.force:
             removed = SphinxReport.clean.removeTracker( name )
             print "removed all data for tracker %s: %i files" % (name, len(removed))
 
-        t = tracker()
+        # instantiate functors
+        if is_derived: t = tracker()
+        # but not functions
+        else: t = tracker
+
         dispatcher = Dispatcher( t, renderer(t,**kwargs), transformers ) 
         ## needs to be resolved between renderer and dispatcher options
         result = dispatcher( **kwargs )

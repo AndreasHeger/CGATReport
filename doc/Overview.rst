@@ -33,41 +33,44 @@ to :mod:`Sphinx`. It
 Usage
 *****
 
-The :mod:`SphinxReport` extension has three parts:
+Three steps are required to include rendered images into restructured text
+using :mod:`SphinxReport`:
 
-1. ``Renderers`` are provided by the :mod:`SphinxReport` extension and are used to display data
-   as graphs or tables. They can be incorporated into restructured text files using the ``:report::`` directive.
-
-2. ``Trackers`` are python classes and are provided by the user and collect data. The data can be obtained from
+1. Provide a data source. Data are provided by objects of the type :class:`Tracker`. The data can be obtained from
    data sources like flat files, SQL tables and more. Trackers provide data by :term:`track` and :term:`slice`. 
    Tracks are principal collections of data, for example data measurements taken from different species. Slices 
    are subsections of the data. For example, a :class:`Tracker` might provide *weight* measurements of different species
    according to the slice *gender*.
 
-3. :file:``sphinxreport-build`` is used to build a document. 
+2. Insert a ``report`` directive into a restructered text document. ``:report:`` directives invoke
+   objects of the type :class:`Renderer`. These are provided by the :mod:`SphinxReport` extension 
+   and are used to display data as graphs or tables. 
 
-The following minimal example illustrates how Renderers and Trackers work together. A ``:report:``
-directive like::
+3. Run :file:``sphinxreport-build`` to build the document. 
 
-   .. report:: BarData
+The following minimal example illustrates how this process works. A ``:report:`` directive like::
+
+   .. report:: Trackers.BarData
       :render: bars
 
-will insert a barplot (:class:`RendererInterleavedBars`) at the current
-location. The Renderer will obtain the data from a python class or function *BarData* in the file
+will insert a barplot (:class:`RendererInterleavedBars`) at the current location. The Renderer will 
+obtain the data from a python class or function *BarData* in the file
 :file:`Trackers.py` that should be somewhere in the python search path (see :ref:`Configuration`).
-The function *BarData* might look like this::
+The :file:`Trackers.py` should contain a function *BarData*, that might look like this::
 
-   @returnLabeledData
-   def BarData(): return [("bar1", 10), ("bar2", 20)]
+   def BarData( track, slice = None ): return dict( [("bar1", 10), ("bar2", 20)] )
 
-The document is built using the usual :mod:`Sphinx` process::
+Instead of plain functions, function objects can be used as well. 
+
+Finally, the document is built using the usual :mod:`Sphinx` process::
 
    sphinx-build -b html -d _build/doctrees   . _build/html
 
-See the :ref:`Tutorials` for a more complete introduction on how to use the extension. See
-:ref:`Running` on more advanced building methods.
+The :mod:`SphinxReport` module comes with additional utilities for to aid debugging
+and the building of large documents. 
 
-
+See the :ref:`Tutorials` for a more complete introduction on how to use the extension. 
+See :ref:`Running` on more advanced building methods.
 
 .. _Background:
 

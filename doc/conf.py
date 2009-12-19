@@ -31,6 +31,8 @@ sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 # add warnings into the document
 sphinxreport_add_warnings = True
 
+sphinxreporterror_include_sphinxreporterrors = True
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
@@ -40,8 +42,10 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.coverage', 
               'sphinx.ext.pngmath', 
               'sphinx.ext.ifconfig', 
+              'sphinx.ext.todo', 
               'SphinxReport.inheritance_diagram', 
               'SphinxReport.only_directives', 
+              'SphinxReport.errors_directive', 
               'SphinxReport.report_directive' ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -106,6 +110,8 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+# If true, include todo list
+todo_include_todos = True
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -155,7 +161,8 @@ html_static_path = ['_static']
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = { 'index' : 'index.html', 'gallery' : 'gallery.html' }
+html_additional_pages = { 'index' : 'index.html', 
+                          'gallery' : 'gallery.html' }
 
 # If false, no module index is generated.
 #html_use_modindex = True

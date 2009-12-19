@@ -40,9 +40,6 @@ Adding a data source
 Create the file :file:`Tutorial1.py` in the :file:`python` subdirectory and add 
 the following code::
 
-   from SphinxReport.DataTypes import *
-
-   @returnLabeledData
    def MyDataFunction():
       return [ ("header1", 10), ("header2", 20) ]
 
@@ -62,10 +59,10 @@ Testing the data source
 The utility :file:`sphinxreport-test` can be used to check if a
 data source works. To test your data source, type::
 
-   sphinxreport-test -t MyDataFunction -r bars
+   sphinxreport-test -t MyDataFunction -r bar-plot
 
 on the command prompt in the root directory. This should create a 
-bar plot (``-r bars`` or ``--renderer=bars`` ) of your data source
+bar plot (``-r bars-plot`` or ``--renderer=bar-plot`` ) of your data source
 (``-t MyDataFunction`` or ``--tracker=MyDataFunction``).
 
 :file:`sphinxreport-test` will also produce the restructured text
@@ -85,7 +82,7 @@ Create the following rst file:`Tutorial1.rst`::
     My first bar blot:
 
     .. report:: Tutorial1.MyDataFunction
-       :render: bars
+       :render: bar-plot
 
        My first bar plot.
 
@@ -107,7 +104,6 @@ like.
 
 The next Tutorial (:ref:`Tutorial2`) will cover more complex
 data sources and plots.
-
 
 
 

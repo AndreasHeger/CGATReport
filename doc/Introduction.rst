@@ -62,7 +62,8 @@ Configuration
 
 Sphinx and the :mod:`SphinxReport` extension read configuration details
 from the file :file:`conf.py` at the top-level of the installation. In order
-to use the extension, add the following entries to the variable :data:`extensions`::
+to use the :mod:`SphinxReport` extension, add the following entries to the variable 
+:data:`extensions`::
 
    extensions.extend( ['SphinxReport.inheritance_diagram',
               'SphinxReport.only_directives',
@@ -71,9 +72,11 @@ to use the extension, add the following entries to the variable :data:`extension
 Further variables can be addded to :file:`conf.py` to customize the extension. The
 variables are:
 
-This file containing python code sets mostly :mod:`sphinx` configuration 
-options (see the `sphinx documentation <http://sphinx.pocoo.org/config.html>`_
-for more information), but some sphinxreport options as well.
+.. todo:: 
+   add variables
+
+For :mod:`sphinx` configuration options, see the `sphinx documentation <http://sphinx.pocoo.org/config.html>`_.
+
 
 
 

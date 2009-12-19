@@ -112,6 +112,7 @@ def getTracker( fullpath ):
     infile.close()
 
     logging.debug( "instantiating tracker %s" % cls )
+
     try:
         tracker =  getattr( module, cls)()
     except AttributeError, msg:
@@ -128,6 +129,7 @@ ADDITIONAL_FORMATS = [
     # ('pdf', 'pdf', 50 ),
     ]
 
+# Map transformer names to their implementations.
 MAP_TRANSFORMER = { 
     'stats' : Transformer.TransformerStats, 
     'correlation' : Transformer.TransformerCorrelation, 
@@ -138,7 +140,9 @@ MAP_TRANSFORMER = {
     'combine': Transformer.TransformerCombinations,
     }
 
+# Map renderer names to their implemenations
 MAP_RENDERER= { 
+    'debug' : Renderer.RendererDebug,
     'line-plot': Renderer.RendererLinePlot,
     'pie-plot': Renderer.RendererPiePlot,
     'scatter-plot': Renderer.RendererScatterPlot,
@@ -662,11 +666,6 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         lines.extend( [ '    %s' % row.strip() for row in content] )
         lines.append( "" )
 
-    #try:
-    #    lines.extend( [ '    %s' % row.strip() for row in tracker.__doc__.split('\n')] )
-    #except AttributeError:
-    #    pass
-    # lines.extend( [ '    renderer=%s' % row.strip() for row in renderer.getCaption().split('\n')] )
     lines.append( "" )
 
     # output rst text for this renderer

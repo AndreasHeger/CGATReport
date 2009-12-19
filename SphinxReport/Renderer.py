@@ -27,7 +27,7 @@ import CorrespondenceAnalysis
 from ResultBlock import ResultBlock, ResultBlocks
 from odict import OrderedDict as odict
 
-from DataTree import DataTree
+from DataTree import DataTree, path2str
 
 # Some renderers will build several objects.
 # Use these two rst levels to separate individual
@@ -59,18 +59,21 @@ def buildException( stage ):
         
     if sphinxreport_add_warnings:
         EXCEPTION_TEMPLATE = '''
-.. warning:: 
+.. sphinxreporterror:: %(exception_name)s
+
    * stage: %(stage)s
    * exception: %(exception_name)s
    * message: %(exception_value)s
    * traceback: 
+
 %(exception_stack)s
 '''
 
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
         lines = traceback.format_tb( exceptionTraceback )
         # remove all the ones relate to Dispatcher.py
-        xlines = filter( lambda x: not re.search( "Dispatcher.py", x ), lines )
+        # xlines = filter( lambda x: not re.search( "Dispatcher.py", x ), lines )
+        xlines = lines
         # if nothing left, use the full traceback
         if len(xlines) > 0: lines = xlines
         # add prefix of 6 spaces
@@ -144,9 +147,10 @@ class Renderer(Reporter):
         return None
 
     def __call__(self, data, path ):
-        '''iterate over leaves in data structure.
+        '''iterate over leaves/branches in data structure.
 
-        and call ``render`` method.
+        This method will call the :meth:`render` method for 
+        each leaf/branch at level :attr:`nlevels`.
         '''
         if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
@@ -632,11 +636,9 @@ class RendererMatrix(Renderer):
 class RendererLinePlot(Renderer, Plotter):        
     '''create a line plot.
 
-    
     This :class:`Renderer` requires at least three levels:
 
     line / data / coords.
-    
     '''
     nlevels = 3
 
@@ -681,7 +683,6 @@ class RendererLinePlot(Renderer, Plotter):
         plt.ylabel( "-".join( set(ylabels) ) )
         
         return self.endPlot( plts, legend, path )
-
 
 class RendererBarPlot( RendererMatrix, Plotter):
     '''A bar plot.
@@ -1147,5 +1148,34 @@ class RendererScatterPlotWithColor( Renderer, Plotter ):
 
         return self.endPlot( plts, None, path )
 
+class RendererDebug( Renderer ):
+    '''a simple renderer, returning the type of data and the number of items at each path.'''
+
+    # only look at leaves
+    nlevels = 1
+
+    def render( self, work, path ):
+
+        # initiate output structure
+        results = ResultBlocks( title = path )
+
+        # iterate over all items at leaf
+        for key in work:
+
+            t = type(work[key])
+            try:
+                l = "%i" % len(work[key])
+            except AttributeError:
+                l = "na"
+                
+            # add a result block.
+            results.append( ResultBlock( "debug: path=%s, key=%s, type=%s, len=%s" % \
+                                             ( path2str(path),
+                                               key,
+                                               t, l), title = "") )
+
+        return results
         
+    
+    
 

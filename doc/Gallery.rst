@@ -4,14 +4,6 @@ Gallery
 
 The gallery lists examples of all plots and available renderers.
 
-
-Labeled data
-************
-
-These Renderers require :class:`DataTypes.LabeledData`. Labeled data is
-consists of a list of labels and a list of data, for
-example ``[ ("column1", "column2" ), ( 10, 20) ]``.
-
 Table
 =====
 
@@ -67,12 +59,6 @@ as pie charts.
 
    A pie plot
 
-Single column data
-******************
-
-Renderers that accept a single column of data of type :class:`DataTypes.SingleColumnData` 
-per :term:`track` and :term:`slice`, for example ``[2,3,1,3,4]``.
-
 Histogram
 =========
 
@@ -120,14 +106,6 @@ The :class:`Renderer.RendererBoxplot` class computes boxplots.
    :render: box-plot
 
    Figure caption.
-
-Multi-column data
-*****************
-
-Renderers that accept multiple columns of data of type :class:`DataTypes.SingleColumnData` 
-per :term:`track` and :term:`slice`. The data is asscociated with column headers, for example 
-``[ ('column1', 'column2'), ( ( 1,2,3), (4,5,6) )]``.
-
 
 Pairwise scatter plot
 ========================

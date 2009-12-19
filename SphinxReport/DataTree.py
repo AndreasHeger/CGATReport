@@ -9,11 +9,21 @@ def unique( iterables ):
             yield x
             s.add(x)
 
+def path2str( path ):
+    '''convert path to printable string.'''
+    return "/".join(path)
+
 class DataTree( object ):
     '''a DataTree.
 
+    A data tree is a nested dictionary. A branch or
+    leaf is identified by a :term:`path`, a tuple
+    of dictionary keys. For example: the :term:path 
+    ("data1","slice1","distance") returns the
+    data at dictionary["data1"]["slice1"]["distance"].
+
     Note that it will never return a KeyError, but
-    return and empty dictionary.
+    will return an empty dictionary for a new tree.
     '''
     
     slots = "_data"
@@ -35,6 +45,7 @@ class DataTree( object ):
         return self._data.__setitem__(key,value)
     def __len__(self):
         return self._data.__len__()
+
     def getPaths( self ):
         '''extract labels from data.
 
@@ -57,7 +68,7 @@ class DataTree( object ):
         return labels
 
     def getLeaf( self, path ):
-        '''get leaf in hierarchy at path.'''
+        '''get leaf/branch at *path*.'''
         work = self._data
         for x in path:
             try:
@@ -68,7 +79,7 @@ class DataTree( object ):
         return work
 
     def setLeaf( self, path, data ):
-        '''set leaf.'''
+        '''set leaf/branch at *path* to *data*.'''
         if len(path) == 0:
             object.__setattr__( self, "_data", data)
         else:
@@ -82,7 +93,7 @@ class DataTree( object ):
             work[path[-1]] = data
 
     def removeLeaf( self, path ):
-        '''set leaf.'''
+        '''remove leaf/branch at *path*.'''
         if len(path) == 0:
             object.__setattr__( self, "_data", odict)
         else:

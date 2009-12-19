@@ -81,9 +81,9 @@ Options for sphinxreport-build are:
 sphinxreport-clean
 ------------------
 
-The :file:`sphinxreport-clean` utility removes files from a previous built. It is called as::
+The :file:`sphinxreport-clean` utility removes files from a previous build. It is called as::
 
-   $ sphinxreport-clean [*target* [[*tracker] ...]
+   $ sphinxreport-clean [target [[tracker] ...]
 
 Where *target* can be one of 
 
@@ -94,7 +94,7 @@ Where *target* can be one of
    Remove all build information including cached data.
 
 **<tracker>**
-   The name of a tracker. All images, cached data and text elements based
+   The name of a :class:`Tracker`. All images, cached data and text elements based
    on this tracker are removed so that they will be re-build during the 
    next build. Multiple trackers can be named on the command line.
 
@@ -104,34 +104,36 @@ sphinxreport-test
 -----------------
 
 The :file:`sphinxreport-test` utility presents previews of graphs and tables. It
-can also generate templater restructured text for cutting and pasting into a 
-document. It is called as
+can also generate template restructured text for cutting and pasting into a 
+document. It is very useful for debugging trackers and tweaking parameters in order
+to build the desired plot.
 
-   $ sphinxreport-test tracker renderer
+:file:`sphinxreport-test` is called as
 
-**-t/--tracker** tracker
-   Tracker to use.
+   $ sphinxreport-test [options] [tracker] [renderer]
 
-**-a/--tracks** tracks
-   Tracks to display as a comma-separated list.
+The following example shows how an interactive session develops. First, we start by printing 
+debugging summary for the :class:`Tracker` ``SingleColumnDataExample``, to see if all is 
+as expected::
 
-**-s/--slices** slices
-   Slices to display as a comma-separated list.
+   sphinxreport-test -t SingleColumnDataExample -r debug
 
-**-r/--renderer** renderer
-   Renderer to use.
+The following command will compute stats and output a table::
 
-**-o/--option** option
-   Options for the renderer. Supply as key=value pairs (without spaces). Several **-o** options can
-   be supplied on the command line.
+   sphinxreport-test -t SingleColumnDataExample -r table -m stats
 
-**--no-print**
-   Do not print an rst text template corresponding to the displayed plots.
+The following command will group the tables by track and not by slice::
 
-**--no-plot**
-   Do not plot.
+   sphinxreport-test -t SingleColumnDataExample -r table -m stats -o groupby="track"
 
-If no command line arguments are given all Trackers are build in parallel.
+In the end, we decide to rather plot the data. The following command will compute 
+a histogram and plot as a line-plot::
+
+   sphinxreport-test -t SingleColumnDataExample -r line-plot -m histogram
+
+However, we prefer a cumulative histogram and rendering without bullets::
+
+   sphinxreport-test -t SingleColumnDataExample -r line-plot -m histogram -o tf-aggregate=cumulative -o as-lines
 
 .. _sphinxreport-gallery:
 

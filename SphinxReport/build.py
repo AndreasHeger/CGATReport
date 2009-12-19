@@ -282,6 +282,13 @@ def buildDocument( options, args ):
     """
     runCommand( "%s" % " ".join(args) )
 
+@timeit( "buildLog" )
+def buildLog( options, args ):
+    """construct pages with the error log, stats
+    and the build history.
+    """
+    runCommand( "%s" % " ".join(args) )
+
 def main():
 
     print "SphinxReport: version %s started" % str("$Id$")
@@ -309,6 +316,8 @@ def main():
     buildPlots( rst_files, options, args )
 
     buildGallery( options, args )
+
+    buildLog( options, args )
 
     buildDocument( options, args )
 

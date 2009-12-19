@@ -1,17 +1,17 @@
-****************
-DataTypes
-****************
+********
+DataTree
+********
 
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReport.DataTypes
+.. inheritance-diagram:: SphinxReport.DataTree
    :parts: 1
 
-:mod:`DataTypes`
+:mod:`DataTree`
 =======================
 
-.. automodule:: DataTypes
+.. automodule:: DataTree
    :members:
    :inherited-members:
    :show-inheritance:

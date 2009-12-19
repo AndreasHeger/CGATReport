@@ -13,6 +13,7 @@ Modules documentation
    Renderer.rst
    Plotter.rst
    Tracker.rst
+   Transformer.rst
    DataTypes.rst
 
 Indices and tables
