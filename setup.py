@@ -62,4 +62,7 @@ setup(name='SphinxReport',
 import distutils.sysconfig, stat, glob
 print "updating file permissions for scripts"
 for x in glob.glob( os.path.join(distutils.sysconfig.project_base, "sphinx*")):
-    os.chmod( x, os.stat(x).st_mode | stat.S_IWGRP ) 
+    try:
+        os.chmod( x, os.stat(x).st_mode | stat.S_IWGRP ) 
+    except OSError:
+        pass

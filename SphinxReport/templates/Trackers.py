@@ -1,15 +1,14 @@
-from SphinxReport.Tracker import Tracker
-from SphinxReport.DataTypes import *
+from SphinxReport.Tracker import *
+from SphinxReport.Renderer import *
 
 class SimpleExampleData(Tracker):
    """Simple Example Data.
    """
 
-   def getTracks( self ): return ["bicycle", "car" ]
+   def getTracks( self, subset = None ): return ["bicycle", "car" ]
 
-   @returnLabeledData
    def __call__(self, track, slice = None ):
        if track == "car":
-           return ( ("wheels", 4), ("max passengers", 5) )
+           return odict( ( ("wheels", 4), ("max passengers", 5) ) )
        elif track == "bicycle":
-           return ( ("wheels", 2), ("max passengers", 1) )
+           return odict( ( ("wheels", 2), ("max passengers", 1) ) )

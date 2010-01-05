@@ -5,6 +5,6 @@ Example
 Simple tutorial example.
 
 .. report:: Trackers.SimpleExampleData
-   :render: bars
+   :render: interleaved-bar-plot
 
    Simple example data.

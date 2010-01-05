@@ -24,6 +24,9 @@ sys.path.extend( [os.path.abspath('.'), os.path.abspath('python') ] )
 # be used.
 cachedir=os.path.abspath("_cache")
 
+# whether or not to echo errors into the document
+sphinxreport_add_warnings=True
+
 # The Database backend. Possible values are mysql, psql and sqlite
 # sql_backend="sqlite:///%s/csvdb" % os.path.abspath("..")
 

@@ -94,21 +94,22 @@ def main( argv = sys.argv ):
             print "no thumbnail directory '%s' - no gallery created" % thumbdir
             return 0
 
-        #print thumbdir
+        print "SphinxReport: collecting thumbnails from %s" % thumbdir
 
         # we search for pdfs here because there is one pdf for each
         # successful image build (2 pngs since one is high res) and the
         # mapping between py files and images is 1->many
-        for pdffile in sorted(glob.glob(os.path.join(thisdir, '*.pdf'))):
-            basepath, filename = os.path.split(pdffile)
+        for captionfile in sorted(glob.glob(os.path.join(thisdir, '*.txt'))):
+            basepath, filename = os.path.split(captionfile)
             basename, ext = os.path.splitext(filename)
             # print 'generating', subdir, basename
 
             if basename in skips: continue
 
+            pdffile = os.path.join(thisdir, '%s.pdf' % basename)
             pngfile = os.path.join(thisdir, '%s.png' % basename)
             thumbfile = os.path.join(thumbdir, '%s.png' % basename)
-            captionfile = os.path.join(thumbdir, '%s.txt' % basename)
+            # captionfile = os.path.join(thumbdir, '%s.txt' % basename)
             if not os.path.exists(pngfile): pngfile = None
             if not os.path.exists(thumbfile): thumbfile = None
 
@@ -118,8 +119,8 @@ def main( argv = sys.argv ):
                 print "could not parse %s into three components" % basename
                 continue
 
-            # print 'datasource=', datasource, "renderer=", renderer, "filename=",filename, "basename=",basename, "ext=",ext
-            # print 'pngfile', pngfile, "thumbfile", thumbfile
+            #print 'datasource=', datasource, "renderer=", renderer, "filename=",filename, "basename=",basename, "ext=",ext
+            #print 'pngfile', pngfile, "thumbfile", thumbfile
             data.append( (datasource, subdir, thisdir, renderer, basename, pngfile, thumbfile, captionfile))
     link_template = """
     <td>
@@ -143,6 +144,7 @@ def main( argv = sys.argv ):
 
     rows = [] 
 
+    print "SphinxReport: creating %i thumbnails" % len(data)
     col = 0
     last_datasource = None
     for (datasource, subdir, thisdir, renderer, basename, pngfile, thumbfile, captionfile) in data:
