@@ -145,7 +145,7 @@ class Dispatcher(Reporter):
             # before the final call to close(). Even necessary, if writeback = False
             self._cache.sync()
 
-    def getData( self, track, slice):
+    def getData( self, track, slice ):
         """get data for track and slice. Save data in persistent cache for further use."""
 
         key = ":".join( (str(track), str(slice)) )
@@ -181,54 +181,44 @@ class Dispatcher(Reporter):
 
         return result
 
-    def buildTracks( self ):
-        '''decide which tracks to collect.'''
+    def buildTracksOrSlices( self, obj, fun, input_list = None ):
+        '''determine tracks/slices from a tracker.'''
+        result = []
 
-        if hasattr( self.mTracker, "getTracks" ):
-            tracks = self.mTracker.getTracks( subset = None )
-        else:
-            # not a Tracker, hence no tracks
-            self.mTracks = []
-            return True
-
-        # do we have a subset specified
-        if self.mInputTracks != None:
-            # if it starts with -, remove
-            if self.mInputTracks[0].startswith("-"):
-                f = set(self.mTracks)
-                f.add( self.mTracks[0][1:] )
-                tracks = [ t for t in tracks if t not in f ]
-            else:
-                # get tracks again, this time with subset
-                tracks = self.mTracker.getTracks( subset = self.mInputTracks )
+        if not hasattr( obj, fun ):
+            # not a tracker, hence no tracks/slices
+            return True, result
         
-        self.mTracks = tracks
-        return False
+        f = getattr(obj, fun )
+        if input_list:
+            all_entries = set(f( subset = None ))
+
+            for s in input_list:
+                if s in all_entries:
+                    result.append( s )
+                else:
+                    result.extend( f( subset = self.mInputSlices ) )
+            else:
+                result = input_list
+        else:
+            result = f( subset = None )
+        
+        if type(result) in types.StringTypes: result=[result,]
+        return False, result
+
+    def buildTracks( self ):
+        '''determine the tracks'''
+        is_function, self.mTracks = self.buildTracksOrSlices( self.mTracker, 
+                                                              "getTracks", 
+                                                              self.mInputTracks )
+        return is_function
 
     def buildSlices( self ):
-        '''determine the slices through the data'''
-
-        # first get all slices without subsets and check if all
-        # specified slices are available. 
-
-        if not hasattr( self.mTracker, "getSlices" ):
-            # not a tracker, hence no slices
-            slices = []
-        elif self.mInputSlices:
-            all_slices = set(self.mTracker.getSlices( subset = None ))
-            for s in self.mInputSlices:
-                if s not in all_slices:
-                    slices = self.mTracker.getSlices( subset = self.mInputSlices )
-                    break
-            else:
-                slices = self.mInputSlices
-        else:
-            slices = self.mTracker.getSlices( subset = None )
-        
-        if type(slices) in types.StringTypes: slices=[slices,]
-        # if len(slices) == 0: slices=[None,]
-        
-        self.mSlices = slices
+        '''determine the slices'''
+        is_function, self.mSlices = self.buildTracksOrSlices( self.mTracker, 
+                                                              "getSlices", 
+                                                              self.mInputSlices )
+        return is_function
 
     def collect( self ):
         '''collect all the data

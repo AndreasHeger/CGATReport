@@ -225,8 +225,8 @@ class TransformerHistogram( Transformer ):
         if self.normalize_total in self.mConverters or self.normalize_max in self.mConverters:
            self.mFormat = "%6.4f" 
 
-        if "bins" in kwargs: self.mBins = kwargs["bins"]
-        if "range" in kwargs: self.mRange = kwargs["range"]
+        if "tf-bins" in kwargs: self.mBins = kwargs["tf-bins"]
+        if "tf-range" in kwargs: self.mRange = kwargs["tf-range"]
 
         f = []
         if self.normalize_total in self.mConverters: f.append( "relative" )

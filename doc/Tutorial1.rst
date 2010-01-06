@@ -41,17 +41,9 @@ Create the file :file:`Tutorial1.py` in the :file:`python` subdirectory and add
 the following code::
 
    def MyDataFunction():
-      return [ ("header1", 10), ("header2", 20) ]
+      return dict( ( ("header1", 10), ("header2", 20), ) )
 
-In the first line the module :mod:`DataTypes` is imported which
-defines decorators used for ensuring type consistency between
-data sources and ``Renderers``. This is all that is required in this
-simple example. 
-
-In the above example, the function :meth:`MyDataFunction` 
-returns ``DataTypes.LabeledData``, which is simply a list of tuples 
-of ``(key,value)`` pairs. The type of data returned requires on the renderer. 
-For example, a histogram requires a list or tuple of values. 
+This function returns a dictionary as all data sources do.
 
 Testing the data source
 =======================
@@ -62,7 +54,7 @@ data source works. To test your data source, type::
    sphinxreport-test -t MyDataFunction -r bar-plot
 
 on the command prompt in the root directory. This should create a 
-bar plot (``-r bars-plot`` or ``--renderer=bar-plot`` ) of your data source
+bar plot (``-r bar-plot`` or ``--renderer=bar-plot`` ) of your data source
 (``-t MyDataFunction`` or ``--tracker=MyDataFunction``).
 
 :file:`sphinxreport-test` will also produce the restructured text
@@ -82,16 +74,16 @@ Create the following rst file:`Tutorial1.rst`::
     My first bar blot:
 
     .. report:: Tutorial1.MyDataFunction
-       :render: bar-plot
+       :render: interleaved-bar-plot
 
        My first bar plot.
 
-The the ``report`` directive is used to insert the graph into 
+The :term:`report` directive is used to insert the graph into 
 the restructured text document. Behind the scenes, :mod:`sphinx` will call 
 the :mod:`SphinxReport` extension and request a barplot. The :mod:`SphinxReport` in 
-turn will look for a data source :meth:``MyDataFunction`` in the :file:``Tutorial1.py`` 
-that should be somewhere in your :env:``PYTHONPATH`. The default location for
-these is in the :file:``python`` subdirectory under the main installation
+turn will look for a data source :meth:``MyDataFunction`` in the module :file:``Tutorial1.py`` 
+that should be somewhere in your :env:``PYTHONPATH` or added in :file:`conf.py`.
+The default location for these is in the :file:``python`` subdirectory under the main installation
 directory. The content of the ``report`` directive is the figure or table caption.
 
 Add a link to the contents section in the :file:`index.rst` and rebuild the sources::
@@ -104,7 +96,6 @@ like.
 
 The next Tutorial (:ref:`Tutorial2`) will cover more complex
 data sources and plots.
-
 
 
 

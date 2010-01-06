@@ -5,7 +5,7 @@ Glossary
 .. glossary::
    :sorted:
 
-   render
+   report
       The restructured text directive supplied by the SphinxSqlPlot extension.
 
    track
@@ -16,6 +16,10 @@ Glossary
 
    Tracker
       A python function or functor returning data for a track, see :class:`Tracker.Tracker`.
+
+   path
+      Data is stored hierarchically in a nested dictionary. The sequence of keys to 
+      access a data item is called the path.
 
    SingleColumnData
       Return type of a :class:`Tracker.Tracker`. SingleColumnData is a single list or tuple of data,

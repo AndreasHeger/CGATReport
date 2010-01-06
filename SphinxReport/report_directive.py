@@ -13,7 +13,7 @@ Additionally, if the :include-source: option is provided, the literal
 source will be included inline, as well as a link to the source.
 """
 
-import sys, os, glob, shutil, imp, warnings, cStringIO, hashlib, re, logging, math
+import sys, os, glob, shutil, imp, warnings, cStringIO, hashlib, re, logging, math, types
 import traceback
 
 from docutils.parsers.rst import directives
@@ -26,6 +26,7 @@ except ImportError:
     align = Image.align
 
 import Renderer
+import Tracker
 import Transformer
 import Dispatcher
 import matplotlib
@@ -113,13 +114,23 @@ def getTracker( fullpath ):
 
     logging.debug( "instantiating tracker %s" % cls )
 
-    try:
-        tracker =  getattr( module, cls)()
-    except AttributeError, msg:
-        logging.critical( "instantiating tracker %s.%s failed: %s" % (module, cls, msg))
-        raise
+    # get tracker
+    obj = getattr( module, cls)
 
-    return code, tracker
+    if isinstance(obj, (type, types.ClassType)) and \
+            issubclass(obj, Tracker.Tracker) and hasattr(obj, "__call__"):
+        try:
+            tracker = obj()
+        except AttributeError, msg:
+            logging.critical( "instantiating tracker %s.%s failed: %s" % (module, cls, msg))
+            raise
+        return code, tracker
+    elif isinstance(obj, (type, types.FunctionType)):
+        return code, obj
+    elif isinstance(obj, (type, types.LambdaType)):
+        return code, obj
+
+    raise ValueError("can not make sense of tracker %s" % cls )
 
 HTML_IMAGE_FORMAT = ('main', 'png', 80)
 LATEX_IMAGE_FORMAT = () # ('pdf', 'pdf' 50)

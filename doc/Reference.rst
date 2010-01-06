@@ -15,10 +15,10 @@ ignored.
 .. glossary::
    :sorted:
 
-   bins
+   tf-bins
       int or sequence of scalars, optional
 
-      If `bins` is an int, it defines the number of equal-width
+      If `tf-bins` is an int, it defines the number of equal-width
       bins in the given range (10, by default). If `bins` is a sequence,
       it defines the bin edges, including the rightmost edge, allowing
       for non-uniform bin widths.
@@ -35,33 +35,18 @@ ignored.
 	 :tf-bins: arange(0,1,0.1)
 	 :tf-bins: log-100
 
-   range
+   tf-range
       float[,float[,float]], optional
 
       The minimum value, maximum value and the bin-size. Fields can the left empty.
       If no minimum is provided, the minimum value is min(data), the maxmimum
-      value is max(data) and the bin-size depends on the :term:`bins` parameter.
+      value is max(data) and the bin-size depends on the :term:`tf-bins` parameter.
       Values outside the range are ignored. 
 
-   cumulative
-      flag
+   tf-aggregate
+      cumulative|reverse-cumulative|normalized-max|normalized-total
 
-      convert values to cumulative values summing from low to high
-
-   reverse-cumulative
-      flag
-
-      convert values to cumulative values summing from high to low
-
-   normalized-max
-      flag
-
-      normalize values by the row maximum
-
-   normalized-total 
-      flag
-
-      normalize values by the row total
+      normalize or cumulate values in a histogram
 
    groupby   
       choice of 'tracks', 'slices', 'all'

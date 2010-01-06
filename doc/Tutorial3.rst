@@ -1,21 +1,23 @@
 .. _Tutorial3:
 
-==========================
- Tutorial 3: Using slices
-==========================
+===============================
+ Tutorial 3: Using transformers
+===============================
 
-This tutorial introduces ``slices``. ``Slices`` are subsets
-of data within tracks. To illustrate their use we will count
-word sizes of ``.py`` and ``.rst`` files.
+This tutorial introduces ``Transformers``. A :class:`Transformer` changes the
+data from a :class:`Tracker` before it is passed to a :class:`Renderer` for plotting.
+To illustrate their use we will count word sizes of ``.py`` and ``.rst`` files.
 
 ***********************
 Creating a word counter
 ***********************
 
+First we create a new data source that will count words. We will record
+the counts separately in ``.py`` and ``.rst`` files.
+
 Create the file :file:`Tutorial3.py` in the :file:`python` subdirectory and add 
 the following code::
 
-    from SphinxReport.DataTypes import *
     from SphinxReport.Tracker import *
 
     import os
@@ -23,10 +25,9 @@ the following code::
     class WordCounter(Tracker):
 	"""Counting word size."""
 
-	def getTracks( self ):
+	def getTracks( self, subset = None ):
 	    return ( "all", ".py", ".rst" )
 
-	@returnSingleColumnData
 	def __call__(self, track, slice = None ):
 	    word_sizes = []
 
@@ -40,120 +41,61 @@ the following code::
 		    fn, ext = os.path.splitext( f )
 		    if ext not in tracks: continue
 		    infile = open(os.path.join( root, f),"r")
-		    word_sizes.extend( [ len(word) for word in re.split("\s+", "".join(infile.readlines())) ] )
+		    words = re.split("\s+", "".join(infile.readlines()))
+		    word_sizes.extend( [ len(word) for word in words ] )
 		    infile.close()
 
-	    return word_sizes
+	    return { "word sizes" : word_sizes }
 
-This Tracker counts word sizes in ``.py`` and ``.rst`` files in the current directory and returns
-a list of word sizes (:class:`DataTypes.SingleColumnData`).
+This Tracker counts word sizes in ``.py``, ``.rst`` files in the current directory.
+Note that the tracker again returns a dictionary. The dictionary contains one entry
+(``word sizes``) with a list of word sizes.
+
+We can look at the word sizes returned::
 
 Testing this data source::
 
-   sphinxreport-test -t WordCounter -r histogram-plot -o range=0,100,1"
+   sphinxreport-test -t WordCounter -r table 
 
-should produce a line plot. Note the ``-o`` option to :file:`sphinxreport-test` in order to pass 
-parameters. In the above example, the histogram is computed in the range from 0 to 100 in steps of size 1.
+The output is not very informative. :mod:`SphinxReport` contains methods (objects of the type :class:`Tranformer`) 
+modify data before display. For example, the :class:`TransformerHistogram` computes a histogram (``-m histogram`` or
+``--transformer=histogram``)::
 
-*************
-Adding slices
-*************
+   sphinxreport-test -t WordCounter -r table -m histogram
 
-Let us say we want to examine the length of words starting in with vocals (``AEIOU``) compared to
-those starting with consonants. One possibility is to extend the :meth:`getTracks()` method to
-return new tracks like .py_vocals, .py_consonants, etc. A better way to do this is to use
-slices. Add the following code to :file:`Tutorial3.py`::
+The array of word size is replaced with two arrays for bins and values. Again, the tabular output is not very informative. 
+However, the histogram is easily plotted choosing a different :class:`Renderer`::
 
-    class WordCounterWithSlices(Tracker):
-	"""Counting word size."""
+   sphinxreport-test -t WordCounter -r line-plot -m histogram
 
-	def getTracks( self ):
-	    return ( "all", ".py", ".rst" )
+Most objects of type :class:`Renderer` or :class:`Transformer` accept options. Options are passed
+with :file:`sphinxreport-test` with the ``-o arg=value`` or ``--option=arg=value`` syntax.
+For example to compute the histogram in the range from 0 to 100 in steps of size 5 and to display the histogram 
+as lines, we can specify:
 
-	def getSlices( self, subset = None ):
-	    return ( "all", "vocals", "consonants")
+   sphinxreport-test -t WordCounter -r line-plot -m histogram -o range=0,100,5 -o as-lines
 
-	@returnSingleColumnData
-	def __call__(self, track, slice = None ):
-	    word_sizes = []
-
-	    if track == "all" or track == None:
-		tracks = [ ".py", ".rst" ]
-	    else:
-		tracks = [track]
-
-	    if slice == "all" or slice == None:
-		test_f = lambda x: True
-	    elif slice == "vocals":
-		test_f = lambda x: x[0].upper() in "AEIOU"
-	    elif slice == "consonants":
-		test_f = lambda x: x[0].upper() not in "BCDFGHJKLMNPQRSTVWXYZ"
-
-	    for root, dirs, files in os.walk('.'):
-		for f in files:
-		    fn, ext = os.path.splitext( f )
-		    if ext not in tracks: continue
-		    infile = open(os.path.join( root, f),"r")
-		    words = [ w for w in re.split("\s+", "".join(infile.readlines())) if len(w) > 0]
-		    word_sizes.extend( [ len(w) for w in words if test_f(w)] )
-		    infile.close()
-
-	    return word_sizes
-
-This counter again counts word sizes in ``.py`` and ``.rst`` files, but collects counts separately
-for words starting with vocals and consonants.
-
-Testing the data source::
-
-   sphinxreport-test -t WordCounterWithSlices -r histogram-plot -o range=0,1,100
-
-will now produce three plots, one for each slice. Per default, plots are grouped by ``slice``, but the grouping
-can be changed using the option ``groupby=track``::
-
-   sphinxreport-test -t WordCounterWithSlices -r histogram-plot -o range=0,1,100 -o groubpy=track
-
-Again, three plots are created, but this time there is one plot per ``track``. 
 
 ****************************************************
 Inserting the graphs in a restructured text document
 ****************************************************
 
-We can now add these three plots into a restructured text document using
+We can now add the histogram into a restructured text document using
 a single report directive block::
 
     ==========
     Tutorial 3
     ==========
 
-    Using slices
+    Plotting a histogram
+    ====================
 
-    .. report:: Tutorial3.WordCounterWithSlices
-       :render: histogram-plot
+    .. report:: Tutorial3.WordCounter
+       :render: line-plot
+       :transform: histogram
        :tf-range: 0,100,1
+       :as-lines:
 
-       Word sizes in .py and .rst files grouped by slice
-
-Additionally you can add the plots grouped by tracks::
-
-    .. report:: Tutorial3.WordCounterWithSlices
-       :render: histogram-plot
-       :tf-range: 0,100,1
-       :groupby: track
-
-       Word sizes in .py and .rst files grouped
-       by track.
-
-More fine grained control is possible. The following only shows a single plot::
-
-    .. report:: Tutorial3.WordCounterWithSlices
-       :render: histogram-plot
-       :tf-range: 0,100,1
-       :tracks: .py,.rst
-       :slices: vocals
-
-       Word sizes of words starting with vocals in .py and
-       .rst files.
+       Word sizes in .py and .rst files. 
 
 See :ref:`Tutorial3Demo` to check how the result should look like.
-
-

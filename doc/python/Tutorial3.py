@@ -1,4 +1,3 @@
-from SphinxReport.DataTypes import *
 from SphinxReport.Tracker import *
 
 import os
@@ -44,7 +43,7 @@ class WordCounterWithSlices(Tracker):
             tracks = [ ".py", ".rst" ]
         else:
             tracks = [track]
-        
+
         if slice == "all" or slice == None:
             test_f = lambda x: True
         elif slice == "vocals":

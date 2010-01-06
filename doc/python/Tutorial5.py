@@ -1,4 +1,3 @@
-from SphinxReport.DataTypes import *
 from SphinxReport.Tracker import *
 
 class ExpressionLevel(TrackerSQL):

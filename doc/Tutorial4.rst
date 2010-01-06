@@ -1,134 +1,123 @@
 .. _Tutorial4:
 
-======================
- Tutorial 4: Using SQL
-======================
+========================
+Tutorial 4: Using slices
+========================
 
-Trackers allow you to use all the flexibility of python to generate
-data sources. In the previous Tutorial :ref:`Tutorial3` the data
-was computed directly by the Tracker. More often, the data is computed
-elsewhere and stored in a database. :mod:`SphinxReport` provides a
-tracker :class:`Tracker.TrackerSQL` that facilitates obtaining data
-from an SQL database.
+Functors of type :class:`Tracker` can provide subsets of tracks. Each subset is a :term:`slice`.
+This tutorial builds on the :class:`WordCounter` example from the previous tutorial.
 
-Configuration
-=============
-
-In order to use SQL connectivity, the option ``sql_backend`` needs to be set.
-in the file :file:`conf.py`. ``sql_backend`` is passed ot the 
-:mod:`sql_alchemy` :meth:`create_engine` method to connect to an SQL database. 
-For more information see the `sqlalchemy documentation <http://www.sqlalchemy.org/docs/04/dbengine.html>`_.
-
-The tutorial assumes that `sqlite <http://www.sqlite.org/>`_ has been installed. 
-First, set ``sql_backend`` in :file:`conf.py` to ::
-
-   sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
-
-This will tell the Trackers to look for a sqlite database called ``csvdb`` in
-the root installation directory.
-
-Let us add some data to the database. Create a small python script fill.py
-in the current directory::
-
-    import random, os
-    from subprocess import Popen
-
-    cmd = 'sqlite3 csvdb "%s" '
-
-    def e( stmt ):
-	p = Popen( cmd % stmt, shell=True )
-	sts = os.waitpid(p.pid, 0)
-
-    e("CREATE TABLE experiment1_data (gene_id TEXT, function TEXT, expression INT)")
-
-    for x in range(0,200,2):
-	e( "INSERT INTO %s VALUES ('gene%2i', '%s', %f)" % ("experiment1_data", x, "housekeeping", random.gauss( 40, 5)) )
-	e( "INSERT INTO %s VALUES ('gene%2i', '%s', %f)" % ("experiment1_data", x+1, "regulation", random.gauss( 10, 5)) )
-
-    e("CREATE TABLE experiment2_data (gene_id TEXT, function TEXT, expression INT)")
-
-    for x in range(0,200,2):
-	e( "INSERT INTO %s VALUES ('gene%2i', '%s', %f)" % ("experiment2_data", x, "housekeeping", random.gauss( 50, 5)) )
-	e( "INSERT INTO %s VALUES ('gene%2i', '%s', %f)" % ("experiment2_data", x+1, "regulation", random.gauss( 20, 5)) )
-
-The script will create two tables called ``experiment1_data`` and
-``experiment2_data`` and fill them with random data. The data is thought
-to have come from two experiments measuring expression level in genes
-that are either thought to encode housekeeping functions are regulatory
-functions.
-
-Building a tracker
-==================
-
-Create the file :file:`Tutorial4.py` in the :file:`python` subdirectory and add 
-the following code::
-
-    from SphinxReport.DataTypes import *
-    from SphinxReport.Tracker import *
-
-    class ExpressionLevel(TrackerSQL):
-	"""Counting word size."""
-	mPattern = "_data$"
-
-	@returnSingleColumnData
-	def __call__(self, track, slice = None ):
-	    statement = "SELECT expression FROM %s_data" % track
-	    data = self.getValues( statement )
-	    return data
-
-Note that this tracker is derived from :class:`Tracker.TrackerSQL`. The base
-class provides two options. It implements a :meth:`getTracks` method that
-automatically queries the database for tables matching the pattern 
-in ``mPattern``. It also defines convenience functions as :meth:`getValues`.
-:meth:`getValues` executes an SQL statement that returns rows of single
-values and converts these to a python list.
-
-Testing this data source you should see one plot::
-
-   sphinxreport-test -t ExpressionLevel -r histogram-plot -o range=0,100,4
-
-The plots show a bi-modal distribution in the two experiments.
-
+*************
 Adding slices
-=============
+*************
 
-Adding slices is akin to adding ``WHERE`` clauses in SQL statements. Add the 
-following data source::
+In the :class:`WordCounter` example, let us say we want to examine the length of words starting with vocals (``AEIOU``) 
+compared to those starting with consonants. One possibility is to extend the :meth:`getTracks()` method to
+return new tracks like .py_vocals, .py_consonants, etc. This can easily become cumbersome. A better way 
+to do this is to use slices. 
 
-    class ExpressionLevelWithSlices(ExpressionLevel):
+Add the following code to :file:`Tutorial3.py`::
+
+    class WordCounterWithSlices(Tracker):
 	"""Counting word size."""
+
+	def getTracks( self, subset = None ):
+	    return ( "all", ".py", ".rst" )
 
 	def getSlices( self, subset = None ):
-	    return ( "housekeeping", "regulation" )
+	    return ( "all", "vocals", "consonants")
 
-	@returnSingleColumnData
 	def __call__(self, track, slice = None ):
-	    if not slice: where = ""
-	    else: where = "WHERE function = '%s'" % slice
-	    statement = "SELECT expression FROM %s_data %s" % (track,where)
-	    data = self.getValues( statement )
-	    return data
+	    word_sizes = []
 
-Testing this data source you should now see two plots by function::
+	    if track == "all" or track == None:
+		tracks = [ ".py", ".rst" ]
+	    else:
+		tracks = [track]
 
-   sphinxreport-test -t ExpressionLevel -r histogram-plot -o range=0,100,4
+	    if slice == "all" or slice == None:
+		test_f = lambda x: True
+	    elif slice == "vocals":
+		test_f = lambda x: x[0].upper() in "AEIOU"
+	    elif slice == "consonants":
+		test_f = lambda x: x[0].upper() not in "BCDFGHJKLMNPQRSTVWXYZ"
 
-The plot is concorporated into a restructured text document as usual::
+	    for root, dirs, files in os.walk('.'):
+		for f in files:
+		    fn, ext = os.path.splitext( f )
+		    if ext not in tracks: continue
+		    infile = open(os.path.join( root, f),"r")
+		    words = [ w for w in re.split("\s+", "".join(infile.readlines())) if len(w) > 0]
+		    word_sizes.extend( [ len(w) for w in words if test_f(w)] )
+		    infile.close()
 
-   ==========
-   Tutorial 4
-   ==========
+	    return { "word sizes" : word_sizes }
 
-   Connecting to SQL:
+This counter again counts word sizes in ``.py`` and ``.rst`` files, but collects counts separately
+for words starting with vocals and consonants. What is counted is determined by the ``slice`` option.
+:mod:`SphinxReport` will call the :meth:`getSlices` method and then call the Tracker with all combinations
+of :term:`tracks` and :term:`slices`.
 
-   .. report:: Tutorial4.ExpressionLevelWithSlices
-      :render: histogram-plot
-      :tf-range: 0,100,4
+Testing the data source::
 
-      Expression level in house-keeping and regulatory genes
-      in two experiments.
+   sphinxreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5
+
+will now produce three plots, one for each slice. Per default, plots are grouped by ``slice``, but the grouping
+can be changed using the option ``groupby=track``::
+
+   sphinxreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o groubpy=track
+
+Again, three plots are created, but this time there is one plot per ``track``. 
+
+Which :term:`tracks` and :term:`slices` are plotted can be controlled through options, too. To select only
+one or more :term:`tracks`, use the ``-o tracks=track[,...[,...]]`` option::
+
+   sphinxreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o tracks=.py
+
+To select one or more :term:`slices`, use the ``-o slices=slice[,...[,...]]`` option::
+
+   sphinxreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o slices=vocals,consonants
+
+****************************************************
+Inserting the graphs in a restructured text document
+****************************************************
+
+We can now add these three plots into a restructured text document using
+a single report directive block::
+
+    ==========
+    Tutorial 4
+    ==========
+
+    Using slices
+
+    .. report:: Tutorial3.WordCounterWithSlices
+       :render: histogram-plot
+       :tf-range: 0,100,1
+
+       Word sizes in .py and .rst files grouped by slice
+
+Additionally you can add the plots grouped by tracks::
+
+    .. report:: Tutorial3.WordCounterWithSlices
+       :render: histogram-plot
+       :tf-range: 0,100,1
+       :groupby: track
+
+       Word sizes in .py and .rst files grouped
+       by track.
+
+More fine grained control is possible. The following only shows a single plot::
+
+    .. report:: Tutorial3.WordCounterWithSlices
+       :render: histogram-plot
+       :tf-range: 0,100,1
+       :tracks: .py,.rst
+       :slices: vocals
+
+       Word sizes of words starting with vocals in .py and
+       .rst files.
 
 See :ref:`Tutorial4Demo` to check how the result should look like.
-
 
 

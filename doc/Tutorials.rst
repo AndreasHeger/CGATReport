@@ -17,6 +17,7 @@ Tutorials:
    Tutorial3.rst 
    Tutorial4.rst 
    Tutorial5.rst 
+   Tutorial6.rst 
 
 Tutorial results:
 
@@ -28,3 +29,4 @@ Tutorial results:
    Tutorial3Demo.rst 
    Tutorial4Demo.rst 
    Tutorial5Demo.rst 
+   Tutorial6Demo.rst 

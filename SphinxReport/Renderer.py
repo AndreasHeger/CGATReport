@@ -189,7 +189,7 @@ class RendererTable( Renderer ):
     def buildTable( self, data ):
         """build table from data.
 
-        If there is more than one :term:`column`, additional subrows
+        If there is more than one column, additional subrows
         are added for each.
 
         returns matrix, row_headers, col_headers
