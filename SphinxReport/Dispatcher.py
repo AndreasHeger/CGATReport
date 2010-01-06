@@ -10,23 +10,7 @@ import Renderer
 import report_directive
 from Reporter import *
 
-# Some renderers will build several objects.
-# Use these two rst levels to separate individual
-# entries. Set to None if not separation.
 VERBOSE=True
-
-# from logging import warn, log, debug, info
-# import logging
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     format='%(asctime)s %(levelname)s %(message)s',
-#     stream = open( "sphinxreport.log", "a" ) )
-
-# # for cachedir
-# cachedir = None
-# if not os.path.exists("conf.py"):
-#     raise IOError( "could not find conf.py" )
-# execfile( "conf.py" )
 
 from odict import OrderedDict as odict
 
@@ -62,20 +46,20 @@ class Dispatcher(Reporter):
         self.mRenderer = renderer
         self.mTransformers = transformers
 
-        global cachedir
+        global sphinxreport_cachedir
         self.mCacheFile = None
         self._cache = None
 
-        if cachedir:
+        if sphinxreport_cachedir:
 
             try:
-                if cachedir != None: 
-                    os.mkdir(cachedir)
+                if sphinxreport_cachedir != None: 
+                    os.mkdir(sphinxreport_cachedir)
             except OSError, msg:
                 pass
         
-            if not os.path.exists(cachedir): 
-                raise OSError( "could not create directory %s: %s" % (cachedir, msg ))
+            if not os.path.exists(sphinxreport_cachedir): 
+                raise OSError( "could not create directory %s: %s" % (sphinxreport_cachedir, msg ))
 
                 
             modulename = os.path.split(tracker.__class__.__module__)[1]
@@ -85,7 +69,7 @@ class Dispatcher(Reporter):
             else:
                 name = tracker.__class__.__name__
 
-            self.mCacheFile = os.path.join( cachedir, 
+            self.mCacheFile = os.path.join( sphinxreport_cachedir, 
                                             report_directive.quoted( ".".join((modulename,name))))
                                                                                
             # on Windows XP, the shelve does not work, work without cache

@@ -735,6 +735,7 @@ def setup(app):
     setup.app = app
     setup.config = app.config
     setup.confdir = app.confdir
+    app.add_config_value('sphinxreport_show_warnings', True, False)
 
 report_directive.__doc__ = __doc__
 

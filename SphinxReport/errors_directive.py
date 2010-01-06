@@ -82,7 +82,7 @@ class SphinxreportErrorList(Directive):
 
 
 def process_sphinxreporterror_nodes(app, doctree, fromdocname):
-    if not app.config['sphinxreporterror_include_sphinxreporterrors']:
+    if not app.config['sphinxreport_show_errors']:
         for node in doctree.traverse(sphinxreporterror_node):
             node.parent.remove(node)
 
@@ -94,7 +94,7 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
         env.sphinxreporterror_all_sphinxreporterrors = []
 
     for node in doctree.traverse(sphinxreporterrorlist):
-        if not app.config['sphinxreporterror_include_sphinxreporterrors']:
+        if not app.config['sphinxreport_show_errors']:
             node.replace_self([])
             continue
 
@@ -171,7 +171,7 @@ def depart_sphinxreporterror_node(self, node):
     self.depart_admonition(node)
 
 def setup(app):
-    app.add_config_value('sphinxreporterror_include_sphinxreporterrors', False, False)
+    app.add_config_value('sphinxreport_show_errors', True, False)
 
     app.add_node(sphinxreporterrorlist)
     app.add_node(sphinxreporterror_node,
@@ -179,8 +179,8 @@ def setup(app):
                  latex=(visit_sphinxreporterror_node, depart_sphinxreporterror_node),
                  text=(visit_sphinxreporterror_node, depart_sphinxreporterror_node))
 
-    app.add_directive('sphinxreporterror', SphinxreportError)
-    app.add_directive('sphinxreporterrorlist', SphinxreportErrorList)
+    app.add_directive('error', SphinxreportError)
+    app.add_directive('errorlist', SphinxreportErrorList)
     app.connect('doctree-resolved', process_sphinxreporterror_nodes)
     app.connect('env-purge-doc', purge_sphinxreporterrors)
 

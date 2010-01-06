@@ -2,4 +2,4 @@
 Errors
 ======
 
-.. sphinxreporterrorlist::
+.. errorlist::

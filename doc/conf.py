@@ -23,15 +23,13 @@ sys.path.extend( [os.path.join('..', 'SphinxReport'),
 
 # The cachedir holding the data from the Trackers. If not defined, no cache will 
 # be used.
-cachedir=os.path.abspath("_cache")
+sphinxreport_cachedir=os.path.abspath("_cache")
 
 # The Database backend. Possible values are mysql, psql and sqlite
 sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 
-# add warnings into the document
-sphinxreport_add_warnings = True
-
-sphinxreporterror_include_sphinxreporterrors = True
+# add errors into the document
+sphinxreport_show_errors = True
 
 # -- General configuration -----------------------------------------------------
 

@@ -18,6 +18,10 @@ Contents:
    pipeline/PipelineTest.rst
    python/Trackers.rst
 
+Errors:
+
+.. errorlist::
+
 Indices and tables
 ==================
 

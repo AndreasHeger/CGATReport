@@ -61,6 +61,11 @@ class ResultBlock:
     def __str__(self):
         return "\n\n".join( (self.title, self.text) )
 
+class EmptyResultBlock(ResultBlock):
+    '''place-holder for empty results.'''
+    def __init__( self, title ):
+        ResultBlock.__init__( self, "no data", title )
+
 class ResultBlocks(object):
     '''
     '''

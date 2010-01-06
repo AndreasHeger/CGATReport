@@ -164,9 +164,9 @@ Caching
 Extracting data from a database potentially takes much time if a lot of processing
 is involved or the data set is large. To speed up the writing process :mod:`SphinxReport`
 is able to cache function calls to a :term:`Tracker` if the configuration variable
-``cachedir`` is set, for example to::
+``sphinxreport_cachedir`` is set, for example to::
 
-   cachedir=os.path.abspath("_cache")
+   sphinxreport_cachedir=os.path.abspath("_cache")
 
 Enabling caching will speed up the build process considerably, in particular as
 :ref:`sphinxreport-build` can make use of parallel data gathering and plotting.

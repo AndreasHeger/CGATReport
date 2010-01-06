@@ -22,24 +22,27 @@ sys.path.extend( [os.path.abspath('.'), os.path.abspath('python') ] )
 
 # The cachedir holding the data from the Trackers. If not defined, no cache will 
 # be used.
-cachedir=os.path.abspath("_cache")
+sphinxreport_cachedir=os.path.abspath("_cache")
 
 # whether or not to echo errors into the document
-sphinxreport_add_warnings=True
+sphinxreport_show_errors = True
 
 # The Database backend. Possible values are mysql, psql and sqlite
-# sql_backend="sqlite:///%s/csvdb" % os.path.abspath("..")
-
+# sphinxreport_backend="sqlite:///%s/csvdb" % os.path.abspath("..")
 
 # -- Sphinx configuration ------------------------------------------------------
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.coverage', 
-              'sphinx.ext.pngmath', 'sphinx.ext.ifconfig',
+extensions = ['sphinx.ext.autodoc', 
+              'sphinx.ext.doctest', 
+              'sphinx.ext.coverage', 
+              'sphinx.ext.pngmath', 
+              'sphinx.ext.ifconfig',
               'SphinxReport.only_directives', 
               'SphinxReport.report_directive',
+              'SphinxReport.errors_directive',
               'SphinxReport.inheritance_diagram',
               ]
 

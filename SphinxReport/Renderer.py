@@ -24,30 +24,10 @@ import Histogram
 import collections
 import CorrespondenceAnalysis
 
-from ResultBlock import ResultBlock, ResultBlocks
+from ResultBlock import ResultBlock, EmptyResultBlock, ResultBlocks
 from odict import OrderedDict as odict
 
 from DataTree import DataTree, path2str
-
-# Some renderers will build several objects.
-# Use these two rst levels to separate individual
-# entries. Set to None if not separation.
-SECTION_TOKEN = "@"
-SUBSECTION_TOKEN = "^"
-
-VERBOSE=True
-
-# from logging import warn, log, debug, info
-# import logging
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     format='%(asctime)s %(levelname)s %(message)s',
-#     stream = open( "sphinxreport.log", "a" ) )
-
-# # for cachedir
-# if not os.path.exists("conf.py"):
-#     raise IOError( "could not find conf.py" )
-# execfile( "conf.py" )
 
 from Reporter import *
 
@@ -57,9 +37,9 @@ def buildException( stage ):
     It uses the last exception.
     '''
         
-    if sphinxreport_add_warnings:
+    if sphinxreport_show_errors:
         EXCEPTION_TEMPLATE = '''
-.. sphinxreporterror:: %(exception_name)s
+.. error:: %(exception_name)s
 
    * stage: %(stage)s
    * exception: %(exception_name)s
@@ -72,8 +52,7 @@ def buildException( stage ):
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
         lines = traceback.format_tb( exceptionTraceback )
         # remove all the ones relate to Dispatcher.py
-        # xlines = filter( lambda x: not re.search( "Dispatcher.py", x ), lines )
-        xlines = lines
+        xlines = filter( lambda x: not re.search( "Dispatcher.py", x ), lines )
         # if nothing left, use the full traceback
         if len(xlines) > 0: lines = xlines
         # add prefix of 6 spaces
@@ -154,13 +133,16 @@ class Renderer(Reporter):
         '''
         if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
+        result = ResultBlocks( title = path2str(path) )
+
         labels = data.getPaths()
-        assert len(labels) >= self.nlevels, "at %s: expected at least %i levels - got %i: %s" %\
-            (str(path), self.nlevels, len(labels), str(labels))
-        
+        if len(labels) < self.nlevels:
+            warn( "at %s: expected at least %i levels - got %i: %s" %\
+                      (str(path), self.nlevels, len(labels), str(labels)) )
+            result.append( EmptyResultBlock( title = path2str(path) ) )
+            return result
+
         paths = list(itertools.product( *labels[:-self.nlevels] ))
-        
-        result = ResultBlocks( title = "/".join(path) )
 
         for p in paths:
             work = data.getLeaf( p )
