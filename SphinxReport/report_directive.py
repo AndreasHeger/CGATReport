@@ -143,7 +143,9 @@ ADDITIONAL_FORMATS = [
 # Map transformer names to their implementations.
 MAP_TRANSFORMER = { 
     'stats' : Transformer.TransformerStats, 
-    'correlation' : Transformer.TransformerCorrelation, 
+    'correlation' : Transformer.TransformerCorrelationPearson,
+    'pearson' : Transformer.TransformerCorrelationPearson,
+    'spearman' : Transformer.TransformerCorrelationSpearman, 
     'histogram' : Transformer.TransformerHistogram,
     'filter' : Transformer.TransformerFilter,
     'select' : Transformer.TransformerSelect,

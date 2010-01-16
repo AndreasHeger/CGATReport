@@ -161,6 +161,10 @@ class TrackerSQL( Tracker ):
         else:
             return sorted_tables
 
+    def getTableNames( self, pattern = None ):
+        '''return a list of tablenames.'''
+        return [x.name for x in self.getTables( pattern ) ]
+
     def hasTable( self, name ):
         """return table with name *name*."""
         self.__connect()

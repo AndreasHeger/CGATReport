@@ -463,7 +463,7 @@ def filterNone( args, missing = ("na", "Nan", None, ""), dtype = numpy.float ):
 
     return [ numpy.array( [x[i] for i in range(len(x)) if not mask[i]], dtype = dtype) for x in args ]
 
-def doCorrelationTest( xvals, yvals ):
+def doCorrelationTest( xvals, yvals, method = "pearson" ):
     """compute correlation between x and y.
 
     Raises a value-error if there are not enough observations.
@@ -481,11 +481,19 @@ def doCorrelationTest( xvals, yvals ):
 
     x, y = filterMasked( xvals, yvals )
 
-    result = CorrelationTest( s_result = scipy.stats.pearsonr( x, y ),
-                              method = "pearson",
+    if method == "pearson":
+        s_result = scipy.stats.pearsonr( x, y )
+    elif method == "spearman":
+        s_result = scipy.stats.spearmanr( x, y )
+    else:
+        raise ValueError("unknown method %s" % (method))
+    
+    result = CorrelationTest( s_result = s_result,
+                              method = method,
                               nobservations = len(x))
 
     return result
+
 
 ###################################################################
 ###################################################################

@@ -158,11 +158,12 @@ class TransformerStats( Transformer ):
 
 class TransformerCorrelation( Transformer ):
     '''for each pair of columns on the lowest level compute
-    the correlation coefficient and other stats.
+    the pearson correlation coefficient and other stats.
     '''
 
     nlevels = 1
-
+    method = None
+    
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
 
@@ -185,7 +186,7 @@ class TransformerCorrelation( Transformer ):
             yvals = [yvals[i] for i in take ]
 
             try:
-                result = Stats.doCorrelationTest( xvals, yvals )
+                result = Stats.doCorrelationTest( xvals, yvals, method = self.method )
             except ValueError, msg:
                 continue
 
@@ -194,6 +195,20 @@ class TransformerCorrelation( Transformer ):
 
         return new_data
 
+class TransformerCorrelationPearson( TransformerCorrelation ):
+    '''for each pair of columns on the lowest level compute
+    the spearman correlation coefficient and other stats.
+    '''
+
+    method = "pearson"
+
+class TransformerCorrelationSpearman( TransformerCorrelation ):
+    '''for each pair of columns on the lowest level compute
+    the spearman correlation coefficient and other stats.
+    '''
+
+    method = "spearman"
+    
 class TransformerHistogram( Transformer ):
     '''compute a histogram of values.'''
 

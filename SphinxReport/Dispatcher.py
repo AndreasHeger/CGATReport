@@ -197,9 +197,9 @@ class Dispatcher(Reporter):
                 if s in all_entries:
                     result.append( s )
                 else:
-                    result.extend( f( subset = self.mInputSlices ) )
-            else:
-                result = input_list
+                    result.extend( f( subset = [s,] ) )
+#            else:
+#                result = input_list
         else:
             result = f( subset = None )
         

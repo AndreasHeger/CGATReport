@@ -89,7 +89,7 @@ class Renderer(Reporter):
 
     For example, a renderer might return two figures as::
 
-       return [ "## Figure 1 ##", "## Figure 2 ##" ]``
+       return [ "## Figure 1 ##", "## Figure 2 ##" ]
 
     or just some text::
 
@@ -101,7 +101,6 @@ class Renderer(Reporter):
     This class adds the following options to the :term:`render` directive.
 
        :term:`groupby`: group data by :term:`track` or :term:`slice`.
-
     """
 
     # required levels in nested dictionary
@@ -239,6 +238,10 @@ class RendererTable( Renderer ):
             row_headers, col_headers = col_headers, row_headers
             matrix = zip( *matrix )
 
+        # convert headers to string (might be None)
+        row_headers = [str(x) for x in row_headers]
+        col_headers = [str(x) for x in col_headers]
+        
         return matrix, row_headers, col_headers
 
     def __call__(self, data, path):
@@ -591,6 +594,10 @@ class RendererMatrix(Renderer):
         if self.mConverters and apply_transformations:
             for converter in self.mConverters: 
                 matrix, rows, columns = converter(matrix, rows, columns)
+
+        # convert rows/columns to str (might be None)
+        rows = [ str(x) for x in rows ]
+        columns = [ str(x) for x in columns ]
 
         return matrix, rows, columns
 
@@ -1149,11 +1156,13 @@ class RendererDebug( Renderer ):
                 l = "%i" % len(work[key])
             except AttributeError:
                 l = "na"
+            except TypeError:
+                l = "na"
                 
             # add a result block.
             results.append( ResultBlock( "debug: path=%s, key=%s, type=%s, len=%s" % \
                                              ( path2str(path),
-                                               key,
+                                               str(key),
                                                t, l), title = "") )
 
         return results
