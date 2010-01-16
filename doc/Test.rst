@@ -13,4 +13,5 @@ Here are various examples to test pathological plots.
    TestMultilinePlot.rst
    TestErrors.rst
    TestExceptions.rst
+   TestParameter.rst
    TestSandbox.rst

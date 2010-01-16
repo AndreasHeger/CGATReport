@@ -43,6 +43,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo', 
               'SphinxReport.inheritance_diagram', 
               'SphinxReport.only_directives', 
+              'SphinxReport.roles', 
               'SphinxReport.errors_directive', 
               'SphinxReport.report_directive' ]
 
