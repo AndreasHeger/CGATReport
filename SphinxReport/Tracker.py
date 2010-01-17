@@ -1,17 +1,17 @@
 from __future__ import with_statement 
 
-import os, sys, re, types, copy, warnings
+import os, sys, re, types, copy, warnings, ConfigParser
 
 import sqlalchemy
 import sqlalchemy.exceptions
+
+from odict import OrderedDict as odict
 
 # for sqldatabase
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
 
 execfile( "conf.py" )
-
-from DataTypes import *
 
 class SQLError( Exception ):
     pass
@@ -96,8 +96,10 @@ class TrackerCSV( Tracker ):
 
     def getTracks(self, subset = None ):
         return ["all",]
+
     def getSlices(self, subset = None ):
         return []
+
     def __call__(self, track, slice = None):
         """return a data structure for track :param: track and slice :slice:"""
         raise NotImplementedError("not implemented")
@@ -277,7 +279,6 @@ class TrackerSQLCheckTables(TrackerSQL):
 
         return [ x for x in self.getTables() if keep(x.name) ]
         
-    @returnLabeledData
     def __call__(self, track, slice = None):
         """count number of unique occurances of field *slice* in tables matching *track*."""
 
@@ -289,7 +290,7 @@ class TrackerSQLCheckTables(TrackerSQL):
             field = re.sub( self.mIncludePattern % track, "", table.name ).strip( "._:@$!?#")
             data.append( (field,
                           self.getValue( "SELECT COUNT(DISTINCT %s) FROM %s" % (slice, table.name) ) ) )
-        return data
+        return odict( data )
         
 class TrackerSQLCheckTable(TrackerSQL):
     """Tracker that counts existing entries in a table.
@@ -305,7 +306,6 @@ class TrackerSQLCheckTable(TrackerSQL):
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
 
-    @returnLabeledData
     def __call__(self, track, slice = None):
         """count number of entries in a table."""
 
@@ -322,6 +322,40 @@ class TrackerSQLCheckTable(TrackerSQL):
         for column in [x.name for x in table.columns]:
             if fskip( column ): continue
             data.append( (column, self.getValue( statement % (column, table.name, column) ) ) )
-        return data
+        return odict( data )
 
+class Config( Tracker ):
+    '''tracker providing config values.'''
 
+    def __init__(self, *args, **kwargs ):
+        Tracker.__init__(self, *args, **kwargs )
+
+    def __call__(self, track, slice = None):
+        """count number of entries in a table."""
+
+        config = ConfigParser.ConfigParser()
+        config.readfp(open(track),"r")
+
+        result = odict()
+
+        def convert( value ):
+            '''convert a value to int, float or str.'''
+            rx_int = re.compile("^\s*[+-]*[0-9]+\s*$")
+            rx_float = re.compile("^\s*[+-]*[0-9.]+[.+\-eE][+-]*[0-9.]*\s*$")
+
+            if value == None: return value
+
+            if rx_int.match( value ):
+                return int(value), "int"
+            elif rx_float.match( value ):
+                return float(value), "float"
+            return value, "string"
+
+        for section in config.sections():
+            x = odict()
+            for key,value in config.items( section ):
+                x[key] = odict( zip( ("value", "type" ), convert( value )) )
+            result[section] = x
+        
+        return result
+        

@@ -49,7 +49,7 @@ The example below creates a simple renderer::
 	    return results
 
    
-In order to activate this renderer, it has to be entered to the :var:`MAP_RENDERER`
+In order to activate this renderer, it has to be entered to the :data:`MAP_RENDERER`
 dictionary in the file :file:`report_directive.py`.
 
 :mod:`Renderer`

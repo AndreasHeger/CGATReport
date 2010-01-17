@@ -24,12 +24,11 @@ import Histogram
 import collections
 import CorrespondenceAnalysis
 
-from ResultBlock import ResultBlock, EmptyResultBlock, ResultBlocks
-from odict import OrderedDict as odict
-
-from DataTree import DataTree, path2str
-
-from Reporter import *
+from SphinxReport.ResultBlock import ResultBlock, EmptyResultBlock, ResultBlocks
+from SphinxReport.odict import OrderedDict as odict
+from SphinxReport.DataTree import DataTree, path2str
+from SphinxReport.Reporter import *
+from SphinxReport import Utils
 
 def buildException( stage ):
     '''build an exception text element.
@@ -98,7 +97,7 @@ class Renderer(Reporter):
     The base class implements querying the :attr:`mTracker` for tracks and 
     slices and then asking the tracker for data grouped by tracks or slices.
 
-    This class adds the following options to the :term:`render` directive.
+    This class adds the following options to the :term:`report` directive.
 
        :term:`groupby`: group data by :term:`track` or :term:`slice`.
     """
@@ -293,7 +292,7 @@ class RendererMatrix(Renderer):
 
     It implements column-wise and row-wise transformations.
 
-    This class adds the following options to the :term:`render` directive.
+    This class adds the following options to the :term:`report` directive.
 
         :term:`transform-matrix`: apply a matrix transform. Possible choices are:
 
@@ -992,7 +991,7 @@ class RendererBoxPlot(Renderer, Plotter):
             assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
 
             for label, values in data.iteritems():
-                assert isArray( values ), "work is of type '%s'" % values
+                assert Utils.isArray( values ), "work is of type '%s'" % values
                 all_data.append( [ x for x in values if x != None ] )
                 legend.append( "/".join((line,label)))
 
@@ -1064,7 +1063,7 @@ class RendererScatterPlot(Renderer, Plotter):
 class RendererScatterPlotWithColor( Renderer, Plotter ):
     """Scatter plot with individual colors for each dot.
 
-    This class adds the following options to the :term:`render` directive:
+    This class adds the following options to the :term:`report` directive:
 
        :term:`colorbar-format`: numerical format for the colorbar.
 

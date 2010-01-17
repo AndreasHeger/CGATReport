@@ -2,9 +2,6 @@
 Plotter
 ****************
 
-.. todo::
-   Deal better the legends of large matrices
-
 Inheritance diagram
 ===================
 

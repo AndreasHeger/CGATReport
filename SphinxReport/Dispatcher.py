@@ -4,11 +4,11 @@ import bsddb.db
 import sqlalchemy
 import collections
 
-from ResultBlock import ResultBlock, ResultBlocks
-import DataTree
-import Renderer
-import report_directive
-from Reporter import *
+from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
+from SphinxReport import DataTree
+from SphinxReport import Renderer
+from SphinxReport.Reporter import *
+from SphinxReport import Utils
 
 VERBOSE=True
 
@@ -70,7 +70,7 @@ class Dispatcher(Reporter):
                 name = tracker.__class__.__name__
 
             self.mCacheFile = os.path.join( sphinxreport_cachedir, 
-                                            report_directive.quoted( ".".join((modulename,name))))
+                                            Utils.quoted( ".".join((modulename,name))))
                                                                                
             # on Windows XP, the shelve does not work, work without cache
             try:

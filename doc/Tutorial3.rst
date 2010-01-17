@@ -51,13 +51,11 @@ This Tracker counts word sizes in ``.py``, ``.rst`` files in the current directo
 Note that the tracker again returns a dictionary. The dictionary contains one entry
 (``word sizes``) with a list of word sizes.
 
-We can look at the word sizes returned::
-
 Testing this data source::
 
    sphinxreport-test -t WordCounter -r table 
 
-The output is not very informative. :mod:`SphinxReport` contains methods (objects of the type :class:`Tranformer`) 
+The tabular output is not very informative in this case. :mod:`SphinxReport` contains methods (objects of the type :class:`Tranformer`) 
 modify data before display. For example, the :class:`TransformerHistogram` computes a histogram (``-m histogram`` or
 ``--transformer=histogram``)::
 
@@ -71,7 +69,7 @@ However, the histogram is easily plotted choosing a different :class:`Renderer`:
 Most objects of type :class:`Renderer` or :class:`Transformer` accept options. Options are passed
 with :file:`sphinxreport-test` with the ``-o arg=value`` or ``--option=arg=value`` syntax.
 For example to compute the histogram in the range from 0 to 100 in steps of size 5 and to display the histogram 
-as lines, we can specify:
+as lines, we can specify::
 
    sphinxreport-test -t WordCounter -r line-plot -m histogram -o range=0,100,5 -o as-lines
 

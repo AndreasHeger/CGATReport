@@ -140,36 +140,17 @@ def getTrackers( fullpath ):
     name, cls = os.path.splitext(fullpath)
     # remove leading '.'
     cls = cls[1:]
+
     module_name = os.path.basename(name)
-    
-    try:
-        (file, pathname, description) = imp.find_module( module_name )
-    except ImportError, msg:
-        print "could not find module %s" % name
-        raise
-
-    if file == None: return []
-
-    stdout = sys.stdout
-    sys.stdout = cStringIO.StringIO()
-    try:
-        module = imp.load_module(name, file, pathname, description )
-    except:
-        raise
-    finally:
-        file.close()
-        sys.stdout = stdout
+    module, pathname = report_directive.getModule( name )
 
     trackers = []
 
     for name in dir(module):
         obj = getattr(module, name)
-        if isinstance(obj, (type, types.ClassType)) and \
-                issubclass(obj, Tracker) and hasattr(obj, "__call__"):
+        if report_directive.isTracker( obj ):
             trackers.append( (name, obj, module_name, True) )
-        elif isinstance(obj, (type, types.FunctionType)):
-            trackers.append( (name, obj, module_name, False) )
-        elif isinstance(obj, (type, types.LambdaType)):
+        else:
             trackers.append( (name, obj, module_name, False) )
             
     return trackers

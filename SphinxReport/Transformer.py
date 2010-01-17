@@ -2,9 +2,11 @@ import Stats
 from logging import warn, log, debug, info
 import itertools
 import numpy
-import odict
-from DataTree import DataTree
 from numpy import arange
+
+from SphinxReport.odict import OrderedDict as odict
+from SphinxReport.DataTree import DataTree
+
 
 # ignore numpy histogram warnings in versions 1.3
 import warnings
@@ -116,8 +118,8 @@ class TransformerCombinations( Transformer ):
         debug( "%s: called" % str(self))
 
         vals =  data.keys()
-        new_data = odict.OrderedDict()
-        for x in vals: new_data[x] = odict.OrderedDict()
+        new_data = odict()
+        for x in vals: new_data[x] = odict()
 
         for x1 in range(len(vals)-1):
             n1 = vals[x1]
@@ -130,7 +132,7 @@ class TransformerCombinations( Transformer ):
                 ## check if array?
 
                 new_data[n1][n2] =\
-                    odict.OrderedDict( (\
+                    odict( (\
                         ("%s/%s" % (n1,self.fields), d1),
                         ("%s/%s" % (n2,self.fields), d2), ) )
 
@@ -175,9 +177,9 @@ class TransformerCorrelation( Transformer ):
 
         pairs = itertools.combinations( data.keys(), 2)
 
-        new_data = odict.OrderedDict()
+        new_data = odict()
 
-        for x in data.keys(): new_data[x] = odict.OrderedDict()
+        for x in data.keys(): new_data[x] = odict()
         
         for x,y in pairs:
             xvals, yvals = data[x], data[y]
@@ -351,7 +353,7 @@ class TransformerHistogram( Transformer ):
             bins, values = self.toHistogram(values)
             if bins != None:
                 for converter in self.mConverters: values = converter(values)
-                data[header] =  odict.OrderedDict( ((header,bins), ("frequency", values)) )
+                data[header] =  odict( ((header,bins), ("frequency", values)) )
             else:
                 del data[header]
         return data

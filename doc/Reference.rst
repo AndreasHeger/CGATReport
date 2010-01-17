@@ -82,6 +82,11 @@ ignored.
       add an explicit label to the Y-axis. The default is to use the
       one supplied by the :class:Renderer.
 
+   add-title
+      flag
+
+      add title within in each plot
+
    add-total 
       flag
 

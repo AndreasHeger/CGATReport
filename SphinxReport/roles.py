@@ -1,11 +1,12 @@
 import re
-import report_directive
 
 from docutils import nodes, utils
 from docutils.parsers.rst import roles
 
 from sphinx import addnodes
 from sphinx.util import ws_re, caption_ref_re
+
+from SphinxReport import Utils
 
 default_settings = {
     'pubmed_url' : "http://www.ncbi.nlm.nih.gov/pubmed/%i" }
@@ -31,28 +32,28 @@ def pmid_reference_role(role, rawtext, text, lineno, inliner,
 
     return [node], []
 
-def parameter_role( role, rawtext, text, lineno, inliner,
-                   options={}, content=[]):
+def param_role( role, rawtext, text, lineno, inliner,
+                options={}, content=[]):
     
     parts = text.split(".")
 
     if len(parts) < 2:
         msg = inliner.reporter.error(
-            'parameter should be in class.value format '
-            '"%s" is invalid.' % text, line=lineno)
+            ':param: should be in class.value format '
+            ': "%s" is invalid.' % text, line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 
     class_name, parameter_name = ".".join(parts[:-1]), parts[-1]
 
     try:
-        code, tracker = report_directive.getTracker( class_name )
+        code, tracker = Utils.getTracker( class_name )
     except AttributeError:
         tracker = None
 
     if not tracker:
         msg = inliner.reporter.error(
-            'parameter can not find class '
+            ':param: can not find class '
             '"%s".' % class_name, line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
@@ -61,8 +62,8 @@ def parameter_role( role, rawtext, text, lineno, inliner,
         value = getattr( tracker, parameter_name )
     except AttributeError:
         msg = inliner.reporter.error(
-            'parameter can not find variable %s in '
-            '"%s" is invalid.' % (parameter_name, class_name), line=lineno)
+            ':param: can not find variable %s in '
+            ': "%s" is invalid.' % (parameter_name, class_name), line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 
@@ -77,7 +78,7 @@ def parameter_role( role, rawtext, text, lineno, inliner,
     return [node], []
 
 roles.register_local_role('pmid', pmid_reference_role)
-roles.register_local_role('parameter', parameter_role)
+roles.register_local_role('param', param_role)
 
 def setup( self ):
     pass

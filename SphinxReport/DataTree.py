@@ -1,6 +1,7 @@
-from odict import OrderedDict as odict
 import collections
 from logging import warn, log, debug, info
+
+from SphinxReport.odict import OrderedDict as odict
 
 def unique( iterables ):
     s = set()

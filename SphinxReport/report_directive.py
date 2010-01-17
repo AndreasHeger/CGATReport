@@ -25,12 +25,13 @@ except ImportError:
     from docutils.parsers.rst.directives.images import Image
     align = Image.align
 
-import Renderer
-import Tracker
-import Transformer
-import Dispatcher
+from SphinxReport import Renderer
+from SphinxReport import Tracker
+from SphinxReport import Transformer
+from SphinxReport import Dispatcher
+from SphinxReport import Utils
 import matplotlib
-from ResultBlock import ResultBlock, ResultBlocks
+from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 
 SPHINXREPORT_DEBUG = False
 
@@ -44,93 +45,6 @@ SEPARATOR="@"
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 from matplotlib import _pylab_helpers
-
-class memoized(object):
-   """Decorator that caches a function's return value each time it is called.
-   If called later with the same arguments, the cached value is returned, and
-   not re-evaluated.
-   """
-   def __init__(self, func):
-      self.func = func
-      self.cache = {}
-   def __call__(self, *args):
-      try:
-         return self.cache[args]
-      except KeyError:
-         self.cache[args] = value = self.func(*args)
-         return value
-      except TypeError:
-         # uncachable -- for instance, passing a list as an argument.
-         # Better to not cache than to blow up entirely.
-         return self.func(*args)
-   def __repr__(self):
-      """Return the function's docstring."""
-      return self.func.__doc__
-
-@memoized
-def getModule( name ):
-    """load module in fullpath
-    """
-    # remove leading '.'
-    logging.debug( "getModule %s" % name )
-    (file, pathname, description) = imp.find_module( name )
-    stdout = sys.stdout
-    sys.stdout = cStringIO.StringIO()
-    try:
-        module = imp.load_module(name, file, pathname, description )
-    except:
-        raise
-    finally:
-        file.close()
-        sys.stdout = stdout
-
-    return module, pathname
-
-@memoized
-def getTracker( fullpath ):
-    """retrieve an instantiated tracker and its associated code.
-    
-    returns a tuple (code, tracker).
-    """
-    name, cls = os.path.splitext(fullpath)
-    # remove leading '.'
-    cls = cls[1:]
-
-    module, pathname = getModule( name )
-
-    # extract code
-    code = []
-    infile = open( pathname, "r")
-    for line in infile:
-        x = re.search( "(\s*)class\s+%s" % cls, line ) 
-        if x:
-            indent = len( x.groups()[0] )
-            code.append( line )
-            break
-    for line in infile:
-        if len( re.match( "^(\s*)", line).groups()[0] ) <= indent: break
-        code.append(line)
-    infile.close()
-
-    logging.debug( "instantiating tracker %s" % cls )
-
-    # get tracker
-    obj = getattr( module, cls)
-
-    if isinstance(obj, (type, types.ClassType)) and \
-            issubclass(obj, Tracker.Tracker) and hasattr(obj, "__call__"):
-        try:
-            tracker = obj()
-        except AttributeError, msg:
-            logging.critical( "instantiating tracker %s.%s failed: %s" % (module, cls, msg))
-            raise
-        return code, tracker
-    elif isinstance(obj, (type, types.FunctionType)):
-        return code, obj
-    elif isinstance(obj, (type, types.LambdaType)):
-        return code, obj
-
-    raise ValueError("can not make sense of tracker %s" % cls )
 
 HTML_IMAGE_FORMAT = ('main', 'png', 80)
 LATEX_IMAGE_FORMAT = () # ('pdf', 'pdf' 50)
@@ -233,10 +147,6 @@ TEMPLATE_TEXT = """
    [`source code <%(linked_codename)s>`__]
 
 """
-
-# latex does not permit a "." for image files - replace it with "-"
-def quoted( fn ):
-    return re.sub( "[.]", "-", fn )
 
 def out_of_date(original, derived):
     """
@@ -458,7 +368,7 @@ def buildPaths( reference ):
     basedir, fname = os.path.split(reference)
     basename, ext = os.path.splitext(fname)
     outdir = os.path.join('_static', 'report_directive', basedir)
-    codename = quoted(reference) + ".code"
+    codename = Utils.quoted(reference) + ".code"
 
     return basedir, fname, basename, ext, outdir, codename
 
@@ -547,7 +457,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                                         str(dispatcher_options) +\
                                         str(transformer_names) ).hexdigest()
 
-        template_name = quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
+        template_name = Utils.quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
         filename_text = os.path.join( outdir, "%s.txt" % (template_name))
 
         logging.debug( "options_hash=%s" %  options_hash)
@@ -606,7 +516,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         ########################################################
         # find the tracker
         logging.debug( "collecting tracker." )
-        code, tracker = getTracker( reference )
+        code, tracker = Utils.getTracker( reference )
         if not tracker: 
             logging.debug( "no tracker - no output from %s " % str(document) )
             raise ValueError( "tracker `%s` not found" % reference )

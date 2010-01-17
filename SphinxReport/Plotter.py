@@ -8,7 +8,7 @@ import matplotlib.backends
 import matplotlib.pyplot as plt
 import numpy
 
-from ResultBlock import ResultBlock, ResultBlocks
+from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 
 class Plotter:
     """Base class for Renderers that do simple 2D plotting.
@@ -20,7 +20,7 @@ class Plotter:
     provided that the methods :meth:`startPlot` and :meth:`endPlot`
     are called appropriately. It then inserts the appropriate place holders.
 
-    This class adds the following options to the :term:`render` directive:
+    This class adds the following options to the :term:`report` directive:
 
        :term:`logscale`: apply logscales one or more axes.
 
@@ -47,7 +47,7 @@ class Plotter:
     this control.
 
        :term:`mpl-figure`: options for matplotlib
-           ``figure `` calls().
+           ``figure`` calls().
 
        :term:`mpl-legend`: options for matplotlib
            ``legend`` calls().
@@ -278,7 +278,7 @@ class PlotterMatrix(Plotter):
     This mixin class provides convenience function for :class:`Renderer.Renderer`
     classes that plot matrices.
     
-    This class adds the following options to the :term:`render` directive:
+    This class adds the following options to the :term:`report` directive:
     
        :term:`colorbar-format`: numerical format for the colorbar.
 
