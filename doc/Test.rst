@@ -15,4 +15,5 @@ Here are various examples to test pathological plots.
    TestExceptions.rst
    TestParameter.rst
    TestConfig.rst 
+   TestTable.rst
    TestSandbox.rst

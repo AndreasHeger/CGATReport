@@ -1,5 +1,6 @@
 import re, os, sys, imp, cStringIO, types
 
+import SphinxReport
 from SphinxReport.Tracker import Tracker
 from SphinxReport.Reporter import *
 
@@ -64,10 +65,25 @@ def getModule( name ):
     """load module in fullpath
     """
     # remove leading '.'
-    logging.debug( "getModule %s" % name )
-    (file, pathname, description) = imp.find_module( name )
+    debug( "entered getModule with `%s`" % name )
+
+    parts = name.split(".")
+    # note that find_module is NOT recursive - implement later
+    if len(parts) > 1:
+        raise NotImplementedError( "hierarchical module names not implemented yet." )
+
+    # find in user specified directories
+    if name == "Tracker":
+        return SphinxReport.Tracker, os.path.join( SphinxReport.__path__[0], "Tracker.py")
+    else:
+        try:
+            (file, pathname, description) = imp.find_module( name )
+        except ImportError:
+            warn("could not find module %s" % name )        
+
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
+    debug( "got module: %s: %s, %s, %s" % (name, file, pathname, description) )
     try:
         module = imp.load_module(name, file, pathname, description )
     except:
@@ -97,7 +113,7 @@ def getCode( cls, pathname ):
     return code
 
 def isTracker( obj ):
-    '''return true if obj is a Tracker class.
+    '''return true if obj is a valid tracker.
     
     return False if it is a function object.
     raise ValueError if neither
@@ -133,7 +149,7 @@ def getTracker( fullpath ):
 
     code = getCode( cls, pathname )
 
-    logging.debug( "instantiating tracker %s" % cls )
+    debug( "instantiating tracker %s" % cls )
 
     # get tracker
     obj = getattr( module, cls)
@@ -143,7 +159,7 @@ def getTracker( fullpath ):
         try:
             obj = obj()
         except AttributeError, msg:
-            logging.critical( "instantiating tracker %s.%s failed: %s" % (module, cls, msg))
+            critical( "instantiating tracker %s.%s failed: %s" % (module, cls, msg))
             raise
         
     return code, obj

@@ -1,7 +1,6 @@
 import sys, os, re, random
 
-from SphinxReport.Tracker import Tracker
-from SphinxReport.DataTypes import returnLabeledData, returnSingleColumnData, returnMultipleColumnData, returnMultipleColumns
+from SphinxReport.Tracker import *
 
 class LongLabelsSmall( Tracker ):
     """example with long labels."""
@@ -64,3 +63,18 @@ class MultipleHistogramTest( Tracker ):
                        (range(0,self.mNumSamples),
                         [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ],
                         [ random.gauss( 0,1 ) for x in range(self.mNumSamples) ] )))
+
+
+class MultiLevelTable( Tracker ):
+
+    mNumTracks = 5
+    mNumCols = 3
+    mNumLevels = 3
+
+    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.mNumTracks)]
+
+    def __call__(self, track, slice = None ):
+        data = [ \
+            [ "value%i" % y for y in range(self.mNumLevels) ] \
+                  for z in range(self.mNumCols) ]
+        return odict( zip( ["col%i" % x for x in range(self.mNumCols)], data ) )

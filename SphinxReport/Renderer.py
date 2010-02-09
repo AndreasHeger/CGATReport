@@ -83,16 +83,7 @@ class Renderer(Reporter):
 
     When called, a Renderer and its subclasses will return blocks of
     restructured text. Images are automatically collected from matplotlib
-    and inserted at place-holders in the format ``## Figure x ##``, where
-    ``x`` is number of the figure.
-
-    For example, a renderer might return two figures as::
-
-       return [ "## Figure 1 ##", "## Figure 2 ##" ]
-
-    or just some text::
-
-       return [ "text element 1", "text element 2" ]
+    and inserted at place-holders.
 
     The base class implements querying the :attr:`mTracker` for tracks and 
     slices and then asking the tracker for data grouped by tracks or slices.
@@ -190,6 +181,9 @@ class RendererTable( Renderer ):
         If there is more than one column, additional subrows
         are added for each.
 
+        If each cell within a row is a list or tuple, multiple
+        subrows will be created as well.
+
         returns matrix, row_headers, col_headers
         """
         # if len(data) == 0: return None, None, None
@@ -207,30 +201,65 @@ class RendererTable( Renderer ):
         matrix = []
 
         debug( "%s: RendererTable: creating table with %i columns" % (id(self), len(col_headers)))
+
         ## the following can be made more efficient
         ## by better use of indices
         row_offset = 0
         row_headers = []
         for x, row in enumerate(labels[0]):
+
             first = True
             for xx, path in enumerate(paths):
-                row_data = [""] * ncols 
-                work = data.getLeaf( (row,) + path )
-                if not work: continue
-                for z, p in enumerate(path): 
-                    row_data[z] = p
-
-                for y, column in enumerate(labels[-1]):
-                    try:
-                        row_data[y+header_offset] = quote(work[column])
-                    except KeyError:
-                        pass
 
                 if first: 
                     row_headers.append( row )
                     first = False
                 else:
                     row_headers.append("")
+
+                row_data = [""] * ncols 
+
+                work = data.getLeaf( (row,) + path )
+                if not work: continue
+
+                for z, p in enumerate(path): 
+                    row_data[z] = p
+
+                # check for multi-level rows
+                is_container = True
+                max_rows = None
+                for y, column in enumerate(labels[-1]):
+                    if type(work[column]) not in Utils.ContainerTypes:
+                        is_container = False
+                        break
+                    if max_rows == None:
+                        max_rows = len( work[column])
+                    elif max_rows != len( work[column]):
+                        raise ValueError("multi-level rows - unequal lengths: %i != %i" % \
+                                             (max_rows, len(work[column])))
+                    
+
+                if is_container:
+                    # multi-level rows
+                    for z in range( max_rows ):
+                        for y, column in enumerate(labels[-1]):
+                            try:
+                                row_data[y+header_offset] = quote(work[column][z])
+                            except KeyError:
+                                pass
+
+                        if z < max_rows-1:
+                            matrix.append( row_data )
+                            row_headers.append( "" )
+                            row_data = [""] * ncols 
+                else:
+                    # single level row
+                    for y, column in enumerate(labels[-1]):
+                        try:
+                            row_data[y+header_offset] = quote(work[column])
+                        except KeyError:
+                            pass
+
                 matrix.append( row_data )
 
         if self.mTranspose:
@@ -647,25 +676,31 @@ class RendererLinePlot(Renderer, Plotter):
             for label, coords in data.iteritems():
 
                 # get and transform x/y values
-                try:
-                    xlabel, ylabel = coords.keys()
-                except AttributeError:
-                    warn("could not plot %s: %s" % (label, str(coords) ))
+                keys = coords.keys()
+                if len(keys) <= 1:
+                    warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
                     continue
 
-                xvals, yvals = coords.values()
+                xlabel = keys[0]
+                xvals = coords[xlabel]
+                for ylabel in keys[1:]:
+                    yvals = coords[ylabel]
 
-                s = self.mSymbols[nplotted % len(self.mSymbols)]
+                    s = self.mSymbols[nplotted % len(self.mSymbols)]
 
-                plts.append( plt.plot( xvals,
-                                       yvals,
-                                       s ) )
-                
-                legend.append( "/".join((line,label) ))
-                nplotted += 1
+                    plts.append( plt.plot( xvals,
+                                           yvals,
+                                           s ) )
 
+                    if len(keys) > 2:
+                        legend.append( "/".join((line,label,ylabel) ))
+                    else:
+                        legend.append( "/".join((line,label) ))
+                        
+                    ylabels.append(ylabel)
+                    nplotted += 1
+                    
                 xlabels.append(xlabel)
-                ylabels.append(ylabel)
 
         plt.xlabel( "-".join( set(xlabels) ) )
         plt.ylabel( "-".join( set(ylabels) ) )

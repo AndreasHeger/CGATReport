@@ -3,7 +3,8 @@ import math
 import numpy
 import scipy
 import scipy.stats
-import collections
+import collections, itertools
+
 try:
     from rpy import r as R
     import rpy
@@ -501,8 +502,9 @@ def doCorrelationTest( xvals, yvals, method = "pearson" ):
 ## compute ROC curves from sorted values
 ###################################################################
 def computeROC( values ):
-    '''return a roc curve for *values*. Values
-    is a sorted list of (value, bool) pairs.
+    '''return a roc curve for *values*.
+    Values is a sorted list of (value, bool) pairs.
+
     '''
     roc = []
     
@@ -512,27 +514,74 @@ def computeROC( values ):
 
     ntotal = len(values)
 
-    last_value, last_fpr = None, None
     tp, fp = 0, 0
-    tn, fn = ntotal - npositives, npositives 
-    for value, is_positive in values:
+    tn, fn = ntotal - npositives, npositives
 
-        if is_positive: 
-            tp += 1
-            fn -= 1
-        else: 
-            fp += 1
-            tn -= 1
+    for value, g in itertools.groupby( values ):
+        
+        for k, is_positive in g:
+            if is_positive: 
+                tp += 1
+                fn -= 1
+            else: 
+                fp += 1
+                tn -= 1
 
-        if last_value != value:
-            tpr = float(tp) / (tp + fn)
-            fpr = float(fp) / (fp + tn)
-            if last_fpr != fpr:
-                roc.append( (fpr,tpr) )
-                last_fpr = fpr
-
-        last_values = value
+        tpr = float(tp) / (tp + fn)
+        fpr = float(fp) / (fp + tn)
+        roc.append( (fpr,tpr) )
 
     return roc
 
- 
+###################################################################
+###################################################################
+###################################################################
+## 
+###################################################################
+def getAreaUnderCurve( xvalues, yvalues ):
+    '''compute area under curve from a set of discrete x,y coordinates
+    using trapezoids.
+    
+    This is only as accurate as the density of points.
+    '''
+
+    assert len(xvalues) == len(yvalues)
+    last_x, last_y = xvalues[0], yvalues[0]
+    auc = 0
+    for x,y in zip(xvalues, yvalues)[1:]:
+        dx = x - last_x
+        assert dx > 0, "x not increasing: %f >= %f" % (last_x, x)
+        dy = abs(last_y - y)
+        my = min(last_y, y)
+        # rectangle plus triangle
+        auc += dx * my + dx * dy / 2
+        last_x, last_y = x, y
+        
+    return auc
+
+###################################################################
+###################################################################
+###################################################################
+## 
+###################################################################
+def getSensitivityRecall( values ):
+    '''return sensitivity/selectivity.
+
+    Values is a sorted list of (value, bool) pairs.
+    '''
+
+    npositives = 0.0
+    npredicted = 0.0
+    l = None
+    result = []
+    total = float(len(values))
+    for value, is_positive in values:
+        npredicted += 1.0
+        if is_positive > 0: npositives += 1.0
+        if value != l:
+            result.append( (value, npositives / npredicted, npredicted / total ) )
+        l = value
+    if l:
+        result.append( (l, npositives / npredicted, npredicted/total ) )
+
+    return result

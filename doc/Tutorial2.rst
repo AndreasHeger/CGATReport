@@ -65,7 +65,7 @@ Testing the current implementation::
 
    sphinxreport-test -t MyDataOneTrack -r interleaved-bar-plot
 
-will show a familiar plot - the functor returns the data as the funtion in :file:`Tutorial1.py`.
+will show a familiar plot - the functor returns the data as the funtion in :file:`Tutorial2.py`.
 
 ******************
 Adding more tracks
@@ -77,7 +77,7 @@ example returning data for several tracks.
 Adding a data source
 ********************
 
-Add the following code to :file:`Tutorial1.py`::
+Add the following code to :file:`Tutorial2.py`::
 
     class MyDataTwoTracks(Tracker):
 	"""My one-tracked data."""

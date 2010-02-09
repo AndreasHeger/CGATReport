@@ -1,4 +1,4 @@
-#!/bin/env python
+#! /bin/env python
 
 """
 sphinxreport-test
@@ -103,7 +103,8 @@ from SphinxReport.Tracker import Tracker
 from SphinxReport.Renderer import *
 from SphinxReport.Transformer import *
 from SphinxReport.report_directive import MAP_RENDERER, MAP_TRANSFORMER
-import SphinxReport.report_directive
+from SphinxReport import Utils
+
 import SphinxReport.clean
 from SphinxReport.Dispatcher import Dispatcher
 
@@ -137,22 +138,26 @@ def getTrackers( fullpath ):
     as an available tracker, though it might be specified at the
     command line.
     """
+
     name, cls = os.path.splitext(fullpath)
     # remove leading '.'
     cls = cls[1:]
 
     module_name = os.path.basename(name)
-    module, pathname = report_directive.getModule( name )
+    module, pathname = Utils.getModule( name )
 
     trackers = []
 
     for name in dir(module):
         obj = getattr(module, name)
-        if report_directive.isTracker( obj ):
-            trackers.append( (name, obj, module_name, True) )
-        else:
-            trackers.append( (name, obj, module_name, False) )
-            
+        try:
+            if Utils.isTracker( obj ):
+                trackers.append( (name, obj, module_name, True) )
+            else:
+                trackers.append( (name, obj, module_name, False) )
+        except ValueError:
+            pass
+        
     return trackers
 
 def run( name, t, kwargs ):
@@ -263,7 +268,6 @@ def main():
         trackers = []
         for filename in glob.glob( "python/*.py" ):
             trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in exclude ] )
-
         
         for name, tracker, modulename, is_derived  in trackers:
             if name == options.tracker: break

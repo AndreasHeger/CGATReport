@@ -515,7 +515,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     try:
         ########################################################
         # find the tracker
-        logging.debug( "collecting tracker." )
+        logging.debug( "collecting tracker %s." % reference )
         code, tracker = Utils.getTracker( reference )
         if not tracker: 
             logging.debug( "no tracker - no output from %s " % str(document) )
