@@ -44,16 +44,27 @@ class SingleColumnDataExample( Tracker ):
     def getSlices( self, subset = None ): return "slice1", "slice2"
     def getTracks( self, subset = None ): return "track1", "track2", "track3"
     def __call__(self, track, slice = None):
-        s = [random.randint(0,10) for x in range(20)]
+        s = [random.randint(0,20) for x in range(40)]
         random.shuffle( s )
         return odict( (("data", s),) )
+
+class SingleColumnDataWithErrorExample( Tracker ):
+    '''return a single column of data.'''
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    def __call__(self, track, slice = None):
+        s = [random.randint(0,20) for x in range(40)]
+        e = [random.randint(0,3) for x in range(40)]
+        random.shuffle( s )
+        return odict( (("data", s),
+                       ("error", e) ) )
 
 class SingleColumnDataExampleWithoutSlices( Tracker ):
     '''return a single column of data.'''
     def getSlices( self, subset = None ): return []
     def getTracks( self, subset = None ): return "track1", "track2", "track3"
     def __call__(self, track, slice = None):
-        s = [random.randint(0,10) for x in range(20)]
+        s = [random.randint(0,20) for x in range(40)]
         random.shuffle( s )
         return odict( (("data", s),) )
 

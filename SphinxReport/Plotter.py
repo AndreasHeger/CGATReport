@@ -211,6 +211,7 @@ class Plotter:
             maxlen = max( [ len(x) for x in legends ] )
             # legends = self.wrapText( legends )
 
+            assert len(plts) == len(legends)
             if self.mLegendLocation == "outer":
                 legend = outer_legend( plts, legends )
             else:

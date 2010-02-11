@@ -616,6 +616,8 @@ class RendererMatrix(Renderer):
                     matrix[x,y] = take_f( row, column )
                 except KeyError:
                     pass
+                except ValueError:
+                    raise ValueError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
                 except TypeError:
                     raise TypeError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
                 
@@ -707,6 +709,99 @@ class RendererLinePlot(Renderer, Plotter):
         
         return self.endPlot( plts, legend, path )
 
+class RendererHistogramPlot(Renderer, Plotter):        
+    '''create a line plot.
+
+    This :class:`Renderer` requires at least three levels:
+
+    Currently the xvalues are interpreted as left bin sizes
+    and the last bin is the same width as the second to last
+    bin. This could be made more correct using the bins
+    from histogram directly.
+
+    line / data / coords.
+    '''
+    nlevels = 3
+
+    # column to use for error bars
+    error = None
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+        try: self.error = kwargs["error"]
+        except KeyError: pass
+
+    def render(self, work, path ):
+        
+        self.startPlot()
+
+        plts, legend = [], []
+        xlabels, ylabels = [], []
+        nplotted = 0
+        alpha = 1.0 / len(work)
+
+        for line, data in work.iteritems():
+            
+            for label, coords in data.iteritems():
+
+                # get and transform x/y values
+                keys = coords.keys()
+                nkeys = len(keys)
+                if nkeys <= 1:
+                    warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
+                    continue
+
+                # locate error bars
+                if self.error and self.error in coords:
+                    yerr = coords[self.error]
+                    nkeys -= 1 
+                else: yerr = None
+
+                xlabel = keys[0]
+                xvals = coords[xlabel]
+
+                # compute bar widths
+                widths = []
+                w = xvals[0]
+                for x in xvals[1:]:
+                    widths.append( x-w )
+                    w=x
+                widths.append( widths[-1] )
+
+                for ylabel in keys[1:]:
+                    # ignore errors
+                    if ylabel == self.error: continue
+
+                    yvals = coords[ylabel]
+                    plts.append( plt.bar( xvals,
+                                          yvals,
+                                          width = widths,
+                                          alpha = alpha,
+                                          yerr = yerr,
+                                          color = self.mColors[ nplotted % len(self.mColors) ], ) )
+
+                    if len(keys) > 2:
+                        legend.append( "/".join((line,label,ylabel) ))
+                    else:
+                        legend.append( "/".join((line,label) ))
+                        
+                    ylabels.append(ylabel)
+                    nplotted += 1
+                    
+                xlabels.append(xlabel)
+                
+        plt.xlabel( "-".join( set(xlabels) ) )
+        plt.ylabel( "-".join( set(ylabels) ) )
+
+        # there is a problem with legends
+        # even though len(plts) == len(legend)
+        # matplotlib thinks there are more. 
+        # In fact, it thinks it is len(plts) = len(legend) * len(xvals)
+        legend = None
+        return self.endPlot( plts, legend, path )
+
 class RendererBarPlot( RendererMatrix, Plotter):
     '''A bar plot.
 
@@ -750,7 +845,6 @@ class RendererBarPlot( RendererMatrix, Plotter):
 
     def buildMatrices( self, work ):
         '''build matrices necessary for plotting.
-
         '''
         self.error_matrix = None
         self.label_matrix = None
@@ -778,7 +872,6 @@ class RendererBarPlot( RendererMatrix, Plotter):
 
         else:
             self.matrix, self.rows, self.columns = self.buildMatrix( work )
-                    
 
     def render( self, work, path ):
 

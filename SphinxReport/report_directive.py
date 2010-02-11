@@ -71,6 +71,7 @@ MAP_TRANSFORMER = {
 MAP_RENDERER= { 
     'debug' : Renderer.RendererDebug,
     'line-plot': Renderer.RendererLinePlot,
+    'histogram-plot' : Renderer.RendererHistogramPlot,
     'pie-plot': Renderer.RendererPiePlot,
     'scatter-plot': Renderer.RendererScatterPlot,
     'scatter-rainbow-plot': Renderer.RendererScatterPlotWithColor,
