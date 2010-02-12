@@ -201,7 +201,10 @@ def collectImagesFromMatplotlib( template_name,
 
             if format=='png':
                 thumbdir = os.path.join(outdir, 'thumbnails')
-                if not os.path.exists(thumbdir): os.makedirs(thumbdir)
+                try:
+                    os.makedirs(thumbdir)
+                except OSError:
+                    pass
                 thumbfile = str('%s.png' % os.path.join(thumbdir, outname) )
                 captionfile = str('%s.txt' % os.path.join(thumbdir, outname) )
                 if not os.path.exists(thumbfile):

@@ -119,7 +119,8 @@ The plot is concorporated into a restructured text document as usual::
    Connecting to SQL:
 
    .. report:: Tutorial4.ExpressionLevelWithSlices
-      :render: histogram-plot
+      :render: line-plot
+      :transform: histogram
       :tf-range: 0,100,4
 
       Expression level in house-keeping and regulatory genes

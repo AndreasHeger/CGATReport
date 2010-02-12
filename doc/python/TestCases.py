@@ -77,4 +77,5 @@ class MultiLevelTable( Tracker ):
         data = [ \
             [ "value%i" % y for y in range(self.mNumLevels) ] \
                   for z in range(self.mNumCols) ]
+
         return odict( zip( ["col%i" % x for x in range(self.mNumCols)], data ) )

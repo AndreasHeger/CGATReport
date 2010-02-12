@@ -211,6 +211,11 @@ class RendererTable( Renderer ):
             first = True
             for xx, path in enumerate(paths):
 
+                # get data
+                work = data.getLeaf( (row,) + path )
+                # skip empty rows
+                if not work: continue
+
                 if first: 
                     row_headers.append( row )
                     first = False
@@ -218,10 +223,6 @@ class RendererTable( Renderer ):
                     row_headers.append("")
 
                 row_data = [""] * ncols 
-
-                work = data.getLeaf( (row,) + path )
-                if not work: continue
-
                 for z, p in enumerate(path): 
                     row_data[z] = p
 
@@ -237,7 +238,6 @@ class RendererTable( Renderer ):
                     elif max_rows != len( work[column]):
                         raise ValueError("multi-level rows - unequal lengths: %i != %i" % \
                                              (max_rows, len(work[column])))
-                    
 
                 if is_container:
                     # multi-level rows

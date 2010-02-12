@@ -80,13 +80,16 @@ def getModule( name ):
             (file, pathname, description) = imp.find_module( name )
         except ImportError:
             warn("could not find module %s" % name )        
-
+            raise
+        
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
-    debug( "got module: %s: %s, %s, %s" % (name, file, pathname, description) )
+    debug( "loading module: %s: %s, %s, %s" % (name, file, pathname, description) )
+    
     try:
         module = imp.load_module(name, file, pathname, description )
     except:
+        warn("could not load module %s" % name )        
         raise
     finally:
         file.close()

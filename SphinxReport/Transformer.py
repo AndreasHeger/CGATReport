@@ -331,12 +331,13 @@ class TransformerHistogram( Transformer ):
                 mi = log10( mi )
                 bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
             elif binsize != None:
-                bins = arange(mi, ma, binsize )
+                # make sure that ma is part of bins
+                bins = numpy.arange(mi, ma + binsize, binsize )
             else:
                 bins = eval(self.mBins)
 
             if hasattr( bins, "__iter__") and len(bins) == 0:
-                warn( "empty bins from %s: %s: %s" % (str(self.mTracker), group, title) )
+                warn( "empty bins")
                 return None, None
 
         # ignore histogram semantics warning

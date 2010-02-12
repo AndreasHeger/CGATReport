@@ -113,11 +113,17 @@ class Plotter:
                 for x in "gbrcmyk":
                     self.mSymbols.append( y+x )
 
-        try: self.mXRange = map(float, kwargs["xrange"].split(","))
-        except: self.mXRange = None
+        def _parseRanges(r):
+            if not r: return r
+            r = [ x.strip() for x in r.split(",")]
+            if r[0] == "": r[0] = None
+            else: r[0] = float(r[0])
+            if r[1] == "": r[1] = None
+            else: r[1] = float(r[1])
+            return r
 
-        try: self.mYRange = map(float, kwargs["yrange"].split(","))
-        except: self.mYRange = None
+        self.mXRange = _parseRanges(kwargs.get("xrange", None ))
+        self.mYRange = _parseRanges(kwargs.get("yrange", None ))
 
         def setupMPLOption( key ):
             options = {}
@@ -196,9 +202,11 @@ class Plotter:
             if "y" in self.mLogScale:
                 plt.gca().set_yscale('log')
 
-        if self.mXRange: plt.xlim( self.mXRange )
-        if self.mYRange: plt.ylim( self.mYRange )
-
+        if self.mXRange:
+            plt.xlim( self.mXRange )
+        if self.mYRange:
+            plt.ylim( self.mYRange )
+            
         if self.mAddTitle: plt.suptitle( "/".join(path) )
 
         blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure-1), "")), title = "/".join(path) ) )

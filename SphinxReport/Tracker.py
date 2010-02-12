@@ -85,6 +85,24 @@ class Tracker(object):
         """return a data structure for track :param: track and slice :slice:"""
         raise NotImplementedError("not implemented")
 
+    def members( self, locals = None ):
+        '''function similar to locals() but returning member variables of this tracker.
+
+        Convenience function for string substitution. If locals is given (and a dictionary),
+        the dictionary is added to the returned dictionary.
+
+        Typical usage is::
+
+           print "my string with %(vars)s" % (self.members(locals())).
+
+        returns a dictionary
+        '''
+        l = dict( [(attr,getattr(self,attr)) for attr in dir(self) \
+                      if not callable(attr) and not attr.startswith("__")] )
+            
+        if locals: return dict( l, **locals)
+        else: return l
+
 class TrackerCSV( Tracker ):
     """Base class for trackers that fetch data from an CSV file.
     
