@@ -12,3 +12,5 @@ in detail.
 .. automodule:: SphinxReport.clean
 
 .. automodule:: SphinxReport.test
+
+.. automodule:: SphinxReport.get

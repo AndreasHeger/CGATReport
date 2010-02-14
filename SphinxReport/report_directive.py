@@ -17,130 +17,23 @@ import sys, os, glob, shutil, imp, warnings, cStringIO, hashlib, re, logging, ma
 import traceback
 
 from docutils.parsers.rst import directives
-try:
-    # docutils 0.4
-    from docutils.parsers.rst.directives.images import align
-except ImportError:
-    # docutils 0.5
-    from docutils.parsers.rst.directives.images import Image
-    align = Image.align
 
-from SphinxReport import Renderer
-from SphinxReport import Tracker
-from SphinxReport import Transformer
-from SphinxReport import Dispatcher
-from SphinxReport import Utils
-import matplotlib
+import SphinxReport
+from SphinxReport import Renderer, Tracker, Transformer, Dispatcher, Utils, Cache
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
+from SphinxReport.Reporter import *
 
 SPHINXREPORT_DEBUG = False
-
-SEPARATOR="@"
 
 # This does not work:
 # matplotlib.use('Agg', warn = False)
 # Matplotlib might be imported beforehand? plt.switch_backend did not
 # change the backend. The only option I found was to change my own matplotlibrc.
 
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 from matplotlib import _pylab_helpers
-
-HTML_IMAGE_FORMAT = ('main', 'png', 80)
-LATEX_IMAGE_FORMAT = () # ('pdf', 'pdf' 50)
-
-ADDITIONAL_FORMATS = [
-    ('hires', 'hires.png', 200 ),
-    # ('pdf', 'pdf', 50 ),
-    ]
-
-# Map transformer names to their implementations.
-MAP_TRANSFORMER = { 
-    'stats' : Transformer.TransformerStats, 
-    'correlation' : Transformer.TransformerCorrelationPearson,
-    'pearson' : Transformer.TransformerCorrelationPearson,
-    'spearman' : Transformer.TransformerCorrelationSpearman, 
-    'histogram' : Transformer.TransformerHistogram,
-    'filter' : Transformer.TransformerFilter,
-    'select' : Transformer.TransformerSelect,
-    'combinations': Transformer.TransformerCombinations,
-    'combine': Transformer.TransformerCombinations,
-    }
-
-# Map renderer names to their implemenations
-MAP_RENDERER= { 
-    'debug' : Renderer.RendererDebug,
-    'line-plot': Renderer.RendererLinePlot,
-    'histogram-plot' : Renderer.RendererHistogramPlot,
-    'pie-plot': Renderer.RendererPiePlot,
-    'scatter-plot': Renderer.RendererScatterPlot,
-    'scatter-rainbow-plot': Renderer.RendererScatterPlotWithColor,
-    'table': Renderer.RendererTable,
-    'matrix': Renderer.RendererMatrix,
-    'matrix-plot': Renderer.RendererMatrixPlot,
-    'hinton-plot': Renderer.RendererHintonPlot,
-    'bar-plot': Renderer.RendererBarPlot,
-    'stacked-bar-plot': Renderer.RendererStackedBarPlot,
-    'interleaved-bar-plot': Renderer.RendererInterleavedBarPlot,
-    'box-plot': Renderer.RendererBoxPlot,
-    'glossary' : Renderer.RendererGlossary 
-}
-
-DISPLAY_OPTIONS = {
-    'alt': directives.unchanged,
-    'height': directives.length_or_unitless,
-    'width': directives.length_or_percentage_or_unitless,
-    'scale': directives.nonnegative_int,
-    'align': align,
-    'class': directives.class_option,
-    'render' : directives.unchanged,
-    'transform' : directives.unchanged,
-    'include-source': directives.flag 
-    }
-
-DISPATCHER_OPTIONS = {
-    'groupby' : directives.unchanged,
-    'tracks': directives.unchanged,
-    'slices': directives.unchanged,
-    }
-
-RENDER_OPTIONS = { 
-    'layout' : directives.unchanged,
-    'error' : directives.unchanged,
-    'label' : directives.unchanged,
-    'logscale' : directives.unchanged,
-    'title' : directives.unchanged,
-    'add-title' : directives.flag,
-    'xtitle' : directives.unchanged,
-    'ytitle' : directives.unchanged,
-    'xrange' : directives.unchanged,
-    'yrange' : directives.unchanged,
-    'zrange' : directives.unchanged,
-    'palette' : directives.unchanged,
-    'reverse-palette' : directives.flag,
-    'transpose' : directives.flag,
-    'transform-matrix' : directives.unchanged,
-    'as-lines': directives.flag,  
-    'format' : directives.unchanged,
-    'colorbar-format' : directives.unchanged,
-    'filename' : directives.unchanged,
-    'pie-min-percentage' : directives.unchanged,
-    'max-rows' : directives.unchanged,
-    'max-cols' : directives.unchanged,
-    'mpl-figure' : directives.unchanged,
-    'mpl-legend' : directives.unchanged,
-    'mpl-subplot' : directives.unchanged,
-    'mpl-rc' : directives.unchanged, 
-}
-
-TRANSFORM_OPTIONS = {
-    'tf-fields' : directives.unchanged,
-    'tf-level' : directives.length_or_unitless,
-    'tf-bins' : directives.unchanged,
-    'tf-range' : directives.unchanged,
-    'tf-aggregate': directives.unchanged,
-    }
-
 
 TEMPLATE_TEXT = """
 .. htmlonly::
@@ -169,11 +62,13 @@ def collectImagesFromMatplotlib( template_name,
                                  linkdir, 
                                  content,
                                  display_options,
-                                 linked_codename ):
+                                 linked_codename,
+                                 tracker_id):
     ''' collect one or more pylab figures and 
-        save as png, hires-png and pdf
-        save thumbnail
-        insert rendering code at placeholders in output
+        
+    1. save as png, hires-png and pdf
+    2. save thumbnail
+    3. insert rendering code at placeholders in output
 
     returns a map of place holder to placeholder text.
     '''
@@ -181,10 +76,15 @@ def collectImagesFromMatplotlib( template_name,
 
     map_figure2text = {}
 
+    all_formats = [SphinxReport.HTML_IMAGE_FORMAT]
+    if SphinxReport.LATEX_IMAGE_FORMAT: all_formats.append( SphinxReport.LATEX_IMAGE_FORMAT )
+    all_formats.extend( SphinxReport.ADDITIONAL_FORMATS )
+
     for i, figman in enumerate(fig_managers):
         # create all images
-        
-        for id, format, dpi in [HTML_IMAGE_FORMAT + LATEX_IMAGE_FORMAT] + ADDITIONAL_FORMATS:
+
+        for id, format, dpi in all_formats:
+
             if len(fig_managers) == 1:
                 outname = template_name
             else:
@@ -221,28 +121,40 @@ def collectImagesFromMatplotlib( template_name,
         rst_output = ""
         imagepath = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
         linked_text = imagepath + ".txt"
-        if HTML_IMAGE_FORMAT:
-            id, format, dpi = HTML_IMAGE_FORMAT
+
+        if SphinxReport.HTML_IMAGE_FORMAT:
+            id, format, dpi = SphinxReport.HTML_IMAGE_FORMAT
             template = '''
 .. htmlonly::
 
    .. image:: %(linked_image)s
 %(display_options)s
 
-   [`source code <%(linked_codename)s>`__ `rst <%(linked_text)s>`__ %(extra_images)s]
+   [%(code_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
 '''
-        
+            
             linked_image = imagepath + ".%s" % format
             extra_images=[]
-            for id, format, dpi in ADDITIONAL_FORMATS:
+            for id, format, dpi in SphinxReport.ADDITIONAL_FORMATS:
                 extra_images.append( "`%(id)s <%(imagepath)s.%(format)s>`__" % locals())
             if extra_images: extra_images = " " + " ".join( extra_images)
             else: extra_images = ""
 
+            # construct additional urls
+            code_url, data_url, rst_url = "", "", ""
+            if "code" in sphinxreport_urls:
+                code_url = "`code <%(linked_codename)s>`__" % locals()
+
+            if "data" in sphinxreport_urls: 
+                data_url = "`data </data/%(tracker_id)s>`__" % locals()
+                
+            if "rst" in sphinxreport_urls:
+                rst_url = "`rst <%(linked_text)s>`__" % locals()
+
             rst_output += template % locals()
             
-        if LATEX_IMAGE_FORMAT:
-            id, format, dpi = LATEX_IMAGE_FORMAT
+        if SphinxReport.LATEX_IMAGE_FORMAT:
+            id, format, dpi = SphinxReport.LATEX_IMAGE_FORMAT
             template = '''
 .. latexonly::
 
@@ -261,7 +173,7 @@ def layoutBlocks( blocks, layout = "column"):
 
     layout can be one of "column", "row", or "grid".
 
-    The layout uses an rst table.
+    The layout uses an rst table to arrange elements.
     """
 
     lines = []
@@ -372,7 +284,7 @@ def buildPaths( reference ):
     basedir, fname = os.path.split(reference)
     basename, ext = os.path.splitext(fname)
     outdir = os.path.join('_static', 'report_directive', basedir)
-    codename = Utils.quoted(reference) + ".code"
+    codename = Utils.quote_filename(reference) + ".code"
 
     return basedir, fname, basename, ext, outdir, codename
 
@@ -428,9 +340,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     except KeyError: 
         layout = "column"
     
-    render_options = selectAndDeleteOptions( options, RENDER_OPTIONS )
-    transform_options = selectAndDeleteOptions( options, TRANSFORM_OPTIONS)
-    dispatcher_options = selectAndDeleteOptions( options, DISPATCHER_OPTIONS)
+    render_options = selectAndDeleteOptions( options, SphinxReport.RENDER_OPTIONS )
+    transform_options = selectAndDeleteOptions( options, SphinxReport.TRANSFORM_OPTIONS)
+    dispatcher_options = selectAndDeleteOptions( options, SphinxReport.DISPATCHER_OPTIONS)
 
     logging.debug( "renderer options: %s" % str(render_options) )
     logging.debug( "transformer options: %s" % str(transform_options) )
@@ -447,8 +359,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     ########################################################
     # add sphinx options for image display
     if options.items:
-        display_options = "\n".join( ['      :%s: %s' % (key, val) for key, val in
-                                      options.items()] )
+        display_options = "\n".join( \
+            ['      :%s: %s' % (key, val) for key, val in options.items()] )
     else:
         display_options = ''
 
@@ -461,7 +373,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                                         str(dispatcher_options) +\
                                         str(transformer_names) ).hexdigest()
 
-        template_name = Utils.quoted( SEPARATOR.join( (reference, renderer_name, options_hash ) ))
+        template_name = Utils.quote_filename( \
+            SphinxReport.SEPARATOR.join( (reference, renderer_name, options_hash ) ))
         filename_text = os.path.join( outdir, "%s.txt" % (template_name))
 
         logging.debug( "options_hash=%s" %  options_hash)
@@ -527,15 +440,17 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
         logging.debug( "collected tracker." )
 
+        tracker_id = Cache.tracker2key( tracker )
+
         ########################################################
         # determine the transformer
         transformers = []
         logging.debug( "creating transformers." )
 
         for transformer in transformer_names:
-            if transformer not in MAP_TRANSFORMER: 
+            if transformer not in SphinxReport.MAP_TRANSFORMER: 
                 raise KeyError('unknown transformer `%s`' % transformer )
-            else: transformers.append( MAP_TRANSFORMER[transformer](**transform_options)) 
+            else: transformers.append( SphinxReport.MAP_TRANSFORMER[transformer](**transform_options)) 
 
         ########################################################
         # determine the renderer
@@ -543,17 +458,22 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         if renderer_name == None:
             raise ValueError("the report directive requires a renderer.")
 
-        if renderer_name not in MAP_RENDERER:
+        if renderer_name not in SphinxReport.MAP_RENDERER:
             raise KeyError("unknown renderer `%s`" % renderer_name)
 
-        renderer = MAP_RENDERER[renderer_name]
+        renderer = SphinxReport.MAP_RENDERER[renderer_name]
 
+        ########################################################
+        # create and call dispatcher
         logging.debug( "creating dispatcher" )
-        dispatcher = Dispatcher.Dispatcher( tracker, renderer(tracker, **render_options), transformers )     
+        dispatcher = Dispatcher.Dispatcher( tracker, 
+                                            renderer(tracker, **render_options), 
+                                            transformers )     
         blocks = dispatcher( **dispatcher_options )
     except:
         blocks = Renderer.buildException( "invocation" )
         code = None
+        tracker_id = None
 
     ########################################################
     ## write code output
@@ -562,7 +482,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         outfile = open( os.path.join(outdir, codename ), "w" )
         for line in code: outfile.write( line )
         outfile.close()
-
+        
     ###########################################################
     # collect images
     ###########################################################
@@ -571,7 +491,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                                                    linkdir, 
                                                    content, 
                                                    display_options,
-                                                   linked_codename)
+                                                   linked_codename,
+                                                   tracker_id )
 
     ###########################################################
     # replace place holders or add text
@@ -629,10 +550,10 @@ except ImportError:
 
     report_directive.__doc__ = __doc__
     report_directive.arguments = (1, 0, 1)
-    report_directive.options = dict( RENDER_OPTIONS.items() +\
-                                TRANSFORM_OPTIONS.items() +\
-                                DISPLAY_OPTIONS.items() +\
-                                DISPATCHER_OPTIONS.items() )
+    report_directive.options = dict( SphinxReport.RENDER_OPTIONS.items() +\
+                                         SphinxReport.TRANSFORM_OPTIONS.items() +\
+                                         SphinxReport.DISPLAY_OPTIONS.items() +\
+                                         SphinxReport.DISPATCHER_OPTIONS.items() )
 
     _directives['report'] = report_directive
 else:
@@ -641,10 +562,10 @@ else:
         optional_arguments = 0
         has_content = True
         final_argument_whitespace = True
-        option_spec = dict( RENDER_OPTIONS.items() +\
-                                TRANSFORM_OPTIONS.items() +\
-                                DISPLAY_OPTIONS.items() +\
-                                DISPATCHER_OPTIONS.items() )
+        option_spec = dict( SphinxReport.RENDER_OPTIONS.items() +\
+                                SphinxReport.TRANSFORM_OPTIONS.items() +\
+                                SphinxReport.DISPLAY_OPTIONS.items() +\
+                                SphinxReport.DISPATCHER_OPTIONS.items() )
         def run(self):
             document = self.state.document.current_source
             logging.info( "starting: %s:%i" % (str(document), self.lineno) )

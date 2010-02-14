@@ -26,7 +26,7 @@ import CorrespondenceAnalysis
 
 from SphinxReport.ResultBlock import ResultBlock, EmptyResultBlock, ResultBlocks
 from SphinxReport.odict import OrderedDict as odict
-from SphinxReport.DataTree import DataTree, path2str
+from SphinxReport.DataTree import DataTree, path2str, tree2table
 from SphinxReport.Reporter import *
 from SphinxReport import Utils
 
@@ -70,10 +70,6 @@ def buildException( stage ):
                          title = "" ) ) )
     else:
         return ResultBlocks()
-
-def quote( text ):
-    '''quote text for restructured text.'''
-    return re.sub( r"([*])", r"\\\1", str(text))
 
 class Renderer(Reporter):
     """Base class of renderers that render data into restructured text.
@@ -186,91 +182,8 @@ class RendererTable( Renderer ):
 
         returns matrix, row_headers, col_headers
         """
-        # if len(data) == 0: return None, None, None
 
-        labels = data.getPaths()
-        if len(labels) < 2:
-            raise ValueError( "expected at least two levels for building table, got %i: %s" %\
-                                  (len(labels), str(labels)))
-
-        col_headers = [""] * (len(labels)-2) + labels[-1]
-        ncols = len(col_headers)
-
-        paths = list(itertools.product( *labels[1:-1] ))                
-        header_offset = len(labels)-2
-        matrix = []
-
-        debug( "%s: RendererTable: creating table with %i columns" % (id(self), len(col_headers)))
-
-        ## the following can be made more efficient
-        ## by better use of indices
-        row_offset = 0
-        row_headers = []
-        for x, row in enumerate(labels[0]):
-
-            first = True
-            for xx, path in enumerate(paths):
-
-                # get data
-                work = data.getLeaf( (row,) + path )
-                # skip empty rows
-                if not work: continue
-
-                if first: 
-                    row_headers.append( row )
-                    first = False
-                else:
-                    row_headers.append("")
-
-                row_data = [""] * ncols 
-                for z, p in enumerate(path): 
-                    row_data[z] = p
-
-                # check for multi-level rows
-                is_container = True
-                max_rows = None
-                for y, column in enumerate(labels[-1]):
-                    if type(work[column]) not in Utils.ContainerTypes:
-                        is_container = False
-                        break
-                    if max_rows == None:
-                        max_rows = len( work[column])
-                    elif max_rows != len( work[column]):
-                        raise ValueError("multi-level rows - unequal lengths: %i != %i" % \
-                                             (max_rows, len(work[column])))
-
-                if is_container:
-                    # multi-level rows
-                    for z in range( max_rows ):
-                        for y, column in enumerate(labels[-1]):
-                            try:
-                                row_data[y+header_offset] = quote(work[column][z])
-                            except KeyError:
-                                pass
-
-                        if z < max_rows-1:
-                            matrix.append( row_data )
-                            row_headers.append( "" )
-                            row_data = [""] * ncols 
-                else:
-                    # single level row
-                    for y, column in enumerate(labels[-1]):
-                        try:
-                            row_data[y+header_offset] = quote(work[column])
-                        except KeyError:
-                            pass
-
-                matrix.append( row_data )
-
-        if self.mTranspose:
-            row_headers, col_headers = col_headers, row_headers
-            matrix = zip( *matrix )
-
-        # convert headers to string (might be None)
-        row_headers = [str(x) for x in row_headers]
-        col_headers = [str(x) for x in col_headers]
-        
-        return matrix, row_headers, col_headers
+        return tree2table( data, self.mTranspose )
 
     def __call__(self, data, path):
 

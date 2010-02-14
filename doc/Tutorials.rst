@@ -18,6 +18,7 @@ Tutorials:
    Tutorial4.rst 
    Tutorial5.rst 
    Tutorial6.rst 
+   Tutorial7.rst 
 
 Tutorial results:
 

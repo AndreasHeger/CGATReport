@@ -14,6 +14,8 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
+PORT=8080
+
 .PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest
 
 help:
@@ -45,6 +47,13 @@ dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) _build/dirhtml
 	@echo
 	@echo "Build finished. The HTML pages are in _build/dirhtml."
+
+server-start:
+	if ! test -e static; then ln -s _build/html static; fi 
+	nohup nice -19 ./server.py $(PORT) 2>&1 >> server.log &
+
+server-stop:
+	pkill "server.py $(PORT)"
 
 pickle:
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) _build/pickle

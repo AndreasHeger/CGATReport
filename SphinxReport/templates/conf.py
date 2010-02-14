@@ -28,7 +28,10 @@ sphinxreport_cachedir=os.path.abspath("_cache")
 sphinxreport_show_errors = True
 
 # The Database backend. Possible values are mysql, psql and sqlite
-# sphinxreport_backend="sqlite:///%s/csvdb" % os.path.abspath("..")
+# sphinxreport_sql_backend="sqlite:///%s/csvdb" % os.path.abspath("..")
+
+# urls to include within the annotation of an image
+sphinxreport_urls=("code", "rst")
 
 # -- Sphinx configuration ------------------------------------------------------
 # -- General configuration -----------------------------------------------------

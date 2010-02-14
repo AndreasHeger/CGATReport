@@ -15,6 +15,7 @@ Modules documentation
    Tracker.rst
    Transformer.rst
    DataTypes.rst
+   Server.rst
 
 Indices and tables
 ==================

@@ -10,6 +10,8 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s',
     stream = open( "sphinxreport.log", "a" ) )
 
+# read configuration options - variables are imported in
+# this namespace.
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
 execfile( "conf.py" )

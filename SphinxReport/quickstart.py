@@ -88,6 +88,7 @@ def main( argv = sys.argv ):
         outfile.close()
 
     for f in ("Makefile",
+              "server.py",
               "conf.py",
               "analysis.rst",
               "contents.rst",
@@ -102,6 +103,9 @@ def main( argv = sys.argv ):
               "search.html" ):
         copy( f, "_templates")
         
+    for f in ("data_table.html",):
+        copy( f, "templates")
+
     for f in ("Discussion.rst",
               "Introduction.rst",
               "Methods.rst",

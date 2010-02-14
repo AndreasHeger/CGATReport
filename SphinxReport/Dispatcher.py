@@ -1,14 +1,11 @@
 import os, sys, re, shelve, traceback, cPickle, types, itertools
 
-import bsddb.db
-import sqlalchemy
-import collections
-
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReport import DataTree
 from SphinxReport import Renderer
 from SphinxReport.Reporter import *
 from SphinxReport import Utils
+from SphinxReport import Cache
 
 VERBOSE=True
 
@@ -42,60 +39,15 @@ class Dispatcher(Reporter):
         self.debug("starting dispatcher '%s': tracker='%s', renderer='%s', transformer:='%s'" % \
                   (str(self), str(tracker), str(renderer), str(transformers) ) )
 
-        self.mTracker = tracker
-        self.mRenderer = renderer
-        self.mTransformers = transformers
+        self.tracker = tracker
+        self.renderer = renderer
+        self.transformers = transformers
 
-        global sphinxreport_cachedir
-        self.mCacheFile = None
-        self._cache = None
-
-        if sphinxreport_cachedir:
-
-            try:
-                if sphinxreport_cachedir != None: 
-                    os.mkdir(sphinxreport_cachedir)
-            except OSError, msg:
-                pass
-        
-            if not os.path.exists(sphinxreport_cachedir): 
-                raise OSError( "could not create directory %s: %s" % (sphinxreport_cachedir, msg ))
-
-                
-            modulename = os.path.split(tracker.__class__.__module__)[1]
-
-            if hasattr( tracker, "func_name" ):
-                name = tracker.func_name
-            else:
-                name = tracker.__class__.__name__
-
-            self.mCacheFile = os.path.join( sphinxreport_cachedir, 
-                                            Utils.quoted( ".".join((modulename,name))))
-                                                                               
-            # on Windows XP, the shelve does not work, work without cache
-            try:
-                self._cache = shelve.open(self.mCacheFile,"c", writeback = False)
-                debug( "disp%s: using cache %s" % (id(self), self.mCacheFile ))
-                debug( "disp%s: keys in cache: %s" % (id(self,), str(self._cache.keys() ) ))                
-            except bsddb.db.DBFileExistsError, msg:    
-                warn("disp%s: could not open cache %s - continuing without. Error = %s" %\
-                     (id(self), self.mCacheFile, msg))
-                self.mCacheFile = None
-                self._cache = None
-
-        else:
-            debug( "disp%s: not using cache"% (id(self),) )
-
-        self.mData = DataTree.DataTree()
+        self.cache = Cache.Cache( Cache.tracker2key(tracker) )
+        self.data = DataTree.DataTree()
 
     def __del__(self):
-        
-        if self._cache != None: 
-            return
-            self.debug( "closing cache %s" % self.mCacheFile )
-            self.debug( "keys in cache %s" % (str(self._cache.keys() ) ))
-            self._cache.close()
-            self._cache = None
+        pass
 
     def getCaption( self ):
         """return a caption string."""
@@ -104,8 +56,8 @@ class Dispatcher(Reporter):
     def parseArguments(self, *args, **kwargs ): 
         '''argument parsing.'''
 
-        try: self.mGroupBy = kwargs["groupby"]
-        except KeyError: self.mGroupBy = "slice"
+        try: self.groupby = kwargs["groupby"]
+        except KeyError: self.groupby = "slice"
 
         try: self.mInputTracks = [ x.strip() for x in kwargs["tracks"].split(",")]
         except KeyError: self.mInputTracks = None
@@ -116,40 +68,15 @@ class Dispatcher(Reporter):
         try: self.mColumns = [ x.strip() for x in kwargs["columns"].split(",")]
         except KeyError: self.mColumns = None
 
-    def getDataFromCache( self, key ):
-
-        result = None
-        if self._cache != None:
-            try:
-                if key in self._cache: 
-                    result = self._cache[key]
-                    self.debug( "retrieved data for key '%s' from cache: %i" % (key, len(result)) )
-                else:
-                    result = None
-                    self.debug( "key '%s' not found in cache" % key )
-
-            except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, cPickle.UnpicklingError, ValueError, EOFError), msg:
-                self.warn( "could not get key '%s' or value for key in '%s': msg=%s" % (key,self.mCacheFile, msg) )
-        return result
-
-    def saveDataInCache( self, key, data ):
-
-        if self._cache != None:
-            try:
-                self._cache[key] = data
-                self.debug( "saved data for key '%s' in cache" % key )
-            except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError), msg:
-                self.warn( "could not save key '%s' from '%s': msg=%s" % (key,self.mCacheFile,msg) )
-            # The following sync call is absolutely necessary when using 
-            # the multiprocessing library (python 2.6.1). Otherwise the cache is emptied somewhere 
-            # before the final call to close(). Even necessary, if writeback = False
-            self._cache.sync()
-
     def getData( self, track, slice ):
         """get data for track and slice. Save data in persistent cache for further use."""
 
-        key = ":".join( (str(track), str(slice)) )
-        result = self.getDataFromCache( key )
+        key = "/".join( (str(track), str(slice)) )
+
+        try:
+            result = self.cache[ key ]
+        except KeyError:
+            result = None
 
         kwargs = {}
         if track != None: kwargs['track'] = track
@@ -157,27 +84,13 @@ class Dispatcher(Reporter):
         
         if result == None:
             try:
-                result = self.mTracker( **kwargs )
+                result = self.tracker( **kwargs )
             except Exception, msg:
-                self.warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.mTracker), track, slice, msg) )
+                self.warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.tracker), track, slice, msg) )
                 if VERBOSE: self.warn( traceback.format_exc() )
                 raise
 
-            # try:
-            #     # this messy code distinguishes between the result of functors
-            #     # and true functions that have been wrapped with the DataTypes
-            #     # decorators by checking if it has a __len__ method.
-            #     if not hasattr( self.mTracker, "__len__"):
-            #         result = self.mTracker( **kwargs )
-            #     else:
-            #         result = self.mTracker
-            #     self.debug( "collected data for key '%s': %i" % (key, len(result)) )
-            # except Exception, msg:
-            #     self.warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.mTracker), track, slice, msg) )
-            #     if VERBOSE: self.warn( traceback.format_exc() )
-            #     result = []
-            
-        self.saveDataInCache( key, result )
+        self.cache[key] = result
 
         return result
 
@@ -208,14 +121,14 @@ class Dispatcher(Reporter):
 
     def buildTracks( self ):
         '''determine the tracks'''
-        is_function, self.mTracks = self.buildTracksOrSlices( self.mTracker, 
+        is_function, self.tracks = self.buildTracksOrSlices( self.tracker, 
                                                               "getTracks", 
                                                               self.mInputTracks )
         return is_function
 
     def buildSlices( self ):
         '''determine the slices'''
-        is_function, self.mSlices = self.buildTracksOrSlices( self.mTracker, 
+        is_function, self.slices = self.buildTracksOrSlices( self.tracker, 
                                                               "getSlices", 
                                                               self.mInputSlices )
         return is_function
@@ -227,43 +140,43 @@ class Dispatcher(Reporter):
         the first level and slice as the second level.
         '''
 
-        self.mData = DataTree.DataTree()
-        self.mTracks = []
-        self.mSlices = []
+        self.data = DataTree.DataTree()
+        self.tracks = []
+        self.slices = []
 
         is_function = self.buildTracks()
 
         if is_function:
             d = self.getData( None, None )
-            self.mData[ "all" ] = odict( (( "all", d),))
-            self.debug( "%s: collecting data finished for function." % (self.mTracker))
+            self.data[ "all" ] = odict( (( "all", d),))
+            self.debug( "%s: collecting data finished for function." % (self.tracker))
             return
 
-        if len(self.mTracks) == 0: 
-            self.warn( "%s: no tracks found - no output" % self.mTracker )
-            raise ValueError( "no tracks found from %s" % (str(self.mTracker)))
+        if len(self.tracks) == 0: 
+            self.warn( "%s: no tracks found - no output" % self.tracker )
+            raise ValueError( "no tracks found from %s" % (str(self.tracker)))
 
         self.buildSlices()
 
-        tracks, slices = self.mTracks, self.mSlices
+        tracks, slices = self.tracks, self.slices
 
-        self.debug( "%s: collecting data started for %i pairs, %i tracks: %s, %i slices: %s" % (self.mTracker, 
+        self.debug( "%s: collecting data started for %i pairs, %i tracks: %s, %i slices: %s" % (self.tracker, 
                                                                                            len(tracks) * len(slices), 
                                                                                            len(tracks), str(tracks),
                                                                                            len(slices), str(slices) ) )
-        self.mData = DataTree.DataTree()
+        self.data = DataTree.DataTree()
         for track in tracks:
-            self.mData[track] =  DataTree.DataTree()
+            self.data[track] =  DataTree.DataTree()
             if slices:
                 for slice in slices:
                     d = self.getData( track, slice )
                     if not d: continue
-                    self.mData[track][slice] = DataTree.DataTree( d )
+                    self.data[track][slice] = DataTree.DataTree( d )
             else:
                 d = self.getData( track, None )
-                self.mData[track] = DataTree.DataTree( d )
+                self.data[track] = DataTree.DataTree( d )
 
-        self.debug( "%s: collecting data finished for %i pairs, %i tracks: %s, %i slices: %s" % (self.mTracker, 
+        self.debug( "%s: collecting data finished for %i pairs, %i tracks: %s, %i slices: %s" % (self.tracker, 
                                                                                             len(tracks) * len(slices), 
                                                                                             len(tracks), str(tracks),
                                                                                             len(slices), str(slices) ) )
@@ -271,9 +184,9 @@ class Dispatcher(Reporter):
     def transform(self): 
         '''call data transformers
         '''
-        for transformer in self.mTransformers:
-            self.debug( "%s: applying %s" % (self.mRenderer, transformer ))
-            self.mData = transformer( self.mData )
+        for transformer in self.transformers:
+            self.debug( "%s: applying %s" % (self.renderer, transformer ))
+            self.data = transformer( self.data )
 
     def render( self ):
         '''supply the :class:`Renderer.Renderer` with 
@@ -282,14 +195,14 @@ class Dispatcher(Reporter):
 
         return resultblocks
         '''
-        self.debug( "%s: rendering data started for %i items" % (self,len(self.mData)))
+        self.debug( "%s: rendering data started for %i items" % (self,len(self.data)))
 
         results = ResultBlocks( title="main" )
 
-        labels = self.mData.getPaths()
+        labels = self.data.getPaths()
         nlevels = len(labels)
         self.debug( "%s: rendering data started: %s labels, %s minimum, %s" %\
-                        (self, str(nlevels), str(self.mRenderer.nlevels), str(labels)))
+                        (self, str(nlevels), str(self.renderer.nlevels), str(labels)))
 
         if nlevels >= 2:
             all_tracks, all_slices = labels[0], labels[1]
@@ -297,56 +210,56 @@ class Dispatcher(Reporter):
             all_tracks, all_slices = labels[0], []
 
         self.debug( "%s: rendering: groupby=%s, input: tracks=%s, slices=%s; output: tracks=%s, slices=%s" %\
-                   (self, self.mGroupBy, self.mTracks, self.mSlices, all_tracks, all_slices))
+                   (self, self.groupby, self.tracks, self.slices, all_tracks, all_slices))
 
-        tracks, slices = self.mTracks, self.mSlices
+        tracks, slices = self.tracks, self.slices
 
-        if nlevels < self.mRenderer.nlevels:
+        if nlevels < self.renderer.nlevels:
             # add some dummy levels if levels is not enough
-            d = self.mData
-            for x in range( self.mRenderer.nlevels - nlevels):
+            d = self.data
+            for x in range( self.renderer.nlevels - nlevels):
                 d = odict( (("all", d ),))
-            results.append( self.mRenderer( DataTree.DataTree(d), path = ("all",) ) )
+            results.append( self.renderer( DataTree.DataTree(d), path = ("all",) ) )
 
-        elif nlevels >= self.mRenderer.nlevels:
-            if self.mGroupBy == "none":
-                paths = list(itertools.product( *labels[:-self.mRenderer.nlevels] ))
+        elif nlevels >= self.renderer.nlevels:
+            if self.groupby == "none":
+                paths = list(itertools.product( *labels[:-self.renderer.nlevels] ))
                 for path in paths:
                     subtitle = "/".join( path )
-                    work = self.mData.getLeaf( path )
+                    work = self.data.getLeaf( path )
                     if not work: continue
                     for key,value in work.iteritems():
                         vals = DataTree.DataTree( odict( ((key,value),) ))
-                        results.append( self.mRenderer( vals, path = path ))
-            elif nlevels == self.mRenderer.nlevels and self.mGroupBy == "track":
+                        results.append( self.renderer( vals, path = path ))
+            elif nlevels == self.renderer.nlevels and self.groupby == "track":
                 for track in all_tracks:
-                    vals = DataTree.DataTree( odict( ((track, self.mData[track]),)))
-                    results.append( self.mRenderer( vals, path = (track,) ) )
+                    vals = DataTree.DataTree( odict( ((track, self.data[track]),)))
+                    results.append( self.renderer( vals, path = (track,) ) )
                 
-            elif nlevels > self.mRenderer.nlevels and self.mGroupBy == "track":
+            elif nlevels > self.renderer.nlevels and self.groupby == "track":
                 for track in all_tracks:
                     # slices can be absent
-                    d = [ (x,self.mData[track][x]) for x in all_slices if x in self.mData[track] ]
+                    d = [ (x,self.data[track][x]) for x in all_slices if x in self.data[track] ]
                     if len(d) == 0: continue
                     vals = DataTree.DataTree( odict( d ) )
-                    results.append( self.mRenderer( vals, path = (track,) ) )
+                    results.append( self.renderer( vals, path = (track,) ) )
 
-            elif nlevels > self.mRenderer.nlevels and self.mGroupBy == "slice" and len(self.mSlices) > 0:
+            elif nlevels > self.renderer.nlevels and self.groupby == "slice" and len(self.slices) > 0:
                 for slice in all_slices:
-                    d = [ (x,self.mData[x][slice]) for x in all_tracks if slice in self.mData[x] ]
+                    d = [ (x,self.data[x][slice]) for x in all_tracks if slice in self.data[x] ]
                     if len(d) == 0: continue
                     vals = DataTree.DataTree( odict( d ) )
-                    results.append( self.mRenderer( vals, path = (slice,) ) )
-            elif self.mGroupBy == "all":
-                results.append( self.mRenderer( self.mData, path = () ) )
+                    results.append( self.renderer( vals, path = (slice,) ) )
+            elif self.groupby == "all":
+                results.append( self.renderer( self.data, path = () ) )
             else:
-                results.append( self.mRenderer( self.mData, path = () ) )
+                results.append( self.renderer( self.data, path = () ) )
 
         if len(results) == 0:
             self.warn("tracker returned no data.")
             raise ValueError( "tracker returned no data." )
 
-        self.debug( "%s: rendering data finished with %i blocks" % (self.mTracker, len(results)))
+        self.debug( "%s: rendering data finished with %i blocks" % (self.tracker, len(results)))
 
         return results
 
@@ -358,13 +271,13 @@ class Dispatcher(Reporter):
         try: self.collect()
         except: return Renderer.buildException( "collection" )
 
-        labels = self.mData.getPaths()
+        labels = self.data.getPaths()
         self.debug( "%s: after collection: %i labels: %s" % (self,len(labels), str(labels)))
         
         try: self.transform()
         except: return Renderer.buildException( "transformation" )
 
-        labels = self.mData.getPaths()
+        labels = self.data.getPaths()
         self.debug( "%s: after transformation: %i labels: %s" % (self,len(labels), str(labels)))
 
         try: result = self.render()
@@ -373,4 +286,16 @@ class Dispatcher(Reporter):
         return result
 
         
+    def getTracks( self ):
+        '''return tracks used by the dispatcher.
+        
+        used for re-constructing call to cache.
+        '''
+        return self.tracks
 
+    def getSlices( self ):
+        '''return slices used by the dispatcher.
+        
+        used for re-constructing call to cache.
+        '''
+        return self.slices

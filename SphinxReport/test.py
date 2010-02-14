@@ -102,7 +102,7 @@ import matplotlib.pyplot as plt
 from SphinxReport.Tracker import Tracker
 from SphinxReport.Renderer import *
 from SphinxReport.Transformer import *
-from SphinxReport.report_directive import MAP_RENDERER, MAP_TRANSFORMER
+from SphinxReport import MAP_RENDERER, MAP_TRANSFORMER
 from SphinxReport import Utils
 
 import SphinxReport.clean

@@ -25,8 +25,11 @@ sys.path.extend( [os.path.join('..', 'SphinxReport'),
 # be used.
 sphinxreport_cachedir=os.path.abspath("_cache")
 
+# urls to include within the annotation of an image
+sphinxreport_urls=("code", "rst", "data")
+
 # The Database backend. Possible values are mysql, psql and sqlite
-sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
+sphinxrepot_sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 
 # add errors into the document
 sphinxreport_show_errors = True

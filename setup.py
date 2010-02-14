@@ -49,6 +49,7 @@ setup(name='SphinxReport',
             'sphinxreport-clean = SphinxReport.clean:main',
             'sphinxreport-test = SphinxReport.test:main',
             'sphinxreport-quickstart = SphinxReport.quickstart:main',            
+            'sphinxreport-get = SphinxReport.get:main',            
         ],
         'distutils.commands': [
             'build_sphinx = sphinxreport.setup_command:BuildDoc',

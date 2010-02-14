@@ -32,11 +32,15 @@ def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
     return all(hasattr(obj, attr) for attr in attrs)
 
-def quoted( fn ):
+def quote_filename( fn ):
     '''quote a filename.
     latex does not permit a "." for image files - replace it with "-"
     '''
     return re.sub( "[.]", "-", fn )
+
+def quote_rst( text ):
+    '''quote text for restructured text.'''
+    return re.sub( r"([*])", r"\\\1", str(text))
 
 class memoized(object):
    """Decorator that caches a function's return value each time it is called.
@@ -80,8 +84,8 @@ def getModule( name ):
             (file, pathname, description) = imp.find_module( name )
         except ImportError:
             warn("could not find module %s" % name )        
-            raise
-        
+            raise ImportError("could not find module %s" % name )
+
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
     debug( "loading module: %s: %s, %s, %s" % (name, file, pathname, description) )

@@ -146,10 +146,10 @@ class TrackerSQL( Tracker ):
         """lazy connection function."""
 
         if not self.db:
-            db = sqlalchemy.create_engine( sql_backend )
+            db = sqlalchemy.create_engine( sphinxreport_sql_backend )
 
             if not db:
-                raise ValueError( "could not connect to database %s" % sql_backend)
+                raise ValueError( "could not connect to database %s" % sphinxreport_sql_backend)
 
             db.echo = False  
 

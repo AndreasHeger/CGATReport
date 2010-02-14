@@ -1,24 +1,26 @@
-# Makefile for Sphinx Report
-# Derived from the Makefile coming with sphinx.
+# Makefile for Sphinx documentation
+#
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXCLEAN   = sphinxreport-clean
 SPHINXBUILD   = sphinxreport-build --num-jobs=4 sphinx-build
+SPHINXCLEAN   = sphinxreport-clean
 PAPER         =
+
+PUBLISH       = ~/public_html/SphinxReport
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
+PORT=8080
+
 .PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  html      to make standalone HTML files"
-	@echo "  clean	   to clean up the current build while keeping all the cached data."
-	@echo "  distclean to clean up the current build and all the cached data."
 	@echo "  dirhtml   to make HTML files named index.html in directories"
 	@echo "  pickle    to make pickle files"
 	@echo "  json      to make JSON files"
@@ -28,6 +30,7 @@ help:
 	@echo "  changes   to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck to check all external links for integrity"
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
+	@echo "  publish   to copy the html code to public_html"
 
 clean:
 	$(SPHINXCLEAN) clean
@@ -44,6 +47,13 @@ dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) _build/dirhtml
 	@echo
 	@echo "Build finished. The HTML pages are in _build/dirhtml."
+
+server-start:
+	if ! test -e static; then ln -s _build/html static; fi 
+	nohup nice -19 ./server.py $(PORT) 2>&1 >> server.log &
+
+server-stop:
+	pkill "server.py $(PORT)"
 
 pickle:
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) _build/pickle
@@ -92,3 +102,8 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) _build/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in _build/doctest/output.txt."
+
+publish:
+	rm -rf $(PUBLISH)
+	mkdir $(PUBLISH)
+	cp -r _build/html/* $(PUBLISH)/
