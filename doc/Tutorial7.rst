@@ -12,7 +12,6 @@ web server.
    Running a web server potentially opens security holes. Only
    run a web server if you know what you are doing. Also, do
    not assume that I know what I am doing.
-   My recommendation is to run the web server behind a firewall.
 
 :mod:`SphinxReport` uses `web.py <http://webpy.org>`_ as a server.
 Make sure it is installed. To test if it is, run::
@@ -21,8 +20,8 @@ Make sure it is installed. To test if it is, run::
 
 from your python command line.
 
-Active content can be added to the file :file:`serve.py` in the 
-root directory. Readily available applications are
+Active content can be added to the file :file:`server.py` in the 
+root directory. Already available applications are
 
    * :class:`DataTable`
 
@@ -37,3 +36,9 @@ in the root directory of your document. See the :file:`Makefile`
 for configuration options.
 
 The document should now be accessible at ``http://localhost:8080/static/index.html``.
+
+.. note::
+
+   Contents of the cache can also be retrieved with the :ref:`sphinxreport-get`
+   command line utility.
+

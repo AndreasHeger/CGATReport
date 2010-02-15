@@ -29,7 +29,7 @@ sphinxreport_cachedir=os.path.abspath("_cache")
 sphinxreport_urls=("code", "rst", "data")
 
 # The Database backend. Possible values are mysql, psql and sqlite
-sphinxrepot_sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
+sphinxreport_sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 
 # add errors into the document
 sphinxreport_show_errors = True

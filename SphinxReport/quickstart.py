@@ -3,8 +3,6 @@ import sys, re, os
 import optparse
 
 from pkg_resources import resource_string
-
-import SphinxReport
 from pkgutil import get_loader
 
 USAGE="""%s [OPTIONS]
@@ -72,7 +70,7 @@ def main( argv = sys.argv ):
     dest = options.destination
 
     # create directories
-    for d in ("", "_templates", "labbook", "labbook/static", "analysis", "pipeline", "python" ):
+    for d in ("", "_templates", "labbook", "labbook/static", "analysis", "pipeline", "python", "templates" ):
         dd = os.path.join( dest, d )
         if not os.path.exists( dd ): os.makedirs( dd )
 

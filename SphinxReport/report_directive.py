@@ -18,8 +18,7 @@ import traceback
 
 from docutils.parsers.rst import directives
 
-import SphinxReport
-from SphinxReport import Renderer, Tracker, Transformer, Dispatcher, Utils, Cache
+from SphinxReport import Config, Renderer, Tracker, Transformer, Dispatcher, Utils, Cache
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReport.Reporter import *
 
@@ -76,9 +75,9 @@ def collectImagesFromMatplotlib( template_name,
 
     map_figure2text = {}
 
-    all_formats = [SphinxReport.HTML_IMAGE_FORMAT]
-    if SphinxReport.LATEX_IMAGE_FORMAT: all_formats.append( SphinxReport.LATEX_IMAGE_FORMAT )
-    all_formats.extend( SphinxReport.ADDITIONAL_FORMATS )
+    all_formats = [Config.HTML_IMAGE_FORMAT]
+    if Config.LATEX_IMAGE_FORMAT: all_formats.append( Config.LATEX_IMAGE_FORMAT )
+    all_formats.extend( Config.ADDITIONAL_FORMATS )
 
     for i, figman in enumerate(fig_managers):
         # create all images
@@ -122,8 +121,8 @@ def collectImagesFromMatplotlib( template_name,
         imagepath = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
         linked_text = imagepath + ".txt"
 
-        if SphinxReport.HTML_IMAGE_FORMAT:
-            id, format, dpi = SphinxReport.HTML_IMAGE_FORMAT
+        if Config.HTML_IMAGE_FORMAT:
+            id, format, dpi = Config.HTML_IMAGE_FORMAT
             template = '''
 .. htmlonly::
 
@@ -135,7 +134,7 @@ def collectImagesFromMatplotlib( template_name,
             
             linked_image = imagepath + ".%s" % format
             extra_images=[]
-            for id, format, dpi in SphinxReport.ADDITIONAL_FORMATS:
+            for id, format, dpi in Config.ADDITIONAL_FORMATS:
                 extra_images.append( "`%(id)s <%(imagepath)s.%(format)s>`__" % locals())
             if extra_images: extra_images = " " + " ".join( extra_images)
             else: extra_images = ""
@@ -153,8 +152,8 @@ def collectImagesFromMatplotlib( template_name,
 
             rst_output += template % locals()
             
-        if SphinxReport.LATEX_IMAGE_FORMAT:
-            id, format, dpi = SphinxReport.LATEX_IMAGE_FORMAT
+        if Config.LATEX_IMAGE_FORMAT:
+            id, format, dpi = Config.LATEX_IMAGE_FORMAT
             template = '''
 .. latexonly::
 
@@ -340,9 +339,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     except KeyError: 
         layout = "column"
     
-    render_options = selectAndDeleteOptions( options, SphinxReport.RENDER_OPTIONS )
-    transform_options = selectAndDeleteOptions( options, SphinxReport.TRANSFORM_OPTIONS)
-    dispatcher_options = selectAndDeleteOptions( options, SphinxReport.DISPATCHER_OPTIONS)
+    render_options = selectAndDeleteOptions( options, Config.RENDER_OPTIONS )
+    transform_options = selectAndDeleteOptions( options, Config.TRANSFORM_OPTIONS)
+    dispatcher_options = selectAndDeleteOptions( options, Config.DISPATCHER_OPTIONS)
 
     logging.debug( "renderer options: %s" % str(render_options) )
     logging.debug( "transformer options: %s" % str(transform_options) )
@@ -374,7 +373,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                                         str(transformer_names) ).hexdigest()
 
         template_name = Utils.quote_filename( \
-            SphinxReport.SEPARATOR.join( (reference, renderer_name, options_hash ) ))
+            Config.SEPARATOR.join( (reference, renderer_name, options_hash ) ))
         filename_text = os.path.join( outdir, "%s.txt" % (template_name))
 
         logging.debug( "options_hash=%s" %  options_hash)
@@ -448,9 +447,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         logging.debug( "creating transformers." )
 
         for transformer in transformer_names:
-            if transformer not in SphinxReport.MAP_TRANSFORMER: 
+            if transformer not in Config.MAP_TRANSFORMER: 
                 raise KeyError('unknown transformer `%s`' % transformer )
-            else: transformers.append( SphinxReport.MAP_TRANSFORMER[transformer](**transform_options)) 
+            else: transformers.append( Config.MAP_TRANSFORMER[transformer](**transform_options)) 
 
         ########################################################
         # determine the renderer
@@ -458,10 +457,10 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         if renderer_name == None:
             raise ValueError("the report directive requires a renderer.")
 
-        if renderer_name not in SphinxReport.MAP_RENDERER:
+        if renderer_name not in Config.MAP_RENDERER:
             raise KeyError("unknown renderer `%s`" % renderer_name)
 
-        renderer = SphinxReport.MAP_RENDERER[renderer_name]
+        renderer = Config.MAP_RENDERER[renderer_name]
 
         ########################################################
         # create and call dispatcher
@@ -550,10 +549,10 @@ except ImportError:
 
     report_directive.__doc__ = __doc__
     report_directive.arguments = (1, 0, 1)
-    report_directive.options = dict( SphinxReport.RENDER_OPTIONS.items() +\
-                                         SphinxReport.TRANSFORM_OPTIONS.items() +\
-                                         SphinxReport.DISPLAY_OPTIONS.items() +\
-                                         SphinxReport.DISPATCHER_OPTIONS.items() )
+    report_directive.options = dict( Config.RENDER_OPTIONS.items() +\
+                                         Config.TRANSFORM_OPTIONS.items() +\
+                                         Config.DISPLAY_OPTIONS.items() +\
+                                         Config.DISPATCHER_OPTIONS.items() )
 
     _directives['report'] = report_directive
 else:
@@ -562,10 +561,10 @@ else:
         optional_arguments = 0
         has_content = True
         final_argument_whitespace = True
-        option_spec = dict( SphinxReport.RENDER_OPTIONS.items() +\
-                                SphinxReport.TRANSFORM_OPTIONS.items() +\
-                                SphinxReport.DISPLAY_OPTIONS.items() +\
-                                SphinxReport.DISPATCHER_OPTIONS.items() )
+        option_spec = dict( Config.RENDER_OPTIONS.items() +\
+                                Config.TRANSFORM_OPTIONS.items() +\
+                                Config.DISPLAY_OPTIONS.items() +\
+                                Config.DISPATCHER_OPTIONS.items() )
         def run(self):
             document = self.state.document.current_source
             logging.info( "starting: %s:%i" % (str(document), self.lineno) )

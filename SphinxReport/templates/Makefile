@@ -50,7 +50,7 @@ dirhtml:
 
 server-start:
 	if ! test -e static; then ln -s _build/html static; fi 
-	nohup nice -19 ./server.py $(PORT) 2>&1 >> server.log &
+	nohup nice -19 python ./server.py $(PORT) 2>&1 >> server.log &
 
 server-stop:
 	pkill "server.py $(PORT)"
