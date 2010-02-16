@@ -167,6 +167,50 @@ def collectImagesFromMatplotlib( template_name,
 
     return map_figure2text
 
+def collectHTML( result_blocks,
+                 template_name, 
+                 outdir, 
+                 linkdir, 
+                 content,
+                 display_options,
+                 linked_codename,
+                 tracker_id):
+    '''collect html output from result blocks.
+    
+    
+
+    HTML output is saved as a file and a link will be inserted at
+    the place holder text.
+    '''
+    map_figure2text = {}
+    extension = "html"
+    
+    index = 0
+    for blocks in enumerate(result_blocks):
+        print type(blocks)
+        for block in blocks:
+            print "block=",type(block)
+            print dir(block)
+            if not hasattr( block, "html" ): continue
+            
+            outname = "%s_%02d" % (template_name, index)
+            index += 1
+            outputpath = os.path.join(outdir, '%s.%s' % (outname, extension))
+
+            # save to file
+            outf = open( outputpath, "w")
+            outf.write( block.html )
+            outf.close()
+
+            path = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
+            link = path + "." + extension
+
+            rst_output = "`placeholder <%(link)s>`_" % locals()
+
+            map_figure2text[ "#$html %i$#" % i] = rst_output
+
+    return map_figure2text
+
 def layoutBlocks( blocks, layout = "column"):
     """layout blocks of rst text.
 
@@ -180,9 +224,9 @@ def layoutBlocks( blocks, layout = "column"):
 
     # flatten blocks
     x = ResultBlocks()
-    for i in blocks: 
-        if i.title: i.updateTitle( i.title, "prefix" )
-        x.extend( i )
+    for b in blocks:
+        if b.title: b.updateTitle( b.title, "prefix" )
+        x.extend( b )
     blocks = x
 
     if layout == "column":
@@ -492,6 +536,18 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                                                    display_options,
                                                    linked_codename,
                                                    tracker_id )
+
+    ###########################################################
+    # collect text
+    ###########################################################
+    map_figure2text.update( collectHTML(  blocks,
+                                          template_name, 
+                                          outdir, 
+                                          linkdir, 
+                                          content, 
+                                          display_options,
+                                          linked_codename,
+                                          tracker_id ) )
 
     ###########################################################
     # replace place holders or add text

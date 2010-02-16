@@ -144,9 +144,16 @@ class RendererTable( Renderer ):
     '''a basic table. 
 
     Values are either text or converted to text.
+
+    If the has more rows than :attr:`max_rows` or more columns
+    than :attr:`max_cols`, a placeholder will be inserted pointing
+    towards a file.
     '''
 
     nlevels = 2
+
+    max_rows = 100
+    max_cols = 30
 
     def __init__( self, *args, **kwargs ):
         Renderer.__init__(self, *args, **kwargs )
@@ -187,21 +194,41 @@ class RendererTable( Renderer ):
 
     def __call__(self, data, path):
 
-        lines = []
+
         matrix, row_headers, col_headers = self.buildTable( data )
-        if matrix == None: return lines
+        skip = False
+
+        if matrix == None: 
+            return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
         title = "/".join(path)
 
-        lines.append( ".. csv-table:: %s" % title )
-        lines.append( '   :header: "", "%s" ' % '","'.join( col_headers ) )
-        lines.append( '' )
+        if len(row_headers) > self.max_rows or len(col_headers) > self.max_cols:
+            debug("%s: saving %i x %i table as file'"% (id(self), 
+                                                        len(row_headers), 
+                                                        len(col_headers)))
+            lines = ["#$html %i$#"]
+            r = ResultBlock( "\n".join(lines), title = title)
+            # create an html table
+            data = ["<table>"]
+            data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( col_headers) )
+            for h, row in zip( row_headers, matrix):
+                data.append( "<tr><th>%s</th><th>%s</th></tr>" % (h, "</th><th>".join(row) ))
+            data.append( "</table>" )
+            r.html = "\n".join( data )
+            return ResultBlocks( r )
 
-        for header, line in zip( row_headers, matrix ):
-            lines.append( '   "%s","%s"' % (header, '","'.join( line ) ) )
+        lines = []
+        if not skip:
+            lines.append( ".. csv-table:: %s" % title )
+            lines.append( '   :header: "", "%s" ' % '","'.join( col_headers ) )
+            lines.append( '' )
 
-        lines.append( "") 
+            for header, line in zip( row_headers, matrix ):
+                lines.append( '   "%s","%s"' % (header, '","'.join( line ) ) )
 
+            lines.append( "") 
+        
         return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
 class RendererGlossary( RendererTable ):
