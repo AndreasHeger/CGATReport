@@ -135,6 +135,45 @@ However, we prefer a cumulative histogram and rendering without bullets::
 
    sphinxreport-test -t SingleColumnDataExample -r line-plot -m histogram -o tf-aggregate=cumulative -o as-lines
 
+.. _sphinxreport-get:
+
+sphinxreport-get
+----------------
+
+:file:`sphinxreport-get` retrieves data from the cache. It is called as
+
+   $ sphinxreport-get [options] tracker
+
+The options are:
+
+**-t/--tracker** tracker
+   :class:`Tracker` to use.
+
+**-a/--tracks** tracks
+   Tracks to display as a comma-separated list. If none are given, output all tracks.
+
+**-s/--slices** slices
+   Slices to display as a comma-separated list. If none are given, output all slices
+
+**-v/--view** 
+   Do not ouput data, but display list of available tracks and slices.
+
+**-g/--groupby** group by
+   (track,slice)
+   Group output either by :term:`track` or :term:`slice`.
+
+**-f/--format** output format
+   (tsv, csv)
+   Output format. Available are:
+
+   * ``tsv``: tab-separated values
+   * ``csv``: comma-separated values
+
+For example, to output the data in the cache hold for the tracker ``LabeledDataExample`` as
+comma separated values, type::
+
+    sphinxreport-get --format=csv LabeledDataExample
+
 .. _sphinxreport-gallery:
 
 sphinxreport-gallery
