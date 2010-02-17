@@ -565,8 +565,10 @@ class RendererMatrix(RendererTableBase):
 
         rows, columns = labels[:2]
 
+        self.debug("creating matrix")
         matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), dtype )
         matrix.shape = (len(rows), len(columns) )
+        self.debug("constructing matrix")
         for x,row in enumerate(rows):
             for y, column in enumerate(columns):
                 # deal with empty values from DataTree
@@ -578,9 +580,11 @@ class RendererMatrix(RendererTableBase):
                     raise ValueError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
                 except TypeError:
                     raise TypeError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
-                
+        
+        
         if self.mConverters and apply_transformations:
             for converter in self.mConverters: 
+                self.debug("applying converter %s" % converter)
                 matrix, rows, columns = converter(matrix, rows, columns)
 
         # convert rows/columns to str (might be None)
