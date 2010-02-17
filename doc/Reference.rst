@@ -97,6 +97,13 @@ ignored.
 
       printf format for tick labels on the colorbar. The default is '%1.1f'.
 
+   force
+      flag
+
+      force display of large tables and matrices. If given,
+      the large table will be inserted. The default behaviour is to create
+      a separate file for the table and link to it.
+
    palette  
       choice
 

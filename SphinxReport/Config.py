@@ -61,6 +61,7 @@ DISPATCHER_OPTIONS = {
 
 RENDER_OPTIONS = { 
     'layout' : directives.unchanged,
+    'force' : directives.flag,
     'error' : directives.unchanged,
     'label' : directives.unchanged,
     'logscale' : directives.unchanged,

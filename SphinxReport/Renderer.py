@@ -148,7 +148,8 @@ class RendererTableBase( Renderer ):
 
     def __init__( self, *args, **kwargs ):
         Renderer.__init__(self, *args, **kwargs )
-            
+        self.force = "force" in kwargs            
+
     def asFile( self, matrix, row_headers, col_headers, title ):
         '''save the table as HTML file.'''
 
@@ -233,7 +234,7 @@ class RendererTable( RendererTableBase ):
             return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
         # do not output large matrices as rst files
-        if len(row_headers) > self.max_rows or len(col_headers) > self.max_cols:
+        if not self.force and (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols):
             return self.asFile( matrix, row_headers, col_headers, title )
 
         lines = []
@@ -601,7 +602,7 @@ class RendererMatrix(RendererTableBase):
             return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
         # do not output large matrices as rst files
-        if len(rows) > self.max_rows or len(columns) > self.max_cols:
+        if not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols):
             return self.asFile( [ [ self.format % x for x in r ] for r in matrix ], 
                                 rows, 
                                 columns, 
