@@ -1,6 +1,6 @@
 import types, re, string
 
-class ResultBlock:
+class ResultBlock(object):
     """Result of :class:``Renderer``
 
     A ResultBlock is a container of an :class:``Renderer`` result. It contains
@@ -8,10 +8,7 @@ class ResultBlock:
 
     Blocks will be arranged according to the :term: `layout`
     option to the ``report`` directive.
-
-    A result Block is recursive.
     """
-
 
     def __init__( self, text, title ):
         assert type(text) in types.StringTypes, "created ResultBlock without txt, but %s" % str(text)
@@ -67,7 +64,9 @@ class EmptyResultBlock(ResultBlock):
         ResultBlock.__init__( self, "no data", title )
 
 class ResultBlocks(object):
-    '''
+    '''A collection of :class:`ResultBlock`.
+
+    This class is recursive.
     '''
     __slots__=["_data", "title"]
     def __init__(self, block = None, title = None ):

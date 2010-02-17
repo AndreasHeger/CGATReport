@@ -9,7 +9,6 @@ except ImportError:
     from docutils.parsers.rst.directives.images import Image
     align = Image.align
 
-
 # Map transformer names to their implementations.
 MAP_TRANSFORMER = { 
     'stats' : Transformer.TransformerStats, 

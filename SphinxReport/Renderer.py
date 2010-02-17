@@ -139,8 +139,41 @@ class Renderer(Reporter):
                 raise 
             
         return result
+
+class RendererTableBase( Renderer ):
+    '''base classes for tables and matrices.'''
+    
+    max_rows = 30
+    max_cols = 20
+
+    def __init__( self, *args, **kwargs ):
+        Renderer.__init__(self, *args, **kwargs )
             
-class RendererTable( Renderer ):
+    def asFile( self, matrix, row_headers, col_headers, title ):
+        '''save the table as HTML file.'''
+
+        # multiple files per renderer not implemented.
+        index = 0
+
+        debug("%s: saving %i x %i table as file'"% (id(self), 
+                                                    len(row_headers), 
+                                                    len(col_headers)))
+        lines = []
+        lines.append("`%i x %i table <#$html %i$#>`_" %\
+                     (len(row_headers), len(col_headers),
+                      index) )
+        r = ResultBlock( "\n".join(lines), title = title)
+        # create an html table
+        data = ["<table>"]
+        data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( col_headers) )
+        for h, row in zip( row_headers, matrix):
+            data.append( "<tr><th>%s</th><td>%s</td></tr>" % (h, "</td><td>".join(row) ))
+        data.append( "</table>\n" )
+        r.html = "\n".join( data )
+
+        return ResultBlocks( r )
+
+class RendererTable( RendererTableBase ):
     '''a basic table. 
 
     Values are either text or converted to text.
@@ -152,11 +185,8 @@ class RendererTable( Renderer ):
 
     nlevels = 2
 
-    max_rows = 100
-    max_cols = 30
-
     def __init__( self, *args, **kwargs ):
-        Renderer.__init__(self, *args, **kwargs )
+        RendererTableBase.__init__(self, *args, **kwargs )
         self.mTranspose = "transpose" in kwargs
 
     def getHeaders( self, data ):
@@ -178,6 +208,7 @@ class RendererTable( Renderer ):
 
         return sorted_headers, column_headers
 
+
     def buildTable( self, data ):
         """build table from data.
 
@@ -196,38 +227,24 @@ class RendererTable( Renderer ):
 
 
         matrix, row_headers, col_headers = self.buildTable( data )
-        skip = False
+        title = "/".join(path)
 
         if matrix == None: 
             return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
-        title = "/".join(path)
-
+        # do not output large matrices as rst files
         if len(row_headers) > self.max_rows or len(col_headers) > self.max_cols:
-            debug("%s: saving %i x %i table as file'"% (id(self), 
-                                                        len(row_headers), 
-                                                        len(col_headers)))
-            lines = ["#$html %i$#"]
-            r = ResultBlock( "\n".join(lines), title = title)
-            # create an html table
-            data = ["<table>"]
-            data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( col_headers) )
-            for h, row in zip( row_headers, matrix):
-                data.append( "<tr><th>%s</th><th>%s</th></tr>" % (h, "</th><th>".join(row) ))
-            data.append( "</table>" )
-            r.html = "\n".join( data )
-            return ResultBlocks( r )
+            return self.asFile( matrix, row_headers, col_headers, title )
 
         lines = []
-        if not skip:
-            lines.append( ".. csv-table:: %s" % title )
-            lines.append( '   :header: "", "%s" ' % '","'.join( col_headers ) )
-            lines.append( '' )
+        lines.append( ".. csv-table:: %s" % title )
+        lines.append( '   :header: "", "%s" ' % '","'.join( col_headers ) )
+        lines.append( '' )
 
-            for header, line in zip( row_headers, matrix ):
-                lines.append( '   "%s","%s"' % (header, '","'.join( line ) ) )
+        for header, line in zip( row_headers, matrix ):
+            lines.append( '   "%s","%s"' % (header, '","'.join( line ) ) )
 
-            lines.append( "") 
+        lines.append( "") 
         
         return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
@@ -256,7 +273,7 @@ class RendererGlossary( RendererTable ):
 
         return ResultBlocks( "\n".join(lines), title = title )
 
-class RendererMatrix(Renderer):    
+class RendererMatrix(RendererTableBase):    
     """A table with numerical columns.
 
     It implements column-wise and row-wise transformations.
@@ -286,7 +303,7 @@ class RendererMatrix(Renderer):
     nlevels = 2
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
+        RendererTableBase.__init__(self, *args, **kwargs )
 
         self.mMapKeywordToTransform = {
             "correspondence-analysis": self.transformCorrespondenceAnalysis,
@@ -574,12 +591,23 @@ class RendererMatrix(Renderer):
     def render( self, work, path ):
         """render the data.
         """
+
         results = ResultBlocks( title = path )
+
         matrix, rows, columns = self.buildMatrix( work )
+        title = "/".join(path)
+
+        if len(rows) == 0:
+            return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
+
+        # do not output large matrices as rst files
+        if len(rows) > self.max_rows or len(columns) > self.max_cols:
+            return self.asFile( [ [ self.format % x for x in r ] for r in matrix ], 
+                                rows, 
+                                columns, 
+                                title )
 
         lines = []
-        if len(rows) == 0: return lines
-
         lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
         lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
         lines.append( '')
@@ -588,6 +616,7 @@ class RendererMatrix(Renderer):
         lines.append( "") 
         if not path: subtitle = ""
         else: subtitle = "/".join(path)
+
         results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
 
         return results

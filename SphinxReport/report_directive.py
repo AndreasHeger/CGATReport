@@ -176,25 +176,19 @@ def collectHTML( result_blocks,
                  linked_codename,
                  tracker_id):
     '''collect html output from result blocks.
-    
-    
 
-    HTML output is saved as a file and a link will be inserted at
-    the place holder text.
+    HTML output is written to a file and a link will be inserted at
+    the place holder.
     '''
     map_figure2text = {}
     extension = "html"
     
     index = 0
-    for blocks in enumerate(result_blocks):
-        print type(blocks)
+    for blocks in result_blocks:
         for block in blocks:
-            print "block=",type(block)
-            print dir(block)
             if not hasattr( block, "html" ): continue
             
             outname = "%s_%02d" % (template_name, index)
-            index += 1
             outputpath = os.path.join(outdir, '%s.%s' % (outname, extension))
 
             # save to file
@@ -205,9 +199,10 @@ def collectHTML( result_blocks,
             path = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
             link = path + "." + extension
 
-            rst_output = "`placeholder <%(link)s>`_" % locals()
+            rst_output = "%(link)s" % locals()
 
-            map_figure2text[ "#$html %i$#" % i] = rst_output
+            map_figure2text[ "#$html %i$#" % index] = rst_output
+            index += 1
 
     return map_figure2text
 
@@ -509,11 +504,16 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         ########################################################
         # create and call dispatcher
         logging.debug( "creating dispatcher" )
+
         dispatcher = Dispatcher.Dispatcher( tracker, 
                                             renderer(tracker, **render_options), 
                                             transformers )     
         blocks = dispatcher( **dispatcher_options )
+
     except:
+
+        logging.warn("exception caught at %s:%i - see document" % (str(document), lineno) )
+
         blocks = Renderer.buildException( "invocation" )
         code = None
         tracker_id = None

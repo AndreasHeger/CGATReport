@@ -93,3 +93,18 @@ class LargeTable( Tracker ):
 
         data = [ "value%i" % y for y in range(self.nrows) ]
         return odict( [ ("col%i" % x, data) for x in range(self.ncols)] )
+
+class VeryLargeMatrix( Tracker ):
+    """example of a large matrix with long labels."""
+    ncols = 200
+    ntracks = 50
+
+    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.ntracks)]
+
+    def __call__(self, track, slice = None):
+        
+        data = []
+        for x in range( 0, self.ncols):
+            data.append( ("col%i" % x,x ))
+
+        return dict( data )
