@@ -11,7 +11,3 @@ Multi-level tables
 
    Rendering a large table
 
-.. report:: TestCases.VeryLargeMatrix
-   :render: matrix
-
-   Rendering a large matrix

@@ -195,14 +195,17 @@ class Dispatcher(Reporter):
 
         return resultblocks
         '''
-        self.debug( "%s: rendering data started for %i items" % (self,len(self.data)))
+        self.debug( "%s: rendering data started for %i items" % (self,
+                                                                 len(self.data)))
 
         results = ResultBlocks( title="main" )
 
         labels = self.data.getPaths()
         nlevels = len(labels)
         self.debug( "%s: rendering data started: %s labels, %s minimum, %s" %\
-                        (self, str(nlevels), str(self.renderer.nlevels), str(labels)))
+                        (self, str(nlevels), 
+                         str(self.renderer.nlevels), 
+                         str(labels)[:100]))
 
         if nlevels >= 2:
             all_tracks, all_slices = labels[0], labels[1]
@@ -210,7 +213,11 @@ class Dispatcher(Reporter):
             all_tracks, all_slices = labels[0], []
 
         self.debug( "%s: rendering: groupby=%s, input: tracks=%s, slices=%s; output: tracks=%s, slices=%s" %\
-                   (self, self.groupby, self.tracks, self.slices, all_tracks, all_slices))
+                   (self, self.groupby, 
+                    self.tracks[:20], 
+                    self.slices[:20], 
+                    all_tracks, 
+                    all_slices))
 
         tracks, slices = self.tracks, self.slices
 

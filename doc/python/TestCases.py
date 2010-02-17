@@ -96,8 +96,8 @@ class LargeTable( Tracker ):
 
 class VeryLargeMatrix( Tracker ):
     """example of a large matrix with long labels."""
-    ncols = 200
-    ntracks = 50
+    ncols = 7000
+    ntracks = 200
 
     def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.ntracks)]
 
@@ -105,6 +105,6 @@ class VeryLargeMatrix( Tracker ):
         
         data = []
         for x in range( 0, self.ncols):
-            data.append( ("col%i" % x,x ))
+            data.append( ("col%i%s" % (x,"f"*193),x ))
 
         return dict( data )
