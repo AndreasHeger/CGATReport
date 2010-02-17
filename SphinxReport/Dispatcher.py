@@ -216,8 +216,8 @@ class Dispatcher(Reporter):
                    (self, self.groupby, 
                     self.tracks[:20], 
                     self.slices[:20], 
-                    all_tracks, 
-                    all_slices))
+                    all_tracks[:20], 
+                    all_slices[:20]))
 
         tracks, slices = self.tracks, self.slices
 
