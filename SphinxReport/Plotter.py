@@ -375,6 +375,8 @@ class PlotterMatrix(Plotter):
 
     def plotMatrix( self, matrix, row_headers, col_headers, vmin, vmax, color_scheme = None):
 
+        self.debug("plot matrix started")
+
         plot = plt.imshow(matrix,
                           cmap=color_scheme,
                           origin='lower',
@@ -401,7 +403,9 @@ class PlotterMatrix(Plotter):
         plt.yticks( [ offset + y for y in range(len(row_headers)) ],
                     row_headers,
                     fontsize=yfontsize )
-            
+
+        self.debug("plot matrix finished")            
+
         return plot
 
     def plot( self,  matrix, row_headers, col_headers, path ):
@@ -409,7 +413,13 @@ class PlotterMatrix(Plotter):
 
         Large matrices are split into several plots.
         '''
+
+        self.debug("plot started")
+
         self.startPlot()
+
+
+        self.debug("checkpoint 1")
 
         nrows, ncols = matrix.shape
         if self.mZRange:
@@ -431,7 +441,10 @@ class PlotterMatrix(Plotter):
 
         split_row, split_col = nrows > self.mMaxRows, ncols > self.mMaxCols
 
+        self.debug("checkpoint 2")
+
         if (split_row and split_col) or not (split_row or split_col):
+            self.debug("not splitting matrix")
             # do not split small or symmetric matrices
             self.plotMatrix( matrix, row_headers, col_headers, vmin, vmax, color_scheme )
             try:
@@ -468,6 +481,8 @@ class PlotterMatrix(Plotter):
                 plt.subplots_adjust( **self.mMPLSubplotOptions )
 
         elif split_row:
+            self.debug("splitting matrix at row")
+
             if not self.mZRange:
                 vmin, vmax = matrix.min(), matrix.max()
             nplots = int(math.ceil( float(nrows) / self.mMaxRows ))
@@ -487,6 +502,7 @@ class PlotterMatrix(Plotter):
             plt.colorbar( format = self.mBarFormat)        
 
         elif split_col:
+            self.debug("splitting matrix at column")
             if not self.mZRange:
                 vmin, vmax = matrix.min(), matrix.max()
             nplots = int(math.ceil( float(ncols) / self.mMaxCols ))
@@ -505,6 +521,7 @@ class PlotterMatrix(Plotter):
             plt.subplots_adjust( **self.mMPLSubplotOptions )
             plt.colorbar( format = self.mBarFormat)        
 
+        self.debug("plot finished")
         return self.endPlot( plots, labels, path )
 
 class PlotterHinton(PlotterMatrix):

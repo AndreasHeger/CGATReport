@@ -1047,7 +1047,9 @@ class RendererMatrixPlot(RendererMatrix, PlotterMatrix):
     def render( self, work, path ):
         """render the data."""
 
+        self.debug("building matrix started")
         matrix, rows, columns = self.buildMatrix( work )
+        self.debug("building matrix finished")
         return self.plot( matrix, rows, columns, path )
 
 class RendererHintonPlot(RendererMatrix, PlotterHinton):
