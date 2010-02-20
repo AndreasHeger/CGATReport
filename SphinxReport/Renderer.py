@@ -783,6 +783,109 @@ class RendererHistogramPlot(Renderer, Plotter):
         legend = None
         return self.endPlot( plts, legend, path )
 
+class RendererHistogramGradientPlot(Renderer, Plotter):        
+    '''create a series of coloured bars from histogram data.
+
+    This :class:`Renderer` requires at least three levels:
+
+    line / data / coords.
+    '''
+    nlevels = 3
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+        try: self.mPalette = kwargs["palette"]
+        except KeyError: self.mPalette = "Blues"
+
+        self.mReversePalette = "reverse-palette" in kwargs
+
+    def render(self, work, path ):
+        
+        fig = self.startPlot()
+
+        plots, legend = [], []
+        xlabels, ylabels = [], []
+        nplotted = 0
+
+        if self.mPalette:
+            if self.mReversePalette:
+                color_scheme = plt.get_cmap( "%s_r" % self.mPalette )
+            else:
+                color_scheme = plt.get_cmap( "%s" % self.mPalette )
+        else:
+            color_scheme = None
+
+        # get min/max x and number of rows
+        xmin, xmax = None, None
+        nrows = 0
+        for line, data in work.iteritems():
+
+            for label, coords in data.iteritems():
+
+                try: keys = coords.keys()
+                except AttributeError: continue
+                if len(keys) <= 1: continue
+                
+                c = coords[keys[0]]
+
+                if xmin == None: 
+                    xmin, xmax = min(c), max(c)
+                else:
+                    xmin = min(xmin, min(c))
+                    xmax = max(xmax, max(c))
+
+                nrows += len(keys)-1
+                
+        # now do the plotting
+        nplotted = 0
+
+        for line, data in work.iteritems():
+            
+            for label, coords in data.iteritems():
+
+                # get and transform x/y values
+                try:
+                    keys = coords.keys()
+                except AttributeError:
+                    warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
+                    continue
+
+                if len(keys) <= 1:
+                    warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
+                    continue
+
+                xlabel = keys[0]
+                xvals = coords[xlabel]
+                for ylabel in keys[1:]:
+                    yvals = coords[ylabel]
+                    
+                    a = numpy.vstack((yvals,yvals))
+                    ax = plt.subplot(nrows, 1, nplotted+1)
+                    plots.append( plt.imshow(a,
+                                             aspect='auto', 
+                                             cmap=color_scheme, 
+                                             origin='lower') )
+                    
+                    # add legend on left-hand side
+                    pos = list(ax.get_position().bounds)
+                    fig.text(pos[0] - 0.01, 
+                             pos[1], 
+                             ylabel, 
+                             horizontalalignment='right')
+
+                    ax = plt.gca()
+                    plt.setp(ax.get_xticklabels(), visible=False)
+                    plt.setp(ax.get_yticklabels(), visible=False)
+
+                    nplotted += 1
+                    
+        # turn on x-axis for last plot
+        plt.setp(ax.get_xticklabels(), visible=True)
+        return self.endPlot( plots, legend, path )
+
+
 class RendererBarPlot( RendererMatrix, Plotter):
     '''A bar plot.
 

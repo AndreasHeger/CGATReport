@@ -75,11 +75,26 @@ of data and inserts it as a table.
 HistogramPlot
 =============
 
-The :class:`Renderer.RendererLinePlot` class computes a histogram
-of data and inserts a plot.
+A histogram is plotted as a combination of a 
+:class:`Renderer.RendererLinePlot` 
+and a :class:`Transformer.TransformerHistogram`.
 
 .. report:: Trackers.SingleColumnDataExample
    :render: line-plot
+   :transform: histogram
+   :tf-bins: arange(0,10)
+
+   A histogram plot.
+
+Histogram as gradient
+=====================
+
+A histogram is plotted as a combination of a 
+:class:`Renderer.RendererLinePlot` 
+and a :class:`Transformer.TransformerHistogram`.
+
+.. report:: Trackers.SingleColumnDataExample
+   :render: histogram-gradient-plot
    :transform: histogram
    :tf-bins: arange(0,10)
 

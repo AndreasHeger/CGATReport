@@ -142,7 +142,10 @@ class Plotter:
         self.mMPLRC = setupMPLOption( "mpl-rc" )
 
     def startPlot( self, **kwargs ):
-        """prepare everything for a plot."""
+        """prepare everything for a plot.
+        
+        returns the current figure.
+        """
 
         self.mFigure +=1 
 
@@ -154,6 +157,8 @@ class Plotter:
         self.mCurrentFigure = plt.figure( num = self.mFigure, **self.mMPLFigureOptions )
 
         if self.mTitle:  plt.title( self.mTitle )
+
+        return self.mCurrentFigure
 
     def wrapText( self, text, cliplen = 20, separators = " :_" ):
         """wrap around text using the mathtext.

@@ -27,6 +27,7 @@ MAP_RENDERER= {
     'debug' : Renderer.RendererDebug,
     'line-plot': Renderer.RendererLinePlot,
     'histogram-plot' : Renderer.RendererHistogramPlot,
+    'histogram-gradient-plot' : Renderer.RendererHistogramGradientPlot,
     'pie-plot': Renderer.RendererPiePlot,
     'scatter-plot': Renderer.RendererScatterPlot,
     'scatter-rainbow-plot': Renderer.RendererScatterPlotWithColor,
