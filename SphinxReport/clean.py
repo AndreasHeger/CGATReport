@@ -44,7 +44,7 @@ execfile( "conf.py" )
 
 SEPARATOR="@"
 
-def deleteFiles( test_f, dirs_to_check = (".",) ):
+def deleteFiles( test_f, dirs_to_check = (".",), dry_run = False ):
     """remove all files that test_f returns True for.
     """
     removed = []
@@ -54,14 +54,14 @@ def deleteFiles( test_f, dirs_to_check = (".",) ):
                 if test_f( f ):
                     try:
                         ff = os.path.join( root, f) 
-                        os.remove( ff )
+                        if not dry_run: os.remove( ff )
                         removed.append( ff )
                     except OSError, msg:
                         pass
 
     return removed
 
-def removeTracker( tracker ):
+def removeTracker( tracker, dry_run = False ):
     """remove all files created by :class:Renderer objects
     that use tracker.
     """
@@ -69,17 +69,17 @@ def removeTracker( tracker ):
     dirs_to_check = ("_static", "_cache", "_build" )
 
     # image and text files
-    rx1 = re.compile("-*%s%s" % (tracker,SEPARATOR) )
+    rx1 = re.compile("-%s%s" % (tracker,SEPARATOR) )
     # files in cache
-    rx2 = re.compile("-*%s$" % (tracker) )
+    rx2 = re.compile("-%s$" % (tracker) )
     # .code files
-    rx3 = re.compile("-*%s%s" % (tracker,".code") )
+    rx3 = re.compile("-%s%s" % (tracker,".code") )
 
     test_f = lambda x: rx1.search(x) or rx2.search(x) or rx3.search(x)
 
-    return deleteFiles( test_f, dirs_to_check )
+    return deleteFiles( test_f, dirs_to_check, dry_run = dry_run )
 
-def removeText( tracker ):
+def removeText( tracker, dry_run = False ):
     """remove all temporary files that reference the ``tracker``."""
     
     # find all .rst files that reference tracker
@@ -93,12 +93,12 @@ def removeText( tracker ):
                 found = rx_tracker.search( "".join(open(fn,"r").readlines()) )
                 if found:
                     files_to_check.append( f )
-
+                    
     patterns = []
     for f in files_to_check:
         p = f[:-len(source_suffix)]
-        patterns.append(re.compile( p ))
-    
+        patterns.append( re.compile( p ) )
+
     def test_f(x):
         for p in patterns:
             if p.search(x): return True
@@ -106,7 +106,7 @@ def removeText( tracker ):
 
     dirs_to_check = ("_build",)
 
-    return deleteFiles( test_f, dirs_to_check )
+    return deleteFiles( test_f, dirs_to_check, dry_run = dry_run )
 
 def main():
 
@@ -115,7 +115,16 @@ def main():
     parser.add_option( "-v", "--verbose", dest="loglevel", type="int",
                        help="loglevel. The higher, the more output [default=%default]" )
 
-    parser.set_defaults( loglevel = 2 )
+    parser.add_option( "-s", "--section", dest="sections", type="choice", action="append",
+                       choices=("tracker", "text"),
+                       help="only clean from certain sections [default=%default]" )
+
+    parser.add_option( "-n", "--dry-run", dest="dry_run", action="store_true",
+                       help="only show what is about to be deleted, but do not delete [default=%default]" )
+
+    parser.set_defaults( loglevel = 2,
+                         dry_run = False,
+                         sections = [] )
 
     (options, args) = parser.parse_args()
 
@@ -135,18 +144,29 @@ def main():
         if target in ("distclean",):
             dirs.append( "_static/report_directive" )
 
-        for d in dirs:
-            if os.path.exists(d):
-                shutil.rmtree( d )
+        if options.dry_run:
+            print "the following directories will be deleted:"
+            print "\n".join( dirs )
+        else:
+            for d in dirs:
+                if os.path.exists(d):
+                    shutil.rmtree( d )
 
     else:
+        if options.dry_run:
+            print "the following files will be deleted:"
+
         for tracker in args:
             print "cleaning up %s ..." % tracker,
-            removed = removeTracker( tracker )
-            removed.extend( removeText( tracker ))
+            removed = []
+            if not options.sections or "tracker" in options.sections:
+                removed.extend( removeTracker( tracker, dry_run = options.dry_run ) )
+            if not options.sections or "text" in options.sections:
+                removed.extend( removeText( tracker, dry_run = options.dry_run ) )
             print "%i files (done)" % len(removed)
             if options.loglevel >= 3:
                 print "\n".join( removed )
-
+            if options.dry_run:
+                print "\n".join( removed )
 if __name__ == "__main__":
     sys.exit(main())

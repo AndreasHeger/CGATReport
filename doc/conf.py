@@ -34,6 +34,12 @@ sphinxreport_sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 # add errors into the document
 sphinxreport_show_errors = True
 
+# static images to create for each plot
+# a tuple of (id, format, dpi).
+sphinxreport_images=( ( "hires", "hires.png", 200),
+                      ( "eps", "eps", 50 ),
+                      ( "svg", "svg", 50 ) )
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions

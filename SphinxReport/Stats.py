@@ -30,6 +30,8 @@ class Result(object):
             try: return object.__getattribute__(self,"_data")[key]
             except KeyError: pass
         return getattr( self._data, key )
+    def __contains__(self,key):
+        return key in self._data
     def __getitem__(self, key ):
         return self._data[key]
     def __delitem__(self, key ):

@@ -119,11 +119,10 @@ class DataTree( object ):
 def tree2table( data, transpose = False ):
     """build table from data.
 
-    If there is more than one column, additional subrows
-    are added for each.
+    The table will be multi-level (main-rows and sub-rows), if:
 
-    If each cell within a row is a list or tuple, multiple
-    subrows will be created as well.
+       1. there is more than one column
+       2. each cell within a row is a list or tuple
 
     returns matrix, row_headers, col_headers
     """
@@ -146,22 +145,26 @@ def tree2table( data, transpose = False ):
     ## by better use of indices
     row_offset = 0
     row_headers = []
+
+    # iterate over main rows
     for x, row in enumerate(labels[0]):
 
         first = True
         for xx, path in enumerate(paths):
 
+            # get data - skip if there is None
+            work = data.getLeaf( (row,) + path )
+            if not work: continue
+
+            # add row header only for first row (if there are sub-rows)
             if first: 
                 row_headers.append( row )
                 first = False
             else:
                 row_headers.append("")
 
+            # enter data for the first row
             row_data = [""] * ncols 
-
-            work = data.getLeaf( (row,) + path )
-            if not work: continue
-
             for z, p in enumerate(path): 
                 row_data[z] = p
 
@@ -169,6 +172,7 @@ def tree2table( data, transpose = False ):
             is_container = True
             max_rows = None
             for y, column in enumerate(labels[-1]):
+                if column not in work: continue
                 if type(work[column]) not in Utils.ContainerTypes:
                     is_container = False
                     break
@@ -178,7 +182,7 @@ def tree2table( data, transpose = False ):
                     raise ValueError("multi-level rows - unequal lengths: %i != %i" % \
                                          (max_rows, len(work[column])))
 
-
+            # add sub-rows
             if is_container:
                 # multi-level rows
                 for z in range( max_rows ):

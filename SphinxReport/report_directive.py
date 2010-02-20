@@ -75,10 +75,20 @@ def collectImagesFromMatplotlib( template_name,
 
     map_figure2text = {}
 
-    all_formats = [Config.HTML_IMAGE_FORMAT]
-    if Config.LATEX_IMAGE_FORMAT: all_formats.append( Config.LATEX_IMAGE_FORMAT )
-    all_formats.extend( Config.ADDITIONAL_FORMATS )
+    # determine the image formats to create
+    default_format = Config.HTML_IMAGE_FORMAT
+    additional_formats = []
 
+    try:
+        additional_formats.extend( sphinxreport_images )
+    except NameError:
+        additional_formats.extend( Config.ADDITIONAL_FORMATS )
+
+    if Config.LATEX_IMAGE_FORMAT: additional_formats.append( Config.LATEX_IMAGE_FORMAT )
+
+    all_formats = [default_format,] + additional_formats
+
+    # create all the images
     for i, figman in enumerate(fig_managers):
         # create all images
 
@@ -134,7 +144,7 @@ def collectImagesFromMatplotlib( template_name,
             
             linked_image = imagepath + ".%s" % format
             extra_images=[]
-            for id, format, dpi in Config.ADDITIONAL_FORMATS:
+            for id, format, dpi in additional_formats:
                 extra_images.append( "`%(id)s <%(imagepath)s.%(format)s>`__" % locals())
             if extra_images: extra_images = " " + " ".join( extra_images)
             else: extra_images = ""
@@ -152,6 +162,7 @@ def collectImagesFromMatplotlib( template_name,
 
             rst_output += template % locals()
             
+        # treat latex separately
         if Config.LATEX_IMAGE_FORMAT:
             id, format, dpi = Config.LATEX_IMAGE_FORMAT
             template = '''
@@ -183,12 +194,11 @@ def collectHTML( result_blocks,
     map_figure2text = {}
     extension = "html"
     
-    index = 0
     for blocks in result_blocks:
         for block in blocks:
             if not hasattr( block, "html" ): continue
             
-            outname = "%s_%02d" % (template_name, index)
+            outname = "%s_%s" % (template_name, block.title)
             outputpath = os.path.join(outdir, '%s.%s' % (outname, extension))
 
             # save to file
@@ -201,8 +211,7 @@ def collectHTML( result_blocks,
 
             rst_output = "%(link)s" % locals()
 
-            map_figure2text[ "#$html %i$#" % index] = rst_output
-            index += 1
+            map_figure2text[ "#$html %s$#" % block.title] = rst_output
 
     return map_figure2text
 

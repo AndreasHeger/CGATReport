@@ -213,11 +213,11 @@ class Dispatcher(Reporter):
             all_tracks, all_slices = labels[0], []
 
         self.debug( "%s: rendering: groupby=%s, input: tracks=%s, slices=%s; output: tracks=%s, slices=%s" %\
-                   (self, self.groupby, 
-                    self.tracks[:20], 
-                    self.slices[:20], 
-                    all_tracks[:20], 
-                    all_slices[:20]))
+                        (self, self.groupby, 
+                         self.tracks[:20], 
+                         self.slices[:20], 
+                         all_tracks[:20], 
+                         all_slices[:20])[:200])
 
         tracks, slices = self.tracks, self.slices
 

@@ -143,7 +143,7 @@ class Renderer(Reporter):
 class RendererTableBase( Renderer ):
     '''base classes for tables and matrices.'''
     
-    max_rows = 30
+    max_rows = 50
     max_cols = 20
 
     def __init__( self, *args, **kwargs ):
@@ -151,18 +151,20 @@ class RendererTableBase( Renderer ):
         self.force = "force" in kwargs            
 
     def asFile( self, matrix, row_headers, col_headers, title ):
-        '''save the table as HTML file.'''
+        '''save the table as HTML file.
 
-        # multiple files per renderer not implemented.
-        index = 0
+        Multiple files of the same Renderer/Tracker combination are distinguished 
+        by the title.
+        '''
 
         debug("%s: saving %i x %i table as file'"% (id(self), 
                                                     len(row_headers), 
                                                     len(col_headers)))
         lines = []
-        lines.append("`%i x %i table <#$html %i$#>`_" %\
+        lines.append("`%i x %i table <#$html %s$#>`_" %\
                      (len(row_headers), len(col_headers),
-                      index) )
+                      title) )
+
         r = ResultBlock( "\n".join(lines), title = title)
         # create an html table
         data = ["<table>"]
@@ -652,7 +654,12 @@ class RendererLinePlot(Renderer, Plotter):
             for label, coords in data.iteritems():
 
                 # get and transform x/y values
-                keys = coords.keys()
+                try:
+                    keys = coords.keys()
+                except AttributeError:
+                    warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
+                    continue
+
                 if len(keys) <= 1:
                     warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
                     continue
