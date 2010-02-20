@@ -74,13 +74,15 @@ def removeTracker( tracker, dry_run = False ):
     rx2 = re.compile("-%s$" % (tracker) )
     # .code files
     rx3 = re.compile("-%s%s" % (tracker,".code") )
+    # .html files
+    rx4 = re.compile("-%s%s" % (tracker,".html") )
 
-    test_f = lambda x: rx1.search(x) or rx2.search(x) or rx3.search(x)
+    test_f = lambda x: rx1.search(x) or rx2.search(x) or rx3.search(x) or rx4.search(x)
 
     return deleteFiles( test_f, dirs_to_check, dry_run = dry_run )
 
 def removeText( tracker, dry_run = False ):
-    """remove all temporary files that reference the ``tracker``."""
+    """remove all files that reference the ``tracker``."""
     
     # find all .rst files that reference tracker
     nremoved = 0
@@ -93,11 +95,13 @@ def removeText( tracker, dry_run = False ):
                 found = rx_tracker.search( "".join(open(fn,"r").readlines()) )
                 if found:
                     files_to_check.append( f )
-                    
+
+    suffixes = (".doctree", ".html" )
     patterns = []
     for f in files_to_check:
         p = f[:-len(source_suffix)]
-        patterns.append( re.compile( p ) )
+        for s in suffixes:
+            patterns.append( re.compile( "%s%s$" % (p, s ) ))
 
     def test_f(x):
         for p in patterns:

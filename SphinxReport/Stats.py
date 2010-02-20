@@ -552,7 +552,7 @@ def getAreaUnderCurve( xvalues, yvalues ):
     auc = 0
     for x,y in zip(xvalues, yvalues)[1:]:
         dx = x - last_x
-        assert dx > 0, "x not increasing: %f >= %f" % (last_x, x)
+        assert not dx < 0, "x not increasing: %f >= %f" % (last_x, x)
         dy = abs(last_y - y)
         my = min(last_y, y)
         # rectangle plus triangle
