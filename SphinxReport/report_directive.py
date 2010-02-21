@@ -239,7 +239,7 @@ def layoutBlocks( blocks, layout = "column"):
                 lines.extend( block.title.split("\n") )
                 lines.append( "" )
             else:
-                logging.warn( "missing title" )
+                logging.warn( "report_directive.layoutBlocks: missing title" )
 
             lines.extend(block.text.split("\n"))
         lines.extend( [ "", ] )
@@ -338,7 +338,7 @@ def buildPaths( reference ):
 def run(arguments, options, lineno, content, state_machine = None, document = None):
     """process :report: directive."""
 
-    logging.debug( "started report_directive.run: %s:%i" % (str(document), lineno) )
+    logging.debug( "report_directive.run: started %s:%i" % (str(document), lineno) )
 
     # sort out the paths
     # reference is used for time-stamping
@@ -355,15 +355,15 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     linkdir = ('../' * (nparts)) + outdir
 
-    logging.debug( "arguments=%s, options=%s, lineno=%s, content=%s, document=%s" % (str(arguments),
-                                                                                     str(options),
-                                                                                     str(lineno),
-                                                                                     str(content),
-                                                                                     str(document)))
+    logging.debug( "report_directive.run: arguments=%s, options=%s, lineno=%s, content=%s, document=%s" % (str(arguments),
+                                                                                                           str(options),
+                                                                                                           str(lineno),
+                                                                                                           str(content),
+                                                                                                           str(document)))
 
-    logging.debug( "plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, reldir=%s, relparts=%s, nparts=%d" %\
+    logging.debug( "report_directive.run: plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, reldir=%s, relparts=%s, nparts=%d" %\
                        (reference, basename, ext, fname, rstdir, reldir, relparts, nparts) )
-    logging.debug( "reference=%s, basedir=%s, linkdir=%s, outdir=%s, codename=%s" % (reference, basedir, linkdir, outdir, codename))
+    logging.debug( "report_directive.run: reference=%s, basedir=%s, linkdir=%s, outdir=%s, codename=%s" % (reference, basedir, linkdir, outdir, codename))
 
     # try to create. If several processes try to create it,
     # testing with `if` will not work.
@@ -391,9 +391,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     transform_options = selectAndDeleteOptions( options, Config.TRANSFORM_OPTIONS)
     dispatcher_options = selectAndDeleteOptions( options, Config.DISPATCHER_OPTIONS)
 
-    logging.debug( "renderer options: %s" % str(render_options) )
-    logging.debug( "transformer options: %s" % str(transform_options) )
-    logging.debug( "dispatcher options: %s" % str(dispatcher_options) )
+    logging.debug( "report_directive.run: renderer options: %s" % str(render_options) )
+    logging.debug( "report_directive.run: transformer options: %s" % str(transform_options) )
+    logging.debug( "report_directive.run: dispatcher options: %s" % str(dispatcher_options) )
 
     if options.has_key("transform"): 
         transformer_names = options["transform"].split(",")
@@ -424,7 +424,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
             Config.SEPARATOR.join( (reference, renderer_name, options_hash ) ))
         filename_text = os.path.join( outdir, "%s.txt" % (template_name))
 
-        logging.debug( "options_hash=%s" %  options_hash)
+        logging.debug( "report_directive.run: options_hash=%s" %  options_hash)
 
         ###########################################################
         # check for existing files
@@ -434,7 +434,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         ###########################################################
         queries = [ re.compile( "%s(%s\S+.%s)" % ("\.\./" * nparts, outdir,suffix ) ) for suffix in ("png", "pdf") ]
 
-        logging.debug( "checking for changed files." )
+        logging.debug( "report_directive.run: checking for changed files." )
 
         # check if text element exists
         if os.path.exists( filename_text ):
@@ -448,10 +448,10 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                     x = query.search( line )
                     if x: filenames.extend( list( x.groups()) )
 
-            logging.debug( "checking for %s" % str(filenames))
+            logging.debug( "report_directive.run: checking for %s" % str(filenames))
             for filename in filenames:
                 if not os.path.exists( filename ):
-                    logging.info( "redo: %s missing" % filename )
+                    logging.info( "report_directive.run: redo: %s missing" % filename )
                     break
             else:
                 logging.info( "no redo: all files are present" )
@@ -461,7 +461,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                         lines, state_machine.input_lines.source(0) )
                 return []
         else:
-            logging.debug( "no check performed: %s missing" % str(filename_text))
+            logging.debug( "report_directive.run: no check performed: %s missing" % str(filename_text))
     else:
         template_name = ""
         filename_text = None
@@ -479,20 +479,20 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     try:
         ########################################################
         # find the tracker
-        logging.debug( "collecting tracker %s." % reference )
+        logging.debug( "report_directive.run: collecting tracker %s." % reference )
         code, tracker = Utils.getTracker( reference )
         if not tracker: 
-            logging.debug( "no tracker - no output from %s " % str(document) )
+            logging.debug( "report_directive.run: no tracker - no output from %s " % str(document) )
             raise ValueError( "tracker `%s` not found" % reference )
 
-        logging.debug( "collected tracker." )
+        logging.debug( "report_directive.run: collected tracker." )
 
         tracker_id = Cache.tracker2key( tracker )
 
         ########################################################
         # determine the transformer
         transformers = []
-        logging.debug( "creating transformers." )
+        logging.debug( "report_directive.run: creating transformers." )
 
         for transformer in transformer_names:
             if transformer not in Config.MAP_TRANSFORMER: 
@@ -501,7 +501,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
         ########################################################
         # determine the renderer
-        logging.debug( "creating renderer." )
+        logging.debug( "report_directive.run: creating renderer." )
         if renderer_name == None:
             raise ValueError("the report directive requires a renderer.")
 
@@ -512,7 +512,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
         ########################################################
         # create and call dispatcher
-        logging.debug( "creating dispatcher" )
+        logging.debug( "report_directive.run: creating dispatcher" )
 
         dispatcher = Dispatcher.Dispatcher( tracker, 
                                             renderer(tracker, **render_options), 
@@ -521,7 +521,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     except:
 
-        logging.warn("exception caught at %s:%i - see document" % (str(document), lineno) )
+        logging.warn("report_directive.run: exception caught at %s:%i - see document" % (str(document), lineno) )
 
         blocks = Renderer.buildException( "invocation" )
         code = None
@@ -593,7 +593,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         state_machine.insert_input(
             lines, state_machine.input_lines.source(0))
 
-    logging.debug( "finished report_directive.run: %s:%i" % (str(document), lineno) )
+    logging.debug( "report_directive.run: finished %s:%i" % (str(document), lineno) )
 
     return []
 
@@ -632,7 +632,7 @@ else:
                                 Config.DISPATCHER_OPTIONS.items() )
         def run(self):
             document = self.state.document.current_source
-            logging.info( "starting: %s:%i" % (str(document), self.lineno) )
+            logging.info( "report_directive: starting: %s:%i" % (str(document), self.lineno) )
             return run(self.arguments, 
                        self.options,
                        self.lineno,
