@@ -32,7 +32,7 @@ Building proceeds in three phases.
 import matplotlib
 import matplotlib.pyplot as plt
 
-from SphinxReport import report_directive, gallery, clean
+from SphinxReport import report_directive, gallery, clean, Reporter
 
 try:
     from multiprocessing import Process
@@ -57,7 +57,7 @@ RST_TEMPLATE = """.. _%(label)s:
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
-    stream = open( "sphinxreport.log", "a" ) )
+    stream = open( Reporter.LOGFILE, "a" ) )
 
 class ReportBlock:
     '''quick and dirty parsing of rst of a report block.'''
@@ -184,9 +184,9 @@ def buildPlots( rst_files, options, args ):
 
     if options.num_jobs > 1:
         logQueue = Queue(100)
-        handler= Logger.MultiProcessingLogHandler(logging.FileHandler( os.path.abspath( "sphinxreport.log" ), "w"), logQueue)
+        handler= Logger.MultiProcessingLogHandler(logging.FileHandler( os.path.abspath( Reporter.LOGFILE ), "w"), logQueue)
     else:
-        handler= logging.FileHandler( os.path.abspath( "sphinxreport.log" ), "w")
+        handler= logging.FileHandler( os.path.abspath( Reporter.LOGFILE ), "w")
 
     handler.setFormatter(  
         logging.Formatter( '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',

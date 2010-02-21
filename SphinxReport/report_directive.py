@@ -656,5 +656,5 @@ directives.register_directive('report', report_directive)
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
-    stream = open( "sphinxreport.log", "a" ) )
+    stream = open( LOGFILE, "a" ) )
 

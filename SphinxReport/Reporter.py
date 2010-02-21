@@ -3,12 +3,14 @@
 
 import os
 
+LOGFILE = "sphinxreport.log"
+
 from logging import warn, log, debug, info
 import logging
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
-    stream = open( "sphinxreport.log", "a" ) )
+    stream = open( LOGFILE, "a" ) )
 
 # read configuration options - variables are imported in
 # this namespace.

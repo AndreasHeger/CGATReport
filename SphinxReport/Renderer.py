@@ -628,12 +628,29 @@ class RendererMatrix(RendererTableBase):
 
         return results
 
-class RendererLinePlot(Renderer, Plotter):        
+class RendererLinePlot( Renderer, Plotter ):
     '''create a line plot.
 
     This :class:`Renderer` requires at least three levels:
 
     line / data / coords.
+
+    This is a base class that provides several hooks for
+    derived classes.
+
+    initPlot()
+
+    for line, data in work:
+        initLine()
+
+        for coords in data:
+            xlabel, ylabels = initCoords()
+            for ylabel in ylabels:
+                addData( xlabel, ylabel )
+            finishCoords()
+        finishLine()
+
+    finishPlot()
     '''
     nlevels = 3
 
@@ -641,56 +658,100 @@ class RendererLinePlot(Renderer, Plotter):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
+    def initPlot(self, fig, work, path ):
+        '''initialize plot.'''
+ 
+        self.legend = []
+        self.plots = []
+        self.xlabels = []
+        self.ylabels = []
+
+    def addData( self, xlabel, ylabel,
+                 xvals, yvals, nplotted ):
+
+        s = self.mSymbols[nplotted % len(self.mSymbols)]
+        
+        self.plots.append( plt.plot( xvals,
+                                     yvals,
+                                     s ) )
+        
+        self.ylabels.append(ylabel)
+        self.xlabels.append(xlabel)
+
+    def initLine( self, line, data ):
+        '''hook for code working on a line.'''
+        pass
+
+    def initCoords( self, label, coords ):
+        '''hook for code working a collection of coords.
+
+        should return a single key for xvalues and 
+        one or more keys for y-values.
+        '''
+        keys = coords.keys()
+        return keys[0], keys[1:]
+
+    def finishLine( self, line, data ):
+        '''hook called after all lines have been processed.'''
+        pass
+
+    def finishCoords( self, label, coords ):
+        '''hook called after all coords have been processed.'''
+        pass
+
+    def finishPlot( self, fig, work, path ):
+        '''hook called after plotting has finished.'''
+        plt.xlabel( "-".join( set(self.xlabels) ) )
+        plt.ylabel( "-".join( set(self.ylabels) ) )
+        
     def render(self, work, path ):
         
-        self.startPlot()
+        fig = self.startPlot()
 
-        plts, legend = [], []
-        xlabels, ylabels = [], []
+        self.initPlot( fig, work, path )
+
         nplotted = 0
 
         for line, data in work.iteritems():
-            
-            for label, coords in data.iteritems():
 
-                # get and transform x/y values
-                try:
-                    keys = coords.keys()
+            self.initLine( line, data )
+
+            for label, coords in data.iteritems():
+                
+                # sanity check on data
+                try: keys = coords.keys()
                 except AttributeError:
                     warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
                     continue
-
+                
                 if len(keys) <= 1:
                     warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
                     continue
 
-                xlabel = keys[0]
+                xlabel, ylabels = self.initCoords( label, coords)
+
                 xvals = coords[xlabel]
-                for ylabel in keys[1:]:
+                for ylabel in ylabels:
                     yvals = coords[ylabel]
-
-                    s = self.mSymbols[nplotted % len(self.mSymbols)]
-
-                    plts.append( plt.plot( xvals,
-                                           yvals,
-                                           s ) )
-
-                    if len(keys) > 2:
-                        legend.append( "/".join((line,label,ylabel) ))
-                    else:
-                        legend.append( "/".join((line,label) ))
-                        
-                    ylabels.append(ylabel)
+                    self.addData( xlabel, ylabel, xvals, yvals, nplotted )
                     nplotted += 1
-                    
-                xlabels.append(xlabel)
 
-        plt.xlabel( "-".join( set(xlabels) ) )
-        plt.ylabel( "-".join( set(ylabels) ) )
+                    if len(ylabels) > 1:
+                        self.legend.append( "/".join((line,label,ylabel) ))
+                    else:
+                        self.legend.append( "/".join((line,label) ))
+                                
+                self.xlabels.append(xlabel)
+
+                self.finishCoords( label, coords)
+
+            self.finishLine( line, data )
+            
+        self.finishPlot( fig, work, path )
+
+        return self.endPlot( self.plots, self.legend, path )
         
-        return self.endPlot( plts, legend, path )
-
-class RendererHistogramPlot(Renderer, Plotter):        
+class RendererHistogramPlot(RendererLinePlot):        
     '''create a line plot.
 
     This :class:`Renderer` requires at least three levels:
@@ -708,82 +769,67 @@ class RendererHistogramPlot(Renderer, Plotter):
     error = None
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        RendererLinePlot.__init__(self,*args, **kwargs)
 
         try: self.error = kwargs["error"]
         except KeyError: pass
 
-    def render(self, work, path ):
+    def initPlot( self, fig, work, path ):
+        RendererLinePlot.initPlot( self, fig, work, path )
+        self.alpha = 1.0 / len(work)        
         
-        self.startPlot()
+    def initCoords( self, label, coords ):
+        '''collect error coords and compute bar width.'''
 
-        plts, legend = [], []
-        xlabels, ylabels = [], []
-        nplotted = 0
-        alpha = 1.0 / len(work)
+        # get and transform x/y values
+        keys = coords.keys() 
 
-        for line, data in work.iteritems():
-            
-            for label, coords in data.iteritems():
+        xlabel, ylabels = keys[0], keys[1:]
 
-                # get and transform x/y values
-                keys = coords.keys()
-                nkeys = len(keys)
-                if nkeys <= 1:
-                    warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
-                    continue
+        # locate error bars
+        if self.error and self.error in coords:
+            self.yerr = coords[self.error]
+            ylabels = [ x for x in ylabels if x == self.error ]
+        else:
+            self.yerr = None
+        
+        xvals = coords[xlabel]  
 
-                # locate error bars
-                if self.error and self.error in coords:
-                    yerr = coords[self.error]
-                    nkeys -= 1 
-                else: yerr = None
+        # compute bar widths
+        widths = []
+        w = xvals[0]
+        for x in xvals[1:]:
+            widths.append( x-w )
+            w=x
+        widths.append( widths[-1] )
+        self.widths = widths
 
-                xlabel = keys[0]
-                xvals = coords[xlabel]
+        return xlabel, ylabels
 
-                # compute bar widths
-                widths = []
-                w = xvals[0]
-                for x in xvals[1:]:
-                    widths.append( x-w )
-                    w=x
-                widths.append( widths[-1] )
+    def addData( self, 
+                 xlabel, 
+                 ylabel,
+                 xvals, 
+                 yvals, 
+                 nplotted ):
+        
+        self.plots.append( plt.bar( xvals,
+                                    yvals,
+                                    width = self.widths,
+                                    alpha = self.alpha,
+                                    yerr = self.yerr,
+                                    color = self.mColors[ nplotted % len(self.mColors) ], ) )
 
-                for ylabel in keys[1:]:
-                    # ignore errors
-                    if ylabel == self.error: continue
+    def finishPlot( self, fig, work, path ):
 
-                    yvals = coords[ylabel]
-                    plts.append( plt.bar( xvals,
-                                          yvals,
-                                          width = widths,
-                                          alpha = alpha,
-                                          yerr = yerr,
-                                          color = self.mColors[ nplotted % len(self.mColors) ], ) )
-
-                    if len(keys) > 2:
-                        legend.append( "/".join((line,label,ylabel) ))
-                    else:
-                        legend.append( "/".join((line,label) ))
-                        
-                    ylabels.append(ylabel)
-                    nplotted += 1
-                    
-                xlabels.append(xlabel)
-                
-        plt.xlabel( "-".join( set(xlabels) ) )
-        plt.ylabel( "-".join( set(ylabels) ) )
-
+        RendererLinePlot.finishPlot(self, fig, work, path)
         # there is a problem with legends
         # even though len(plts) == len(legend)
         # matplotlib thinks there are more. 
         # In fact, it thinks it is len(plts) = len(legend) * len(xvals)
-        legend = None
-        return self.endPlot( plts, legend, path )
-
-class RendererHistogramGradientPlot(Renderer, Plotter):        
+        self.legend = None
+                        
+class RendererHistogramGradientPlot(RendererLinePlot):        
     '''create a series of coloured bars from histogram data.
 
     This :class:`Renderer` requires at least three levels:
@@ -793,29 +839,24 @@ class RendererHistogramGradientPlot(Renderer, Plotter):
     nlevels = 3
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        RendererLinePlot.__init__(self, *args, **kwargs )
 
         try: self.mPalette = kwargs["palette"]
         except KeyError: self.mPalette = "Blues"
 
         self.mReversePalette = "reverse-palette" in kwargs
 
-    def render(self, work, path ):
-        
-        fig = self.startPlot()
-
-        plots, legend = [], []
-        xlabels, ylabels = [], []
-        nplotted = 0
-
         if self.mPalette:
             if self.mReversePalette:
-                color_scheme = plt.get_cmap( "%s_r" % self.mPalette )
+                self.color_scheme = plt.get_cmap( "%s_r" % self.mPalette )
             else:
-                color_scheme = plt.get_cmap( "%s" % self.mPalette )
+                self.color_scheme = plt.get_cmap( "%s" % self.mPalette )
         else:
-            color_scheme = None
+            self.color_scheme = None
+
+    def initPlot(self, fig, work, path ):
+
+        RendererLinePlot.initPlot( self, fig, work, path )
 
         # get min/max x and number of rows
         xmin, xmax = None, None
@@ -837,54 +878,40 @@ class RendererHistogramGradientPlot(Renderer, Plotter):
                     xmax = max(xmax, max(c))
 
                 nrows += len(keys)-1
-                
-        # now do the plotting
-        nplotted = 0
 
-        for line, data in work.iteritems():
-            
-            for label, coords in data.iteritems():
+        self.nrows = nrows
 
-                # get and transform x/y values
-                try:
-                    keys = coords.keys()
-                except AttributeError:
-                    warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
-                    continue
+    def addData( self, xlabel, ylabel,
+                 xvals, yvals, nplotted ):
 
-                if len(keys) <= 1:
-                    warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
-                    continue
+        a = numpy.vstack((yvals,yvals))
+        ax = plt.subplot(self.nrows, 1, nplotted+1)
+        self.plots.append( plt.imshow(a,
+                                      aspect='auto', 
+                                      cmap=self.color_scheme, 
+                                      origin='lower') )
 
-                xlabel = keys[0]
-                xvals = coords[xlabel]
-                for ylabel in keys[1:]:
-                    yvals = coords[ylabel]
-                    
-                    a = numpy.vstack((yvals,yvals))
-                    ax = plt.subplot(nrows, 1, nplotted+1)
-                    plots.append( plt.imshow(a,
-                                             aspect='auto', 
-                                             cmap=color_scheme, 
-                                             origin='lower') )
-                    
-                    # add legend on left-hand side
-                    pos = list(ax.get_position().bounds)
-                    fig.text(pos[0] - 0.01, 
-                             pos[1], 
-                             ylabel, 
-                             horizontalalignment='right')
+        # add legend on left-hand side
+        pos = list(ax.get_position().bounds)
+        self.mCurrentFigure.text(pos[0] - 0.01, 
+                                 pos[1], 
+                                 ylabel, 
+                                 horizontalalignment='right')
 
-                    ax = plt.gca()
-                    plt.setp(ax.get_xticklabels(), visible=False)
-                    plt.setp(ax.get_yticklabels(), visible=False)
+        ax = plt.gca()
+        plt.setp(ax.get_xticklabels(), visible=False)
+        plt.setp(ax.get_yticklabels(), visible=False)
 
-                    nplotted += 1
-                    
+    def finishPlot( self, fig, work, path ):
         # turn on x-axis for last plot
-        plt.setp(ax.get_xticklabels(), visible=True)
-        return self.endPlot( plots, legend, path )
 
+        ax = plt.gca()
+        plt.setp(ax.get_xticklabels(), visible=True)
+
+    def finishPlot( self, fig, work, path ):
+
+        RendererLinePlot.finishPlot(self, fig, work, path)
+        self.legend = None
 
 class RendererBarPlot( RendererMatrix, Plotter):
     '''A bar plot.
