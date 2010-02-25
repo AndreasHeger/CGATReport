@@ -666,8 +666,11 @@ class RendererLinePlot( Renderer, Plotter ):
         self.xlabels = []
         self.ylabels = []
 
-    def addData( self, xlabel, ylabel,
-                 xvals, yvals, nplotted ):
+    def addData( self, 
+                 line, label,
+                 xlabel, ylabel,
+                 xvals, yvals, 
+                 nplotted ):
 
         s = self.mSymbols[nplotted % len(self.mSymbols)]
         
@@ -733,7 +736,7 @@ class RendererLinePlot( Renderer, Plotter ):
                 xvals = coords[xlabel]
                 for ylabel in ylabels:
                     yvals = coords[ylabel]
-                    self.addData( xlabel, ylabel, xvals, yvals, nplotted )
+                    self.addData( line, label, xlabel, ylabel, xvals, yvals, nplotted )
                     nplotted += 1
 
                     if len(ylabels) > 1:
@@ -804,9 +807,13 @@ class RendererHistogramPlot(RendererLinePlot):
         widths.append( widths[-1] )
         self.widths = widths
 
+        self.xvals = xvals
+
         return xlabel, ylabels
 
     def addData( self, 
+                 line, 
+                 label,
                  xlabel, 
                  ylabel,
                  xvals, 
@@ -841,6 +848,9 @@ class RendererHistogramGradientPlot(RendererLinePlot):
     def __init__(self, *args, **kwargs):
         RendererLinePlot.__init__(self, *args, **kwargs )
 
+        try: self.mBarFormat = kwargs["colorbar-format"]
+        except KeyError: self.mBarFormat = "%1.1f"
+
         try: self.mPalette = kwargs["palette"]
         except KeyError: self.mPalette = "Blues"
 
@@ -860,7 +870,9 @@ class RendererHistogramGradientPlot(RendererLinePlot):
 
         # get min/max x and number of rows
         xmin, xmax = None, None
+        ymin, ymax = None, None
         nrows = 0
+        self.xvals = None
         for line, data in work.iteritems():
 
             for label, coords in data.iteritems():
@@ -869,19 +881,32 @@ class RendererHistogramGradientPlot(RendererLinePlot):
                 except AttributeError: continue
                 if len(keys) <= 1: continue
                 
-                c = coords[keys[0]]
+                xvals = coords[keys[0]]
+                if self.xvals == None:
+                    self.xvals = xvals
+                elif not numpy.all(self.xvals == xvals):
+                    raise ValueError("Gradient-Histogram-Plot requires the same x values.")
 
                 if xmin == None: 
-                    xmin, xmax = min(c), max(c)
+                    xmin, xmax = min(xvals), max(xvals)
                 else:
-                    xmin = min(xmin, min(c))
-                    xmax = max(xmax, max(c))
+                    xmin = min(xmin, min(xvals))
+                    xmax = max(xmax, max(xvals))
+
+                for ylabel in keys[1:]:
+                    yvals = coords[ylabel]
+                    if ymin == None: 
+                        ymin, ymax = min(yvals), max(yvals)
+                    else:
+                        ymin = min(ymin, min(yvals))
+                        ymax = max(ymax, max(yvals))
 
                 nrows += len(keys)-1
-
+                
         self.nrows = nrows
+        self.ymin, self.ymax = ymin, ymax
 
-    def addData( self, xlabel, ylabel,
+    def addData( self, line, label, xlabel, ylabel,
                  xvals, yvals, nplotted ):
 
         a = numpy.vstack((yvals,yvals))
@@ -889,13 +914,15 @@ class RendererHistogramGradientPlot(RendererLinePlot):
         self.plots.append( plt.imshow(a,
                                       aspect='auto', 
                                       cmap=self.color_scheme, 
-                                      origin='lower') )
+                                      origin='lower',
+                                      vmax = self.ymax,
+                                      vmin = self.ymin ) )
 
         # add legend on left-hand side
         pos = list(ax.get_position().bounds)
         self.mCurrentFigure.text(pos[0] - 0.01, 
                                  pos[1], 
-                                 ylabel, 
+                                 line,
                                  horizontalalignment='right')
 
         ax = plt.gca()
@@ -903,15 +930,20 @@ class RendererHistogramGradientPlot(RendererLinePlot):
         plt.setp(ax.get_yticklabels(), visible=False)
 
     def finishPlot( self, fig, work, path ):
-        # turn on x-axis for last plot
 
-        ax = plt.gca()
+        ax = plt.gca() 
         plt.setp(ax.get_xticklabels(), visible=True)
-
-    def finishPlot( self, fig, work, path ):
+        increment = len(self.xvals ) // 5
+        ax.set_xticks( xrange( 0, len(self.xvals), increment ) ) 
+        ax.set_xticklabels( [self.xvals[x] for x in xrange( 0, len(self.xvals), increment ) ] )
 
         RendererLinePlot.finishPlot(self, fig, work, path)
         self.legend = None
+
+        # add colorbar on the right
+        plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
+        cax = plt.axes([0.85, 0.1, 0.075, 0.8])
+        plt.colorbar(cax=cax, format=self.mBarFormat )
 
 class RendererBarPlot( RendererMatrix, Plotter):
     '''A bar plot.
@@ -952,7 +984,6 @@ class RendererBarPlot( RendererMatrix, Plotter):
             trans=coord_offset(ax, self.mCurrentFigure, self.label_offset_x, self.label_offset_y)
             for xval, yval, label in zip(xvals,vals,labels):
                 ax.text(xval, yval, label, transform=trans)
-
 
     def buildMatrices( self, work ):
         '''build matrices necessary for plotting.

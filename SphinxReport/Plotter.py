@@ -10,6 +10,22 @@ import numpy
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 
+def parseRanges(r):
+    '''given a string in the format "x,y", 
+    return a tuple of values (x,y).
+
+    missing values are set to None.
+    '''
+
+    if not r: return r
+    r = [ x.strip() for x in r.split(",")]
+    if r[0] == "": r[0] = None
+    else: r[0] = float(r[0])
+    if r[1] == "": r[1] = None
+    else: r[1] = float(r[1])
+    return r
+
+
 class Plotter:
     """Base class for Renderers that do simple 2D plotting.
 
@@ -54,7 +70,7 @@ class Plotter:
 
        :term:`mpl-subplot`: options for matplotlib
            ``subplots_adjust`` calls().
-
+           
        :term:`mpl-rc`: general environment settings for matplotlib.
           See the matplotlib documentation. Multiple options can be
           separated by ;, for example 
@@ -113,17 +129,9 @@ class Plotter:
                 for x in "gbrcmyk":
                     self.mSymbols.append( y+x )
 
-        def _parseRanges(r):
-            if not r: return r
-            r = [ x.strip() for x in r.split(",")]
-            if r[0] == "": r[0] = None
-            else: r[0] = float(r[0])
-            if r[1] == "": r[1] = None
-            else: r[1] = float(r[1])
-            return r
 
-        self.mXRange = _parseRanges(kwargs.get("xrange", None ))
-        self.mYRange = _parseRanges(kwargs.get("yrange", None ))
+        self.mXRange = parseRanges(kwargs.get("xrange", None ))
+        self.mYRange = parseRanges(kwargs.get("yrange", None ))
 
         def setupMPLOption( key ):
             options = {}
@@ -131,7 +139,10 @@ class Plotter:
                 for k in kwargs[ key ].split(";"):
                     key,val = k.split("=")
                     # convert unicode to string
-                    options[str(key)] = eval(val)
+                    try:
+                        options[str(key)] = eval(val)
+                    except NameError:
+                        options[str(key)] = val
             except KeyError: 
                 pass
             return options
@@ -321,8 +332,7 @@ class PlotterMatrix(Plotter):
         try: self.mPalette = kwargs["palette"]
         except KeyError: self.mPalette = "jet"
 
-        try: self.mZRange = map(float, kwargs["zrange"].split(",") )
-        except KeyError: self.mZRange = None
+        self.mZRange = parseRanges( kwargs.get("zrange", None ) )
 
         try: self.mMaxRows = kwargs["max-rows"]
         except KeyError: self.mMaxRows = 20
@@ -429,6 +439,8 @@ class PlotterMatrix(Plotter):
         nrows, ncols = matrix.shape
         if self.mZRange:
             vmin, vmax = self.mZRange
+            if vmin == None: vmin = matrix.min()
+            if vmax == None: vmax = matrix.max()
             matrix[ matrix < vmin ] = vmin
             matrix[ matrix > vmax ] = vmax
         else:
