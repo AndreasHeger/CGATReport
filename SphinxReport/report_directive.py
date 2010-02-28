@@ -338,7 +338,7 @@ def buildPaths( reference ):
 def run(arguments, options, lineno, content, state_machine = None, document = None):
     """process :report: directive."""
 
-    logging.debug( "report_directive.run: started %s:%i" % (str(document), lineno) )
+    logging.debug( "report_directive.run: profile: started: rst: %s:%i" % (str(document), lineno) )
 
     # sort out the paths
     # reference is used for time-stamping
@@ -387,12 +387,12 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     except KeyError: 
         layout = "column"
     
-    render_options = selectAndDeleteOptions( options, Config.RENDER_OPTIONS )
-    transform_options = selectAndDeleteOptions( options, Config.TRANSFORM_OPTIONS)
+    renderer_options = selectAndDeleteOptions( options, Config.RENDER_OPTIONS )
+    transformer_options = selectAndDeleteOptions( options, Config.TRANSFORM_OPTIONS)
     dispatcher_options = selectAndDeleteOptions( options, Config.DISPATCHER_OPTIONS)
 
-    logging.debug( "report_directive.run: renderer options: %s" % str(render_options) )
-    logging.debug( "report_directive.run: transformer options: %s" % str(transform_options) )
+    logging.debug( "report_directive.run: renderer options: %s" % str(renderer_options) )
+    logging.debug( "report_directive.run: transformer options: %s" % str(transformer_options) )
     logging.debug( "report_directive.run: dispatcher options: %s" % str(dispatcher_options) )
 
     if options.has_key("transform"): 
@@ -415,8 +415,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # check for missing files
     if renderer_name != None:
         
-        options_hash = hashlib.md5( str(render_options) +\
-                                        str(transform_options) +\
+        options_hash = hashlib.md5( str(renderer_options) +\
+                                        str(transformer_options) +\
                                         str(dispatcher_options) +\
                                         str(transformer_names) ).hexdigest()
 
@@ -480,7 +480,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         ########################################################
         # find the tracker
         logging.debug( "report_directive.run: collecting tracker %s." % reference )
-        code, tracker = Utils.getTracker( reference )
+        code, tracker = Utils.makeTracker( reference )
         if not tracker: 
             logging.debug( "report_directive.run: no tracker - no output from %s " % str(document) )
             raise ValueError( "tracker `%s` not found" % reference )
@@ -497,7 +497,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         for transformer in transformer_names:
             if transformer not in Config.MAP_TRANSFORMER: 
                 raise KeyError('unknown transformer `%s`' % transformer )
-            else: transformers.append( Config.MAP_TRANSFORMER[transformer](**transform_options)) 
+            else: transformers.append( Config.MAP_TRANSFORMER[transformer](**transformer_options)) 
 
         ########################################################
         # determine the renderer
@@ -505,17 +505,20 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         if renderer_name == None:
             raise ValueError("the report directive requires a renderer.")
 
-        if renderer_name not in Config.MAP_RENDERER:
+        if renderer_name in Config.MAP_RENDERER:
+            renderer = Config.MAP_RENDERER[renderer_name](**renderer_options)
+        else:
+            renderer = Utils.makeRenderer( renderer_name, **renderer_options)
+            
+        if not renderer:
             raise KeyError("unknown renderer `%s`" % renderer_name)
-
-        renderer = Config.MAP_RENDERER[renderer_name]
 
         ########################################################
         # create and call dispatcher
         logging.debug( "report_directive.run: creating dispatcher" )
 
         dispatcher = Dispatcher.Dispatcher( tracker, 
-                                            renderer(tracker, **render_options), 
+                                            renderer,
                                             transformers )     
         blocks = dispatcher( **dispatcher_options )
 
@@ -593,7 +596,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         state_machine.insert_input(
             lines, state_machine.input_lines.source(0))
 
-    logging.debug( "report_directive.run: finished %s:%i" % (str(document), lineno) )
+    logging.debug( "report_directive.run: profile: finished: rst: %s:%i" % (str(document), lineno) )
 
     return []
 

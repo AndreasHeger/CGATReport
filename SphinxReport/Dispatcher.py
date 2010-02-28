@@ -275,8 +275,12 @@ class Dispatcher(Reporter):
         try: self.parseArguments( *args, **kwargs )
         except: return Renderer.buildException( "parsing" )
 
+        self.debug( "profile: started: tracker: %s" % (self.tracker))
+
         try: self.collect()
         except: return Renderer.buildException( "collection" )
+
+        self.debug( "profile: finished: tracker: %s" % (self.tracker))
 
         labels = self.data.getPaths()
         self.debug( "%s: after collection: %i labels: %s" % (self,len(labels), str(labels)))
@@ -287,9 +291,13 @@ class Dispatcher(Reporter):
         labels = self.data.getPaths()
         self.debug( "%s: after transformation: %i labels: %s" % (self,len(labels), str(labels)))
 
+        self.debug( "profile: started: renderer: %s" % (self.renderer))
+
         try: result = self.render()
         except: return Renderer.buildException( "rendering" )
-        
+
+        self.debug( "profile: finished: renderer: %s" % (self.renderer))
+
         return result
 
         

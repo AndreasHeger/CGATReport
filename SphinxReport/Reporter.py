@@ -7,9 +7,12 @@ LOGFILE = "sphinxreport.log"
 
 from logging import warn, log, debug, info
 import logging
+
+LOGGING_FORMAT='%(asctime)s %(levelname)s %(message)s'
+
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(message)s',
+    format= LOGGING_FORMAT,
     stream = open( LOGFILE, "a" ) )
 
 # read configuration options - variables are imported in

@@ -32,7 +32,8 @@ Building proceeds in three phases.
 import matplotlib
 import matplotlib.pyplot as plt
 
-from SphinxReport import report_directive, gallery, clean, Reporter
+from SphinxReport import report_directive, gallery, clean
+from SphinxReport.Reporter import *
 
 try:
     from multiprocessing import Process
@@ -54,10 +55,12 @@ RST_TEMPLATE = """.. _%(label)s:
    %(caption)s
 """
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(message)s',
-    stream = open( Reporter.LOGFILE, "a" ) )
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s %(levelname)s %(message)s',
+#     stream = open( Reporter.LOGFILE, "a" ) )
+
+
 
 class ReportBlock:
     '''quick and dirty parsing of rst of a report block.'''
@@ -85,14 +88,19 @@ def run( work ):
     """
 
     try:
-        for f, b in work:
-            debug( "starting: %s, %s" % (str(b.mArguments), str(b.mOptions) ) )
+        for f, lineno, b in work:
+            ff = os.path.abspath( f )
+            debug( "build.run: profile: started: rst: %s:%i" % (ff, lineno) )
+                                                
             report_directive.run(  b.mArguments,
                                    b.mOptions,
-                                   lineno = 0,
+                                   lineno = lineno,
                                    content = b.mCaption,
                                    state_machine = None,
-                                   document = os.path.abspath( f ) )
+                                   document = ff )
+
+            debug( "build.run: profile: finished: rst: %s:%i" % (ff,lineno) )
+
         return None
     except:
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
@@ -106,9 +114,11 @@ def rst_reader(infile ):
     
     result = None
     keep = 0
+    lineno = 0
     for line in infile:
+        lineno += 1
         if line.startswith( ".. report::" ):
-            if result: yield result
+            if result: yield lineno, result
             keep = True
             result = ReportBlock()
             result.append( line )
@@ -119,7 +129,7 @@ def rst_reader(infile ):
                 else:
                     result.append( line )
 
-    if result: yield result
+    if result: yield lineno, result
     
 def getBlocksFromRstFile( rst_file ):
 
@@ -130,8 +140,8 @@ def getBlocksFromRstFile( rst_file ):
         print "could not open %s - skipped" % rst_file 
         return blocks
 
-    for rst_block in rst_reader( infile ):
-        blocks.append( rst_block )
+    for lineno, rst_block in rst_reader( infile ):
+        blocks.append( (lineno, rst_block) )
     infile.close()
     return blocks
 
@@ -173,8 +183,8 @@ def buildPlots( rst_files, options, args ):
     # access and the cache files will get mangled.
     work_per_tracker = collections.defaultdict( list )
     for f in rst_files:
-        for b in getBlocksFromRstFile( f ):
-            work_per_tracker[b.mArguments].append( (f,b) )
+        for lineno, b in getBlocksFromRstFile( f ):
+            work_per_tracker[b.mArguments].append( (f,lineno,b) )
 
     work = []
     for tracker,vals in work_per_tracker.iteritems():
@@ -184,13 +194,12 @@ def buildPlots( rst_files, options, args ):
 
     if options.num_jobs > 1:
         logQueue = Queue(100)
-        handler= Logger.MultiProcessingLogHandler(logging.FileHandler( os.path.abspath( Reporter.LOGFILE ), "w"), logQueue)
+        handler= Logger.MultiProcessingLogHandler(logging.FileHandler( os.path.abspath( LOGFILE ), "w"), logQueue)
     else:
-        handler= logging.FileHandler( os.path.abspath( Reporter.LOGFILE ), "w")
+        handler= logging.FileHandler( os.path.abspath( LOGFILE ), "w")
 
     handler.setFormatter(  
-        logging.Formatter( '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                           datefmt='%m-%d %H:%M' ) )
+        logging.Formatter( LOGGING_FORMAT ) )
 
     logging.getLogger('').addHandler(handler)
     logging.getLogger('').setLevel(options.loglevel)
@@ -232,14 +241,14 @@ def cleanTrackers( rst_files, options, args ):
     '''instantiate trackers and get code.'''
     trackers = set()
     for f in rst_files:
-        for b in getBlocksFromRstFile( f ):
+        for lineno, b in getBlocksFromRstFile( f ):
             trackers.add(b.mArguments[0])
             
     ntested, ncleaned, nskipped = 0, 0, 0
     for reference in trackers:
 
         try:
-            code, tracker = report_directive.getTracker( reference )
+            code, tracker = report_directive.makeTracker( reference )
         except AttributeError:
             # ignore missing trackers
             nskipped += 1

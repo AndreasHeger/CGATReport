@@ -81,9 +81,6 @@ class Renderer(Reporter):
     restructured text. Images are automatically collected from matplotlib
     and inserted at place-holders.
 
-    The base class implements querying the :attr:`mTracker` for tracks and 
-    slices and then asking the tracker for data grouped by tracks or slices.
-
     This class adds the following options to the :term:`report` directive.
 
        :term:`groupby`: group data by :term:`track` or :term:`slice`.
@@ -95,7 +92,7 @@ class Renderer(Reporter):
     # default number format
     format = "%i"
 
-    def __init__(self, tracker, *args, **kwargs ):
+    def __init__(self, *args, **kwargs ):
         """create an Renderer object using an instance of 
         a :class:`Tracker.Tracker`.
         """
@@ -104,8 +101,6 @@ class Renderer(Reporter):
 
         try: self.format = kwargs["format"]
         except KeyError: pass
-
-        self.mTracker = tracker
 
     def __call__(self):
         return None
@@ -615,7 +610,7 @@ class RendererMatrix(RendererTableBase):
                                 title )
 
         lines = []
-        lines.append( ".. csv-table:: %s" % self.mTracker.getShortCaption() )
+        lines.append( ".. csv-table:: %s" % title )
         lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
         lines.append( '')
         for x in range(len(rows)):

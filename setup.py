@@ -50,6 +50,7 @@ setup(name='SphinxReport',
             'sphinxreport-test = SphinxReport.test:main',
             'sphinxreport-quickstart = SphinxReport.quickstart:main',            
             'sphinxreport-get = SphinxReport.get:main',            
+            'sphinxreport-profile = SphinxReport.profile:main',            
         ],
         'distutils.commands': [
             'build_sphinx = sphinxreport.setup_command:BuildDoc',

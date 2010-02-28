@@ -119,8 +119,8 @@ def getCode( cls, pathname ):
 
     return code
 
-def isTracker( obj ):
-    '''return true if obj is a valid tracker.
+def isClass( obj ):
+    '''return true if obj is a class.
     
     return False if it is a function object.
     raise ValueError if neither
@@ -142,32 +142,55 @@ def isTracker( obj ):
     
     raise ValueError("can not make sense of tracker %s" % str(obj))
 
-@memoized
-def getTracker( fullpath ):
-    """retrieve an instantiated tracker and its associated code.
-    
-    returns a tuple (code, tracker).
-    """
-    name, cls = os.path.splitext(fullpath)
+def makeObject( path, *args, **kwargs ):
+    '''return object of type *path*
+
+    This function is similar to an import statement, but
+    also instantiates the class and returns the object.
+
+    The object is instantiated with *args* and **kwargs**.
+    '''
+
+    # split class from module
+    name, cls = os.path.splitext(path)
+
     # remove leading '.'
     cls = cls[1:]
 
+    debug( "instantiating class %s" % cls )
+
     module, pathname = getModule( name )
-
-    code = getCode( cls, pathname )
-
-    debug( "instantiating tracker %s" % cls )
 
     # get tracker
     obj = getattr( module, cls)
 
-    # instantiate, if it is a tracker
-    if isTracker( obj ):
+    # instantiate, if it is a class
+    if isClass( obj ):
         try:
-            obj = obj()
+            obj = obj( *args, **kwargs )
         except AttributeError, msg:
-            critical( "instantiating tracker %s.%s failed: %s" % (module, cls, msg))
+            critical( "instantiating class %s.%s failed: %s" % (module, cls, msg))
             raise
         
+    return obj, module, pathname, cls
+    
+@memoized
+def makeTracker( path, *args, **kwargs ):
+    """retrieve an instantiated tracker and its associated code.
+    
+    returns a tuple (code, tracker).
+    """
+
+    obj, module, pathname, cls = makeObject( path, *args, **kwargs )
+    code = getCode( cls, pathname )
     return code, obj
+
+@memoized
+def makeRenderer( path, *args, **kwargs ):
+    """retrieve an instantiated Renderer.
+    
+    returns the object.
+    """
+    obj, module, pathname, cls = makeObject( path, *args, **kwargs )
+    return obj
 

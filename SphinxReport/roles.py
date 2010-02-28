@@ -47,7 +47,7 @@ def param_role( role, rawtext, text, lineno, inliner,
     class_name, parameter_name = ".".join(parts[:-1]), parts[-1]
 
     try:
-        code, tracker = Utils.getTracker( class_name )
+        code, tracker = Utils.makeTracker( class_name )
     except AttributeError:
         tracker = None
 

@@ -37,7 +37,7 @@ class Transformer(object):
                 warn( "no data at %s - removing branch" % str(path))
                 data.removeLeaf( path )
 
-        debug( "transform: ended with paths: %s" % data.getPaths())
+        debug( "transform: finished with paths: %s" % data.getPaths())
 
         return data
         
