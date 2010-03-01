@@ -901,10 +901,21 @@ class RendererHistogramGradientPlot(RendererLinePlot):
         self.nrows = nrows
         self.ymin, self.ymax = ymin, ymax
 
+        if self.mZRange:
+            self.ymin, self.ymax = self.mZRange
+
     def addData( self, line, label, xlabel, ylabel,
                  xvals, yvals, nplotted ):
 
+        if self.mZRange:
+            vmin, vmax = self.mZRange
+            if vmin == None: vmin = yvals.min()
+            if vmax == None: vmax = yvals.max()
+            yvals[ yvals < vmin ] = vmin
+            yvals[ yvals > vmax ] = vmax
+
         a = numpy.vstack((yvals,yvals))
+
         ax = plt.subplot(self.nrows, 1, nplotted+1)
         self.plots.append( plt.imshow(a,
                                       aspect='auto', 

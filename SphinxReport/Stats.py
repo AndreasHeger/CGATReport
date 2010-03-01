@@ -25,11 +25,26 @@ class Result(object):
     slots=("_data")
     def __init__(self):
         object.__setattr__(self, "_data", odict.OrderedDict())
+    def fromR( self, take, r_result ):
+        '''convert from an *r_result* dictionary using map *take*.
+
+        *take* is a list of tuples mapping a field to the corresponding
+        field in *r_result*.
+        '''
+        for x,y in take:
+            if y:
+                self._data[x] = r_result[y]
+            else:
+                self._data[x] = r_result[x]
+
+        return self
     def __getattr__(self, key):
         if not key.startswith("_"):
             try: return object.__getattribute__(self,"_data")[key]
             except KeyError: pass
         return getattr( self._data, key )
+    def __str__(self):
+        return str(self._data)
     def __contains__(self,key):
         return key in self._data
     def __getitem__(self, key ):
@@ -43,6 +58,8 @@ class Result(object):
             self._data[key] = value
         else:
             object.__setattr__(self,key,value)
+
+
 
 #################################################################
 #################################################################
@@ -587,3 +604,23 @@ def getSensitivityRecall( values ):
         result.append( (l, npositives / npredicted, npredicted/total ) )
 
     return result
+
+###################################################################
+###################################################################
+###################################################################
+## 
+###################################################################
+def doMannWhitneyUTest( xvals, yvals ):
+    '''apply the Mann-Whitney U test to test for the difference of medians.'''
+
+
+    r_result = R.wilcox_test( xvals, yvals, paired = False )
+
+    result = Result().fromR( 
+        ( ("pvalue", 'p.value'),
+          ('alternative', None),
+          ('method', None ) ), 
+        r_result )
+
+    return result
+

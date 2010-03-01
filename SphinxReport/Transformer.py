@@ -7,7 +7,6 @@ from numpy import arange
 from SphinxReport.odict import OrderedDict as odict
 from SphinxReport.DataTree import DataTree
 
-
 # ignore numpy histogram warnings in versions 1.3
 import warnings
 
@@ -158,14 +157,15 @@ class TransformerStats( Transformer ):
                 warn("%s: could not compute stats: expected an array of values, but got '%s'" % (str(self), str(values)) )
         return data
 
-class TransformerCorrelation( Transformer ):
+class TransformerPairwise( Transformer ):
     '''for each pair of columns on the lowest level compute
     the pearson correlation coefficient and other stats.
     '''
 
     nlevels = 1
     method = None
-    
+    paired = False
+
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
 
@@ -173,7 +173,7 @@ class TransformerCorrelation( Transformer ):
         debug( "%s: called" % str(self))
 
         if len(data.keys()) < 2:
-            raise ValueError( "can not compute correlation with only a single array." )
+            raise ValueError( "expected at least two arrays, got only %s." % str(data.keys()) )
 
         pairs = itertools.combinations( data.keys(), 2)
 
@@ -183,12 +183,16 @@ class TransformerCorrelation( Transformer ):
         
         for x,y in pairs:
             xvals, yvals = data[x], data[y]
-            take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
-            xvals = [xvals[i] for i in take ]
-            yvals = [yvals[i] for i in take ]
+            if self.paired:
+                if len(xvals) != len(yvals):
+                    raise ValueError("expected to arrays of the same length, %i != %i" % (len(xvals),
+                                                                                          len(yvals)))
+                take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
+                xvals = [xvals[i] for i in take ]
+                yvals = [yvals[i] for i in take ]
 
             try:
-                result = Stats.doCorrelationTest( xvals, yvals, method = self.method )
+                result = self.apply( xvals, yvals )
             except ValueError, msg:
                 continue
 
@@ -197,11 +201,17 @@ class TransformerCorrelation( Transformer ):
 
         return new_data
 
+class TransformerCorrelation( TransformerPairwise ):
+    '''compute correlations.'''
+    paired = True
+    def apply( self, xvals, yvals ):
+        return Stats.doCorrelationTest( xvals, yvals, method = self.method )
+
 class TransformerCorrelationPearson( TransformerCorrelation ):
     '''for each pair of columns on the lowest level compute
     the spearman correlation coefficient and other stats.
     '''
-
+    
     method = "pearson"
 
 class TransformerCorrelationSpearman( TransformerCorrelation ):
@@ -210,6 +220,14 @@ class TransformerCorrelationSpearman( TransformerCorrelation ):
     '''
 
     method = "spearman"
+
+class TransformerMannWhitneyU( TransformerPairwise ):
+    '''apply the Mann-Whitney U test to test for 
+    the difference of medians.
+    '''
+
+    def apply( self, xvals, yvals ):
+        return Stats.doMannWhitneyUTest( xvals, yvals )
     
 class TransformerHistogram( Transformer ):
     '''compute a histogram of values.'''

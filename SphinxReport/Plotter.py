@@ -132,6 +132,7 @@ class Plotter:
 
         self.mXRange = parseRanges(kwargs.get("xrange", None ))
         self.mYRange = parseRanges(kwargs.get("yrange", None ))
+        self.mZRange = parseRanges(kwargs.get("zrange", None ))
 
         def setupMPLOption( key ):
             options = {}
@@ -332,8 +333,6 @@ class PlotterMatrix(Plotter):
         try: self.mPalette = kwargs["palette"]
         except KeyError: self.mPalette = "jet"
 
-        self.mZRange = parseRanges( kwargs.get("zrange", None ) )
-
         try: self.mMaxRows = kwargs["max-rows"]
         except KeyError: self.mMaxRows = 20
 
@@ -433,9 +432,6 @@ class PlotterMatrix(Plotter):
 
         self.startPlot()
 
-
-        self.debug("checkpoint 1")
-
         nrows, ncols = matrix.shape
         if self.mZRange:
             vmin, vmax = self.mZRange
@@ -457,8 +453,6 @@ class PlotterMatrix(Plotter):
         plots = []
 
         split_row, split_col = nrows > self.mMaxRows, ncols > self.mMaxCols
-
-        self.debug("checkpoint 2")
 
         if (split_row and split_col) or not (split_row or split_col):
             self.debug("not splitting matrix")

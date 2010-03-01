@@ -15,6 +15,7 @@ MAP_TRANSFORMER = {
     'correlation' : Transformer.TransformerCorrelationPearson,
     'pearson' : Transformer.TransformerCorrelationPearson,
     'spearman' : Transformer.TransformerCorrelationSpearman, 
+    'test-mwu' : Transformer.TransformerMannWhitneyU, 
     'histogram' : Transformer.TransformerHistogram,
     'filter' : Transformer.TransformerFilter,
     'select' : Transformer.TransformerSelect,

@@ -13,7 +13,8 @@ Additionally, if the :include-source: option is provided, the literal
 source will be included inline, as well as a link to the source.
 """
 
-import sys, os, glob, shutil, imp, warnings, cStringIO, hashlib, re, logging, math, types
+import sys, os, glob, shutil, imp, warnings, cStringIO
+import hashlib, re, logging, math, types
 import traceback
 
 from docutils.parsers.rst import directives
