@@ -151,7 +151,7 @@ def getTrackers( fullpath ):
     for name in dir(module):
         obj = getattr(module, name)
         try:
-            if Utils.isTracker( obj ):
+            if Utils.isClass( obj ):
                 trackers.append( (name, obj, module_name, True) )
             else:
                 trackers.append( (name, obj, module_name, False) )
