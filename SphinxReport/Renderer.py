@@ -171,6 +171,18 @@ class RendererTableBase( Renderer ):
 
         return ResultBlocks( r )
 
+    def removeRedundantCells( self, matrix ):
+        '''remove cells in a matrix that are the same as
+        the ones above the top.'''
+        
+        nrows = len(matrix)
+        for x in xrange(nrows-1, 0, -1):
+            row = matrix[x]
+            for y in range(len(row)):
+                if row[y] == matrix[x-1][y]:
+                    row[y] = ""
+        return matrix
+
 class RendererTable( RendererTableBase ):
     '''a basic table. 
 
@@ -186,6 +198,7 @@ class RendererTable( RendererTableBase ):
     def __init__( self, *args, **kwargs ):
         RendererTableBase.__init__(self, *args, **kwargs )
         self.mTranspose = "transpose" in kwargs
+        self.mFormat = kwargs.get( "format", "").split(",")
 
     def getHeaders( self, data ):
         """return a list of headers and a mapping of header to column.
@@ -205,7 +218,6 @@ class RendererTable( RendererTableBase ):
             raise ValueError("mal-formatted data - RendererTable expected three level dictionary, got %s." % str(data) )
 
         return sorted_headers, column_headers
-
 
     def buildTable( self, data ):
         """build table from data.
@@ -229,6 +241,9 @@ class RendererTable( RendererTableBase ):
 
         if matrix == None: 
             return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
+
+        if "grouped" in self.mFormat:
+            matrix = self.removeRedundantCells( matrix )
 
         # do not output large matrices as rst files
         if not self.force and (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols):

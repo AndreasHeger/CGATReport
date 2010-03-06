@@ -83,7 +83,7 @@ class Tracker(object):
 
     def __call__(self, track, slice = None):
         """return a data structure for track :param: track and slice :slice:"""
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Tracker not fully implemented -> __call__ missing")
 
     def members( self, locals = None ):
         '''function similar to locals() but returning member variables of this tracker.
