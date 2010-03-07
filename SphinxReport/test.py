@@ -99,10 +99,10 @@ sphinx.
 import matplotlib
 import matplotlib.pyplot as plt
 
+from SphinxReport.Component import *
 from SphinxReport.Tracker import Tracker
-from SphinxReport.Renderer import *
-from SphinxReport.Transformer import *
-from SphinxReport.Config import MAP_RENDERER, MAP_TRANSFORMER
+# from SphinxReport.Renderer import *
+# from SphinxReport.Transformer import *
 from SphinxReport import Utils
 
 import SphinxReport.clean
@@ -218,6 +218,7 @@ def main():
     if len(args) == 2:
         options.tracker, options.renderer = args
 
+    # test plugins
     kwargs = {}
     for x in options.options:
         if "=" in x:
@@ -230,24 +231,11 @@ def main():
     if options.tracks: kwargs["tracks"] = options.tracks
     if options.slices: kwargs["slices"] = options.slices
 
-    if options.renderer:
-        try:
-            renderer = MAP_RENDERER[options.renderer]
-        except KeyError:
-            print "could not find renderer '%s'. Available renderers:\n  %s" % \
-                (options.renderer, "\n  ".join(sorted(MAP_RENDERER.keys())))
-            sys.exit(1)
-    else:
-        renderer = RendererTable
+    if options.renderer == None: options.renderer = "table"
 
-    transformers = []
-    for transformer in options.transformers:
-        try:
-            transformers.append( MAP_TRANSFORMER[transformer]( *args, **kwargs) )
-        except KeyError, msg:
-            print "could not instantiate transformer '%s': %s.\nAvailable transformers:\n  %s" % \
-                (transformer, msg, "\n  ".join(sorted(MAP_TRANSFORMER.keys())))
-            sys.exit(1)
+    renderer = Utils.getRenderer( options.renderer, **kwargs )
+
+    transformers = Utils.getTransformers( options.transformers, **kwargs )
 
     exclude = set( ("Tracker", 
                     "TrackerSQL", 
@@ -287,11 +275,10 @@ def main():
         # but not functions
         else: t = tracker
 
-        dispatcher = Dispatcher( t, renderer(t,**kwargs), transformers ) 
+        dispatcher = Dispatcher( t, renderer, transformers ) 
+
         ## needs to be resolved between renderer and dispatcher options
         result = dispatcher( **kwargs )
-        
-        #r = renderer( tracker() )
 
         if options.do_print:                        
             options_rst = []
@@ -331,22 +318,6 @@ def main():
         for block in blocks:
             build.run( ( (options.page, block ),) )
             
-    else:
-        trackers = []
-        for filename in glob.glob( "python/*.py" ):
-            trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in exclude ] )
-
-        processes = []
-        for name, tracker, modulename, is_derived in trackers:
-            if not is_derived: continue
-            obj = tracker()
-            r = renderer( obj )
-            p = Process( target = run, args= ( name,r,kwargs ) )
-            processes.append( (name, p) )
-            p.start()
-
-        for name, p in processes:
-            p.join()
-
 if __name__ == "__main__":
     sys.exit(main())
+

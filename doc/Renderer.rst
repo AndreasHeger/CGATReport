@@ -5,7 +5,7 @@ Renderer
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReport.Renderer
+.. inheritance-diagram:: SphinxReportPlugins.Renderer
    :parts: 1
 
 Writing your own renderer
@@ -55,7 +55,7 @@ dictionary in the file :file:`report_directive.py`.
 :mod:`Renderer`
 =======================
 
-.. automodule:: Renderer
+.. automodule:: SphinxReportPlugins.Renderer
    :members:
    :inherited-members:
    :show-inheritance:

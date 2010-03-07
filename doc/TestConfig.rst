@@ -7,3 +7,5 @@ from a :mod:`ConfigParser` file.
 .. report:: Tracker.Config
    :tracks: conf.ini
    :render: table
+   
+   Table with pipeline parameters.

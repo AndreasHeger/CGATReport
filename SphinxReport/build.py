@@ -17,10 +17,6 @@ on the command line.
 
 import sys, os, re, types, glob, optparse, traceback, hashlib
 import subprocess, logging, time, collections
-from logging import warn, log, debug, info
-
-import Logger
-
 USAGE = """python %s [OPTIONS] args
 
 build a sphinx report.
@@ -33,7 +29,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from SphinxReport import report_directive, gallery, clean
-from SphinxReport.Reporter import *
+from SphinxReport.Component import *
+
+import Logger
 
 try:
     from multiprocessing import Process
@@ -58,9 +56,7 @@ RST_TEMPLATE = """.. _%(label)s:
 # logging.basicConfig(
 #     level=logging.DEBUG,
 #     format='%(asctime)s %(levelname)s %(message)s',
-#     stream = open( Reporter.LOGFILE, "a" ) )
-
-
+#     stream = open( Component.LOGFILE, "a" ) )
 
 class ReportBlock:
     '''quick and dirty parsing of rst of a report block.'''
@@ -203,7 +199,9 @@ def buildPlots( rst_files, options, args ):
 
     logging.getLogger('').addHandler(handler)
     logging.getLogger('').setLevel(options.loglevel)
-    logging.info('starting %i jobs on %i work items' % (options.num_jobs, len(work)))
+    
+    info('starting %i jobs on %i work items' % (options.num_jobs, len(work)))
+    debug( "build.py: profile: started: 0 seconds" )
 
     if options.num_jobs > 1:
         pool = Pool( options.num_jobs )
@@ -331,6 +329,8 @@ def main():
     buildDocument( options, args )
 
     print "SphinxReport: finished in %i seconds" % (time.time() - t )
+
+    debug( "build.py: profile: finished: %i seconds" % (time.time() - t ))
 
 if __name__ == "__main__":
     sys.exit(main())

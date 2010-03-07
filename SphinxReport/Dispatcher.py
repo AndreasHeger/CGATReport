@@ -2,8 +2,8 @@ import os, sys, re, shelve, traceback, cPickle, types, itertools
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReport import DataTree
-from SphinxReport import Renderer
-from SphinxReport.Reporter import *
+# from SphinxReport import Renderer
+from SphinxReport.Component import *
 from SphinxReport import Utils
 from SphinxReport import Cache
 
@@ -11,7 +11,7 @@ VERBOSE=True
 
 from odict import OrderedDict as odict
 
-class Dispatcher(Reporter):
+class Dispatcher(Component):
     """Dispatch the directives in the ``:report:`` directive
     to a :class:`Tracker`, class:`Transformer` and :class:`Renderer`.
     
@@ -34,7 +34,7 @@ class Dispatcher(Reporter):
         to obtain data, an optional :class:`Transformer` to transform
         the data and a :class:`Renderer.Renderer` to render the output.
         '''
-        Reporter.__init__(self)
+        Component.__init__(self)
 
         self.debug("starting dispatcher '%s': tracker='%s', renderer='%s', transformer:='%s'" % \
                   (str(self), str(tracker), str(renderer), str(transformers) ) )
@@ -43,7 +43,14 @@ class Dispatcher(Reporter):
         self.renderer = renderer
         self.transformers = transformers
 
-        self.cache = Cache.Cache( Cache.tracker2key(tracker) )
+        try:
+            if tracker.cache:
+                self.cache = Cache.Cache( Cache.tracker2key(tracker) )
+            else:
+                self.cache = {}
+        except AttributeError:
+            self.cache = Cache.Cache( Cache.tracker2key(tracker) )
+
         self.data = DataTree.DataTree()
 
     def __del__(self):
@@ -197,14 +204,19 @@ class Dispatcher(Reporter):
         '''
         self.debug( "%s: rendering data started for %i items" % (self,
                                                                  len(self.data)))
-
+        
         results = ResultBlocks( title="main" )
+
+        try:
+            renderer_nlevels = self.renderer.nlevels
+        except AttributeError:
+            renderer_nlevels = 0
 
         labels = self.data.getPaths()
         nlevels = len(labels)
         self.debug( "%s: rendering data started: %s labels, %s minimum, %s" %\
                         (self, str(nlevels), 
-                         str(self.renderer.nlevels), 
+                         str(renderer_nlevels),
                          str(labels)[:100]))
 
         if nlevels >= 2:
@@ -221,16 +233,16 @@ class Dispatcher(Reporter):
 
         tracks, slices = self.tracks, self.slices
 
-        if nlevels < self.renderer.nlevels:
+        if nlevels < renderer_nlevels:
             # add some dummy levels if levels is not enough
             d = self.data
-            for x in range( self.renderer.nlevels - nlevels):
+            for x in range( renderer_nlevels - nlevels):
                 d = odict( (("all", d ),))
             results.append( self.renderer( DataTree.DataTree(d), path = ("all",) ) )
 
-        elif nlevels >= self.renderer.nlevels:
+        elif nlevels >= renderer_nlevels:
             if self.groupby == "none":
-                paths = list(itertools.product( *labels[:-self.renderer.nlevels] ))
+                paths = list(itertools.product( *labels[:-renderer_nlevels] ))
                 for path in paths:
                     subtitle = "/".join( path )
                     work = self.data.getLeaf( path )
@@ -238,12 +250,12 @@ class Dispatcher(Reporter):
                     for key,value in work.iteritems():
                         vals = DataTree.DataTree( odict( ((key,value),) ))
                         results.append( self.renderer( vals, path = path ))
-            elif nlevels == self.renderer.nlevels and self.groupby == "track":
+            elif nlevels == renderer_nlevels and self.groupby == "track":
                 for track in all_tracks:
                     vals = DataTree.DataTree( odict( ((track, self.data[track]),)))
                     results.append( self.renderer( vals, path = (track,) ) )
                 
-            elif nlevels > self.renderer.nlevels and self.groupby == "track":
+            elif nlevels > renderer_nlevels and self.groupby == "track":
                 for track in all_tracks:
                     # slices can be absent
                     d = [ (x,self.data[track][x]) for x in all_slices if x in self.data[track] ]
@@ -251,7 +263,7 @@ class Dispatcher(Reporter):
                     vals = DataTree.DataTree( odict( d ) )
                     results.append( self.renderer( vals, path = (track,) ) )
 
-            elif nlevels > self.renderer.nlevels and self.groupby == "slice" and len(self.slices) > 0:
+            elif nlevels > renderer_nlevels and self.groupby == "slice" and len(self.slices) > 0:
                 for slice in all_slices:
                     d = [ (x,self.data[x][slice]) for x in all_tracks if slice in self.data[x] ]
                     if len(d) == 0: continue
@@ -273,12 +285,12 @@ class Dispatcher(Reporter):
     def __call__(self, *args, **kwargs ):
 
         try: self.parseArguments( *args, **kwargs )
-        except: return Renderer.buildException( "parsing" )
+        except: return Utils.buildException( "parsing" )
 
         self.debug( "profile: started: tracker: %s" % (self.tracker))
 
         try: self.collect()
-        except: return Renderer.buildException( "collection" )
+        except: return Utils.buildException( "collection" )
 
         self.debug( "profile: finished: tracker: %s" % (self.tracker))
 
@@ -286,7 +298,7 @@ class Dispatcher(Reporter):
         self.debug( "%s: after collection: %i labels: %s" % (self,len(labels), str(labels)))
         
         try: self.transform()
-        except: return Renderer.buildException( "transformation" )
+        except: return Utils.buildException( "transformation" )
 
         labels = self.data.getPaths()
         self.debug( "%s: after transformation: %i labels: %s" % (self,len(labels), str(labels)))
@@ -294,7 +306,7 @@ class Dispatcher(Reporter):
         self.debug( "profile: started: renderer: %s" % (self.renderer))
 
         try: result = self.render()
-        except: return Renderer.buildException( "rendering" )
+        except: return Utils.buildException( "rendering" )
 
         self.debug( "profile: finished: renderer: %s" % (self.renderer))
 

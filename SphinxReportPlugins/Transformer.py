@@ -6,11 +6,16 @@ from numpy import arange
 
 from SphinxReport.odict import OrderedDict as odict
 from SphinxReport.DataTree import DataTree
+from SphinxReport.Component import *
+
+from docutils.parsers.rst import directives
 
 # ignore numpy histogram warnings in versions 1.3
 import warnings
 
-class Transformer(object):
+class Transformer(Component):
+
+    capabilities = ['transform']
 
     nlevels = None
 
@@ -47,6 +52,10 @@ class TransformerFilter( Transformer ):
     nlevels = 1
     default = 0
 
+    options = Transformer.options +\
+        ( ('tf-fields', directives.unchanged),
+          ('tf-level', directives.length_or_unitless) )
+
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
 
@@ -72,6 +81,9 @@ class TransformerSelect( Transformer ):
     
     nlevels = 2
     default = 0
+
+    options = Transformer.options +\
+        ( ('tf-fields', directives.unchanged), )
 
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
@@ -105,6 +117,9 @@ class TransformerCombinations( Transformer ):
     '''
     
     nlevels = 2
+
+    options = Transformer.options +\
+        ( ('tf-fields', directives.unchanged), )
 
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
@@ -233,6 +248,12 @@ class TransformerHistogram( Transformer ):
     '''compute a histogram of values.'''
 
     nlevels = 1
+
+    options = Transformer.options +\
+        ( ('tf-aggregate', directives.unchanged), 
+          ('tf-bins', directives.unchanged), 
+          ('tf-range', directives.unchanged), 
+          )
 
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)

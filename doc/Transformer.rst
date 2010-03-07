@@ -5,7 +5,7 @@ Renderer
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReport.Renderer
+.. inheritance-diagram:: SphinxReportPlugins.Transformer.Transformer
    :parts: 1
 
 :mod:`Transformer`

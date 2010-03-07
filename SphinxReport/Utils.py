@@ -1,8 +1,10 @@
 import re, os, sys, imp, cStringIO, types
+import traceback
 
 import SphinxReport
 from SphinxReport.Tracker import Tracker
-from SphinxReport.Reporter import *
+from SphinxReport.ResultBlock import ResultBlocks,ResultBlock
+from SphinxReport.Component import *
 
 from SphinxReport.odict import OrderedDict as odict
 
@@ -193,4 +195,92 @@ def makeRenderer( path, *args, **kwargs ):
     """
     obj, module, pathname, cls = makeObject( path, *args, **kwargs )
     return obj
+
+@memoized
+def makeTransformer( path, *args, **kwargs ):
+    """retrieve an instantiated Transformer.
+    
+    returns the object.
+    """
+    obj, module, pathname, cls = makeObject( path, *args, **kwargs )
+    return obj
+
+
+def buildException( stage ):
+    '''build an exception text element.
+    
+    It uses the last exception.
+    '''
+        
+    if sphinxreport_show_errors:
+        EXCEPTION_TEMPLATE = '''
+.. error:: %(exception_name)s
+
+   * stage: %(stage)s
+   * exception: %(exception_name)s
+   * message: %(exception_value)s
+   * traceback: 
+
+%(exception_stack)s
+'''
+
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        lines = traceback.format_tb( exceptionTraceback )
+        # remove all the ones relate to Dispatcher.py
+        xlines = filter( lambda x: not re.search( "Dispatcher.py", x ), lines )
+        # if nothing left, use the full traceback
+        if len(xlines) > 0: lines = xlines
+        # add prefix of 6 spaces
+        prefix = "\n" + " " * 6
+        exception_stack  = prefix + prefix.join( "".join(lines).split("\n") )
+        if exceptionType.__module__ == "exceptions":
+            exception_name   = exceptionType.__name__
+        else:
+            exception_name   = exceptionType.__module__ + '.' + exceptionType.__name__
+
+        exception_value  = str(exceptionValue)
+
+        return ResultBlocks( 
+            ResultBlocks( 
+                ResultBlock( EXCEPTION_TEMPLATE % locals(), 
+                         title = "" ) ) )
+    else:
+        return ResultBlocks()
+
+
+def getTransformers( transformers, **kwargs ):
+    '''find and instantiate all transformers.'''
+
+    result = []
+    for transformer in transformers:
+        try:
+            cls = getPlugins()["transform"]["transform-%s" % transformer]
+            instance = cls( **kwargs)
+        except KeyError, msg:
+            instance = makeTransformer( transformer )
+
+        if not instance:
+            msg = "could not find transformer '%s'. Available transformers:\n  %s" % \
+                (transformer, "\n  ".join(sorted(getPlugins()["transform"].keys())))
+            raise KeyError( msg )
+
+        result.append( instance )
+
+    return result
+
+def getRenderer( renderer_name, **kwargs ):
+    '''find and instantiate renderer.'''
+
+    try:
+        cls = getPlugins()["render"]["render-%s" % renderer_name]
+        renderer = cls( **kwargs )
+    except KeyError:
+        renderer = makeRenderer( renderer_name, **kwargs)
+
+    if not renderer:
+        raise KeyError( "could not find renderer '%s'. Available renderers:\n  %s" % \
+                            (renderer_name, 
+                             "\n  ".join(sorted(getPlugins()["render"].keys()))))
+
+    return renderer
 

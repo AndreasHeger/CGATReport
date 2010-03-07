@@ -2,7 +2,7 @@ import os, sys, re, shelve, traceback, cPickle, types, itertools
 import bsddb.db
 import sqlalchemy
 
-from SphinxReport.Reporter import *
+from SphinxReport.Component import *
 from SphinxReport import Utils
 
 def tracker2key( tracker ):
@@ -17,7 +17,7 @@ def tracker2key( tracker ):
 
     return Utils.quote_filename( ".".join((modulename,name)))
 
-class Cache( Reporter ):
+class Cache( Component ):
     '''persistent storage for tracker results.'''
 
     def __init__(self, cache_name, mode = "a" ):

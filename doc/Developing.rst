@@ -4,6 +4,18 @@
 Developer's guide
 =================
 
+:mod:`SphinxReport` provides a component architecture 
+for adding new capabilities. Components provide the
+following functions:
+
+render
+   create a plot or table
+
+transform
+   manipulate the data
+
+
+
 Modules documentation
 =====================
 
@@ -12,10 +24,11 @@ Modules documentation
 
    Renderer.rst
    Plotter.rst
-   Tracker.rst
    Transformer.rst
-   DataTypes.rst
    Server.rst
+   Tracker.rst
+   DataTypes.rst
+   Component.rst
 
 Indices and tables
 ==================

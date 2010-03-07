@@ -30,7 +30,7 @@ Targets can contain wild cards.
 
 """ % sys.argv[0]
 
-from SphinxReport import Reporter
+from SphinxReport import Component
 
 class Counter(object):
     '''
@@ -100,13 +100,20 @@ def main():
 
     rx = re.compile("^[0-9]+" )
 
-    sections = ("rst", "tracker", "renderer" )
+    profile_sections = ("rst", "tracker", "renderer" )
 
     counts = {}
-    for section in sections:
+    for section in profile_sections:
         counts[section] = collections.defaultdict( Counter )
 
-    for line in open(Reporter.LOGFILE ):
+    rootpath = os.path.abspath(".")
+
+    if len(args) == 1:
+        infile = open( args[0] )
+    else:
+        infile = open(Component.LOGFILE )
+
+    for line in infile:
 
         if not rx.match( line ): continue
         data = line[:-1].split()
@@ -120,19 +127,28 @@ def main():
         try:
             started, section = data[5:7]
             point = re.sub( "object at .*>","", " ".join(data[7:]))
+            if point.startswith("<"): point = point[1:]
+            point = re.sub( rootpath, "", point )
         except (IndexError, ValueError):
             print data[5:]
             print "malformatted line in logfile: %s" % line 
             continue
         
-        if section == "renderer": section += ":"
+        if section.endswith( ":" ): section = section[:-1]
         
         if source == "report_directive.run:": continue
-
         is_start = started == "started:"
 
+        if source == "build.py:":
+            if is_start:
+                print "# reseting counts at", line,
+                counts = {}
+                for s in profile_sections:
+                    counts[s] = collections.defaultdict( Counter )
+            continue
+
         try:
-            counts[section[:-1]][point].add( is_start, dt, source )
+            counts[section][point].add( is_start, dt, source )
         except ValueError:
             # if there are errors, there is no finish, reset counter
 
@@ -148,7 +164,7 @@ def main():
     elif options.time == "seconds":
         f = lambda d: d.seconds + d.microseconds / 1000000
 
-    for section in sections:
+    for section in profile_sections:
         sys.stdout.write( "\t".join( ("section", "object", "ncalls", "duration", "percall") ) + "\n" )
         for objct, c in counts[section].iteritems():
             d = f(c.duration)

@@ -35,7 +35,7 @@ Targets can contain wild cards.
 """ % sys.argv[0]
 
 from SphinxReport.Tracker import Tracker
-from SphinxReport.Renderer import *
+# from SphinxReport.Renderer import *
 
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )

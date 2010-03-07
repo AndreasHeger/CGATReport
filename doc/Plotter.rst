@@ -5,7 +5,7 @@ Plotter
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReport.Plotter
+.. inheritance-diagram:: SphinxReportPlugins.Plotter.Plotter
    :parts: 1
 
 :mod:`Plotter`

@@ -96,6 +96,10 @@ class LargeTable( Tracker ):
 
 class VeryLargeMatrix( Tracker ):
     """example of a large matrix with long labels."""
+
+    # do not cache - slow in shelve as many key-value pairs
+    cache = False
+
     ncols = 7000
     ntracks = 200
 

@@ -43,8 +43,8 @@ class Tracker(object):
 
     mMinData = 1
 
-    mXLabel = None
-    mYLabel = None
+    # set to False, if results of tracker should be cached
+    cache = True
 
     def __init__(self):
         pass
@@ -60,14 +60,6 @@ class Tracker(object):
         The optional subset argument can group slices together.
         """
         return []
-
-    def getXLabel(self): 
-        """return the default xlabel."""
-        return self.mXLabel
-
-    def getYLabel(self): 
-        """return the default ylabel."""
-        return self.mYLabel
 
     def getShortCaption( self ):
         """return one line caption.
@@ -377,3 +369,13 @@ class Config( Tracker ):
         
         return result
         
+class Empty( Tracker ):
+    '''empty tracker - placeholder for plots that require no input from a tracker.'''
+
+    def getTracks( self, subset = None ):
+        """return a list of all tracks that this tracker provides."""
+        if subset: return subset
+        return ["empty"]
+
+    def __call__(self, track, slice = None ):
+        return odict( (("a", 1),))

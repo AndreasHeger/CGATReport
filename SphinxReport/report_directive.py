@@ -14,14 +14,14 @@ source will be included inline, as well as a link to the source.
 """
 
 import sys, os, glob, shutil, imp, warnings, cStringIO
-import hashlib, re, logging, math, types
+import hashlib, re, logging, math, types, operator
 import traceback
 
 from docutils.parsers.rst import directives
 
-from SphinxReport import Config, Renderer, Tracker, Transformer, Dispatcher, Utils, Cache
+from SphinxReport import Config, Dispatcher, Utils, Cache
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
-from SphinxReport.Reporter import *
+from SphinxReport.Component import *
 
 SPHINXREPORT_DEBUG = False
 
@@ -57,164 +57,6 @@ def exception_to_str(s = None):
     traceback.print_exc(file=sh)
     return sh.getvalue()
 
-def collectImagesFromMatplotlib( template_name, 
-                                 outdir, 
-                                 linkdir, 
-                                 content,
-                                 display_options,
-                                 linked_codename,
-                                 tracker_id):
-    ''' collect one or more pylab figures and 
-        
-    1. save as png, hires-png and pdf
-    2. save thumbnail
-    3. insert rendering code at placeholders in output
-
-    returns a map of place holder to placeholder text.
-    '''
-    fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
-
-    map_figure2text = {}
-
-    # determine the image formats to create
-    default_format = Config.HTML_IMAGE_FORMAT
-    additional_formats = []
-
-    try:
-        additional_formats.extend( sphinxreport_images )
-    except NameError:
-        additional_formats.extend( Config.ADDITIONAL_FORMATS )
-
-    if Config.LATEX_IMAGE_FORMAT: additional_formats.append( Config.LATEX_IMAGE_FORMAT )
-
-    all_formats = [default_format,] + additional_formats
-
-    # create all the images
-    for i, figman in enumerate(fig_managers):
-        # create all images
-
-        for id, format, dpi in all_formats:
-
-            if len(fig_managers) == 1:
-                outname = template_name
-            else:
-                outname = "%s_%02d" % (template_name, i)
-
-            outpath = os.path.join(outdir, '%s.%s' % (outname, format))
-
-            try:
-                figman.canvas.figure.savefig( outpath, dpi=dpi )
-            except:
-                s = exception_to_str("Exception running plot %s" % outpath)
-                warnings.warn(s)
-                return []
-
-            if format=='png':
-                thumbdir = os.path.join(outdir, 'thumbnails')
-                try:
-                    os.makedirs(thumbdir)
-                except OSError:
-                    pass
-                thumbfile = str('%s.png' % os.path.join(thumbdir, outname) )
-                captionfile = str('%s.txt' % os.path.join(thumbdir, outname) )
-                if not os.path.exists(thumbfile):
-                    # thumbnail only available in matplotlib >= 0.98.4
-                    try:
-                        figthumb = image.thumbnail(str(outpath), str(thumbfile), scale=0.3)
-                    except AttributeError:
-                        pass
-                outfile = open(captionfile,"w")
-                outfile.write( "\n".join( content ) + "\n" )
-                outfile.close()
-
-        # create the text element
-        rst_output = ""
-        imagepath = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
-        linked_text = imagepath + ".txt"
-
-        if Config.HTML_IMAGE_FORMAT:
-            id, format, dpi = Config.HTML_IMAGE_FORMAT
-            template = '''
-.. htmlonly::
-
-   .. image:: %(linked_image)s
-%(display_options)s
-
-   [%(code_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
-'''
-            
-            linked_image = imagepath + ".%s" % format
-            extra_images=[]
-            for id, format, dpi in additional_formats:
-                extra_images.append( "`%(id)s <%(imagepath)s.%(format)s>`__" % locals())
-            if extra_images: extra_images = " " + " ".join( extra_images)
-            else: extra_images = ""
-
-            # construct additional urls
-            code_url, data_url, rst_url = "", "", ""
-            if "code" in sphinxreport_urls:
-                code_url = "`code <%(linked_codename)s>`__" % locals()
-
-            if "data" in sphinxreport_urls: 
-                data_url = "`data </data/%(tracker_id)s>`__" % locals()
-                
-            if "rst" in sphinxreport_urls:
-                rst_url = "`rst <%(linked_text)s>`__" % locals()
-
-            rst_output += template % locals()
-            
-        # treat latex separately
-        if Config.LATEX_IMAGE_FORMAT:
-            id, format, dpi = Config.LATEX_IMAGE_FORMAT
-            template = '''
-.. latexonly::
-
-   .. image:: %(linked_image)s
-%(display_options)s
-'''
-            linked_image = imagepath + ".%s" % format
-            rst_output += template % locals()
-        
-        map_figure2text[ "#$mpl %i$#" % i] = rst_output
-
-    return map_figure2text
-
-def collectHTML( result_blocks,
-                 template_name, 
-                 outdir, 
-                 linkdir, 
-                 content,
-                 display_options,
-                 linked_codename,
-                 tracker_id):
-    '''collect html output from result blocks.
-
-    HTML output is written to a file and a link will be inserted at
-    the place holder.
-    '''
-    map_figure2text = {}
-    extension = "html"
-    
-    for blocks in result_blocks:
-        for block in blocks:
-            if not hasattr( block, "html" ): continue
-            
-            outname = "%s_%s" % (template_name, block.title)
-            outputpath = os.path.join(outdir, '%s.%s' % (outname, extension))
-
-            # save to file
-            outf = open( outputpath, "w")
-            outf.write( block.html )
-            outf.close()
-
-            path = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
-            link = path + "." + extension
-
-            rst_output = "%(link)s" % locals()
-
-            map_figure2text[ "#$html %s$#" % block.title] = rst_output
-
-    return map_figure2text
 
 def layoutBlocks( blocks, layout = "column"):
     """layout blocks of rst text.
@@ -336,7 +178,7 @@ def buildPaths( reference ):
 
     return basedir, fname, basename, ext, outdir, codename
 
-def run(arguments, options, lineno, content, state_machine = None, document = None):
+def run(arguments, options, lineno, content, state_machine = None, document = None ):
     """process :report: directive."""
 
     logging.debug( "report_directive.run: profile: started: rst: %s:%i" % (str(document), lineno) )
@@ -387,11 +229,12 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         del options["layout"]
     except KeyError: 
         layout = "column"
-    
-    renderer_options = selectAndDeleteOptions( options, Config.RENDER_OPTIONS )
-    transformer_options = selectAndDeleteOptions( options, Config.TRANSFORM_OPTIONS)
-    dispatcher_options = selectAndDeleteOptions( options, Config.DISPATCHER_OPTIONS)
 
+    option_map = getOptionMap()
+    renderer_options = selectAndDeleteOptions( options, option_map["render"])
+    transformer_options = selectAndDeleteOptions( options, option_map["transform"])
+    dispatcher_options = selectAndDeleteOptions( options, option_map["dispatch"] )
+        
     logging.debug( "report_directive.run: renderer options: %s" % str(renderer_options) )
     logging.debug( "report_directive.run: transformer options: %s" % str(transformer_options) )
     logging.debug( "report_directive.run: dispatcher options: %s" % str(dispatcher_options) )
@@ -466,12 +309,12 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     else:
         template_name = ""
         filename_text = None
-            
-    # we need to clear between runs
-    plt.close('all')    
-    # matplotlib.rcdefaults()
-    # set a figure size that doesn't overflow typical browser windows
-    matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
+      
+    ##########################################################
+    # Initialize collectors
+    collectors = []
+    for collector in getPlugins( "collect" ).values():
+        collectors.append( collector() )
 
     ##########################################################
     ## instantiate tracker, dispatcher, renderer and transformers
@@ -492,27 +335,18 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
         ########################################################
         # determine the transformer
-        transformers = []
         logging.debug( "report_directive.run: creating transformers." )
 
-        for transformer in transformer_names:
-            if transformer not in Config.MAP_TRANSFORMER: 
-                raise KeyError('unknown transformer `%s`' % transformer )
-            else: transformers.append( Config.MAP_TRANSFORMER[transformer](**transformer_options)) 
+        transformers = Utils.getTransformers( transformer_names, **transformer_options )
 
         ########################################################
         # determine the renderer
         logging.debug( "report_directive.run: creating renderer." )
+        
         if renderer_name == None:
             raise ValueError("the report directive requires a renderer.")
 
-        if renderer_name in Config.MAP_RENDERER:
-            renderer = Config.MAP_RENDERER[renderer_name](**renderer_options)
-        else:
-            renderer = Utils.makeRenderer( renderer_name, **renderer_options)
-            
-        if not renderer:
-            raise KeyError("unknown renderer `%s`" % renderer_name)
+        renderer = Utils.getRenderer( renderer_name, **renderer_options )
 
         ########################################################
         # create and call dispatcher
@@ -527,7 +361,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
         logging.warn("report_directive.run: exception caught at %s:%i - see document" % (str(document), lineno) )
 
-        blocks = Renderer.buildException( "invocation" )
+        blocks = Utils.buildException( "invocation" )
         code = None
         tracker_id = None
 
@@ -542,25 +376,16 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     ###########################################################
     # collect images
     ###########################################################
-    map_figure2text = collectImagesFromMatplotlib( template_name, 
+    map_figure2text = {}
+    for collector in collectors:
+        map_figure2text.update( collector.collect( blocks,
+                                                   template_name, 
                                                    outdir, 
                                                    linkdir, 
                                                    content, 
                                                    display_options,
                                                    linked_codename,
-                                                   tracker_id )
-
-    ###########################################################
-    # collect text
-    ###########################################################
-    map_figure2text.update( collectHTML(  blocks,
-                                          template_name, 
-                                          outdir, 
-                                          linkdir, 
-                                          content, 
-                                          display_options,
-                                          linked_codename,
-                                          tracker_id ) )
+                                                   tracker_id ) )
 
     ###########################################################
     # replace place holders or add text
@@ -619,7 +444,7 @@ except ImportError:
     report_directive.__doc__ = __doc__
     report_directive.arguments = (1, 0, 1)
     report_directive.options = dict( Config.RENDER_OPTIONS.items() +\
-                                         Config.TRANSFORM_OPTIONS.items() +\
+                                         # Config.TRANSFORM_OPTIONS.items() +\
                                          Config.DISPLAY_OPTIONS.items() +\
                                          Config.DISPATCHER_OPTIONS.items() )
 
@@ -630,10 +455,10 @@ else:
         optional_arguments = 0
         has_content = True
         final_argument_whitespace = True
-        option_spec = dict( Config.RENDER_OPTIONS.items() +\
-                                Config.TRANSFORM_OPTIONS.items() +\
-                                Config.DISPLAY_OPTIONS.items() +\
-                                Config.DISPATCHER_OPTIONS.items() )
+
+        # build option spec
+        option_spec = getOptionSpec()
+
         def run(self):
             document = self.state.document.current_source
             logging.info( "report_directive: starting: %s:%i" % (str(document), self.lineno) )
@@ -642,7 +467,8 @@ else:
                        self.lineno,
                        self.content, 
                        self.state_machine, 
-                       document)
+                       document )
+
     report_directive.__doc__ = __doc__
 
     directives.register_directive('report', report_directive)
