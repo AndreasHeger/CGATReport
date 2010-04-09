@@ -1,4 +1,4 @@
-import Stats
+
 from logging import warn, log, debug, info
 import itertools
 import numpy
@@ -7,6 +7,7 @@ from numpy import arange
 from SphinxReport.odict import OrderedDict as odict
 from SphinxReport.DataTree import DataTree
 from SphinxReport.Component import *
+from SphinxReport import Stats
 
 from docutils.parsers.rst import directives
 
@@ -153,7 +154,10 @@ class TransformerCombinations( Transformer ):
         return new_data
 
 class TransformerStats( Transformer ):
-    '''compute stats on each column.'''
+    '''compute summary statistics.
+
+    Empty paths will be removed.
+    '''
     nlevels = 1
 
     def __init__(self,*args,**kwargs):
@@ -163,13 +167,19 @@ class TransformerStats( Transformer ):
         debug( "%s: called" % str(self))
         for header, values in data.iteritems():
             if len(values) == 0: 
-                warn( "empty histogram" )
+                warn( "empty histogram for %s -removing" % header)
+                del data[header]
                 continue
-
+            
             try:
-                data[header] =  Stats.Summary( values )
+                data[header] = Stats.Summary( values )._data
             except TypeError:
                 warn("%s: could not compute stats: expected an array of values, but got '%s'" % (str(self), str(values)) )
+                del data[header]
+            except ValueError, msg:
+                warn("%s: could not compute stats: '%s'" % (str(self), msg) )
+                del data[header]
+
         return data
 
 class TransformerPairwise( Transformer ):
@@ -366,8 +376,8 @@ class TransformerHistogram( Transformer ):
                 nbins = float(b)
                 if ma < 0: raise ValueError( "can not bin logarithmically for negative values.")
                 if mi == 0: mi = numpy.MachAr().epsneg
-                ma = log10( ma )
-                mi = log10( mi )
+                ma = numpy.log10( ma )
+                mi = numpy.log10( mi )
                 bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
             elif binsize != None:
                 # make sure that ma is part of bins
@@ -379,10 +389,10 @@ class TransformerHistogram( Transformer ):
                 warn( "empty bins")
                 return None, None
 
-        # ignore histogram semantics warning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            hist, bin_edges = numpy.histogram( data, bins=bins, range=(mi,ma) )
+           # ignore histogram semantics warning
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                hist, bin_edges = numpy.histogram( data, bins=bins, range=(mi,ma) )
         
         return self.binToX(bin_edges), hist
 

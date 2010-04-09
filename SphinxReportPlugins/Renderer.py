@@ -16,7 +16,6 @@ from SphinxReport.odict import OrderedDict as odict
 from SphinxReport.DataTree import DataTree, path2str, tree2table
 from SphinxReport.Component import *
 from SphinxReport import Utils
-from Tracker import *
 
 from docutils.parsers.rst import directives
 

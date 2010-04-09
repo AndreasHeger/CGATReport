@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: SphinxReport
-Version: 1.0.a3
+Version: 1.0
 Summary: SphinxReport : a report generator in python based on Sphinx and matplotlib
 Home-page: http://code.google.com/p/sphinx-report/
 Author: Andreas Heger

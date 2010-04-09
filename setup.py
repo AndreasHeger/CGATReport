@@ -26,7 +26,7 @@ Operating System :: MacOS
 """
 
 setup(name='SphinxReport',
-      version='1.0.a3',
+      version='1.0',
       description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',

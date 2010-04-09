@@ -43,6 +43,8 @@ class Result(object):
             try: return object.__getattribute__(self,"_data")[key]
             except KeyError: pass
         return getattr( self._data, key )
+    def keys(self): return self._data.keys()
+    def values(self): return self._data.values()
     def __str__(self):
         return str(self._data)
     def __contains__(self,key):
@@ -58,8 +60,6 @@ class Result(object):
             self._data[key] = value
         else:
             object.__setattr__(self,key,value)
-
-
 
 #################################################################
 #################################################################
@@ -222,6 +222,9 @@ class Summary( Result ):
             else:
                 n = values
 
+            if len(n) == 0:
+                raise ValueError( "no data for statistics" )
+
             ## use a non-sort algorithm later.
             n.sort()
             self.q1 = n[len(n) / 4]
@@ -235,6 +238,14 @@ class Summary( Result ):
             self.samplestd = scipy.std( n )
             self.sum = reduce( lambda x, y: x+y, n )
 
+    def getHeaders( self ):
+        """returns header of column separated values."""
+        return ("nval", "min", "max", "mean", "median", "stddev", "sum", "q1", "q3")
+
+    def getHeader( self ):
+        """returns header of column separated values."""
+        return "\t".join( self.getHeaders())
+
     def __str__( self ):
         """return string representation of data."""
         
@@ -245,15 +256,15 @@ class Summary( Result ):
             format_vals = self._format
             format_median = self._format
 
-        return "\t".join( ( "%i" % self.mCounts,
-                            format_vals % self.mMin,
-                            format_vals % self.mMax,
-                            self.mFormat % self.mMean,
-                            format_median % self.mMedian,
-                            self.mFormat % self.mSampleStd,                                      
-                            format_vals % self.mSum,
-                            format_vals % self.mQ1,
-                            format_vals % self.mQ3,                            
+        return "\t".join( ( "%i" % self.counts,
+                            format_vals % self.min,
+                            format_vals % self.max,
+                            self._format % self.mean,
+                            format_median % self.median,
+                            self._format % self.samplestd,                                      
+                            format_vals % self.sum,
+                            format_vals % self.q1,
+                            format_vals % self.q3,                            
                             ) )
 
 class FDRResult:
@@ -445,8 +456,9 @@ class CorrelationTest(Result):
             self.pvalue = s_result[1]
             self.nobservations = nobservations
             self.alternative = "two-sided"
-
+            
         if self.pvalue != None:
+            self.logpvalue = math.log( self.pvalue )
             self.significance = getSignificance( self.pvalue )
 
     def __str__(self):

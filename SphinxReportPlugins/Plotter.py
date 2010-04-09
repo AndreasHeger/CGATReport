@@ -214,10 +214,17 @@ class Plotter(object):
         # set logscale before the xlim, as it re-scales the plot.
         if self.logscale:
             if "x" in self.logscale:
-                plt.gca().set_xscale('log')
-            if "y" in self.logscale:
-                plt.gca().set_yscale('log')
+                try:
+                    plt.gca().set_xscale('log')
+                except OverflowError:
+                    plt.gca().set_xscale('linear')
 
+            if "y" in self.logscale:
+                try:
+                    plt.gca().set_yscale('log')
+                except OverflowError:
+                    plt.gca().set_yscale('linear')
+                
         if self.xrange:
             plt.xlim( self.xrange )
         if self.yrange:

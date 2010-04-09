@@ -47,7 +47,8 @@ class DataTree( object ):
         return self._data.__setitem__(key,value)
     def __len__(self):
         return self._data.__len__()
-
+    def __str__(self):
+        return str(self._data)
     def getPaths( self ):
         '''extract labels from data.
 

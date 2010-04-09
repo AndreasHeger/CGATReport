@@ -17,3 +17,5 @@ su -c python setup.py install
 Documentation
 =============
 
+See the `homepage <http://wwwfgu.anat.ox.ac.uk/~andreas/SphinxReport/index.html>` for
+documentation and tutorials.
