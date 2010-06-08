@@ -40,6 +40,8 @@ class Dispatcher(Component):
                   (str(self), str(tracker), str(renderer), str(transformers) ) )
 
         self.tracker = tracker
+        # add reference to self for access to tracks
+        self.tracker.dispatcher = self
         self.renderer = renderer
         self.transformers = transformers
 
