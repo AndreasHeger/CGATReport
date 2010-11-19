@@ -1,5 +1,6 @@
 import re, os, sys, imp, cStringIO, types
 import traceback
+import ConfigParser
 
 import SphinxReport
 from SphinxReport.Tracker import Tracker
@@ -43,6 +44,67 @@ def quote_filename( fn ):
 def quote_rst( text ):
     '''quote text for restructured text.'''
     return re.sub( r"([*])", r"\\\1", str(text))
+
+PARAMS = {}
+
+def convertValue( value ):
+    '''convert a value to int, float or str.'''
+    rx_int = re.compile("^\s*[+-]*[0-9]+\s*$")
+    rx_float = re.compile("^\s*[+-]*[0-9.]+[.+\-eE][+-]*[0-9.]*\s*$")
+
+    if value == None: return value
+
+    if rx_int.match( value ):
+        return int(value)
+    elif rx_float.match( value ):
+        return float(value)
+    return value
+
+def getParameters( filename = "sphinxreport.ini" ):
+    '''read a config file and return as a dictionary.
+
+    Sections and keys are combined with an underscore. If
+    a key without section does not exist, it will be added 
+    plain.
+
+    For example::
+
+       [general]
+       input=input1.file
+
+       [special]
+       input=input2.file
+
+    will be entered as { 'general_input' : "input1.file",
+    'input: "input1.file", 'special_input' : "input2.file" }
+
+    This function also updates the module-wide parameter map.
+    
+    '''
+    if not os.path.exists( filename ):
+        warn("no configuration file %s" % filename)
+        return
+
+    p = {}
+    
+    config = ConfigParser.ConfigParser()
+    config.readfp(open(filename),"r")
+
+    for section in config.sections():
+        for key,value in config.items( section ):
+            v = convertValue( value )
+            p["%s_%s" % (section,key)] = v
+            if section == "general":
+                p["%s" % (key)] = v
+
+    PARAMS.update( p )
+
+    debug( "%s: read parameters: %s" % (filename, str(PARAMS) ))
+
+    return p
+
+## read placeholders
+getParameters()
 
 class memoized(object):
    """Decorator that caches a function's return value each time it is called.
@@ -267,6 +329,25 @@ def getTransformers( transformers, **kwargs ):
         result.append( instance )
 
     return result
+
+def updateOptions( kwargs ):
+    '''replace placeholders in kwargs with
+    with configuration file.
+
+    
+    returns the update dictionary.
+    '''
+
+    for key, value in kwargs.items():
+        if type(value) not in types.StringTypes: continue
+        if value.startswith("@") and value.endswith("@"):
+            code = value[1:-1]
+            if code in PARAMS:
+                kwargs[key] = PARAMS[code]
+            else:
+                raise ValueError("unknown placeholder `%s`" % code )
+
+    return kwargs
 
 def getRenderer( renderer_name, **kwargs ):
     '''find and instantiate renderer.'''

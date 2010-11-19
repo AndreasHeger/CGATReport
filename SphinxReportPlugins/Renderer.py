@@ -49,7 +49,7 @@ class Renderer(Component):
         a :class:`Tracker.Tracker`.
         """
 
-        debug("%s: starting renderer '%s'"% (id(self), str(self)))
+        self.debug("%s: starting renderer '%s'"% (id(self), str(self)))
 
         try: self.format = kwargs["format"]
         except KeyError: pass
@@ -69,7 +69,7 @@ class Renderer(Component):
 
         labels = data.getPaths()
         if len(labels) < self.nlevels:
-            warn( "at %s: expected at least %i levels - got %i: %s" %\
+            self.warn( "at %s: expected at least %i levels - got %i: %s" %\
                       (str(path), self.nlevels, len(labels), str(labels)) )
             result.append( EmptyResultBlock( title = path2str(path) ) )
             return result
@@ -82,7 +82,7 @@ class Renderer(Component):
             try:
                 result.extend( self.render( DataTree(work), path + p ) )
             except:
-                warn("exeception raised in rendering for path: %s" % str(path+p))
+                self.warn("exeception raised in rendering for path: %s" % str(path+p))
                 raise 
             
         return result
@@ -108,9 +108,9 @@ class TableBase( Renderer ):
         by the title.
         '''
 
-        debug("%s: saving %i x %i table as file'"% (id(self), 
-                                                    len(row_headers), 
-                                                    len(col_headers)))
+        self.debug("%s: saving %i x %i table as file'"% (id(self), 
+                                                         len(row_headers), 
+                                                         len(col_headers)))
         lines = []
         lines.append("`%i x %i table <#$html %s$#>`_" %\
                      (len(row_headers), len(col_headers),
@@ -338,6 +338,11 @@ class Matrix(TableBase):
     def transformCorrespondenceAnalysis( self, matrix, row_headers, col_headers ):
         """apply correspondence analysis to a matrix.
         """
+
+        if len(row_headers) <= 1 or len(col_headers) <= 1:
+            self.warn( "correspondence analysis skipped for matrices with single row/column" )
+            return matrix, row_headers, col_headers
+
         try:
             row_indices, col_indices =  CorrespondenceAnalysis.GetIndices( matrix )
         except ValueError, msg:
@@ -564,7 +569,7 @@ class Matrix(TableBase):
         title = "/".join(path)
 
         if len(rows) == 0:
-            return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
+            return ResultBlocks( ResultBlock( "", title = title) )
 
         # do not output large matrices as rst files
         if not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols):

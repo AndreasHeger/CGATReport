@@ -65,8 +65,8 @@ class Dispatcher(Component):
     def parseArguments(self, *args, **kwargs ): 
         '''argument parsing.'''
 
-        try: self.groupby = kwargs["groupby"]
-        except KeyError: self.groupby = "slice"
+        self.groupby = kwargs.get("groupby", "slice")
+        self.nocache = "nocache" in kwargs
 
         try: self.mInputTracks = [ x.strip() for x in kwargs["tracks"].split(",")]
         except KeyError: self.mInputTracks = None
@@ -82,10 +82,13 @@ class Dispatcher(Component):
 
         key = "/".join( (str(track), str(slice)) )
 
-        try:
-            result = self.cache[ key ]
-        except KeyError:
-            result = None
+        result, fromcache = None, False
+        if not self.nocache:
+            try:
+                result = self.cache[ key ]
+                fromcache = True
+            except KeyError:
+                pass
 
         kwargs = {}
         if track != None: kwargs['track'] = track
@@ -99,7 +102,8 @@ class Dispatcher(Component):
                 if VERBOSE: self.warn( traceback.format_exc() )
                 raise
 
-        self.cache[key] = result
+        if not self.nocache and not fromcache:
+            self.cache[key] = result
 
         return result
 

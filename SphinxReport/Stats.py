@@ -458,7 +458,10 @@ class CorrelationTest(Result):
             self.alternative = "two-sided"
             
         if self.pvalue != None:
-            self.logpvalue = math.log( self.pvalue )
+            if self.pvalue > 0:
+                self.logpvalue = math.log( self.pvalue )
+            else:
+                self.logpvalue = 0
             self.significance = getSignificance( self.pvalue )
 
     def __str__(self):
@@ -513,13 +516,14 @@ def doCorrelationTest( xvals, yvals, method = "pearson" ):
 
     x, y = filterMasked( xvals, yvals )
 
+
     if method == "pearson":
         s_result = scipy.stats.pearsonr( x, y )
     elif method == "spearman":
         s_result = scipy.stats.spearmanr( x, y )
     else:
         raise ValueError("unknown method %s" % (method))
-    
+
     result = CorrelationTest( s_result = s_result,
                               method = method,
                               nobservations = len(x))

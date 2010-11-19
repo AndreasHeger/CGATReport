@@ -44,13 +44,16 @@ class Component(object):
 plugins = None
 options = None
 ENTRYPOINT = 'SphinxReport.plugins'
+
 def init_plugins():
+
     info( "initialising plugins" )
     try:
         pkg_resources.working_set.add_entry(sphinxreport_plugins)
         pkg_env = pkg_resources.Environment(sphinxreport_plugins)
     except NameError:
         pkg_env = pkg_resources.Environment()
+        
     plugins = collections.defaultdict( dict )
     for name in pkg_env:
         egg = pkg_env[name][0]
@@ -64,6 +67,12 @@ def init_plugins():
                 
             for c in cls.capabilities:
                 plugins[c][name] = cls
+    if len(plugins) == 0:
+        warn("did not find any plugins")
+    else:
+        debug("found plugins: %i capabilites and %i plugins" % \
+                  (len(plugins), sum( [len(x) for x in plugins.values() ] ) ))
+
     return plugins
 
 def getPlugins(capability  = None):
@@ -97,6 +106,7 @@ def getOptionMap():
             'tracks': directives.unchanged,
             'slices': directives.unchanged,
             'layout': directives.unchanged,
+            'nocache': directives.flag,
             }
 
         options["display"]  = {

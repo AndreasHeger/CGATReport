@@ -233,6 +233,8 @@ def main():
 
     if options.renderer == None: options.renderer = "table"
 
+    kwargs = Utils.updateOptions( kwargs )
+
     renderer = Utils.getRenderer( options.renderer, **kwargs )
 
     transformers = Utils.getTransformers( options.transformers, **kwargs )

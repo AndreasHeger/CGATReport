@@ -1,4 +1,3 @@
-
 from logging import warn, log, debug, info
 import itertools
 import numpy
@@ -75,6 +74,36 @@ class TransformerFilter( Transformer ):
                 del data[v]
             
         return data
+
+class TransformerIndicator( Transformer ):
+    '''take a field from the lowest level and
+    build and indicator out of it.
+    '''
+    
+    nlevels = 1
+    default = 0
+
+    options = Transformer.options +\
+        ( ('tf-fields', directives.unchanged),
+          ('tf-level', directives.length_or_unitless) )
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        try:
+            self.filter = kwargs["tf-fields"]
+        except KeyError: 
+            raise KeyError( "TransformerFilter requires the `tf-fields` option to be set." )
+
+        try: self.nlevels = int(kwargs["tf-level"])
+        except KeyError: pass
+
+                          
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        vals = data[self.filter]
+        return odict(zip( vals, [1] * len(vals) ))
 
 class TransformerSelect( Transformer ):
     '''replace the lowest hierarchy with a single value.
@@ -219,6 +248,7 @@ class TransformerPairwise( Transformer ):
             try:
                 result = self.apply( xvals, yvals )
             except ValueError, msg:
+                warn( "pairwise computation failed: %s" % msg)
                 continue
 
             new_data[x][y] = result
@@ -252,7 +282,9 @@ class TransformerMannWhitneyU( TransformerPairwise ):
     '''
 
     def apply( self, xvals, yvals ):
-        return Stats.doMannWhitneyUTest( xvals, yvals )
+        xx = numpy.array( [ x for x in xvals if x != None ] )
+        yy = numpy.array( [ y for y in yvals if y != None ] )
+        return Stats.doMannWhitneyUTest( xx, yy )
     
 class TransformerHistogram( Transformer ):
     '''compute a histogram of values.'''
@@ -270,8 +302,6 @@ class TransformerHistogram( Transformer ):
 
         self.mConverters = []
         self.mFormat = "%i"
-        self.mBins = "100"
-        self.mRange = None
         self.mBinMarker = "left"
 
         self.mMapKeyword = {
@@ -291,8 +321,8 @@ class TransformerHistogram( Transformer ):
         if self.normalize_total in self.mConverters or self.normalize_max in self.mConverters:
            self.mFormat = "%6.4f" 
 
-        if "tf-bins" in kwargs: self.mBins = kwargs["tf-bins"]
-        if "tf-range" in kwargs: self.mRange = kwargs["tf-range"]
+        self.mBins = kwargs.get( "tf-bins", "100" )
+        self.mRange = kwargs.get( "tf-range", None )
 
         f = []
         if self.normalize_total in self.mConverters: f.append( "relative" )
@@ -372,7 +402,11 @@ class TransformerHistogram( Transformer ):
             bin_edges.append( bin_edges[-1] + 1 )
         else:
             if self.mBins.startswith("log"):
-                a,b = self.mBins.split( "-" )
+
+                try:
+                    a,b = self.mBins.split( "-" )
+                except ValueError:
+                    raise SyntaxError( "expected log-xxx, got %s" % self.mBins )
                 nbins = float(b)
                 if ma < 0: raise ValueError( "can not bin logarithmically for negative values.")
                 if mi == 0: mi = numpy.MachAr().epsneg
@@ -383,7 +417,12 @@ class TransformerHistogram( Transformer ):
                 # make sure that ma is part of bins
                 bins = numpy.arange(mi, ma + binsize, binsize )
             else:
-                bins = eval(self.mBins)
+                try:
+                    bins = eval(self.mBins)
+                except SyntaxError, msg:
+                    raise SyntaxError( "could not evaluate bins from `%s`, error=`%s`" \
+                                           % (self.mBins, msg))
+
 
             if hasattr( bins, "__iter__") and len(bins) == 0:
                 warn( "empty bins")

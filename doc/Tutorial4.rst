@@ -40,7 +40,7 @@ Add the following code to :file:`Tutorial3.py`::
 	    elif slice == "vocals":
 		test_f = lambda x: x[0].upper() in "AEIOU"
 	    elif slice == "consonants":
-		test_f = lambda x: x[0].upper() not in "BCDFGHJKLMNPQRSTVWXYZ"
+		test_f = lambda x: x[0].upper() in "BCDFGHJKLMNPQRSTVWXYZ"
 
 	    for root, dirs, files in os.walk('.'):
 		for f in files:

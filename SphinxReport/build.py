@@ -28,7 +28,8 @@ Building proceeds in three phases.
 import matplotlib
 import matplotlib.pyplot as plt
 
-from SphinxReport import report_directive, gallery, clean
+from SphinxReport import report_directive, gallery, clean, Utils
+
 from SphinxReport.Component import *
 
 import Logger
@@ -87,7 +88,7 @@ def run( work ):
         for f, lineno, b in work:
             ff = os.path.abspath( f )
             debug( "build.run: profile: started: rst: %s:%i" % (ff, lineno) )
-                                                
+
             report_directive.run(  b.mArguments,
                                    b.mOptions,
                                    lineno = lineno,
@@ -156,11 +157,11 @@ class timeit:
         return wrapped
 
 @timeit( "getDirectives" )
-def getDirectives( options, args ):
+def getDirectives( options, args, sourcedir ):
     ''' getting directives.
     '''
     rst_files = []
-    for root, dirs, files in os.walk('.'):
+    for root, dirs, files in os.walk( sourcedir ):
         for f in files:
             if f.endswith( source_suffix ):
                 rst_files.append( os.path.join( root, f) )
@@ -316,7 +317,34 @@ def main():
     
     (options, args) = parser.parse_args()
 
-    rst_files = getDirectives( options, args )
+    assert args[0] == "sphinx-build", "command line should contain sphinx-build"
+
+    sphinx_parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE )
+    sphinx_parser.add_option( "-b", type = "string" )
+    sphinx_parser.add_option( "-a" )
+    sphinx_parser.add_option( "-E" )
+    sphinx_parser.add_option( "-t", type = "string" )
+    sphinx_parser.add_option( "-d", type = "string" )
+    sphinx_parser.add_option( "-c", type = "string" )
+    sphinx_parser.add_option( "-C" )
+    sphinx_parser.add_option( "-D", type = "string" )
+    sphinx_parser.add_option( "-A", type = "string" )
+    sphinx_parser.add_option( "-n" )
+    sphinx_parser.add_option( "-Q" )
+    sphinx_parser.add_option( "-q" )
+    sphinx_parser.add_option( "-w", type = "string" )
+    sphinx_parser.add_option( "-W" )
+    sphinx_parser.add_option( "-P" )
+
+    (sphinx_options, sphinx_args) = sphinx_parser.parse_args( args[1:] )
+
+    sourcedir = sphinx_args[0]
+    if len(sphinx_args) > 1:
+        destdir = sphinx_args[1]
+    else:
+        destdir = "."
+    
+    rst_files = getDirectives( options, args, sourcedir )
 
     cleanTrackers( rst_files, options, args )
 

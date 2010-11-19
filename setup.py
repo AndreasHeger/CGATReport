@@ -68,6 +68,7 @@ setup(name='SphinxReport',
             'transform-test-mwu=SphinxReportPlugins.Transformer:TransformerMannWhitneyU', 
             'transform-histogram=SphinxReportPlugins.Transformer:TransformerHistogram',
             'transform-filter=SphinxReportPlugins.Transformer:TransformerFilter',
+            'transform-indicator=SphinxReportPlugins.Transformer:TransformerIndicator',
             'transform-select=SphinxReportPlugins.Transformer:TransformerSelect',
             'transform-combinations=SphinxReportPlugins.Transformer:TransformerCombinations',
             'transform-combine=SphinxReportPlugins.Transformer:TransformerCombinations',
@@ -87,7 +88,6 @@ setup(name='SphinxReport',
             'render-stacked-bar-plot=SphinxReportPlugins.Plotter:StackedBarPlot',
             'render-interleaved-bar-plot=SphinxReportPlugins.Plotter:InterleavedBarPlot',
             'render-box-plot=SphinxReportPlugins.Plotter:BoxPlot',
-
             ]
             },
       )

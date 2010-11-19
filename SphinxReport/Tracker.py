@@ -157,7 +157,10 @@ class TrackerSQL( Tracker ):
             self.db = db
 
     def getTables(self, pattern = None ):
-        """return a list of table objects matching a :term:`track` pattern."""
+        """return a list of table objects matching a :term:`track` pattern.
+
+        Note that this function does not return views.
+        """
         # old version of sqlalchemy have no sorted_tables attribute
         self.__connect()
         try:
@@ -379,3 +382,19 @@ class Empty( Tracker ):
 
     def __call__(self, track, slice = None ):
         return odict( (("a", 1),))
+
+def prettyFloat( val, format = "%5.2f" ):
+    """output a float or "na" if not defined"""
+    try:
+        x = format % val
+    except (ValueError, TypeError):
+        x = "na"
+    return x
+    
+def prettyPercent( numerator, denominator, format = "%5.2f" ):
+    """output a percent value or "na" if not defined"""
+    try:
+        x = format % (100.0 * numerator / denominator )
+    except (ValueError, ZeroDivisionError):
+        x = "na"
+    return x

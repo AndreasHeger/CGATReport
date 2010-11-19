@@ -196,7 +196,9 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     relparts = [p for p in os.path.split(reldir) if p.strip()]
     nparts = len(relparts)
 
+    # path needs to be relative to source
     linkdir = ('../' * (nparts)) + outdir
+    linkdir = os.path.relpath( linkdir, rstdir )
 
     logging.debug( "report_directive.run: arguments=%s, options=%s, lineno=%s, content=%s, document=%s" % (str(arguments),
                                                                                                            str(options),
@@ -220,15 +222,13 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     ########################################################
     # collect options
+    # replace placedholders
+    options = Utils.updateOptions( options )
     transformer_names = []
     renderer_name = None
 
     # get layout option
-    try: 
-        layout = options["layout"]
-        del options["layout"]
-    except KeyError: 
-        layout = "column"
+    layout = options.get( "layout", "column" )
 
     option_map = getOptionMap()
     renderer_options = selectAndDeleteOptions( options, option_map["render"])
@@ -368,6 +368,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     ########################################################
     ## write code output
     linked_codename = re.sub( "\\\\", "/", os.path.join( linkdir, codename )) 
+    # print "linked_codename=", linked_codename, os.path.join( linkdir, codename ), linkdir, codename
     if code and basedir != outdir:
         outfile = open( os.path.join(outdir, codename ), "w" )
         for line in code: outfile.write( line )

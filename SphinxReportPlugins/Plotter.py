@@ -162,8 +162,11 @@ class Plotter(object):
 
         # go to defaults
         matplotlib.rcdefaults()
+
         # set parameters
-        matplotlib.rcParams.update(self.mMPLRC )
+        if self.mMPLRC:
+            self.debug( "extra plot options: %s" % str(self.mMPLRC) )
+            matplotlib.rcParams.update(self.mMPLRC )
         
         self.mCurrentFigure = plt.figure( num = self.mFigure, **self.mMPLFigureOptions )
 
@@ -735,11 +738,11 @@ class LinePlot( Renderer, Plotter ):
                 # sanity check on data
                 try: keys = coords.keys()
                 except AttributeError:
-                    warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
+                    self.warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
                     continue
                 
                 if len(keys) <= 1:
-                    warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
+                    self.warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
                     continue
 
                 xlabel, ylabels = self.initCoords( label, coords)
@@ -1306,8 +1309,10 @@ class BoxPlot(Renderer, Plotter):
 
             for label, values in data.iteritems():
                 assert Utils.isArray( values ), "work is of type '%s'" % values
-                all_data.append( [ x for x in values if x != None ] )
-                legend.append( "/".join((line,label)))
+                d = [ x for x in values if x != None ]
+                if len(d) > 0:
+                    all_data.append( d )
+                    legend.append( "/".join((line,label)))
 
         plts.append( plt.boxplot( all_data ) )
         
@@ -1339,6 +1344,18 @@ class ScatterPlot(Renderer, Plotter):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
+        # plt.scatter does not permitting setting
+        # options in rcParams - hence the parameters
+        # are parsed explicitely here
+
+        self.markersize = self.mMPLRC.get( "lines.markersize", 
+                                           plt.rcParams.get( "lines.markersize", 6 ) )
+
+        self.markeredgewidth = self.mMPLRC.get( "lines.markeredgewith", 
+                                                plt.rcParams.get("lines.markeredgewidth",
+                                                                 0.5 ) )
+
+
     def render(self, work, path ):
         
         self.startPlot()
@@ -1359,10 +1376,14 @@ class ScatterPlot(Renderer, Plotter):
             color = self.mColors[nplotted % len(self.mColors)]
             if len(xvals) == 0 or len(yvals) == 0: continue
 
+            # plt.scatter does not permitting setting
+            # options in rcParams, so all is explict
             plts.append(plt.scatter( xvals,
                                      yvals,
                                      marker = marker,
-                                     c = color) )
+                                     c = color,
+                                     linewidths = self.markeredgewidth,
+                                     s = self.markersize) )
             legend.append( label )
 
             nplotted += 1
@@ -1375,7 +1396,7 @@ class ScatterPlot(Renderer, Plotter):
         
         return self.endPlot( plts, legend, path )
 
-class ScatterPlotWithColor( Renderer, Plotter ):
+class ScatterPlotWithColor( ScatterPlot ):
     """Scatter plot with individual colors for each dot.
 
     This class adds the following options to the :term:`report` directive:
@@ -1398,8 +1419,7 @@ class ScatterPlotWithColor( Renderer, Plotter ):
     nlevels = 1
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        ScatterPlot.__init__(self, *args, **kwargs )
 
         try: self.mBarFormat = kwargs["colorbar-format"]
         except KeyError: self.mBarFormat = "%1.1f"
@@ -1437,10 +1457,15 @@ class ScatterPlotWithColor( Renderer, Plotter ):
             zvals[ zvals > vmax ] = vmax
         else:
             vmin, vmax = None, None
-
+            
+        # plt.scatter does not permitting setting
+        # options in rcParams, so all is explict
         plts.append(plt.scatter( xvals,
                                  yvals,
+                                 s = self.markersize,
                                  c = zvals,
+                                 linewidths = self.markeredgewidth,
+                                 cmap = color_scheme,
                                  vmax = vmax,
                                  vmin = vmin ) )
             
