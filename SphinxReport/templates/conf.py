@@ -46,7 +46,7 @@ extensions = ['sphinx.ext.autodoc',
               'SphinxReport.only_directives', 
               'SphinxReport.report_directive',
               'SphinxReport.errors_directive',
-              'SphinxReport.inheritance_diagram',
+              'sphinx.ext.inheritance_diagram',
               ]
 
 # Add any paths that contain templates here, relative to this directory.

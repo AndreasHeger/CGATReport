@@ -188,6 +188,9 @@ def main():
     parser.add_option( "-r", "--renderer", dest="renderer", type="string",
                           help="renderer to use [default=%default]" )
 
+    parser.add_option( "-w", "--path", dest="path", type="string",
+                          help="path to trackers [default=%default]" )
+
     parser.add_option( "-f", "--force", dest="force", action="store_true",
                           help="force recomputation of data by deleting cached results [default=%default]" )
 
@@ -210,6 +213,7 @@ def main():
         do_show = True,
         do_print = True,
         force = False,
+        dir_trackers = "python",
         label = "GenericLabel",
         caption = "add caption here" )
     
@@ -256,7 +260,7 @@ def main():
     if options.tracker:
 
         trackers = []
-        for filename in glob.glob( "python/*.py" ):
+        for filename in glob.glob( os.path.join( options.dir_trackers, "*.py" )):
             trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in exclude ] )
         
         for name, tracker, modulename, is_derived  in trackers:

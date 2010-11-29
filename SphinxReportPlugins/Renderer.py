@@ -112,7 +112,7 @@ class TableBase( Renderer ):
                                                          len(row_headers), 
                                                          len(col_headers)))
         lines = []
-        lines.append("`%i x %i table <#$html %s$#>`_" %\
+        lines.append("`%i x %i table <#$html %s$#>`__" %\
                      (len(row_headers), len(col_headers),
                       title) )
 

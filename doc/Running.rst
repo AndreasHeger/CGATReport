@@ -226,6 +226,31 @@ source and an existing image. As long as an image or table is present on the fil
 will not be re-rendered even if the document or the underlying data has changed. To force
 re-rendering, use the command :ref:`sphinxreport-clean`.
 
+.. _BuildDirecotry:
+
+Using a build directory
+=======================
+
+It is good practice to keep the development of the report from the actual
+report itself. Sphinxreport and Sphinx do support building using a build
+directory. 
+
+For example, assume your code is in directory :file:`./code` and you want to build 
+in the directory :file:`./build`. In the :file:`build` directory create a :term:`conf.py` 
+and :term:`Makefile`.
+
+Apply the following modifications to point them to the source directory:
+
+1. Update the relative path to the Trackers to *sys.path*. For example, add::
+
+   sys.path.append( "../code" ) 
+
+2. Point the *templates_path* variable in the html section to the :file:`code` directory::
+   
+   templates_path = ['../code/_templates']
+
+3. Update :file:`Makefile` and add ``-c . ../source`` to the 
+
 .. _Gallery:
 
 Gallery

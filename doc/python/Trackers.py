@@ -15,6 +15,18 @@ class LabeledDataExample( Tracker ):
                             ("column2", 10),
                             ("column3", 5),) )
 
+class LabeledDataLargeExample( Tracker ):
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): return [ "track%i" % x for x in range(0,100) ]
+    def __call__(self, track, slice = None):
+        if slice == "slice1":
+            return odict( (("column1", 10),
+                           ("column2", 20 ),) )
+        elif slice == "slice2":
+            return odict ( (("column1", 20),
+                            ("column2", 10),
+                            ("column3", 5),) )
+
 class LabeledDataWithErrorsExample( Tracker ):
     def getSlices( self, subset = None ): return "slice1", "slice2"
     def getTracks( self, subset = None ): return "track1", "track2", "track3"
@@ -134,6 +146,19 @@ class ErrorInTracker3( Tracker ):
     def __call__(self, track, slice = None):
         return None
 
+
+
+class LabeledDataTest( Tracker ):
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    def __call__(self, track, slice = None):
+        if slice == "slice1":
+            return odict( (("column1", 10),
+                           ("column2", 20 ),) )
+        elif slice == "slice2":
+            return odict ( (("column1", 20),
+                            ("column2", 10),
+                            ("column3", 5),) )
 
 
     

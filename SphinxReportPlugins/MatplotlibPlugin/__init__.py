@@ -24,7 +24,8 @@ class MatplotlibPlugin(Component):
                  blocks,
                  template_name, 
                  outdir, 
-                 linkdir, 
+                 relative_linkdir, 
+                 root_linkdir,
                  content,
                  display_options,
                  linked_codename,
@@ -94,7 +95,10 @@ class MatplotlibPlugin(Component):
 
             # create the text element
             rst_output = ""
-            imagepath = re.sub( "\\\\", "/", os.path.join( linkdir, outname ) )
+            imagepath = re.sub( "\\\\", "/", os.path.join( relative_linkdir, outname ) )
+            print "rel_link=", relative_linkdir, outname
+            print "imagepath=", imagepath
+
             linked_text = imagepath + ".txt"
 
             if Config.HTML_IMAGE_FORMAT:
@@ -109,6 +113,7 @@ class MatplotlibPlugin(Component):
 '''
 
                 linked_image = imagepath + ".%s" % format
+                
                 extra_images=[]
                 for id, format, dpi in additional_formats:
                     extra_images.append( "`%(id)s <%(imagepath)s.%(format)s>`__" % locals())

@@ -11,6 +11,7 @@
 
 from docutils import nodes
 
+from sphinx.locale import _
 from sphinx.environment import NoUri
 from sphinx.util.compat import Directive, make_admonition
 
@@ -30,9 +31,8 @@ class SphinxreportError(Directive):
 
     def run(self):
         env = self.state.document.settings.env
-
-        targetid = "sphinxreporterror-%s" % env.index_num
-        env.index_num += 1
+        targetid = "sphinxreporterror-%s" % env.new_serialno( 'sphinxreporterror' )
+        # env.index_num += 1
         targetnode = nodes.target('', '', ids=[targetid])
 
         # this sets the formatting
@@ -43,7 +43,8 @@ class SphinxreportError(Directive):
         else:
             errorclass = "generic"
 
-        ad = make_admonition(sphinxreporterror_node, self.name, 
+        ad = make_admonition(sphinxreporterror_node, 
+                             self.name, 
                              [_('SphinxreportError')],
                              self.options,
                              self.content, self.lineno, self.content_offset,

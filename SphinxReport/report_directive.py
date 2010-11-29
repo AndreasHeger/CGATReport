@@ -23,7 +23,7 @@ from SphinxReport import Config, Dispatcher, Utils, Cache
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReport.Component import *
 
-SPHINXREPORT_DEBUG = False
+SPHINXREPORT_DEBUG = True
 
 # This does not work:
 # matplotlib.use('Agg', warn = False)
@@ -192,13 +192,15 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
     # get the directory of the rst file
     rstdir, rstfile = os.path.split( document ) # state_machine.document.attributes['source'])
     # reldir = rstdir[len(setup.confdir)+1:]
+    # build directory relative to current directory
     reldir = rstdir[len(os.path.abspath( os.getcwd() ))+1:]
     relparts = [p for p in os.path.split(reldir) if p.strip()]
     nparts = len(relparts)
 
-    # path needs to be relative to source
-    linkdir = ('../' * (nparts)) + outdir
-    linkdir = os.path.relpath( linkdir, rstdir )
+    # path relative to root
+    root_linkdir = ('../' * (nparts)) + outdir
+    # path relative to source (for images)
+    relative_linkdir = os.path.relpath( root_linkdir, rstdir )
 
     logging.debug( "report_directive.run: arguments=%s, options=%s, lineno=%s, content=%s, document=%s" % (str(arguments),
                                                                                                            str(options),
@@ -208,7 +210,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     logging.debug( "report_directive.run: plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, reldir=%s, relparts=%s, nparts=%d" %\
                        (reference, basename, ext, fname, rstdir, reldir, relparts, nparts) )
-    logging.debug( "report_directive.run: reference=%s, basedir=%s, linkdir=%s, outdir=%s, codename=%s" % (reference, basedir, linkdir, outdir, codename))
+    logging.debug( "report_directive.run: reference=%s, basedir=%s, root_linkdir=%s, relative_linkdir=%s, outdir=%s, codename=%s" %\
+                   (reference, basedir, root_linkdir, relative_linkdir, outdir, codename))
 
     # try to create. If several processes try to create it,
     # testing with `if` will not work.
@@ -367,13 +370,12 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     ########################################################
     ## write code output
-    linked_codename = re.sub( "\\\\", "/", os.path.join( linkdir, codename )) 
-    # print "linked_codename=", linked_codename, os.path.join( linkdir, codename ), linkdir, codename
+    linked_codename = os.path.abspath( re.sub( "\\\\", "/", os.path.join( root_linkdir, codename )) )
     if code and basedir != outdir:
         outfile = open( os.path.join(outdir, codename ), "w" )
         for line in code: outfile.write( line )
         outfile.close()
-        
+
     ###########################################################
     # collect images
     ###########################################################
@@ -382,12 +384,13 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         map_figure2text.update( collector.collect( blocks,
                                                    template_name, 
                                                    outdir, 
-                                                   linkdir, 
+                                                   relative_linkdir,
+                                                   root_linkdir,
                                                    content, 
                                                    display_options,
                                                    linked_codename,
                                                    tracker_id ) )
-
+        
     ###########################################################
     # replace place holders or add text
     ###########################################################
