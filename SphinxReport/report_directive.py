@@ -23,7 +23,7 @@ from SphinxReport import Config, Dispatcher, Utils, Cache
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReport.Component import *
 
-SPHINXREPORT_DEBUG = True
+SPHINXREPORT_DEBUG = False
 
 # This does not work:
 # matplotlib.use('Agg', warn = False)
@@ -178,8 +178,19 @@ def buildPaths( reference ):
 
     return basedir, fname, basename, ext, outdir, codename
 
-def run(arguments, options, lineno, content, state_machine = None, document = None ):
-    """process :report: directive."""
+def run(arguments, 
+        options, 
+        lineno, 
+        content, 
+        state_machine = None, 
+        document = None,
+        srcdir = None,
+        builddir = None ):
+    """process :report: directive.
+
+    *srdir* - top level directory of rst documents
+    *builddir* - build directory
+    """
 
     logging.debug( "report_directive.run: profile: started: rst: %s:%i" % (str(document), lineno) )
 
@@ -191,16 +202,23 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     # get the directory of the rst file
     rstdir, rstfile = os.path.split( document ) # state_machine.document.attributes['source'])
-    # reldir = rstdir[len(setup.confdir)+1:]
-    # build directory relative to current directory
-    reldir = rstdir[len(os.path.abspath( os.getcwd() ))+1:]
-    relparts = [p for p in os.path.split(reldir) if p.strip()]
-    nparts = len(relparts)
 
-    # path relative to root
-    root_linkdir = ('../' * (nparts)) + outdir
+    # root of document tree
+    if not srcdir:
+        srcdir = setup.srcdir
+
+    # build directory 
+    if not builddir:
+        builddir = setup.confdir
+    
+    # path to root relative to rst
+    rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
+
+    # path to root relative to rst
+    rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
+
     # path relative to source (for images)
-    relative_linkdir = os.path.relpath( root_linkdir, rstdir )
+    root2builddir = os.path.join( os.path.relpath( builddir, start = srcdir ), outdir )
 
     logging.debug( "report_directive.run: arguments=%s, options=%s, lineno=%s, content=%s, document=%s" % (str(arguments),
                                                                                                            str(options),
@@ -208,10 +226,10 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
                                                                                                            str(content),
                                                                                                            str(document)))
 
-    logging.debug( "report_directive.run: plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, reldir=%s, relparts=%s, nparts=%d" %\
-                       (reference, basename, ext, fname, rstdir, reldir, relparts, nparts) )
-    logging.debug( "report_directive.run: reference=%s, basedir=%s, root_linkdir=%s, relative_linkdir=%s, outdir=%s, codename=%s" %\
-                   (reference, basedir, root_linkdir, relative_linkdir, outdir, codename))
+    logging.debug( "report_directive.run: plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, srcdir=%s, builddir=%s" %\
+                       (reference, basename, ext, fname, rstdir, srcdir, builddir ) )
+    logging.debug( "report_directive.run: reference=%s, basedir=%s, rst2root=%s, root2build=%s, outdir=%s, codename=%s" %\
+                   (reference, basedir, rst2srcdir, rst2builddir, outdir, codename))
 
     # try to create. If several processes try to create it,
     # testing with `if` will not work.
@@ -279,7 +297,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         # for presence/absence of text element and if all figures
         # mentioned it the text element are present
         ###########################################################
-        queries = [ re.compile( "%s(%s\S+.%s)" % ("\.\./" * nparts, outdir,suffix ) ) for suffix in ("png", "pdf") ]
+        queries = [ re.compile( "%s(%s\S+.%s)" % ( root2builddir, outdir, suffix ) ) for suffix in ("png", "pdf") ]
 
         logging.debug( "report_directive.run: checking for changed files." )
 
@@ -370,7 +388,7 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     ########################################################
     ## write code output
-    linked_codename = os.path.abspath( re.sub( "\\\\", "/", os.path.join( root_linkdir, codename )) )
+    linked_codename = re.sub( "\\\\", "/", os.path.join( rst2srcdir, codename ))
     if code and basedir != outdir:
         outfile = open( os.path.join(outdir, codename ), "w" )
         for line in code: outfile.write( line )
@@ -384,8 +402,8 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
         map_figure2text.update( collector.collect( blocks,
                                                    template_name, 
                                                    outdir, 
-                                                   relative_linkdir,
-                                                   root_linkdir,
+                                                   rst2srcdir,
+                                                   rst2builddir,
                                                    content, 
                                                    display_options,
                                                    linked_codename,
@@ -430,58 +448,63 @@ def run(arguments, options, lineno, content, state_machine = None, document = No
 
     return []
 
-try:
-    from docutils.parsers.rst import Directive
-except ImportError:
-    from docutils.parsers.rst.directives import _directives
+#try:
+#    from docutils.parsers.rst import Directive
+# except ImportError:
+#     from docutils.parsers.rst.directives import _directives
 
-    def report_directive(name, 
-                         arguments, 
-                         options, 
-                         content, lineno,
-                         content_offset, 
-                         block_text, 
-                         state, 
-                         state_machine):
-        return run(arguments, options, lineno, content, state_machine )
+#     def report_directive(name, 
+#                          arguments, 
+#                          options, 
+#                          content, lineno,
+#                          content_offset, 
+#                          block_text, 
+#                          state, 
+#                          state_machine):
+#         return run(arguments, options, lineno, content, state_machine )
 
-    report_directive.__doc__ = __doc__
-    report_directive.arguments = (1, 0, 1)
-    report_directive.options = dict( Config.RENDER_OPTIONS.items() +\
-                                         # Config.TRANSFORM_OPTIONS.items() +\
-                                         Config.DISPLAY_OPTIONS.items() +\
-                                         Config.DISPATCHER_OPTIONS.items() )
+#     report_directive.__doc__ = __doc__
+#     report_directive.arguments = (1, 0, 1)
+#     report_directive.options = dict( Config.RENDER_OPTIONS.items() +\
+#                                          # Config.TRANSFORM_OPTIONS.items() +\
+#                                          Config.DISPLAY_OPTIONS.items() +\
+#                                          Config.DISPATCHER_OPTIONS.items() )
 
-    _directives['report'] = report_directive
-else:
-    class report_directive(Directive):
-        required_arguments = 1
-        optional_arguments = 0
-        has_content = True
-        final_argument_whitespace = True
+#     _directives['report'] = report_directive
+# else:
 
-        # build option spec
-        option_spec = getOptionSpec()
+from docutils.parsers.rst import Directive
 
-        def run(self):
-            document = self.state.document.current_source
-            logging.info( "report_directive: starting: %s:%i" % (str(document), self.lineno) )
-            return run(self.arguments, 
-                       self.options,
-                       self.lineno,
-                       self.content, 
-                       self.state_machine, 
-                       document )
+class report_directive(Directive):
+    required_arguments = 1
+    optional_arguments = 0
+    has_content = True
+    final_argument_whitespace = True
 
-    report_directive.__doc__ = __doc__
+    # build option spec
+    option_spec = getOptionSpec()
 
-    directives.register_directive('report', report_directive)
+    def run(self):
+        document = self.state.document.current_source
+        logging.info( "report_directive: starting: %s:%i" % (str(document), self.lineno) )
+        return run(self.arguments, 
+                   self.options,
+                   self.lineno,
+                   self.content, 
+                   self.state_machine, 
+                   document )
+
+report_directive.__doc__ = __doc__
+
+# directives.register_directive('report', report_directive)
 
 def setup(app):
     setup.app = app
     setup.config = app.config
     setup.confdir = app.confdir
+    setup.srcdir = app.srcdir
     app.add_config_value('sphinxreport_show_warnings', True, False)
+    app.add_directive('report', report_directive)
 
 report_directive.__doc__ = __doc__
 

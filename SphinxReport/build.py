@@ -85,7 +85,7 @@ def run( work ):
     """
 
     try:
-        for f, lineno, b in work:
+        for f, lineno, b, srcdir, builddir in work:
             ff = os.path.abspath( f )
             debug( "build.run: profile: started: rst: %s:%i" % (ff, lineno) )
 
@@ -94,7 +94,9 @@ def run( work ):
                                    lineno = lineno,
                                    content = b.mCaption,
                                    state_machine = None,
-                                   document = ff )
+                                   document = ff,
+                                   srcdir = srcdir,
+                                   builddir = builddir )
 
             debug( "build.run: profile: finished: rst: %s:%i" % (ff,lineno) )
 
@@ -168,7 +170,7 @@ def getDirectives( options, args, sourcedir ):
     return rst_files
 
 @timeit( "buildPlots" )
-def buildPlots( rst_files, options, args ):
+def buildPlots( rst_files, options, args, sourcedir ):
     '''build all plot elements and tables.
 
     This can be done in parallel to some extent.
@@ -181,7 +183,11 @@ def buildPlots( rst_files, options, args ):
     work_per_tracker = collections.defaultdict( list )
     for f in rst_files:
         for lineno, b in getBlocksFromRstFile( f ):
-            work_per_tracker[b.mArguments].append( (f,lineno,b) )
+            work_per_tracker[b.mArguments].append( (f,
+                                                    lineno,
+                                                    b, 
+                                                    sourcedir, 
+                                                    "." ) )
 
     work = []
     for tracker,vals in work_per_tracker.iteritems():
@@ -348,7 +354,7 @@ def main():
 
     cleanTrackers( rst_files, options, args )
 
-    buildPlots( rst_files, options, args )
+    buildPlots( rst_files, options, args, sourcedir )
 
     buildGallery( options, args )
 

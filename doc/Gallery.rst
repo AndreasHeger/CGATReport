@@ -171,30 +171,39 @@ A grouped table.
 Matrices
 ========
 
-The :class:`Renderer.RendererMatrix` class inserts labeled data into
-a matrix:
+The :class:`Renderer.RendererMatrix` class display labeled data into
+a tabular matrix:
 
 .. report:: Trackers.LabeledDataExample
    :render: matrix
 
    A matrix.
 
-The :class:`Renderer.RendererMatrixPlot` class inserts labeled data into
-a table.
+The :class:`Renderer.RendererMatrixPlot` class plots labeled data
+in a matrix plot.
 
 .. report:: Trackers.LabeledDataExample
    :render: matrix-plot
 
    A matrix.
 
-The :class:`Renderer.RendererHintonPlot` class inserts labeled data into
-a table.
+The :class:`Renderer.RendererHintonPlot` plots labeled data as a
+weight matrix. The width and colour of each box shows the weight. 
 
 .. report:: Trackers.LabeledDataExample
    :render: hinton-plot
 
    A matrix.
 
+The :class:`Renderer.RendererHintonPlot` plots labeled data as a
+weight matrix. The width of each box shows the weight. Additional
+labels can provide colours.
+
+.. report:: Trackers.LabeledDataWithErrorsExample
+   :render: hinton-plot
+   :colour: error
+
+   A matrix.
 
 Transformers
 ************

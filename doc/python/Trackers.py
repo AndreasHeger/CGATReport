@@ -34,6 +34,30 @@ class LabeledDataWithErrorsExample( Tracker ):
         if slice == "slice1":
             return odict( ( 
                     ("column1", dict( ( ('data', 20), 
+                                        ('error', 1), 
+                                        ) ) ),
+                    ("column2", dict( ( ('data', 10), 
+                                        ('error', 2),
+                                        ) ) ),
+                    )) 
+        elif slice == "slice2":
+            return odict( ( 
+                    ("column1", dict( ( ('data', 20), 
+                                        ('error', 3),
+                                        ) )),
+                    ("column2", dict( ( ('data', 10), 
+                                        ('error', 4))) ),
+                    ("column3", dict( ( ('data', 30), 
+                                        ('error', 5))) ),
+                    ) )
+
+class LabeledDataWithErrorsAndLabelsExample( Tracker ):
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    def __call__(self, track, slice = None):
+        if slice == "slice1":
+            return odict( ( 
+                    ("column1", dict( ( ('data', 20), 
                                         ('error',5), 
                                         ('label','**' ) ) )),
                     ("column2", dict( ( ('data', 10), 

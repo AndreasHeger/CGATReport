@@ -225,7 +225,7 @@ def makeObject( path, *args, **kwargs ):
 
     module, pathname = getModule( name )
 
-    # get tracker
+    # get class from module
     obj = getattr( module, cls)
 
     # instantiate, if it is a class
@@ -315,10 +315,11 @@ def getTransformers( transformers, **kwargs ):
 
     result = []
     for transformer in transformers:
-        try:
-            cls = getPlugins()["transform"]["transform-%s" % transformer]
+        k = "transform-%s" % transformer
+        if k in getPlugins()["transform"]:
+            cls = getPlugins()["transform"][k]
             instance = cls( **kwargs)
-        except KeyError, msg:
+        else:
             instance = makeTransformer( transformer )
 
         if not instance:

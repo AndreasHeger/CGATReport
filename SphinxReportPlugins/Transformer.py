@@ -142,6 +142,60 @@ class TransformerSelect( Transformer ):
 
         return data
 
+class TransformerGroup( Transformer ):
+    '''group second-to-last level by lowest level.
+
+    For example:
+
+    track1/gene_id=1, track1/gene_name=1
+    track2/gene_id=1, track2/gene_name=2
+
+    with tf-fields=gene_id
+
+    will become:
+
+    gene_id1/gene_name=1
+    gene_id1/tracks = [track1,track2]
+
+    Note that other fields not in the group field will take the value of the first row.
+    '''
+    
+    nlevels = 2
+    default = 0
+
+    options = Transformer.options +\
+        ( ('tf-fields', directives.unchanged), )
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        try: self.fields = kwargs["tf-fields"].split(",")
+        except KeyError: 
+            raise KeyError( "TransformerGroup requires the `tf-fields` option to be set." )
+
+        if len(self.fields) != 1:
+            raise ValueError("`tf-fields` requires exactly one field for grouping function" )
+        
+        self.field = self.fields[0]
+
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        nfound = 0
+        new_data = odict()
+
+        for v in data.keys():
+            other_fields = [ x for x in data[v].keys() if x != self.field ]
+            for pos, val in enumerate(data[v][self.field]):
+                if val not in new_data: new_data[val] = odict()
+                if "group" not in new_data[val]: 
+                    for o in other_fields:
+                        new_data[val][o] = data[v][o][pos]
+                    new_data[val]["group"] = ""
+                new_data[val]["group"] += ",%s" % v
+
+        return new_data
+
 class TransformerCombinations( Transformer ):
     '''build combinations of the second lowest level.
     '''
@@ -438,11 +492,15 @@ class TransformerHistogram( Transformer ):
     def transform(self, data, path):
         debug( "%s: called" % str(self))
 
+        to_delete = set()
         for header, values in data.iteritems():
             bins, values = self.toHistogram(values)
             if bins != None:
                 for converter in self.mConverters: values = converter(values)
                 data[header] =  odict( ((header,bins), ("frequency", values)) )
             else:
-                del data[header]
+                to_delete.add( header )
+
+        for header in to_delete:
+            del data[header]
         return data

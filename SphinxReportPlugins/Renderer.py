@@ -505,7 +505,8 @@ class Matrix(TableBase):
                     matrix[x,y] /= m
         return matrix, rows, cols
 
-    def buildMatrix( self, work, 
+    def buildMatrix( self, 
+                     work, 
                      missing_value = 0, 
                      apply_transformations = True,
                      take = None,

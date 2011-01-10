@@ -7,6 +7,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 from matplotlib import _pylab_helpers
+from matplotlib.cbook import exception_to_str
+import warnings
 
 class MatplotlibPlugin(Component):
 
@@ -24,8 +26,8 @@ class MatplotlibPlugin(Component):
                  blocks,
                  template_name, 
                  outdir, 
-                 relative_linkdir, 
-                 root_linkdir,
+                 rst2rootdir, 
+                 rst2builddir,
                  content,
                  display_options,
                  linked_codename,
@@ -95,11 +97,12 @@ class MatplotlibPlugin(Component):
 
             # create the text element
             rst_output = ""
-            imagepath = re.sub( "\\\\", "/", os.path.join( relative_linkdir, outname ) )
-            print "rel_link=", relative_linkdir, outname
-            print "imagepath=", imagepath
+            # for image diretive - image path is relative from rst file to external build dir
+            imagepath = re.sub( "\\\\", "/", os.path.join( rst2builddir, outname ) )
+            # for links - path is from rst file to internal root dir
+            relative_imagepath = re.sub( "\\\\", "/", os.path.join( rst2rootdir, outname ) )
 
-            linked_text = imagepath + ".txt"
+            linked_text = relative_imagepath + ".txt"
 
             if Config.HTML_IMAGE_FORMAT:
                 id, format, dpi = Config.HTML_IMAGE_FORMAT
@@ -113,10 +116,10 @@ class MatplotlibPlugin(Component):
 '''
 
                 linked_image = imagepath + ".%s" % format
-                
+
                 extra_images=[]
                 for id, format, dpi in additional_formats:
-                    extra_images.append( "`%(id)s <%(imagepath)s.%(format)s>`__" % locals())
+                    extra_images.append( "`%(id)s <%(relative_imagepath)s.%(format)s>`__" % locals())
                 if extra_images: extra_images = " " + " ".join( extra_images)
                 else: extra_images = ""
 

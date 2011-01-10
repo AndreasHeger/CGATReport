@@ -4,6 +4,7 @@
 import os, sys, re, math
 
 import matplotlib
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -357,6 +358,9 @@ class PlotterMatrix(Plotter):
 
         self.mReversePalette = "reverse-palette" in kwargs
 
+    def addColourBar( self ):
+        plt.colorbar( format = self.mBarFormat)        
+
     def buildWrappedHeaders( self, headers ):
         """build headers. Long headers are split using
         the \frac mathtext directive (mathtext does not
@@ -473,15 +477,10 @@ class PlotterMatrix(Plotter):
         if (split_row and split_col) or not (split_row or split_col):
             self.debug("not splitting matrix")
             # do not split small or symmetric matrices
-            self.plotMatrix( matrix, row_headers, col_headers, vmin, vmax, color_scheme )
-            try:
-                plt.colorbar( format = self.mBarFormat)        
-            except AttributeError:
-                # fails for hinton plots
-                pass
-
+            cax = self.plotMatrix( matrix, row_headers, col_headers, vmin, vmax, color_scheme )
             plots, labels = None, None
             self.rescaleForVerticalLabels( col_headers, cliplen = 12 )
+            self.addColourBar()
 
             if False:
                 plot_nrows = int(math.ceil( float(nrows) / self.mMaxRows ))
@@ -526,7 +525,7 @@ class PlotterMatrix(Plotter):
             labels = ["%s: %s" % x for x in zip( new_headers, row_headers) ]
             self.legend_location = "extra"
             plt.subplots_adjust( **self.mMPLSubplotOptions )
-            plt.colorbar( format = self.mBarFormat)        
+            self.addColourBar()
 
         elif split_col:
             self.debug("splitting matrix at column")
@@ -546,19 +545,139 @@ class PlotterMatrix(Plotter):
             labels = ["%s: %s" % x for x in zip( new_headers, col_headers) ]
             self.legend_location = "extra"
             plt.subplots_adjust( **self.mMPLSubplotOptions )
-            plt.colorbar( format = self.mBarFormat)        
+            self.addColourBar()
 
         self.debug("plot finished")
+
         return self.endPlot( plots, labels, path )
 
 class PlotterHinton(PlotterMatrix):
-    '''plot a hinton diagram.'''
+    '''plot a hinton diagram.
+
+    Draws a Hinton diagram for visualizing a weight matrix. 
+
+    The size of a box reflects the weight.
+
+    Taken from http://www.scipy.org/Cookbook/Matplotlib/HintonDiagrams
+    and modified to add colours, labels, etc.
+    '''
+
+    # column to use for error bars
+    colour_matrix = None
     
     def __init__(self, *args, **kwargs ):
-        Plotter.__init__(self, *args, **kwargs)
+        PlotterMatrix.__init__(self, *args, **kwargs)
+        
+    def addColourBar( self ):
 
-    def plotMatrix( self, matrix, row_headers, col_headers, vmin, vmax, color_scheme = None):
-        return hinton( matrix )
+        axc, kw = matplotlib.colorbar.make_axes(plt.gca())
+        cb = matplotlib.colorbar.ColorbarBase(axc, 
+                                              cmap=self.color_scheme, 
+                                              norm=self.normer )
+
+        
+        cb.draw_all()
+
+    def buildMatrices( self, work, **kwargs ):
+        '''build matrices necessary for plotting.
+        '''
+        self.colour_matrix = None
+
+        if self.colour:
+            # select label to take
+            labels = work.getPaths()
+            label = list(set(labels[-1]).difference( set((self.colour,)) ))[0]
+            self.matrix, self.rows, self.columns = Matrix.buildMatrix( self,
+                                                                       work, 
+                                                                       apply_transformations = True, 
+                                                                       take = label,
+                                                                       **kwargs 
+                                                                       )
+
+            if self.colour and self.colour in labels[-1]:
+                self.colour_matrix, rows, colums = Matrix.buildMatrix( self,
+                                                                       work, 
+                                                                       apply_transformations = False, 
+                                                                       take = self.colour, 
+                                                                       **kwargs
+                                                                       )
+
+        else:
+            self.matrix, self.rows, self.columns = Matrix.buildMatrix( self, work, **kwargs )
+
+        return self.matrix, self.rows, self.columns
+
+    def plotMatrix( self, weight_matrix, 
+                    row_headers, col_headers, 
+                    vmin, vmax, 
+                    color_scheme = None ):
+        """
+        Temporarily disables matplotlib interactive mode if it is on, 
+        otherwise this takes forever.
+        """
+
+        def _blob(x,y,area,colour):
+            """
+            Draws a square-shaped blob with the given area (< 1) at
+            the given coordinates.
+            """
+            hs = np.sqrt(area) / 2
+            xcorners = np.array([x - hs, x + hs, x + hs, x - hs])
+            ycorners = np.array([y - hs, y - hs, y + hs, y + hs])
+            plt.fill(xcorners, ycorners, 
+                     edgecolor = colour,
+                     facecolor = colour) 
+
+        plt.clf()
+
+        height, width = weight_matrix.shape
+        if vmax == None: vmax = weight_matrix.max() # 2**np.ceil(np.log(np.max(np.abs(weight_matrix)))/np.log(2))
+        if vmin == None: vmin = weight_matrix.min()
+
+        scale = vmax - vmin
+
+        if self.colour_matrix != None:
+            colour_matrix = self.colour_matrix 
+        else:
+            colour_matrix = weight_matrix
+
+        cmin, cmax = colour_matrix.min(), colour_matrix.max()
+        
+        plot = None
+        normer = matplotlib.colors.Normalize( cmin, cmax )
+        # save for colourbar
+        self.normer = normer
+        self.color_scheme = color_scheme
+
+        colours = normer( colour_matrix )
+
+        plt.axis('equal')
+
+        for x in xrange(width):
+            for y in xrange(height):
+                _x = x+1
+                _y = y+1
+                weight = weight_matrix[y,x] - vmin
+
+                _blob(_x - 0.5, 
+                      _y - 0.5,
+                      weight / scale,
+                      color_scheme(colours[y,x]) )
+
+        offset = 0.5
+        xfontsize, col_headers = self.mFontSize, col_headers
+        yfontsize, row_headers = self.mFontSize, row_headers
+        
+        plt.xticks( [ offset + x for x in range(len(col_headers)) ],
+                    col_headers,
+                    rotation="vertical",
+                    fontsize=xfontsize )
+
+        plt.yticks( [ offset + y for y in range(len(row_headers)) ],
+                    row_headers,
+                    fontsize=yfontsize )
+
+        return plot
 
 def outer_legend(*args, **kwargs):
     """plot legend outside of plot by rescaling it.
@@ -998,20 +1117,16 @@ class BarPlot( Matrix, Plotter):
     label_offset_x = 10
     label_offset_y = 5
 
-
     def __init__(self, *args, **kwargs):
         Matrix.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-        try: self.error = kwargs["error"]
-        except KeyError: pass
-
-        try: self.label = kwargs["label"]
-        except KeyError: pass
+        self.error = kwargs.get("error", None )
+        self.label = kwargs.get("label", None )
 
         if self.error or self.label:
             self.nlevels += 1
-
+ 
     def addLabels( self, xvals, yvals, labels ):
         '''add labels at x,y at current plot.'''
 
@@ -1032,7 +1147,7 @@ class BarPlot( Matrix, Plotter):
         if self.error or self.label:
             # select label to take
             labels = work.getPaths()
-            label = list(set(labels[-1]).difference( set(("error", "label")) ))[0]
+            label = list(set(labels[-1]).difference( set((self.error, self.label)) ))[0]
             self.matrix, self.rows, self.columns = self.buildMatrix( work, 
                                                                      apply_transformations = True, 
                                                                      take = label
@@ -1269,17 +1384,36 @@ class MatrixPlot(Matrix, PlotterMatrix):
 
 class HintonPlot(Matrix, PlotterHinton):
     """Render a matrix as a hinton plot.
+
+    Draws a Hinton diagram for visualizing a weight matrix. 
+
+    The size of a box reflects the weight.
+
+    This class adds the following options to the :term:`report` directive:
+
+       :term:`colours`: colour boxes according to value.
+
     """
-    options = Matrix.options + PlotterHinton.options
+    options = Matrix.options + PlotterHinton.options +\
+        ( ('colours', directives.unchanged), 
+          )
+
+    # column to use for error bars
+    colour = None
 
     def __init__(self, *args, **kwargs):
         Matrix.__init__(self, *args, **kwargs )
-        PlotterMatrix.__init__(self, *args, **kwargs )
+        PlotterHinton.__init__(self, *args, **kwargs )
+
+        self.colour = kwargs.get("colour", None )
+
+        if self.colour: self.nlevels += 1
 
     def render( self, work, path ):
         """render the data."""
 
-        matrix, rows, columns = self.buildMatrix( work )
+        matrix, rows, columns = self.buildMatrices( work )
+
         return self.plot( matrix, rows, columns, path )
 
 class BoxPlot(Renderer, Plotter):        
