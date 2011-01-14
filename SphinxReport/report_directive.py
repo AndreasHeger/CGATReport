@@ -494,8 +494,6 @@ class report_directive(Directive):
                    self.state_machine, 
                    document )
 
-report_directive.__doc__ = __doc__
-
 # directives.register_directive('report', report_directive)
 
 def setup(app):
@@ -505,8 +503,6 @@ def setup(app):
     setup.srcdir = app.srcdir
     app.add_config_value('sphinxreport_show_warnings', True, False)
     app.add_directive('report', report_directive)
-
-report_directive.__doc__ = __doc__
 
 directives.register_directive('report', report_directive)
 
