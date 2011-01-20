@@ -192,7 +192,8 @@ def run(arguments,
     *builddir* - build directory
     """
 
-    logging.debug( "report_directive.run: profile: started: rst: %s:%i" % (str(document), lineno) )
+    tag = "%s:%i" % (str(document), lineno)
+    logging.debug( "report_directive.run: profile: started: rst: %s" % tag )
 
     # sort out the paths
     # reference is used for time-stamping
@@ -303,6 +304,7 @@ def run(arguments,
 
         # check if text element exists
         if os.path.exists( filename_text ):
+
             lines = [ x[:-1] for x in open( filename_text, "r").readlines() ]
 
             filenames = []
@@ -313,20 +315,20 @@ def run(arguments,
                     x = query.search( line )
                     if x: filenames.extend( list( x.groups()) )
 
-            logging.debug( "report_directive.run: checking for %s" % str(filenames))
+            logging.debug( "report_directive.run: %s: checking for %s" % (tag, str(filenames)))
             for filename in filenames:
                 if not os.path.exists( filename ):
-                    logging.info( "report_directive.run: redo: %s missing" % filename )
+                    logging.info( "report_directive.run: %s: redo: %s missing" % (tag, filename ))
                     break
             else:
-                logging.info( "no redo: all files are present" )
+                logging.info( "report_directive.run: %s: noredo: all files are present" % tag )
                 ## all is present - save text and return
                 if lines and state_machine:
                     state_machine.insert_input(
                         lines, state_machine.input_lines.source(0) )
                 return []
         else:
-            logging.debug( "report_directive.run: no check performed: %s missing" % str(filename_text))
+            logging.debug( "report_directive.run: %s: no check performed: %s missing" % (tag, str(filename_text)))
     else:
         template_name = ""
         filename_text = None

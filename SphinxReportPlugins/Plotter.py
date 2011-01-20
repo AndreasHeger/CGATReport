@@ -120,7 +120,7 @@ class Plotter(object):
         self.add_title = "add-title" in kwargs
         self.xlabel = kwargs.get("xtitle", None )
         self.ylabel = kwargs.get("ytitle", None )
-        self.legend_location = kwargs.get("legend-location", "outer")
+        self.legend_location = kwargs.get("legend-location", "outer-top")
         self.width = kwargs.get("width", 0.50 )
         self.mAsLines = "as-lines" in kwargs
         self.xrange = parseRanges(kwargs.get("xrange", None ))
@@ -247,14 +247,13 @@ class Plotter(object):
             # legends = self.wrapText( legends )
 
             assert len(plts) == len(legends)
-            if self.legend_location == "outer":
-                legend = outer_legend( plts, legends )
+            if self.legend_location.startswith( "outer" ):
+                legend = outer_legend( plts, legends, loc = self.legend_location )
             else:
                 legend = plt.figlegend( plts, 
                                         legends,
                                         loc = self.legend_location,
                                         **self.mMPLLegendOptions )
-
 
         if self.legend_location == "extra" and legends:
 
@@ -679,6 +678,58 @@ class PlotterHinton(PlotterMatrix):
 
         return plot
 
+def on_draw(event):
+    '''resize for figure legend.'''
+
+    # locate figure and axes
+    canvas = event.canvas
+    fig = canvas.figure
+    axes = fig.gca()
+
+    # get figure coordinates
+    dpi = fig.get_dpi()
+    width, height = fig.get_size_inches()
+    max_x, max_y = dpi * width, dpi * height
+
+    # find legend and coords
+    for o in fig.findobj(matplotlib.legend.Legend):
+        legend = o
+
+    legend_coords = legend.get_window_extent().get_points()
+    legend_x, legend_y = legend_coords[1]
+
+    # re-scale
+    if legend_x > max_x:
+        scale_x = legend_x / max_x * 1.1
+    else:
+        scale_x = 1.0
+
+    if legend_y > max_y:
+        scale_y = legend_y / max_y * 1.1
+    else:
+        scale_y = 1.0
+
+    pos = axes.get_position()
+    # re-scale axes to create space for legend
+    axes.set_position((pos.xmin,
+                       pos.ymin,
+                       pos.width * 1.0 / scale_x,
+                       pos.height * 1.0 / scale_y ))
+
+    # scale figure
+    fig.set_figwidth( fig.get_figwidth() * scale_x )
+    fig.set_figheight( fig.get_figheight() * scale_y )
+
+    # redraw, temporarily disable event to avoid infinite recursion
+    func_handles = fig.canvas.callbacks.callbacks[event.name]
+    canvas.callbacks.callbacks[event.name] = {}
+    # redraw the figure..
+    canvas.draw()
+    # reset the draw event callbacks
+    fig.canvas.callbacks.callbacks[event.name] = func_handles
+
+    return False
+
 def outer_legend(*args, **kwargs):
     """plot legend outside of plot by rescaling it.
 
@@ -695,24 +746,20 @@ def outer_legend(*args, **kwargs):
 
     # make a legend without the location
     # remove the location setting from the kwargs
-    if 'loc' in kwargs: kwargs.pop('loc')
-    leg = plt.legend(loc=(0,0), *args, **kwargs)
-    frame = leg.get_frame()
-    currentAxes = plt.gca()
-    currentAxesPos = currentAxes.get_position()
+    if 'loc' in kwargs: loc = kwargs.pop('loc')
+    else: loc == "right"
 
-    # scale plot by the part which is taken by the legend
-    plotScaling = 0.75
+    if loc.endswith( "right" ):
+        leg = plt.legend(loc=(1.05,0), *args, **kwargs)
+    elif loc.endswith( "top" ):
+        leg = plt.legend(loc=(0,1.05), *args, **kwargs)
+    elif loc.endswith( "bottom" ):
+        leg = plt.legend(loc=(0,1.05), *args, **kwargs)
+    else:
+        raise ValueError("unknown legend location %s" % loc )
 
-    # scale the plot
-    currentAxes.set_position((currentAxesPos.xmin,
-                              currentAxesPos.ymin,
-                              currentAxesPos.width * (plotScaling),
-                              currentAxesPos.height))
-
-    # set (approximate) x and y coordinates of legend 
-    leg._loc = (1 + .05, currentAxesPos.ymin )
-
+    fig = plt.gcf()
+    cid = fig.canvas.mpl_connect('draw_event', on_draw)
     return leg
 
 # the following has been taken from http://www.scipy.org/Cookbook/Matplotlib/HintonDiagrams

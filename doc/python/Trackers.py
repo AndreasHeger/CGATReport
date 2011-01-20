@@ -84,6 +84,16 @@ class SingleColumnDataExample( Tracker ):
         random.shuffle( s )
         return odict( (("data", s),) )
 
+class SingleColumnDataLargeExample( Tracker ):
+    '''return a single column of data.'''
+    def getSlices( self, subset = None ): return "slice1", "slice2"
+    def getTracks( self, subset = None ): return [ "track%i" % x for x in range(0,20) ]
+    def __call__(self, track, slice = None):
+        s = [random.randint(0,20) for x in range(40)]
+        random.shuffle( s )
+        return odict( (("data", s),) )
+
+
 class SingleColumnDataWithErrorExample( Tracker ):
     '''return a single column of data.'''
     def getSlices( self, subset = None ): return "slice1", "slice2"
