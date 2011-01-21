@@ -105,6 +105,7 @@ class Plotter(object):
         ('mpl-subplot',  directives.unchanged),
         ('mpl-rc',  directives.unchanged), 
         ('as-lines', directives.flag),
+        ('legend-location',  directives.unchanged),
         )
 
     def __init__(self, *args, **kwargs ):
@@ -120,7 +121,10 @@ class Plotter(object):
         self.add_title = "add-title" in kwargs
         self.xlabel = kwargs.get("xtitle", None )
         self.ylabel = kwargs.get("ytitle", None )
-        self.legend_location = kwargs.get("legend-location", "outer-top")
+
+        # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
+        self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
+
         self.width = kwargs.get("width", 0.50 )
         self.mAsLines = "as-lines" in kwargs
         self.xrange = parseRanges(kwargs.get("xrange", None ))
@@ -747,13 +751,11 @@ def outer_legend(*args, **kwargs):
     # make a legend without the location
     # remove the location setting from the kwargs
     if 'loc' in kwargs: loc = kwargs.pop('loc')
-    else: loc == "right"
+    else: loc == "outer-top"
 
     if loc.endswith( "right" ):
         leg = plt.legend(loc=(1.05,0), *args, **kwargs)
     elif loc.endswith( "top" ):
-        leg = plt.legend(loc=(0,1.05), *args, **kwargs)
-    elif loc.endswith( "bottom" ):
         leg = plt.legend(loc=(0,1.05), *args, **kwargs)
     else:
         raise ValueError("unknown legend location %s" % loc )
