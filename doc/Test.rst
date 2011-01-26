@@ -13,6 +13,7 @@ Here are various examples to test pathological plots.
    TestMultilinePlot.rst
    TestLegend.rst
    TestErrors.rst
+   TestUser.rst
    TestExceptions.rst
    TestParameter.rst
    TestConfig.rst 

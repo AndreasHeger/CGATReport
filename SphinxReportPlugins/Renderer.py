@@ -623,6 +623,30 @@ class Debug( Renderer ):
 
         return results
         
-    
-    
+class User(Renderer):
+    """Renderer that does not rendering. 
+
+    When called, a Renderer and its subclasses will return blocks of
+    restructured text. Images are automatically collected from matplotlib
+    and inserted at place-holders.
+    """
+
+    # only leaves
+    nlevels = 1
+
+    def render( self, work, path ):
+        
+        # initiate output structure
+        results = ResultBlocks( title = path )
+
+        # iterate over all items at leaf
+        for key in work:
+
+            if "text" in work:
+                # add a result block.
+                results.append( ResultBlock( work["text"],
+                                             title = "" ) )
+
+        return results
+
 

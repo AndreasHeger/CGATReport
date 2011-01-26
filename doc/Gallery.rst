@@ -201,7 +201,7 @@ labels can provide colours.
 
 .. report:: Trackers.LabeledDataWithErrorsExample
    :render: hinton-plot
-   :colour: error
+   :colours: error
 
    A matrix.
 

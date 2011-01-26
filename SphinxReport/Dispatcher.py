@@ -135,8 +135,8 @@ class Dispatcher(Component):
     def buildTracks( self ):
         '''determine the tracks'''
         is_function, self.tracks = self.buildTracksOrSlices( self.tracker, 
-                                                              "getTracks", 
-                                                              self.mInputTracks )
+                                                             "getTracks", 
+                                                             self.mInputTracks )
         return is_function
 
     def buildSlices( self ):

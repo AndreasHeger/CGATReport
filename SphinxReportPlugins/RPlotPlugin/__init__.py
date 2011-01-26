@@ -2,26 +2,19 @@ from SphinxReport.Component import *
 from SphinxReport import Config
 
 import os, re
+from rpy import r as R
 
-import matplotlib
-import matplotlib.pyplot as plt
 import matplotlib.image as image
-from matplotlib import _pylab_helpers
-from matplotlib.cbook import exception_to_str
+
 import warnings
 
-class MatplotlibPlugin(Component):
+class RPlotPlugin(Component):
 
     capabilities = ['collect']
 
     def __init__(self, *args, **kwargs):
         Component.__init__(self,*args,**kwargs)
     
-        plt.close('all')    
-        # matplotlib.rcdefaults()
-        # set a figure size that doesn't overflow typical browser windows
-        matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
-
     def collect( self, 
                  blocks,
                  template_name, 
@@ -32,7 +25,8 @@ class MatplotlibPlugin(Component):
                  display_options,
                  linked_codename,
                  tracker_id):
-        '''collect one or more matplotlib figures and 
+        '''collect one or more R figures from all active devices
+        and
         
         1. save as png, hires-png and pdf
         2. save thumbnail
@@ -40,7 +34,6 @@ class MatplotlibPlugin(Component):
 
         returns a map of place holder to placeholder text.
         '''
-        fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
 
         map_figure2text = {}
 
@@ -57,22 +50,42 @@ class MatplotlibPlugin(Component):
 
         all_formats = [default_format,] + additional_formats
 
-        # create all the images
-        for figman in fig_managers:
-            # create all images
-            figid = figman.num
+        try:
+            maxid = max( R.dev_list().values() )
+        except AttributeError:
+            return map_figure2text
+
+        for figid in range( 2, maxid+1 ):
+
             for id, format, dpi in all_formats:
+
+                R.dev_set( figid )
 
                 outname = "%s_%02d" % (template_name, figid)
 
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
 
-                try:
-                    figman.canvas.figure.savefig( outpath, dpi=dpi )
-                except:
-                    s = exception_to_str("Exception running plot %s" % outpath)
-                    warnings.warn(s)
-                    return []
+                if format.endswith( "png" ):
+                    R.dev_copy( device = R.png,
+                                filename = outpath,
+                                res = dpi )
+                    R.dev_off()
+
+                elif format.endswith( "svg" ):
+                    R.dev_copy( device = R.svg,
+                                filename = outpath )
+                    R.dev_off()
+
+                elif format.endswith( "eps" ):
+                    R.dev_copy( device = R.postscript,
+                                file = outpath,
+                                onefile = True )
+                    R.dev_off()
+                else:
+                    raise ValueError( "format '%s' not supported" % format )
+
+                if not os.path.exists( outpath ):
+                    raise ValueError( "file %s could not be created" )
 
                 if format=='png':
                     thumbdir = os.path.join(outdir, 'thumbnails')
@@ -91,6 +104,8 @@ class MatplotlibPlugin(Component):
                     outfile = open(captionfile,"w")
                     outfile.write( "\n".join( content ) + "\n" )
                     outfile.close()
+
+            R.dev_off(figid)
 
             # create the text element
             rst_output = ""
@@ -145,7 +160,7 @@ class MatplotlibPlugin(Component):
                 linked_image = imagepath + ".%s" % format
                 rst_output += template % locals()
 
-            map_figure2text[ "#$mpl %i$#" % figid] = rst_output
+            map_figure2text[ "#$rpl %i$#" % figid] = rst_output
 
         return map_figure2text
 

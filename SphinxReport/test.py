@@ -98,6 +98,9 @@ sphinx.
 
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib import _pylab_helpers
+
+from rpy import r as R
 
 from SphinxReport.Component import *
 from SphinxReport.Tracker import Tracker
@@ -313,7 +316,14 @@ def main():
                 print "title:", r.title
                 for s in r:
                     print str(s)
-        if options.do_show: plt.show()
+
+        if options.do_show: 
+            if options.renderer.startswith("r-"):
+                print "press Ctrl-c to stop"
+                while 1: pass
+            
+            elif _pylab_helpers.Gcf.get_all_fig_managers() > 0:
+                plt.show()
 
     elif options.page:
         import build

@@ -302,7 +302,7 @@ def buildLog( options, args ):
     and the build history.
     """
     runCommand( "%s" % " ".join(args) )
-
+    
 def main():
 
     print "SphinxReport: version %s started" % str("$Id$")
@@ -356,9 +356,9 @@ def main():
 
     buildPlots( rst_files, options, args, sourcedir )
 
-    buildGallery( options, args )
+    # buildGallery( options, args )
 
-    buildLog( options, args )
+    # buildLog( options, args )
 
     buildDocument( options, args )
 

@@ -34,14 +34,6 @@ Inner legends
 .. report:: Trackers.SingleColumnDataExample
    :render: line-plot 
    :transform: histogram 
-   :legend-location: left
-   :width: 200
-
-   best
-
-.. report:: Trackers.SingleColumnDataExample
-   :render: line-plot 
-   :transform: histogram 
    :legend-location: upper-right
    :width: 200
 
