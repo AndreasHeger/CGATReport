@@ -2,7 +2,10 @@ from SphinxReport.Component import *
 from SphinxReport import Config
 
 import os, re
-from rpy import r as R
+
+from rpy2.robjects import r as R
+import rpy2.robjects as ro
+import rpy2.robjects.numpy2ri
 
 import matplotlib.image as image
 

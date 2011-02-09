@@ -223,7 +223,23 @@ class TrackerSQL( Tracker ):
         This function will return the first row
         from an SELECT statement.
         """
-        return list(self.execute(stmt).fetchone())
+        e = self.execute(stmt).fetchone()
+        if e: return list(e)
+        else: return None
+
+    def getRow( self, stmt ):
+        """return a row of values from an SQL statement.
+
+        This function will return the first row
+        from an SELECT statement as a dictionary
+        of column-value mappings.
+
+        Returns None if result is empty.
+        """
+        e = self.execute(stmt).fetchone()
+        # assumes that values are sorted in ResultProxy.keys()
+        if e: return odict( [x,e[x]] for x in e.keys() )
+        else: return None
 
     def getValues( self, stmt ):
         """return all results from an SQL statement.

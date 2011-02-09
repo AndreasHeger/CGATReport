@@ -10,7 +10,9 @@ from SphinxReport.odict import OrderedDict as odict
 from SphinxReport import Utils
 from SphinxReport import Stats
 
-from rpy import r as R
+from rpy2.robjects import r as R
+import rpy2.robjects as ro
+import rpy2.robjects.numpy2ri
 
 from docutils.parsers.rst import directives
 

@@ -6,7 +6,9 @@ from SphinxReport.odict import OrderedDict as odict
 import matplotlib
 from matplotlib import pyplot as plt
 
-from rpy import r as R
+from rpy2.robjects import r as R
+import rpy2.robjects as ro
+import rpy2.robjects.numpy2ri
 
 def getCurrentRDevice():
     '''return the numerical device id of the current device.'''

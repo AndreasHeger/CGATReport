@@ -5,11 +5,10 @@ import scipy
 import scipy.stats
 import collections, itertools
 
-try:
-    from rpy import r as R
-    import rpy
-except ImportError:
-    pass
+from rpy2.robjects import r as R
+import rpy2.robjects as ro
+import rpy2.robjects.numpy2ri
+
 import odict
 
 def getSignificance( pvalue, thresholds=[0.05, 0.01, 0.001] ):

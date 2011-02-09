@@ -100,8 +100,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
 
-from rpy import r as R
-
 from SphinxReport.Component import *
 from SphinxReport.Tracker import Tracker
 # from SphinxReport.Renderer import *

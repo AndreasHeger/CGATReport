@@ -240,7 +240,7 @@ class Plotter(object):
             
         if self.add_title: plt.suptitle( "/".join(path) )
 
-        blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure-1), "")), title = "/".join(path) ) )
+        blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure), "")), title = "/".join(path) ) )
 
         legend = None
         maxlen = 0
