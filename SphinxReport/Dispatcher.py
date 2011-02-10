@@ -101,7 +101,7 @@ class Dispatcher(Component):
                 self.warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.tracker), track, slice, msg) )
                 if VERBOSE: self.warn( traceback.format_exc() )
                 raise
-
+        
         if not self.nocache and not fromcache:
             self.cache[key] = result
 
@@ -184,7 +184,10 @@ class Dispatcher(Component):
                 for slice in slices:
                     d = self.getData( track, slice )
                     if not d: continue
-                    self.data[track][slice] = DataTree.DataTree( d )
+                    if type(d) in Utils.ContainerTypes:
+                        self.data[track][slice] = DataTree.DataTree( d )
+                    else:
+                        self.data[track][slice] = d
             else:
                 d = self.getData( track, None )
                 self.data[track] = DataTree.DataTree( d )
@@ -256,6 +259,7 @@ class Dispatcher(Component):
                     for key,value in work.iteritems():
                         vals = DataTree.DataTree( odict( ((key,value),) ))
                         results.append( self.renderer( vals, path = path ))
+
             elif nlevels == renderer_nlevels and self.groupby == "track":
                 for track in all_tracks:
                     vals = DataTree.DataTree( odict( ((track, self.data[track]),)))
@@ -275,8 +279,10 @@ class Dispatcher(Component):
                     if len(d) == 0: continue
                     vals = DataTree.DataTree( odict( d ) )
                     results.append( self.renderer( vals, path = (slice,) ) )
+
             elif self.groupby == "all":
                 results.append( self.renderer( self.data, path = () ) )
+
             else:
                 results.append( self.renderer( self.data, path = () ) )
 

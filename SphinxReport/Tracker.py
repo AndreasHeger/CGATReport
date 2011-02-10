@@ -1,6 +1,6 @@
 from __future__ import with_statement 
 
-import os, sys, re, types, copy, warnings, ConfigParser
+import os, sys, re, types, copy, warnings, ConfigParser, inspect
 
 import sqlalchemy
 import sqlalchemy.exceptions
@@ -114,6 +114,17 @@ class TrackerCSV( Tracker ):
         """return a data structure for track :param: track and slice :slice:"""
         raise NotImplementedError("not implemented")
 
+def getCallerLocals( level = 3, decorators = 0):
+    '''returns locals of caller using frame.
+
+    optional pass number of decorators
+    
+    from http://pylab.blogspot.com/2009/02/python-accessing-caller-locals-from.html
+    '''
+    f = sys._getframe(level+decorators)
+    args = inspect.getargvalues(f)
+    return args[3]
+    
 class TrackerSQL( Tracker ):
     """Base class for trackers that fetch data from an SQL database.
     
@@ -209,13 +220,20 @@ class TrackerSQL( Tracker ):
             raise SQLError(msg)
         return r
 
+    def buildStatement( self, stmt ):
+        '''fill in placeholders in stmt.'''
+        
+        kwargs = self.members( getCallerLocals() )
+        statement = stmt % dict( kwargs.items() )
+        return statement
+
     def getValue( self, stmt ):
         """return a single value from an SQL statement.
 
         This function will return the first value in the first row
         from an SELECT statement.
         """
-        return self.execute(stmt).fetchone()[0]
+        return self.execute(self.buildStatement(stmt)).fetchone()[0]
 
     def getFirstRow( self, stmt ):
         """return a row of values from an SQL statement.
@@ -223,7 +241,7 @@ class TrackerSQL( Tracker ):
         This function will return the first row
         from an SELECT statement.
         """
-        e = self.execute(stmt).fetchone()
+        e = self.execute(self.buildStatement(stmt)).fetchone()
         if e: return list(e)
         else: return None
 
@@ -236,7 +254,7 @@ class TrackerSQL( Tracker ):
 
         Returns None if result is empty.
         """
-        e = self.execute(stmt).fetchone()
+        e = self.execute( self.buildStatement( stmt )).fetchone()
         # assumes that values are sorted in ResultProxy.keys()
         if e: return odict( [x,e[x]] for x in e.keys() )
         else: return None
@@ -247,13 +265,13 @@ class TrackerSQL( Tracker ):
         This function will return the first value in each row
         from an SELECT statement.
         """
-        return [x[0] for x in self.execute(stmt).fetchall() ]
+        return [x[0] for x in self.execute(self.buildStatement(stmt)).fetchall() ]
 
     def getAll( self, stmt ):
         """return all results from an SQL statement.
         """
         # convert to tuples
-        return [ tuple(x) for x in self.execute(stmt).fetchall() ]
+        return [ tuple(x) for x in self.execute(self.buildStatement(stmt)).fetchall() ]
 
     def getIter( self, stmt ):
         """return an iterator of SQL results."""
