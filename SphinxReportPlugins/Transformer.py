@@ -320,14 +320,12 @@ class TransformerCorrelationPearson( TransformerCorrelation ):
     '''for each pair of columns on the lowest level compute
     the spearman correlation coefficient and other stats.
     '''
-    
     method = "pearson"
 
 class TransformerCorrelationSpearman( TransformerCorrelation ):
     '''for each pair of columns on the lowest level compute
     the spearman correlation coefficient and other stats.
     '''
-
     method = "spearman"
 
 class TransformerMannWhitneyU( TransformerPairwise ):
@@ -469,6 +467,7 @@ class TransformerHistogram( Transformer ):
                 bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
             elif binsize != None:
                 # make sure that ma is part of bins
+                data.sort()
                 bins = numpy.arange(mi, ma + binsize, binsize )
             else:
                 try:

@@ -1,4 +1,4 @@
-import sys, os, re, random
+import sys, os, re, random, glob
 
 from SphinxReport.Tracker import Tracker
 from SphinxReport.odict import OrderedDict as odict
@@ -12,7 +12,9 @@ import rpy2.robjects.numpy2ri
 
 def getCurrentRDevice():
     '''return the numerical device id of the current device.'''
-    return R.dev_cur().values()[0]
+    #R.dev_off()
+    #return R.dev_cur().values()[0]
+    return R["dev.cur"]()[0]
 
 class MatplotlibData( Tracker ):
     '''create plot using matplotlib.'''
@@ -36,6 +38,19 @@ class RPlotData( Tracker ):
         random.shuffle( s )
         # do the plotting
         R.x11()
-        R.plot( s )
+        R.plot( s, s )
         return odict( (("text", "#$rpl %i$#" % getCurrentRDevice()),) )
 
+IMAGEDIR = os.path.join( os.path.dirname( os.path.abspath( __file__ )), "..", "images")
+
+class Images( Tracker ):
+    def getTracks( self, subset = None ): return glob.glob( os.path.join( IMAGEDIR, "*.png" ) )
+    def __call__(self, track, slice = None ):
+        rst_text = '''
+This is a preface
+
+.. figure:: %s
+
+Some more text for the figure\n''' % track
+
+        return odict( (("rst", rst_text),) )

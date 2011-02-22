@@ -628,7 +628,8 @@ class User(Renderer):
 
     When called, a Renderer and its subclasses will return blocks of
     restructured text. Images are automatically collected from matplotlib
-    and inserted at place-holders.
+    and other renderers from active graphics devices and inserted at 
+    the place-holders.
     """
 
     # only leaves
@@ -643,8 +644,12 @@ class User(Renderer):
         for key in work:
 
             if "text" in work:
-                # add a result block.
+                # add a result block
                 results.append( ResultBlock( work["text"],
+                                             title = "" ) )
+            elif "rst" in work:
+                # add a result block
+                results.append( ResultBlock( work["rst"],
                                              title = "" ) )
 
         return results

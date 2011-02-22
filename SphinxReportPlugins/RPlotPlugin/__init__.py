@@ -22,6 +22,7 @@ class RPlotPlugin(Component):
                  blocks,
                  template_name, 
                  outdir, 
+                 rstdir,
                  rst2rootdir, 
                  rst2builddir,
                  content,
@@ -37,7 +38,7 @@ class RPlotPlugin(Component):
 
         returns a map of place holder to placeholder text.
         '''
-
+        
         map_figure2text = {}
 
         # determine the image formats to create
@@ -52,38 +53,38 @@ class RPlotPlugin(Component):
         if Config.LATEX_IMAGE_FORMAT: additional_formats.append( Config.LATEX_IMAGE_FORMAT )
 
         all_formats = [default_format,] + additional_formats
-
+        devices = R["dev.list"]()
         try:
-            maxid = max( R.dev_list().values() )
-        except AttributeError:
+            maxid = max( R["dev.list"]() )
+        except TypeError:
             return map_figure2text
-
+        
         for figid in range( 2, maxid+1 ):
 
             for id, format, dpi in all_formats:
 
-                R.dev_set( figid )
+                R["dev.set"]( figid )
 
                 outname = "%s_%02d" % (template_name, figid)
 
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
 
                 if format.endswith( "png" ):
-                    R.dev_copy( device = R.png,
-                                filename = outpath,
-                                res = dpi )
-                    R.dev_off()
+                    R["dev.copy"]( device = R.png,
+                                   filename = outpath,
+                                   res = dpi )
+                    R["dev.off"]()
 
                 elif format.endswith( "svg" ):
-                    R.dev_copy( device = R.svg,
-                                filename = outpath )
-                    R.dev_off()
+                    R["dev.copy"]( device = R.svg,
+                                   filename = outpath )
+                    R["dev.off"]()
 
                 elif format.endswith( "eps" ):
-                    R.dev_copy( device = R.postscript,
-                                file = outpath,
-                                onefile = True )
-                    R.dev_off()
+                    R["dev.copy"]( device = R.postscript,
+                                   file = outpath,
+                                   onefile = True )
+                    R["dev.off"]()
                 else:
                     raise ValueError( "format '%s' not supported" % format )
 
@@ -108,7 +109,7 @@ class RPlotPlugin(Component):
                     outfile.write( "\n".join( content ) + "\n" )
                     outfile.close()
 
-            R.dev_off(figid)
+            R["dev.off"](figid)
 
             # create the text element
             rst_output = ""

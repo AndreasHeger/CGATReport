@@ -85,7 +85,7 @@ class Cache( Component ):
             if key in self._cache: 
                 result = self._cache[key]
                 if result != None:
-                    self.debug( "retrieved data for key '%s' from cache: %i" % (key, len(result)) )
+                    self.debug( "retrieved data for key '%s' from cache" % (key) )
                 else:
                     self.warn( "retrieved None data for key '%s' from cache" % (key ))
             else:

@@ -2,6 +2,10 @@
 User created plots
 ==================
 
+This page demonstrates usage of the :term:`user` renderer
+in order to include custom generated plots or images into
+a sphinxreport document.
+
 Plotting with matplotlib
 ========================
 
@@ -18,6 +22,14 @@ Plotting with R
 
    Plot using R
 
+Adding pre-built images
+=======================
 
+Pre-built images can be added, including flanking text.
+
+.. report:: UserTrackers.Images
+   :render: user
+
+   Plot pre-built images
 
 

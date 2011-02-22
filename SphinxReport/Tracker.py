@@ -271,7 +271,23 @@ class TrackerSQL( Tracker ):
         """return all results from an SQL statement.
         """
         # convert to tuples
-        return [ tuple(x) for x in self.execute(self.buildStatement(stmt)).fetchall() ]
+        e = self.execute(self.buildStatement(stmt))
+        columns = e.keys()
+        d = e.fetchall()
+        return odict( zip( columns, zip( *d ) ) )
+
+    def getDict( self, stmt ):
+        """return all results from an SQL statement.
+
+        The first column is taken as the dictionary key
+        """
+        # convert to tuples
+        e = self.execute(self.buildStatement(stmt))
+        columns = e.keys()
+        result = odict()
+        for row in e:
+            result[row[0]] = odict( zip( columns[1:], row[1:] ) )
+        return result
 
     def getIter( self, stmt ):
         """return an iterator of SQL results."""

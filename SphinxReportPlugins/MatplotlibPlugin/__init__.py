@@ -26,6 +26,7 @@ class MatplotlibPlugin(Component):
                  blocks,
                  template_name, 
                  outdir, 
+                 rstdir,
                  rst2rootdir, 
                  rst2builddir,
                  content,
@@ -94,7 +95,7 @@ class MatplotlibPlugin(Component):
 
             # create the text element
             rst_output = ""
-            # for image diretive - image path is relative from rst file to external build dir
+            # for image directive - image path is relative from rst file to external build dir
             imagepath = re.sub( "\\\\", "/", os.path.join( rst2builddir, outname ) )
             # for links - path is from rst file to internal root dir
             relative_imagepath = re.sub( "\\\\", "/", os.path.join( rst2rootdir, outname ) )

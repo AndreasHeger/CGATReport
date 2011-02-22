@@ -13,6 +13,7 @@ class HTMLPlugin(Component):
                  blocks,
                  template_name, 
                  outdir, 
+                 rstdir,
                  relative_linkdir, 
                  root_linkdir,
                  content,
