@@ -276,6 +276,12 @@ class TrackerSQL( Tracker ):
         d = e.fetchall()
         return odict( zip( columns, zip( *d ) ) )
 
+    def get( self, stmt ):
+        """return all results from an SQL statement.
+        """
+        # convert to tuples
+        return self.execute(self.buildStatement(stmt)).fetchall()
+
     def getDict( self, stmt ):
         """return all results from an SQL statement.
 

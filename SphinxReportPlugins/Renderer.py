@@ -179,13 +179,12 @@ class Table( TableBase ):
 
         returns matrix, row_headers, col_headers
         """
-
         return tree2table( data, self.transpose )
 
     def __call__(self, data, path):
-
-
+        
         matrix, row_headers, col_headers = self.buildTable( data )
+
         title = "/".join(path)
 
         if matrix == None: 

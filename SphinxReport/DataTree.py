@@ -117,6 +117,33 @@ class DataTree( object ):
     def __setattr__(self, name, value):
         setattr(self._data, name, value) 
 
+def flatten(l, ltypes=(list, tuple)):
+    '''flatten a nested list/tuple.'''
+
+    ltype = type(l)
+    l = list(l)
+    i = 0
+    while i < len(l):
+        while isinstance(l[i], ltypes):
+            if not l[i]:
+                l.pop(i)
+                i -= 1
+                break
+            else:
+                l[i:i + 1] = l[i]
+        i += 1
+    return ltype(l)
+
+def count_levels( labels ):
+    '''count number of levels for each level in labels'''
+    counts = []
+    for x in labels:
+        if type( x[0] ) in Utils.ContainerTypes:
+            counts.append( len(x[0]) )
+        else:
+            counts.append( 1 )
+    return counts
+
 def tree2table( data, transpose = False ):
     """build table from data.
 
@@ -125,19 +152,27 @@ def tree2table( data, transpose = False ):
        1. there is more than one column
        2. each cell within a row is a list or tuple
 
+    If any of the paths contain tuples/lists, these are
+    expanded to extra columns as well.
+
     returns matrix, row_headers, col_headers
     """
 
     labels = data.getPaths()
+    
     if len(labels) < 2:
         raise ValueError( "expected at least two levels for building table, got %i: %s" %\
                               (len(labels), str(labels)))
 
-    col_headers = [""] * (len(labels)-2) + labels[-1]
+    effective_labels = count_levels( labels ) 
+    # subtract last level (will be expanded) and 1 for row header
+    effective_cols = sum( effective_labels[:-1] ) - 1
+
+    col_headers = [""] * effective_cols + labels[-1]
     ncols = len(col_headers)
 
     paths = list(itertools.product( *labels[1:-1] ))                
-    header_offset = len(labels)-2
+    header_offset = effective_cols
     matrix = []
 
     debug( "Datatree.buildTable: creating table with %i columns" % (len(col_headers)))
@@ -157,15 +192,21 @@ def tree2table( data, transpose = False ):
             work = data.getLeaf( (row,) + path )
             if not work: continue
 
+            row_data = [""] * ncols
+
             # add row header only for first row (if there are sub-rows)
             if first: 
-                row_headers.append( row )
+                if type(row) in Utils.ContainerTypes:
+                    row_headers.append( row[0] )
+                    for z, p in enumerate( row[1:] ):
+                        row_data[z] = p
+                else:
+                    row_headers.append( row )
                 first = False
             else:
                 row_headers.append("")
 
             # enter data for the first row
-            row_data = [""] * ncols 
             for z, p in enumerate(path): 
                 row_data[z] = p
 
