@@ -46,20 +46,23 @@ class Tracker(object):
     # set to False, if results of tracker should be cached
     cache = True
 
+    tracks = []
+    slices = []
+
     def __init__(self):
         pass
 
     def getTracks( self, subset = None ):
         """return a list of all tracks that this tracker provides."""
         if subset: return subset
-        return []
+        return self.tracks
 
     def getSlices(self, subset = None):
         """return a list of all slices that this tracker provides.
 
         The optional subset argument can group slices together.
         """
-        return []
+        return self.slices
 
     def getShortCaption( self ):
         """return one line caption.
@@ -89,8 +92,12 @@ class Tracker(object):
 
         returns a dictionary
         '''
+        # skip tracks and slices to avoid recursion
+        # todo: do this for the general case
+        # 1. subtract property attributes, or
+        # 2. subtract members of Tracker()
         l = dict( [(attr,getattr(self,attr)) for attr in dir(self) \
-                      if not callable(attr) and not attr.startswith("__")] )
+                      if not callable(attr) and not attr.startswith("__") and attr != "tracks" and attr != "slices"] )
             
         if locals: return dict( l, **locals)
         else: return l
@@ -277,9 +284,9 @@ class TrackerSQL( Tracker ):
         return odict( zip( columns, zip( *d ) ) )
 
     def get( self, stmt ):
-        """return all results from an SQL statement.
         """
-        # convert to tuples
+        return results from an SQL statement as list of tuples.
+        """
         return self.execute(self.buildStatement(stmt)).fetchall()
 
     def getDict( self, stmt ):
@@ -298,13 +305,13 @@ class TrackerSQL( Tracker ):
     def getIter( self, stmt ):
         """return an iterator of SQL results."""
         return self.execute(stmt)
-
-    def getTracks( self, subset = None ):
+    
+    @property
+    def tracks(self):
         """return a list of all tracks that this tracker provides.
 
         The tracks are defined as tables matching the attribute :attr:`mPattern`.
         """
-        if subset: return subset
         rx = re.compile(self.mPattern)
         if self.mAsTables:
             return sorted([ x.name for x in self.getTables() if rx.search( x.name ) ])

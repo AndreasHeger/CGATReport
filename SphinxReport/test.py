@@ -189,7 +189,7 @@ def main():
     parser.add_option( "-r", "--renderer", dest="renderer", type="string",
                           help="renderer to use [default=%default]" )
 
-    parser.add_option( "-w", "--path", dest="path", type="string",
+    parser.add_option( "-w", "--path", dest="dir_trackers", type="string",
                           help="path to trackers [default=%default]" )
 
     parser.add_option( "-f", "--force", dest="force", action="store_true",
@@ -262,7 +262,8 @@ def main():
 
         trackers = []
         for filename in glob.glob( os.path.join( options.dir_trackers, "*.py" )):
-            trackers.extend( [ x for x in getTrackers( filename ) if x[0] not in exclude ] )
+            modulename = os.path.basename( filename )
+            trackers.extend( [ x for x in getTrackers( modulename ) if x[0] not in exclude ] )
         
         for name, tracker, modulename, is_derived  in trackers:
             if name == options.tracker: break

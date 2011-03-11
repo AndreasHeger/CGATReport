@@ -114,7 +114,7 @@ class Dispatcher(Component):
         if not hasattr( obj, fun ):
             # not a tracker, hence no tracks/slices
             return True, result
-        
+
         f = getattr(obj, fun )
         if input_list:
             all_entries = set(f( subset = None ))
@@ -142,8 +142,8 @@ class Dispatcher(Component):
     def buildSlices( self ):
         '''determine the slices'''
         is_function, self.slices = self.buildTracksOrSlices( self.tracker, 
-                                                              "getSlices", 
-                                                              self.mInputSlices )
+                                                             "getSlices", 
+                                                             self.mInputSlices )
         return is_function
 
     def collect( self ):
@@ -321,7 +321,7 @@ class Dispatcher(Component):
         except: return Utils.buildException( "rendering" )
 
         self.debug( "profile: finished: renderer: %s" % (self.renderer))
-
+        
         return result
 
         

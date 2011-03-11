@@ -116,17 +116,17 @@ class memoized(object):
       self.cache = {}
    def __call__(self, *args):
       try:
-         return self.cache[args]
+          return self.cache[args]
       except KeyError:
-         self.cache[args] = value = self.func(*args)
-         return value
+          self.cache[args] = value = self.func(*args)
+          return value
       except TypeError:
-         # uncachable -- for instance, passing a list as an argument.
-         # Better to not cache than to blow up entirely.
-         return self.func(*args)
+          # uncachable -- for instance, passing a list as an argument.
+          # Better to not cache than to blow up entirely.
+          return self.func(*args)
    def __repr__(self):
-      """Return the function's docstring."""
-      return self.func.__doc__
+       """Return the function's docstring."""
+       return self.func.__doc__
 
 @memoized
 def getModule( name ):
@@ -146,9 +146,9 @@ def getModule( name ):
     else:
         try:
             (file, pathname, description) = imp.find_module( name )
-        except ImportError:
-            warn("could not find module %s" % name )        
-            raise ImportError("could not find module %s" % name )
+        except ImportError, msg:
+            warn("could not find module %s: msg=%s" % (name,msg) )        
+            raise ImportError("could not find module %s: msg=%s" % (name,msg) )
 
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
