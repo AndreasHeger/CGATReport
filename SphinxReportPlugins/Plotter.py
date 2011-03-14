@@ -914,8 +914,8 @@ class LinePlot( Renderer, Plotter ):
                     continue
 
                 xlabel, ylabels = self.initCoords( label, coords)
-
                 xvals = coords[xlabel]
+
                 for ylabel in ylabels:
                     yvals = coords[ylabel]
                     self.addData( line, label, xlabel, ylabel, xvals, yvals, nplotted )

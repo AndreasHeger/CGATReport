@@ -97,6 +97,7 @@ class MatplotlibPlugin(Component):
             rst_output = ""
             # for image directive - image path is relative from rst file to external build dir
             imagepath = re.sub( "\\\\", "/", os.path.join( rst2builddir, outname ) )
+
             # for links - path is from rst file to internal root dir
             relative_imagepath = re.sub( "\\\\", "/", os.path.join( rst2rootdir, outname ) )
 
