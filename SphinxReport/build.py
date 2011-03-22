@@ -25,9 +25,6 @@ Building proceeds in three phases.
 
 """
 
-import matplotlib
-import matplotlib.pyplot as plt
-
 from SphinxReport import report_directive, gallery, clean, Utils
 
 from SphinxReport.Component import *

@@ -25,16 +25,6 @@ from SphinxReport.Component import *
 
 SPHINXREPORT_DEBUG = False
 
-# This does not work:
-# matplotlib.use('Agg', warn = False)
-# Matplotlib might be imported beforehand? plt.switch_backend did not
-# change the backend. The only option I found was to change my own matplotlibrc.
-
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.image as image
-from matplotlib import _pylab_helpers
-
 TEMPLATE_TEXT = """
 .. htmlonly::
 

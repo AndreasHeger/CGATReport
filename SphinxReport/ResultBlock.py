@@ -1,4 +1,4 @@
-import types, re, string
+import types, re, string, itertools, operator
 
 class ResultBlock(object):
     """Result of :class:``Renderer``
@@ -55,6 +55,11 @@ class ResultBlock(object):
             self.title = "/".join( (self.title,title))
         else:
             self.title = title
+        # normalize titel
+        parts = self.title.split("/")
+        # make unique
+        self.title = "/".join( itertools.imap(next, itertools.imap(operator.itemgetter(1), itertools.groupby(parts))) )
+
     def __str__(self):
         return "\n\n".join( (self.title, self.text) )
 

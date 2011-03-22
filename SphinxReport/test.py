@@ -222,6 +222,9 @@ def main():
 
     if len(args) == 2:
         options.tracker, options.renderer = args
+        
+    # configure options
+    options.dir_trackers = os.path.abspath( os.path.expanduser( options.dir_trackers ) )
 
     # test plugins
     kwargs = {}
@@ -235,7 +238,7 @@ def main():
     
     if options.tracks: kwargs["tracks"] = options.tracks
     if options.slices: kwargs["slices"] = options.slices
-
+    
     if options.renderer == None: options.renderer = "table"
 
     kwargs = Utils.updateOptions( kwargs )

@@ -4,6 +4,11 @@
 import os, sys, re, math
 
 import matplotlib
+matplotlib.use('Agg', warn = False)
+# This does not work:
+# Matplotlib might be imported beforehand? plt.switch_backend did not
+# change the backend. The only option I found was to change my own matplotlibrc.
+
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1384,9 +1389,14 @@ class PiePlot(Renderer, Plotter):
 
     This :class:`Renderer` requires one level:
     entries[dict] 
+
+    If *pie-first-is-total* is set, the first entry
+    is assumed to be the total and all the other values
+    are subtracted. It is renamed by the value of *pie-first-is-total*.
     """
     options = Matrix.options + Plotter.options +\
-        (('pie-min-percentage', directives.unchanged), )
+        (('pie-min-percentage', directives.unchanged),
+         ('pie-first-is-total', directives.unchanged), )
 
     nlevels = 1
 
@@ -1394,8 +1404,9 @@ class PiePlot(Renderer, Plotter):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-        try: self.mPieMinimumPercentage = float(kwargs["pie-min-percentage"])
-        except KeyError: self.mPieMinPercentage = 0
+        self.mPieMinimumPercentage = float( kwargs.get("pie-min-percentage", 0 ))
+
+        self.mFirstIsTotal = kwargs.get( "pie-first-is-total", None )
 
         self.sorted_headers = odict()
 
@@ -1411,8 +1422,16 @@ class PiePlot(Renderer, Plotter):
 
         for key, value in work.iteritems():
             sorted_vals[self.sorted_headers[key]] = value
-        
-        return self.endPlot( plt.pie( sorted_vals, labels = self.sorted_headers.keys() ), None, path )
+
+        labels = self.sorted_headers.keys()
+
+        # subtract others from total - rest
+        if self.mFirstIsTotal:
+            sorted_vals[0] -= sum(sorted_vals[1:])
+            if sorted_vals[0] < 0: raise ValueError( "option first-is-total used, but first < rest" )
+            labels[0] = self.mFirstIsTotal
+
+        return self.endPlot( plt.pie( sorted_vals, labels = labels ), None, path )
 
 class MatrixPlot(Matrix, PlotterMatrix):
     """Render a matrix as a matrix plot.

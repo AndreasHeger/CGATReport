@@ -73,7 +73,7 @@ class Dispatcher(Component):
 
         try: self.mInputSlices = [ x.strip() for x in kwargs["slices"].split(",")]
         except KeyError: self.mInputSlices = None
-
+        
         try: self.mColumns = [ x.strip() for x in kwargs["columns"].split(",")]
         except KeyError: self.mColumns = None
 
@@ -128,7 +128,7 @@ class Dispatcher(Component):
 #                result = input_list
         else:
             result = f( subset = None )
-        
+            
         if type(result) in types.StringTypes: result=[result,]
         return False, result
 
