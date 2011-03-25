@@ -108,7 +108,19 @@ class Dispatcher(Component):
         return result
 
     def buildTracksOrSlices( self, obj, fun, input_list = None ):
-        '''determine tracks/slices from a tracker.'''
+        '''determine tracks/slices from a tracker.
+
+        All possible tracks are collected from the tracker. 
+
+        If input_list is given, they are then filtered by:
+
+        * exact matches to entries in input_list
+        * pattern matches to entries in input list that starting with "r("
+        
+        If there is no match, the entry in input_list is submitted to tracker
+        as a subset command.
+        
+        '''
         result = []
 
         if not hasattr( obj, fun ):
@@ -117,13 +129,24 @@ class Dispatcher(Component):
 
         f = getattr(obj, fun )
         if input_list:
+
             all_entries = set(f( subset = None ))
 
             for s in input_list:
                 if s in all_entries:
+                    # collect exact matches
                     result.append( s )
+                elif s.startswith("r(") and s.endswith(")"):
+                    # collect pattern matches:
+                    # remove r()
+                    s = s[2:-1] 
+                    # remove flanking quotation marks
+                    if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
+                    rx = re.compile( s )
+                    result.extend( [ x for x in all_entries if rx.search( x ) ] )
                 else:
                     result.extend( f( subset = [s,] ) )
+                    
 #            else:
 #                result = input_list
         else:

@@ -60,7 +60,22 @@ def convertValue( value ):
         return float(value)
     return value
 
-def getParameters( filename = "sphinxreport.ini" ):
+def configToDictionary( config ):
+
+    p = {}
+    for section in config.sections():
+        for key,value in config.items( section ):
+            v = IOTools.convertValue( value )
+            p["%s_%s" % (section,key)] = v
+            if section == "general":
+                p["%s" % (key)] = v
+               
+    for key, value in config.defaults().iteritems():
+        p["%s" % (key)] =  IOTools.convertValue( value )
+        
+    return p
+
+def getParameters( filenames = ["sphinxreport.ini",] ):
     '''read a config file and return as a dictionary.
 
     Sections and keys are combined with an underscore. If
@@ -80,31 +95,24 @@ def getParameters( filename = "sphinxreport.ini" ):
 
     This function also updates the module-wide parameter map.
     
+    The section [DEFAULT] is equivalent to [general].
     '''
-    if not os.path.exists( filename ):
-        warn("no configuration file %s" % filename)
-        return
 
-    p = {}
-    
-    config = ConfigParser.ConfigParser()
-    config.readfp(open(filename),"r")
+   
+    global CONFIG
 
-    for section in config.sections():
-        for key,value in config.items( section ):
-            v = convertValue( value )
-            p["%s_%s" % (section,key)] = v
-            if section == "general":
-                p["%s" % (key)] = v
+    CONFIG = ConfigParser.ConfigParser()
+    CONFIG.read( filenames )
 
+    p = configToDictionary( CONFIG )
     PARAMS.update( p )
 
-    debug( "%s: read parameters: %s" % (filename, str(PARAMS) ))
+    return PARAMS
 
-    return p
-
-## read placeholders
-getParameters()
+## read placeholders from config file in current directory
+## It would be nice to read default values, but the location 
+## of the documentation source files are not known to this module. 
+getParameters( [ "sphinxreport.ini" ] )
 
 class memoized(object):
    """Decorator that caches a function's return value each time it is called.
@@ -334,7 +342,6 @@ def getTransformers( transformers, **kwargs ):
 def updateOptions( kwargs ):
     '''replace placeholders in kwargs with
     with configuration file.
-
     
     returns the update dictionary.
     '''
