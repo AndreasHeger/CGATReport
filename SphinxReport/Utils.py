@@ -12,6 +12,7 @@ from SphinxReport.odict import OrderedDict as odict
 import types, copy, numpy
 
 ContainerTypes = (types.TupleType, types.ListType, type(numpy.zeros(0)))
+
 # Taken from numpy.scalartype, but removing the types object and unicode
 # None is allowed to represent missing values. numpy.float128 is a recent
 # numpy addition.
@@ -47,31 +48,42 @@ def quote_rst( text ):
 
 PARAMS = {}
 
-def convertValue( value ):
+def convertValue( value, list_detection = False ):
     '''convert a value to int, float or str.'''
     rx_int = re.compile("^\s*[+-]*[0-9]+\s*$")
     rx_float = re.compile("^\s*[+-]*[0-9.]+[.+\-eE][+-]*[0-9.]*\s*$")
 
     if value == None: return value
 
-    if rx_int.match( value ):
-        return int(value)
-    elif rx_float.match( value ):
-        return float(value)
-    return value
+    if list_detection and "," in value:
+        values = []
+        for value in value.split(","):
+            if rx_int.match( value ):
+                values.append( int(value) )
+            elif rx_float.match( value ):
+                values.append( float(value) )
+            else:
+                values.append(value)
+        return values
+    else:
+        if rx_int.match( value ):
+            return int(value)
+        elif rx_float.match( value ):
+            return float(value)
+        return value
 
 def configToDictionary( config ):
 
     p = {}
     for section in config.sections():
         for key,value in config.items( section ):
-            v = IOTools.convertValue( value )
+            v = convertValue( value )
             p["%s_%s" % (section,key)] = v
             if section == "general":
                 p["%s" % (key)] = v
                
     for key, value in config.defaults().iteritems():
-        p["%s" % (key)] =  IOTools.convertValue( value )
+        p["%s" % (key)] =  convertValue( value )
         
     return p
 
@@ -98,7 +110,6 @@ def getParameters( filenames = ["sphinxreport.ini",] ):
     The section [DEFAULT] is equivalent to [general].
     '''
 
-   
     global CONFIG
 
     CONFIG = ConfigParser.ConfigParser()
@@ -109,10 +120,11 @@ def getParameters( filenames = ["sphinxreport.ini",] ):
 
     return PARAMS
 
+getParameters( filenames = ["sphinxreport.ini",] )
+
 ## read placeholders from config file in current directory
 ## It would be nice to read default values, but the location 
 ## of the documentation source files are not known to this module. 
-getParameters( [ "sphinxreport.ini" ] )
 
 class memoized(object):
    """Decorator that caches a function's return value each time it is called.
@@ -341,15 +353,20 @@ def getTransformers( transformers, **kwargs ):
 
 def updateOptions( kwargs ):
     '''replace placeholders in kwargs with
-    with configuration file.
+    with PARAMS read from config file.
     
     returns the update dictionary.
     '''
 
     for key, value in kwargs.items():
-        if type(value) not in types.StringTypes: continue
-        if value.startswith("@") and value.endswith("@"):
-            code = value[1:-1]
+        try:
+            v = value.strip()
+        except AttributeError:
+            # ignore non-string types
+            continue
+            
+        if v.startswith("@") and v.endswith("@"):
+            code = v[1:-1]
             if code in PARAMS:
                 kwargs[key] = PARAMS[code]
             else:

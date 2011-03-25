@@ -236,6 +236,8 @@ def run(arguments,
     # collect options
     # replace placedholders
     options = Utils.updateOptions( options )
+    logging.debug( "report_directive.run: updated options=%s" % (str(options),) )
+
     transformer_names = []
     renderer_name = None
 
@@ -480,6 +482,7 @@ class report_directive(Directive):
     def run(self):
         document = self.state.document.current_source
         logging.info( "report_directive: starting: %s:%i" % (str(document), self.lineno) )
+
         return run(self.arguments, 
                    self.options,
                    self.lineno,

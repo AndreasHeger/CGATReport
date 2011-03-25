@@ -113,7 +113,7 @@ class TrackerCSV( Tracker ):
 
     def getTracks(self, subset = None ):
         return ["all",]
-
+    
     def getSlices(self, subset = None ):
         return []
 
@@ -240,7 +240,11 @@ class TrackerSQL( Tracker ):
         This function will return the first value in the first row
         from an SELECT statement.
         """
-        return self.execute(self.buildStatement(stmt)).fetchone()[0]
+        statement = self.buildStatement(stmt)
+        result = self.execute(statement).fetchone()
+        if result == None:
+            raise SQLError( "no result from %s" % statement )
+        return result[0]
 
     def getFirstRow( self, stmt ):
         """return a row of values from an SQL statement.

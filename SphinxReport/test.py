@@ -102,9 +102,8 @@ from matplotlib import _pylab_helpers
 
 from SphinxReport.Component import *
 from SphinxReport.Tracker import Tracker
-# from SphinxReport.Renderer import *
-# from SphinxReport.Transformer import *
 from SphinxReport import Utils
+PARAMS = Utils.getParameters( filenames = ["sphinxreport.ini",] )
 
 import SphinxReport.clean
 from SphinxReport.Dispatcher import Dispatcher
