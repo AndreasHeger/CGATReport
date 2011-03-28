@@ -136,21 +136,28 @@ class TrackerSQL( Tracker ):
     """Base class for trackers that fetch data from an SQL database.
     
     The basic tracker identifies tracks as tables that match a
-    certain pattern (:attr:`mPattern`)
+    certain pattern (:attr:`pattern`)
 
     This tracker connects to the database. Each tracker will establish
     its own connection for multi-processing.
 
-    If :attr:`mAsTable` is set, the returned tracks correspond to
-    tables.
-
+    If :attr:`as_tables` is set, the full table names will be returned.
+    The default is to apply :attr:`pattern`.
     """
+
+    # deprecated, use pattern, as_tables instead
     mPattern = ""
     mAsTables = False
+
+    pattern = "(.*)"
+    as_tables = False
 
     def __init__(self, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
         self.db = None
+        # patch patterns for compatibility. Use mPattern if defined
+        if self.mPattern:
+            self.pattern = "(.*)%s" % self.mPattern
 
     def __connect( self ):
         """lazy connection function."""
@@ -314,19 +321,14 @@ class TrackerSQL( Tracker ):
     def tracks(self):
         """return a list of all tracks that this tracker provides.
 
-        The tracks are defined as tables matching the attribute :attr:`mPattern`.
+        The tracks are defined as tables matching the attribute :attr:`pattern`.
         """
-        rx = re.compile(self.mPattern)
-        if self.mAsTables:
-            return sorted([ x.name for x in self.getTables() if rx.search( x.name ) ])
+        rx = re.compile(self.pattern)
+        tables = self.getTables( pattern = self.pattern )
+        if self.as_tables:
+            return sorted([ x.name for x in tables ] )
         else: 
-            result = []
-            for x in self.getTables():
-                if rx.search(x.name):
-                    n = rx.sub( "", x.name )
-                    if n == "": n = x.name
-                    result.append( n )
-            return result
+            return sorted([rx.search( x.name).groups()[0] for x in tables] )
 
 class TrackerSQLCheckTables(TrackerSQL):
     """Tracker that examines the presence/absence of a certain
@@ -336,12 +338,12 @@ class TrackerSQLCheckTables(TrackerSQL):
 
     :attr:`mFields` fields to join
     :attr:`mExcludePattern`: tables to exclude
-    :attr:`mPattern`: pattern to define tracks (see :class:`TrackerSql`)
+    :attr:`pattern`: pattern to define tracks (see :class:`TrackerSql`)
     """
 
     mFields = ["id",]
     mExcludePattern = None
-    mPattern = "_annotations$"
+    pattern = "_annotations$"
     mIncludePattern = "^%s_"
 
     def __init__(self, *args, **kwargs ):
@@ -377,11 +379,11 @@ class TrackerSQLCheckTable(TrackerSQL):
 
     Define the following attributes:
     :attr:`mExcludePattern`: columns to exclude
-    :attr:`mPattern`: pattern to define tracks (see :class:`TrackerSql`)
+    :attr:`pattern`: pattern to define tracks (see :class:`TrackerSql`)
     """
 
     mExcludePattern = None
-    mPattern = "_evol$"
+    pattern = "_evol$"
     
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
