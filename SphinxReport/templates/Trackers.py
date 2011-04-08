@@ -1,11 +1,10 @@
 from SphinxReport.Tracker import *
-from SphinxReport.Renderer import *
 
 class SimpleExampleData(Tracker):
    """Simple Example Data.
    """
 
-   def getTracks( self, subset = None ): return ["bicycle", "car" ]
+   tracks = ["bicycle", "car" ]
 
    def __call__(self, track, slice = None ):
        if track == "car":

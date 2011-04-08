@@ -12,7 +12,7 @@ Adding slices
 *************
 
 In the :class:`WordCounter` example, let us say we want to examine the length of words starting with vocals (``AEIOU``) 
-compared to those starting with consonants. One possibility is to extend the :meth:`getTracks()` method to
+compared to those starting with consonants. One possibility is to extend the :attr:`tracks` attribute to
 return new tracks like .py_vocals, .py_consonants, etc. This can easily become cumbersome. A better way 
 to do this is to use slices. 
 
@@ -21,11 +21,8 @@ Add the following code to :file:`Tutorial3.py`::
     class WordCounterWithSlices(Tracker):
 	"""Counting word size."""
 
-	def getTracks( self, subset = None ):
-	    return ( "all", ".py", ".rst" )
-
-	def getSlices( self, subset = None ):
-	    return ( "all", "vocals", "consonants")
+	tracks = ( "all", ".py", ".rst" )
+	slices = ( "all", "vocals", "consonants")
 
 	def __call__(self, track, slice = None ):
 	    word_sizes = []
@@ -55,7 +52,7 @@ Add the following code to :file:`Tutorial3.py`::
 
 This counter again counts word sizes in ``.py`` and ``.rst`` files, but collects counts separately
 for words starting with vocals and consonants. What is counted is determined by the ``slice`` option.
-:mod:`SphinxReport` will call the :meth:`getSlices` method and then call the Tracker with all combinations
+:mod:`SphinxReport` will query the :attr:`slices` attribute and then call the Tracker with all combinations
 of :term:`tracks` and :term:`slices`.
 
 Testing the data source::

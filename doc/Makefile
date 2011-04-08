@@ -7,7 +7,7 @@ SPHINXBUILD   = sphinxreport-build --num-jobs=4 sphinx-build
 SPHINXCLEAN   = sphinxreport-clean
 PAPER         =
 
-PUBLISH       = ~/public_html/SphinxReport
+PUBLISH       = ~/public_html/documentation/SphinxReport
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -38,7 +38,10 @@ clean:
 distclean:
 	$(SPHINXCLEAN) distclean
 
-html:
+csvdb:
+	python fill.py
+
+html: csvdb
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."

@@ -2,7 +2,6 @@ import os, sys, re, shelve, traceback, cPickle, types, itertools
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReport import DataTree
-# from SphinxReport import Renderer
 from SphinxReport.Component import *
 from SphinxReport import Utils
 from SphinxReport import Cache

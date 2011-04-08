@@ -16,7 +16,7 @@ Contents:
    :maxdepth: 2
 
    pipeline/PipelineTest.rst
-   python/Trackers.rst
+   trackers/Trackers.rst
 
 Errors:
 

@@ -27,8 +27,7 @@ the following code::
   class MyDataOneTrack(Tracker):
       """My one-tracked data."""
 
-      def getTracks( self, subset = None):
-	  return ["all",]
+      tracks = ["all",]
 
       def __call__(self, track, slice = None ):
 	  return dict( (("header1", 10), ("header2", 20)),)
@@ -41,11 +40,10 @@ The docstring::
 
       """My one tracked data."""
 
-will later reappear in the caption of the table or figure. The method :meth:`getTracks` returns
+will later reappear in the caption of the table or figure. The attribute :attr:`tracks` returns
 the tracks provided by this tracker::
 
-      def getTracks( self, subset = None ):
-      	  return ["all",]
+      tracks = ["all",]
 
 In this example, there is only one track called ``all``. The argument *subset* can
 be used to pass options from a restructured text directive to a tracker.
@@ -82,8 +80,7 @@ Add the following code to :file:`Tutorial2.py`::
     class MyDataTwoTracks(Tracker):
 	"""My one-tracked data."""
 
-	def getTracks( self, subset = None ):
-	    return ["track1","track2"]
+	tracks = ["track1","track2"]
 
 	def __call__(self, track, slice = None ):
 	    if track == "track1":

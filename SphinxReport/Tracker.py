@@ -5,13 +5,9 @@ import os, sys, re, types, copy, warnings, ConfigParser, inspect
 import sqlalchemy
 import sqlalchemy.exceptions
 
+from SphinxReport import Utils
+
 from odict import OrderedDict as odict
-
-# for sqldatabase
-if not os.path.exists("conf.py"):
-    raise IOError( "could not find conf.py" )
-
-execfile( "conf.py" )
 
 class SQLError( Exception ):
     pass
@@ -145,28 +141,32 @@ class TrackerSQL( Tracker ):
     The default is to apply :attr:`pattern`.
     """
 
-    # deprecated, use pattern, as_tables instead
-    mPattern = ""
-    mAsTables = False
-
     pattern = "(.*)"
     as_tables = False
 
     def __init__(self, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
+
         self.db = None
-        # patch patterns for compatibility. Use mPattern if defined
-        if self.mPattern:
+        
+        self.backend = kwargs.get( "backend", Utils.PARAMS["report_sql_backend"] )
+
+        # patch for mPattern and mAsTables for backwards-compatibility
+        if hasattr( self, "mPattern"):
+            warnings.warn( "mPattern is deprecated, use pattern instead", DeprecationWarning )
             self.pattern = "(.*)%s" % self.mPattern
+        if hasattr( self, "mAsTables" ):
+            warnings.warn( "mAsTables is deprecated, use as_tables instead", DeprecationWarning )
+            self.as_tables = self.mAsTables
 
     def __connect( self ):
         """lazy connection function."""
 
         if not self.db:
-            db = sqlalchemy.create_engine( sphinxreport_sql_backend )
+            db = sqlalchemy.create_engine( self.backend )
 
             if not db:
-                raise ValueError( "could not connect to database %s" % sphinxreport_sql_backend)
+                raise ValueError( "could not connect to database %s" % self.backend )
 
             db.echo = False  
 

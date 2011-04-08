@@ -22,23 +22,26 @@ class Cache( Component ):
 
     def __init__(self, cache_name, mode = "a" ):
 
-        global sphinxreport_cachedir
         self.cache_filename = None
         self._cache = None
         self.cache_name = cache_name 
+        if "report_cachedir" in Utils.PARAMS:
+            self.cache_dir = Utils.PARAMS["report_cachedir"]
+        else:
+            self.cache_dir = None
 
-        if sphinxreport_cachedir:
+        if self.cache_dir:
             
             try:
-                if sphinxreport_cachedir != None: 
-                    os.mkdir(sphinxreport_cachedir)
+                os.mkdir(self.cache_dir)
             except OSError, msg:
                 pass
         
-            if not os.path.exists(sphinxreport_cachedir): 
-                raise OSError( "could not create directory %s: %s" % (sphinxreport_cachedir, msg ))
+            if not os.path.exists(self.cache_dir): 
+                raise OSError( "could not create directory %s: %s" % (self.cache_dir, msg ))
 
-            self.cache_filename = os.path.join( sphinxreport_cachedir, cache_name )
+            self.cache_filename = os.path.join( self.cache_dir, cache_name )
+
             if mode == "r":
                 if not os.path.exists( self.cache_filename ):
                     raise ValueError( "cache %s does not exist at %s" % \

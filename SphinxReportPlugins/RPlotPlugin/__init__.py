@@ -1,5 +1,5 @@
 from SphinxReport.Component import *
-from SphinxReport import Config
+from SphinxReport import Config, Utils
 
 import os, re
 
@@ -42,17 +42,10 @@ class RPlotPlugin(Component):
         map_figure2text = {}
 
         # determine the image formats to create
-        default_format = Config.HTML_IMAGE_FORMAT
-        additional_formats = []
-
-        try:
-            additional_formats.extend( sphinxreport_images )
-        except NameError:
-            additional_formats.extend( Config.ADDITIONAL_FORMATS )
-
-        if Config.LATEX_IMAGE_FORMAT: additional_formats.append( Config.LATEX_IMAGE_FORMAT )
-
+        default_format, additional_formats = Utils.getImageFormats()
         all_formats = [default_format,] + additional_formats
+        urls = Utils.asList( Utils.PARAMS["report_urls"] )
+
         devices = R["dev.list"]()
         try:
             maxid = max( R["dev.list"]() )
@@ -141,13 +134,13 @@ class RPlotPlugin(Component):
 
                 # construct additional urls
                 code_url, data_url, rst_url = "", "", ""
-                if "code" in sphinxreport_urls:
+                if "code" in urls:
                     code_url = "`code <%(linked_codename)s>`__" % locals()
 
-                if "data" in sphinxreport_urls: 
+                if "data" in urls:
                     data_url = "`data </data/%(tracker_id)s>`__" % locals()
 
-                if "rst" in sphinxreport_urls:
+                if "rst" in urls:
                     rst_url = "`rst <%(linked_text)s>`__" % locals()
 
                 rst_output += template % locals()

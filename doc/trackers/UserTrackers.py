@@ -18,8 +18,8 @@ def getCurrentRDevice():
 
 class MatplotlibData( Tracker ):
     '''create plot using matplotlib.'''
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         s = [random.randint(0,20) for x in range(40)]
         random.shuffle( s )
@@ -31,8 +31,8 @@ class MatplotlibData( Tracker ):
 
 class RPlotData( Tracker ):
     '''create plot using R.'''
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         s = [random.randint(0,20) for x in range(40)]
         random.shuffle( s )
@@ -44,7 +44,7 @@ class RPlotData( Tracker ):
 IMAGEDIR = os.path.join( os.path.dirname( os.path.abspath( __file__ )), "..", "images")
 
 class Images( Tracker ):
-    def getTracks( self, subset = None ): return glob.glob( os.path.join( IMAGEDIR, "*.png" ) )
+    tracks = glob.glob( os.path.join( IMAGEDIR, "*.png" ) )
     def __call__(self, track, slice = None ):
         rst_text = '''
 This is a preface

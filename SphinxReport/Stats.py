@@ -548,22 +548,35 @@ def computeROC( values ):
 
     ntotal = len(values)
 
+    last_value, last_fpr = None, None
     tp, fp = 0, 0
-    tn, fn = ntotal - npositives, npositives
+    tn, fn = ntotal - npositives, npositives 
 
-    for value, g in itertools.groupby( values ):
-        
-        for k, is_positive in g:
-            if is_positive: 
-                tp += 1
-                fn -= 1
-            else: 
-                fp += 1
-                tn -= 1
+    for value, is_positive in values:
+        if is_positive: 
+            tp += 1
+            fn -= 1
+        else: 
+            fp += 1
+            tn -= 1
 
-        tpr = float(tp) / (tp + fn)
-        fpr = float(fp) / (fp + tn)
-        roc.append( (fpr,tpr) )
+        if last_value != value:
+
+            try:
+                tpr = float(tp) / (tp + fn)
+            except ZeroDivisionError:
+                tpr = 0
+
+            try:
+                fpr = float(fp) / (fp + tn)
+            except ZeroDivisionError:
+                fpr = 0
+                
+            if last_fpr != fpr:
+                roc.append( (fpr,tpr) )
+                last_fpr = fpr
+
+        last_values = value
 
     return roc
 

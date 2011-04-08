@@ -70,7 +70,7 @@ def main( argv = sys.argv ):
     dest = options.destination
 
     # create directories
-    for d in ("", "_templates", "labbook", "labbook/static", "analysis", "pipeline", "python", "templates" ):
+    for d in ("", "_templates", "labbook", "labbook/static", "analysis", "pipeline", "trackers", "templates" ):
         dd = os.path.join( dest, d )
         if not os.path.exists( dd ): os.makedirs( dd )
 
@@ -87,6 +87,7 @@ def main( argv = sys.argv ):
 
     for f in ("Makefile",
               "server.py",
+              "sphinxreport.ini",
               "conf.py",
               "analysis.rst",
               "contents.rst",
@@ -120,7 +121,7 @@ def main( argv = sys.argv ):
         copy( f, os.path.join("labbook", "static"))
         
     for f in ("Trackers.py", "Trackers.rst" ):
-        copy( f, "python" )
+        copy( f, "trackers" )
 
 
     print """
@@ -142,7 +143,7 @@ make html
 If all works, you can start adding text to files in the
 directories `analysis` and `pipeline` and pipeline.rst in the 
 main directory. Add code to collect data to the module 'Trackers.py' 
-in the  'python' directory. If you don't like the default file layout,
+in the  'trackers' directory. If you don't like the default file layout,
 it can be easily changed.
 
 """ % locals()

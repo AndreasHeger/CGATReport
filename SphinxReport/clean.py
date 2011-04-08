@@ -35,14 +35,14 @@ Targets can contain wild cards.
 """ % sys.argv[0]
 
 from SphinxReport.Tracker import Tracker
-# from SphinxReport.Renderer import *
 
+SEPARATOR="@"
+
+# import conf.py for source_suffix
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
 
 execfile( "conf.py" )
-
-SEPARATOR="@"
 
 def deleteFiles( test_f, dirs_to_check = (".",), dry_run = False ):
     """remove all files that test_f returns True for.

@@ -3,7 +3,7 @@
 
 import os, sys
 import pkg_resources
-from logging import warn, log, debug, info
+from logging import warn, log, debug, info, critical
 import logging
 import collections
 from docutils.parsers.rst import directives
@@ -15,12 +15,6 @@ logging.basicConfig(
     level=logging.DEBUG,
     format= LOGGING_FORMAT,
     stream = open( LOGFILE, "a" ) )
-
-# read configuration options - variables are imported in
-# this namespace.
-if not os.path.exists("conf.py"):
-    raise IOError( "could not find conf.py" )
-execfile( "conf.py" )
 
 class Component(object):
     '''base class for SphinxReport components.
@@ -38,6 +32,8 @@ class Component(object):
         warn( "disp%s: %s" % (id(self),msg) ) 
     def info( self, msg ):
         info( "disp%s: %s" % (id(self),msg) ) 
+    def critical( self, msg ):
+        critical( "disp%s: %s" % (id(self),msg) ) 
 
 # plugins are only initialized once they are called
 # for in order to remove problems with cyclic imports

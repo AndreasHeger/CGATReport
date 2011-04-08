@@ -1,11 +1,6 @@
 from __future__ import with_statement
 import os, sys
 
-if not os.path.exists("conf.py"):
-    raise IOError( "could not find conf.py" )
-
-execfile("conf.py")
-
 from sqlalchemy import *
 from sqlalchemy.ext.sqlsoup import SqlSoup
 

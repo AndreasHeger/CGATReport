@@ -1,11 +1,11 @@
-import re, os, sys, imp, cStringIO, types
-import traceback
+import re, os, sys, imp, cStringIO, types, traceback, logging
+
 import ConfigParser
 
 import SphinxReport
-from SphinxReport.Tracker import Tracker
 from SphinxReport.ResultBlock import ResultBlocks,ResultBlock
 from SphinxReport.Component import *
+import SphinxReport.Config
 
 from SphinxReport.odict import OrderedDict as odict
 
@@ -41,6 +41,12 @@ def quote_filename( fn ):
     latex does not permit a "." for image files - replace it with "-"
     '''
     return re.sub( "[.]", "-", fn )
+
+def asList( param ):
+    '''return a param as a list'''
+    if type(param) not in (types.ListType, types.TupleType):
+        return [x.strip() for x in param.split(",")]
+    else: return param
 
 def quote_rst( text ):
     '''quote text for restructured text.'''
@@ -122,6 +128,24 @@ def getParameters( filenames = ["sphinxreport.ini",] ):
 
 getParameters( filenames = ["sphinxreport.ini",] )
 
+def getImageFormats( ):
+    '''return list of image formats to render (in addition to the default format).'''
+    default_format = SphinxReport.Config.HTML_IMAGE_FORMAT
+
+    additional_formats = []
+
+    if "report_images" in PARAMS:
+        data = asList( PARAMS["report_images"] )
+        if len(data) % 3 != 0: raise ValueError( "need multiple of 3 number of arguments to report_images option" )
+        for x in xrange( 0, len(data), 3 ):
+            additional_formats.append( (data[x], data[x+1], int(data[x+2]) ) )
+    else:
+            additional_formats.extend( SphinxReport.Config.ADDITIONAL_FORMATS )
+
+    if SphinxReport.Config.LATEX_IMAGE_FORMAT: additional_formats.append( SphinxReport.Config.LATEX_IMAGE_FORMAT )
+        
+    return default_format, additional_formats
+
 ## read placeholders from config file in current directory
 ## It would be nice to read default values, but the location 
 ## of the documentation source files are not known to this module. 
@@ -156,23 +180,43 @@ def getModule( name ):
     debug( "entered getModule with `%s`" % name )
 
     parts = name.split(".")
-    # note that find_module is NOT recursive - implement later
-    if len(parts) > 1:
-        raise NotImplementedError( "hierarchical module names not implemented yet." )
 
-    # find in user specified directories
-    if name == "Tracker":
-        return SphinxReport.Tracker, os.path.join( SphinxReport.__path__[0], "Tracker.py")
-    else:
+    if parts[0] == "Tracker":
+        # special case: Trackers shipped with SphinxReport
+        if len(parts) > 2:
+            raise NotImplementedError( "built-in trackers are Tracker.<name> " )
+        name = "Tracker" 
+        path = [ os.path.join( SphinxReport.__path__[0] ) ]
+
+    # the first part needs to be on the python sys.path
+    elif len(parts) > 1:
         try:
-            (file, pathname, description) = imp.find_module( name )
+            (file, pathname, description ) = imp.find_module( parts[0] )
         except ImportError, msg:
             warn("could not find module %s: msg=%s" % (name,msg) )        
             raise ImportError("could not find module %s: msg=%s" % (name,msg) )
 
+        path = [ os.path.join( pathname, *parts[1:-1] ) ]
+        name = parts[-1]
+    else:
+        path = None
+
+    debug( "searching for module name=%s at path=%s" % (name, str(path)))
+
+    # find module
+    try:
+        (file, pathname, description) = imp.find_module( name, path )
+    except ImportError, msg:
+        warn("could not find module %s: msg=%s" % (name,msg) )        
+        raise ImportError("could not find module %s: msg=%s" % (name,msg) )
+
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
     debug( "loading module: %s: %s, %s, %s" % (name, file, pathname, description) )
+
+    # add to sys.path to ensure that imports in the directory work
+    if pathname not in sys.path:
+        sys.path.append( os.path.dirname( pathname ) )
     
     try:
         module = imp.load_module(name, file, pathname, description )
@@ -294,7 +338,7 @@ def buildException( stage ):
     It uses the last exception.
     '''
         
-    if sphinxreport_show_errors:
+    if PARAMS["report_show_errors"]:
         EXCEPTION_TEMPLATE = '''
 .. error:: %(exception_name)s
 

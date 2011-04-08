@@ -18,7 +18,7 @@ The options are:
    :class:`Renderer` to use.
 
 **-f/--force** 
-   force update of :class:`Tracker`a.
+   force update of a :class:`Tracker`.
 
 **-m/--transformer** transformer
    :class:`Transformer` to use.
@@ -103,21 +103,14 @@ from matplotlib import _pylab_helpers
 from SphinxReport.Component import *
 from SphinxReport.Tracker import Tracker
 from SphinxReport import Utils
-PARAMS = Utils.getParameters( filenames = ["sphinxreport.ini",] )
 
 import SphinxReport.clean
 from SphinxReport.Dispatcher import Dispatcher
-
 
 try:
     from multiprocessing import Process
 except ImportError:
     from threading import Thread as Process
-
-if not os.path.exists("conf.py"):
-    raise IOError( "could not find conf.py" )
-
-execfile( "conf.py" )
 
 RST_TEMPLATE = """.. _%(label)s:
 
@@ -213,7 +206,7 @@ def main():
         do_show = True,
         do_print = True,
         force = False,
-        dir_trackers = "python",
+        dir_trackers = "trackers",
         label = "GenericLabel",
         caption = "add caption here" )
     
@@ -224,7 +217,7 @@ def main():
         
     # configure options
     options.dir_trackers = os.path.abspath( os.path.expanduser( options.dir_trackers ) )
-
+    sys.path.append( options.dir_trackers )
     # test plugins
     kwargs = {}
     for x in options.options:

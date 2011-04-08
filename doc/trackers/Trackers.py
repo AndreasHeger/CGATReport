@@ -4,8 +4,8 @@ from SphinxReport.Tracker import Tracker
 from SphinxReport.odict import OrderedDict as odict
 
 class LabeledDataExample( Tracker ):
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         if slice == "slice1":
             return odict( (("column1", 10),
@@ -16,8 +16,8 @@ class LabeledDataExample( Tracker ):
                             ("column3", 5),) )
 
 class LabeledDataLargeExample( Tracker ):
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return [ "track%i" % x for x in range(0,100) ]
+    slices = ("slice1", "slice2")
+    tracks = [ "track%i" % x for x in range(0,100) ]
     def __call__(self, track, slice = None):
         if slice == "slice1":
             return odict( (("column1", 10),
@@ -28,8 +28,8 @@ class LabeledDataLargeExample( Tracker ):
                             ("column3", 5),) )
 
 class LabeledDataWithErrorsExample( Tracker ):
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         if slice == "slice1":
             return odict( ( 
@@ -52,8 +52,8 @@ class LabeledDataWithErrorsExample( Tracker ):
                     ) )
 
 class LabeledDataWithErrorsAndLabelsExample( Tracker ):
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         if slice == "slice1":
             return odict( ( 
@@ -77,8 +77,8 @@ class LabeledDataWithErrorsAndLabelsExample( Tracker ):
 
 class SingleColumnDataExample( Tracker ):
     '''return a single column of data.'''
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         s = [random.randint(0,20) for x in range(40)]
         random.shuffle( s )
@@ -86,8 +86,8 @@ class SingleColumnDataExample( Tracker ):
 
 class SingleColumnDataLargeExample( Tracker ):
     '''return a single column of data.'''
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return [ "track%i" % x for x in range(0,20) ]
+    slices = ("slice1", "slice2")
+    tracks = [ "track%i" % x for x in range(0,20) ]
     def __call__(self, track, slice = None):
         s = [random.randint(0,20) for x in range(40)]
         random.shuffle( s )
@@ -96,8 +96,8 @@ class SingleColumnDataLargeExample( Tracker ):
 
 class SingleColumnDataWithErrorExample( Tracker ):
     '''return a single column of data.'''
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         s = [random.randint(0,20) for x in range(40)]
         e = [random.randint(0,3) for x in range(40)]
@@ -107,8 +107,7 @@ class SingleColumnDataWithErrorExample( Tracker ):
 
 class SingleColumnDataExampleWithoutSlices( Tracker ):
     '''return a single column of data.'''
-    def getSlices( self, subset = None ): return []
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         s = [random.randint(0,20) for x in range(40)]
         random.shuffle( s )
@@ -117,8 +116,8 @@ class SingleColumnDataExampleWithoutSlices( Tracker ):
 class MultipleColumnDataExample( Tracker ):
     '''multiple columns each with a column with data.'''
     mColumns = [ "col1", "col2", "col3" ]
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2")
     def __call__(self, track, slice = None):
         data = []
         if slice == "slice1":
@@ -132,8 +131,8 @@ class MultipleColumnDataExample( Tracker ):
 class MultipleColumnDataFullExample( Tracker ):
     '''multiple columns each with a column with data.'''
     mColumns = [ "col1", "col2", "col3" ]
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2")
     def __call__(self, track, slice = None):
         data = []
         if slice == "slice1":
@@ -147,8 +146,8 @@ class MultipleColumnDataFullExample( Tracker ):
 class MultipleColumnsExample( Tracker ):
     '''multiple columns each with single value.'''
     mColumns = [ "col1", "col2", "col3" ]
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2")
     def __call__(self, track, slice = None):
         data = []
         if slice == "slice1":
@@ -161,30 +160,30 @@ class MultipleColumnsExample( Tracker ):
 
 class ErrorInTracker1( Tracker ):
     '''A tracker that creates an error - exception while collecting data.'''
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2")
     def __call__(self, track, slice = None):
         raise ValueError("testing: could not collect data")
     
 class ErrorInTracker2( Tracker ):
     '''A tracker that creates an error - problems while returning tracks.'''
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): raise ValueError("testing: did not return trackers.")
+    slices = ("slice1", "slice2")
+    def getTracks( self ):
+        raise ValueError( "testing: could not build tracks" )
     def __call__(self, track, slice = None):
         return odict( (("data", range(0,10)),) )
 
 class ErrorInTracker3( Tracker ):
     '''A tracker that creates an error - problems while returning tracks.'''
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2")
     def __call__(self, track, slice = None):
         return None
 
-
-
 class LabeledDataTest( Tracker ):
-    def getSlices( self, subset = None ): return "slice1", "slice2"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ("slice1", "slice2")
+    tracks = ("track1", "track2", "track3")
+
     def __call__(self, track, slice = None):
         if slice == "slice1":
             return odict( (("column1", 10),

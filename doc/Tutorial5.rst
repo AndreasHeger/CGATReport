@@ -67,7 +67,7 @@ the following code::
 
     class ExpressionLevel(TrackerSQL):
 	"""Expression level measurements."""
-	mPattern = "_data$"
+	pattern = "(.*)_data$"
 
 	def __call__(self, track, slice = None ):
 	    statement = "SELECT expression FROM %s_data" % track
@@ -75,9 +75,9 @@ the following code::
 	    return { "expression" : data }
 
 Note that this tracker is derived from :class:`Tracker.TrackerSQL`. The base
-class provides two options. It implements a :meth:`getTracks` method that
+class provides two options. It implements a :meth:`tracks` property that
 automatically queries the database for tables matching the pattern 
-in ``mPattern``. It also defines convenience functions such as :meth:`getValues`.
+in ``pattern``. It also defines convenience functions such as :meth:`getValues`.
 :meth:`getValues` executes an SQL statement that returns rows of single
 values and converts these to a python list.
 

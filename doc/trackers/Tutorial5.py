@@ -2,7 +2,7 @@ from SphinxReport.Tracker import *
 
 class ExpressionLevel(TrackerSQL):
     """Expression level measurements."""
-    mPattern = "_data$"
+    pattern = "(.*)_data$"
 
     def __call__(self, track, slice = None ):
         statement = "SELECT expression FROM %s_data" % track
@@ -12,8 +12,7 @@ class ExpressionLevel(TrackerSQL):
 class ExpressionLevelWithSlices(ExpressionLevel):
     """Expression level measurements."""
 
-    def getSlices( self, subset = None ):
-        return ( "housekeeping", "regulation" )
+    slices = ( "housekeeping", "regulation" )
     
     def __call__(self, track, slice = None ):
         if not slice: where = ""

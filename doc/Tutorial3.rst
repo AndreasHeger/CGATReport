@@ -25,8 +25,7 @@ the following code::
     class WordCounter(Tracker):
 	"""Counting word size."""
 
-	def getTracks( self, subset = None ):
-	    return ( "all", ".py", ".rst" )
+	tracks = ( "all", ".py", ".rst" )
 
 	def __call__(self, track, slice = None ):
 	    word_sizes = []

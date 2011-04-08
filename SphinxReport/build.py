@@ -37,6 +37,7 @@ try:
 except ImportError:
     from threading import Thread as Process
 
+# import conf.py for source_suffix
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
 

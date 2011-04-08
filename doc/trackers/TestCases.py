@@ -6,8 +6,9 @@ class LongLabelsSmall( Tracker ):
     """example with long labels."""
     wordsize = 5
     numwords = 5
-    def getSlices( self, subset = None ): return "small", "large", "gigantic"
-    def getTracks( self, subset = None ): return "track1", "track2", "track3"
+    slices = ( "small", "large", "gigantic" )
+    tracks = ( "track1", "track2", "track3" )
+
     def __call__(self, track, slice = None):
         if slice == "small": ncolumns = 10
         elif slice == "large": ncolumns = 40
@@ -23,10 +24,10 @@ class LargeMatrix( Tracker ):
     """example of a large matrix with long labels."""
     wordsize = 5
     numwords = 5
-    ntracks = 50
 
-    def getSlices( self, subset = None ): return "small", "large"
-    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.ntracks)]
+    slices = ("small", "large")
+    tracks = ["track%i" % i for i in range(5)]
+
     def __call__(self, track, slice = None):
         if slice == "small": ncolumns = 10
         elif slice == "large": ncolumns = 40
@@ -40,11 +41,10 @@ class LargeMatrix( Tracker ):
 class LayoutTest( Tracker ):
     """Layout testing."""
     nslices = 3
-    ntracks = 5
     nsamples = 100
 
-    def getSlices( self, subset = None ): return ["slice%i" % i for i in range(self.nslices)]
-    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.ntracks)]
+    slices = ["slice%i" % i for i in range(3)]
+    tracks = ["track%i" % i for i in range(5)]
 
     def __call__(self, track, slice = None):
         return dict( ( ("data", [ random.gauss( 0,1 ) for x in range(self.nsamples) ]),))
@@ -52,11 +52,10 @@ class LayoutTest( Tracker ):
 class MultipleHistogramTest( Tracker ):
     """Layout testing."""
     nslices = 3
-    ntracks = 5
     nsamples = 100
 
-    def getSlices( self, subset = None ): return ["slice%i" % i for i in range(self.nslices)]
-    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.ntracks)]
+    slices = ["slice%i" % i for i in range(3)]
+    tracks = ["track%i" % i for i in range(5)]
 
     def __call__(self, track, slice = None):
         return dict( ( ("bin", "value-set1", "value-set2"),
@@ -67,11 +66,10 @@ class MultipleHistogramTest( Tracker ):
 
 class MultiLevelTable( Tracker ):
 
-    ntracks = 5
     ncols = 3
     mNumLevels = 3
 
-    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.ntracks)]
+    tracks = ["track%i" % i for i in range(5)]
 
     def __call__(self, track, slice = None ):
         data = [ \
@@ -83,11 +81,10 @@ class MultiLevelTable( Tracker ):
 class LargeTable( Tracker ):
     '''test case covering rendering large tables.'''
 
-    ntracks = 5
     ncols = 40
     nrows = 200
 
-    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.ntracks)]
+    tracks = ["track%i" % i for i in range(5)]
     
     def __call__(self, track, slice = None ):
 
@@ -101,9 +98,7 @@ class VeryLargeMatrix( Tracker ):
     cache = False
 
     ncols = 7000
-    ntracks = 200
-
-    def getTracks( self, subset = None ): return ["track%i" % i for i in range(self.ntracks)]
+    tracks = ["track%i" % i for i in range(200)]
 
     def __call__(self, track, slice = None):
         
