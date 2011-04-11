@@ -20,6 +20,7 @@ Contents:
    Roles.rst
    Gallery.rst
    Tutorials.rst
+   Advanced.rst
    Reference.rst
    Glossary.rst
    Developing.rst

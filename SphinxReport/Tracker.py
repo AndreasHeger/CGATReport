@@ -1,6 +1,6 @@
 from __future__ import with_statement 
 
-import os, sys, re, types, copy, warnings, ConfigParser, inspect
+import os, sys, re, types, copy, warnings, ConfigParser, inspect, logging
 
 import sqlalchemy
 import sqlalchemy.exceptions
@@ -45,7 +45,7 @@ class Tracker(object):
     tracks = []
     slices = []
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         pass
 
     def getTracks( self, subset = None ):
@@ -144,12 +144,18 @@ class TrackerSQL( Tracker ):
     pattern = "(.*)"
     as_tables = False
 
-    def __init__(self, *args, **kwargs ):
+    def __init__(self, backend = None, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
 
         self.db = None
-        
-        self.backend = kwargs.get( "backend", Utils.PARAMS["report_sql_backend"] )
+
+        if backend != None:
+            # backend given - use it
+            self.backend = backend
+        else:
+            # not defined previously (by mix-in class) get default
+            if not hasattr( self, "backend" ):
+                self.backend = Utils.PARAMS["report_sql_backend"]
 
         # patch for mPattern and mAsTables for backwards-compatibility
         if hasattr( self, "mPattern"):
@@ -163,6 +169,8 @@ class TrackerSQL( Tracker ):
         """lazy connection function."""
 
         if not self.db:
+            
+            logging.debug( "connecting to %s" % self.backend )
             db = sqlalchemy.create_engine( self.backend )
 
             if not db:
@@ -451,6 +459,71 @@ class Empty( Tracker ):
 
     def __call__(self, track, slice = None ):
         return odict( (("a", 1),))
+
+class SingleTableTrackerRows( TrackerSQL ):
+    '''Tracker to interrogate a single table.
+
+    Rows are unique in *field*.
+    '''
+    exclude_columns = ()
+    table = None
+    fields = ("track",)
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    @property
+    def tracks( self ):
+        d = self.get( "SELECT DISTINCT %s FROM %s" % (",".join(self.fields), self.table ))
+        if len(self.fields) == 1:
+            return tuple( [x[0] for x in d ] )
+        else:
+            return tuple( [tuple(x) for x in d ] )
+
+    @property
+    def slices( self ):
+        columns = self.getColumns( self.table )
+        return [ x for x in columns if x not in self.exclude_columns and x not in self.fields ]
+
+    def __call__(self, track, slice = None ):
+        if len(self.fields) == 1: track = (track,)
+        wheres = " AND ".join([ "%s = '%s'" % (x,y) for x,y in zip( self.fields, track ) ] )
+        return self.getValue( "SELECT %(slice)s FROM %(table)s WHERE %(wheres)s" )
+
+class SingleTableTrackerColumns( TrackerSQL ):
+    exclude_columns = ("track,")
+    table = None
+    column = None
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    @property
+    def tracks(self):
+        columns = self.getColumns( self.table )
+        return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
+
+    def __call__(self, track, slice = None ):
+        data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
+        return data
+
+class SingleTableTrackerHistogram( TrackerSQL ):
+    exclude_columns = ("track,")
+    table = None
+    column = None
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    @property
+    def tracks(self):
+        columns = self.getColumns( self.table )
+        return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
+
+    def __call__(self, track, slice = None ):
+        data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
+        return data
+
 
 def prettyFloat( val, format = "%5.2f" ):
     """output a float or "na" if not defined"""

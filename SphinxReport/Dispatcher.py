@@ -106,26 +106,51 @@ class Dispatcher(Component):
 
         return result
 
-    def buildTracksOrSlices( self, obj, fun, input_list = None ):
+    def buildTracksOrSlices( self, obj, attr, fun, input_list = None ):
         '''determine tracks/slices from a tracker.
 
-        All possible tracks are collected from the tracker. 
+        All possible tracks/slices are collected from the tracker via
+        the *attr* attribute or *fun* function.
 
         If input_list is given, they are then filtered by:
 
         * exact matches to entries in input_list
         * pattern matches to entries in input list that starting with "r("
         
-        If there is no match, the entry in input_list is submitted to tracker
-        as a subset command.
-        
+        If there is no match, the entry in input_list is submitted to 
+        tracker.fun as a ``subset`` parameter for custom processing.
         '''
         result = []
 
-        if not hasattr( obj, fun ):
+        if not hasattr( obj, fun ) and not hasattr( obj, attr ):
             # not a tracker, hence no tracks/slices
             return True, result
 
+        if hasattr( obj, attr ):
+            # get tracks/slices via attribute
+            all_entries = getattr( obj, attr )
+            if all_entries:
+                if type(result) in types.StringTypes: result=[result,]
+                if input_list:
+                    for s in input_list:
+                        if s in all_entries:
+                            # collect exact matches
+                            result.append( s )
+                        elif s.startswith("r(") and s.endswith(")"):
+                            # collect pattern matches:
+                            # remove r()
+                            s = s[2:-1] 
+                            # remove flanking quotation marks
+                            if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
+                            rx = re.compile( s )
+                            result.extend( [ x for x in all_entries if rx.search( x ) ] )
+                else:
+                    result = all_entries
+
+                return False, result
+
+        # get tracks/slices via function call
+        # function
         f = getattr(obj, fun )
         if input_list:
 
@@ -145,18 +170,17 @@ class Dispatcher(Component):
                     result.extend( [ x for x in all_entries if rx.search( x ) ] )
                 else:
                     result.extend( f( subset = [s,] ) )
-                    
-#            else:
-#                result = input_list
         else:
             result = f( subset = None )
             
         if type(result) in types.StringTypes: result=[result,]
+
         return False, result
 
     def buildTracks( self ):
         '''determine the tracks'''
         is_function, self.tracks = self.buildTracksOrSlices( self.tracker, 
+                                                             "tracks", 
                                                              "getTracks", 
                                                              self.mInputTracks )
         return is_function
@@ -164,6 +188,7 @@ class Dispatcher(Component):
     def buildSlices( self ):
         '''determine the slices'''
         is_function, self.slices = self.buildTracksOrSlices( self.tracker, 
+                                                             "slices",
                                                              "getSlices", 
                                                              self.mInputSlices )
         return is_function
@@ -218,7 +243,6 @@ class Dispatcher(Component):
                                                                                             len(tracks) * len(slices), 
                                                                                             len(tracks), str(tracks),
                                                                                             len(slices), str(slices) ) )
-        
     def transform(self): 
         '''call data transformers
         '''
