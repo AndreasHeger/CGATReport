@@ -42,6 +42,7 @@ class Tracker(object):
     # set to False, if results of tracker should be cached
     cache = True
 
+    # default: empty tracks/slices
     tracks = []
     slices = []
 
@@ -165,7 +166,7 @@ class TrackerSQL( Tracker ):
             warnings.warn( "mAsTables is deprecated, use as_tables instead", DeprecationWarning )
             self.as_tables = self.mAsTables
 
-    def __connect( self ):
+    def connect( self ):
         """lazy connection function."""
 
         if not self.db:
@@ -195,7 +196,7 @@ class TrackerSQL( Tracker ):
         Note that this function does not return views.
         """
         # old version of sqlalchemy have no sorted_tables attribute
-        self.__connect()
+        self.connect()
         try:
             sorted_tables = self.metadata.sorted_tables
         except AttributeError, msg:
@@ -215,12 +216,12 @@ class TrackerSQL( Tracker ):
 
     def hasTable( self, name ):
         """return table with name *name*."""
-        self.__connect()
+        self.connect()
         return name in set( [x.name for x in self.metadata.sorted_tables])
 
     def getTable( self, name ):
         """return table with name *name*."""
-        self.__connect()
+        self.connect()
         try:
             for table in self.metadata.sorted_tables:
                 if table.name == name: return table
@@ -235,7 +236,7 @@ class TrackerSQL( Tracker ):
         return [ re.sub( "%s[.]" % name, "", x.name) for x in c ]
 
     def execute(self, stmt ):
-        self.__connect()
+        self.connect()
         try:
             r = self.db.execute(stmt)
         except sqlalchemy.exceptions.SQLError, msg:
@@ -325,8 +326,7 @@ class TrackerSQL( Tracker ):
         """return an iterator of SQL results."""
         return self.execute(stmt)
     
-    @property
-    def tracks(self):
+    def getTracks(self, *args, **kwargs):
         """return a list of all tracks that this tracker provides.
 
         The tracks are defined as tables matching the attribute :attr:`pattern`.

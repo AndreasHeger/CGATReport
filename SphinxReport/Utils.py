@@ -358,13 +358,13 @@ def buildException( stage ):
         if len(xlines) > 0: lines = xlines
         # add prefix of 6 spaces
         prefix = "\n" + " " * 6
-        exception_stack  = prefix + prefix.join( "".join(lines).split("\n") )
+        exception_stack  = quote_rst( prefix + prefix.join( "".join(lines).split("\n") ))
         if exceptionType.__module__ == "exceptions":
-            exception_name   = exceptionType.__name__
+            exception_name   = quote_rst(exceptionType.__name__)
         else:
-            exception_name   = exceptionType.__module__ + '.' + exceptionType.__name__
+            exception_name   = quote_rst( exceptionType.__module__ + '.' + exceptionType.__name__ )
 
-        exception_value  = str(exceptionValue)
+        exception_value  = quote_rst( str(exceptionValue) )
 
         return ResultBlocks( 
             ResultBlocks( 

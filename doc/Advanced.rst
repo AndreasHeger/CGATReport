@@ -93,6 +93,9 @@ refrain from using and of the generic sections like ``[report]`` or ``[general]`
 The best way to do this is to create a base tracker that all trackers within a project are derived from. 
 In the example below, the trackers are all derived from the :class:`RnaseqTracker` class::
 
+   from SphinxReport.Tracker import *
+   from SphinxReport.Utils import PARAMS as P
+
    EXPORTDIR=P['rnaseq_exportdir']
    DATADIR=P['rnaseq_datadir']
    DATABASE=P['rnaseq_backend']
