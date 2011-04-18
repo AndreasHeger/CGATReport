@@ -488,7 +488,7 @@ class SingleTableTrackerRows( TrackerSQL ):
     def __call__(self, track, slice = None ):
         if len(self.fields) == 1: track = (track,)
         wheres = " AND ".join([ "%s = '%s'" % (x,y) for x,y in zip( self.fields, track ) ] )
-        return self.getValue( "SELECT %(slice)s FROM %(table)s WHERE %(wheres)s" )
+        return self.getValue( "SELECT %(slice)s FROM %(table)s WHERE %(wheres)s" ) 
 
 class SingleTableTrackerColumns( TrackerSQL ):
     exclude_columns = ("track,")

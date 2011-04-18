@@ -110,7 +110,9 @@ class DataTree( object ):
             del work[path[-1]]
         
     def __str__(self):
-        return "< datatree: %s >" % str(self.getPaths() )
+        paths = self.getPaths()
+        if len(paths) == 0: return "NA"
+        else: return "< datatree: %s >" % str(paths)
 
     def __getattr__(self, name):
         return getattr(self._data, name)

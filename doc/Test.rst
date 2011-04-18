@@ -19,4 +19,5 @@ Here are various examples to test pathological plots.
    TestConfig.rst 
    TestTable.rst
    TestLargeMatrix.rst
+   TestRRendering.rst
    TestSandbox.rst

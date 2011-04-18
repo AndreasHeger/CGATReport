@@ -230,7 +230,7 @@ class Dispatcher(Component):
             if slices:
                 for slice in slices:
                     d = self.getData( track, slice )
-                    if not d: continue
+                    if d == None: continue
                     if type(d) in Utils.ContainerTypes:
                         self.data[track][slice] = DataTree.DataTree( d )
                     else:
@@ -289,6 +289,7 @@ class Dispatcher(Component):
         tracks, slices = self.tracks, self.slices
 
         if nlevels < renderer_nlevels:
+            grouped_by = "dummy"
             # add some dummy levels if levels is not enough
             d = self.data
             for x in range( renderer_nlevels - nlevels):
@@ -297,6 +298,8 @@ class Dispatcher(Component):
 
         elif nlevels >= renderer_nlevels:
             if self.groupby == "none":
+                # split at very lowest level
+                grouped_by = "none"
                 paths = list(itertools.product( *labels[:-renderer_nlevels] ))
                 for path in paths:
                     subtitle = "/".join( path )
@@ -305,13 +308,16 @@ class Dispatcher(Component):
                     for key,value in work.iteritems():
                         vals = DataTree.DataTree( odict( ((key,value),) ))
                         results.append( self.renderer( vals, path = path ))
-
             elif nlevels == renderer_nlevels and self.groupby == "track":
+                # group by track
+                grouped_by = "track"
                 for track in all_tracks:
                     vals = DataTree.DataTree( odict( ((track, self.data[track]),)))
                     results.append( self.renderer( vals, path = (track,) ) )
                 
             elif nlevels > renderer_nlevels and self.groupby == "track":
+                # group by track
+                grouped_by = "track"
                 for track in all_tracks:
                     # slices can be absent
                     d = [ (x,self.data[track][x]) for x in all_slices if x in self.data[track] ]
@@ -320,17 +326,23 @@ class Dispatcher(Component):
                     results.append( self.renderer( vals, path = (track,) ) )
 
             elif nlevels > renderer_nlevels and self.groupby == "slice" and len(self.slices) > 0:
+                # group by slice
+                grouped_by = "slice"
                 for slice in all_slices:
                     d = [ (x,self.data[x][slice]) for x in all_tracks if slice in self.data[x] ]
                     if len(d) == 0: continue
                     vals = DataTree.DataTree( odict( d ) )
                     results.append( self.renderer( vals, path = (slice,) ) )
-
             elif self.groupby == "all":
+                # group everything together
+                grouped_by = "all"
+                results.append( self.renderer( self.data, path = () ) )
+            else:
+                # neither group by slice or track ("ungrouped")
+                grouped_by = "default"
                 results.append( self.renderer( self.data, path = () ) )
 
-            else:
-                results.append( self.renderer( self.data, path = () ) )
+        self.debug( "grouping by %s " % grouped_by )
 
         if len(results) == 0:
             self.warn("tracker returned no data.")

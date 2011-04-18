@@ -28,7 +28,7 @@ def ExampleWithoutData( data, path ):
 
     # return a place holder for this figure
     return ResultBlocks(
-        ResultBlock( "#$mpl 0$#\n", ""),
+        ResultBlock( "#$mpl 1$#\n", ""),
         title = "MyTitle")
 
 def ExampleData1():

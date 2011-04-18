@@ -94,6 +94,7 @@ setup(name='SphinxReport',
             'render-box-plot=SphinxReportPlugins.Plotter:BoxPlot',
             'render-r-line-plot=SphinxReportPlugins.RPlotter:LinePlot',
             'render-r-box-plot=SphinxReportPlugins.RPlotter:BoxPlot',
+            'render-r-smooth-scatter-plot=SphinxReportPlugins.RPlotter:SmoothScatterPlot',
             ]
             },
       )

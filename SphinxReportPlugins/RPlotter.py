@@ -31,6 +31,12 @@ def parseRanges(r):
     else: r[1] = float(r[1])
     return r
 
+def getCurrentRDevice():
+    '''return the numerical device id of the current device.'''
+    #R.dev_off()
+    #return R.dev_cur().values()[0]
+    return R["dev.cur"]()[0]
+
 class Plotter(object):
     """Base class for Renderers that do simple 2D plotting.
 
@@ -143,7 +149,7 @@ class Plotter(object):
                         
     def endPlot( self, work, path ):
         # currently: collects only single plots.
-        figid = R.dev_cur().values()[0]
+        figid = getCurrentRDevice()
         blocks = ResultBlocks( ResultBlock( "\n".join( ("#$rpl %i$#" % (figid), "")), 
                                             title = "/".join(path) ) )
         return blocks
@@ -248,7 +254,7 @@ class LinePlot( Renderer, Plotter ):
                                 
                 self.xlabels.append(xlabel)
 
-        figid = R.dev_cur().values()[0]
+        figid = getCurrentRDevice()
         blocks = ResultBlocks( ResultBlock( "\n".join( ("#$rpl %i$#" % (figid), "")), 
                                             title = "/".join(path) ) )
 
@@ -284,10 +290,53 @@ class BoxPlot( Renderer, Plotter ):
                 assert Utils.isArray( values ), "work is of type '%s'" % values
                 d = [ x for x in values if x != None ]
                 if len(d) > 0:
-                    all_data.append( d )
+                    all_data.append( ro.FloatVector( d ) )
                     legend.append( "/".join((line,label)))
 
         R.boxplot( all_data )
 
         return self.endPlot( work, path )
+
+class SmoothScatterPlot(Renderer, Plotter):
+    """A smoothed scatter plot.
+
+    See R.smoothScatter.
+
+    This :class:`Renderer` requires one levels:
+
+    coords[dict]
+    """
+    options = Renderer.options + Plotter.options
+    
+    nlevels = 1
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def render(self, work, path ):
         
+        self.startPlot()
+        nplotted = 0
+
+        xlabels, ylabels = [], []
+
+        if len(work) < 2:
+            raise ValueError( "requiring two coordinates, only got %s" % str(work.keys()))
+
+        xlabel, ylabel = work.keys()[:2]
+        xvals, yvals = Stats.filterNone( work.values()[:2])
+
+        if len(xvals) == 0 or len(yvals) == 0:
+            raise ValueError("no data" )
+
+        # apply log transformation on data not on plot
+        if self.logscale:
+            if "x" in self.logscale:
+                xvals = R.log10(xvals)
+            if "y" in self.logscale:
+                yvals = R.log10(yvals)
+                
+        R.smoothScatter( xvals, yvals, xlab=xlabel, ylab=ylabel)
+
+        return self.endPlot( work, path )

@@ -82,7 +82,8 @@ class RPlotPlugin(Component):
                     raise ValueError( "format '%s' not supported" % format )
 
                 if not os.path.exists( outpath ):
-                    raise ValueError( "file %s could not be created" )
+                    continue
+                    # raise ValueError( "rendering problem: image file was not be created: %s" % outpath )
 
                 if format=='png':
                     thumbdir = os.path.join(outdir, 'thumbnails')

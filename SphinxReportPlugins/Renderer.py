@@ -1,4 +1,4 @@
-import os, sys, re, shelve, traceback, cPickle, types, itertools
+import os, sys, re, shelve, traceback, cPickle, types, itertools, collections
 
 # so that arange is available in eval
 import numpy
@@ -6,16 +6,12 @@ import numpy.ma
 from numpy import *
 from math import *
 
-import Stats
-import Histogram
-import collections
-import CorrespondenceAnalysis
-
 from SphinxReport.ResultBlock import ResultBlock, EmptyResultBlock, ResultBlocks
 from SphinxReport.odict import OrderedDict as odict
 from SphinxReport.DataTree import DataTree, path2str, tree2table
 from SphinxReport.Component import *
 from SphinxReport import Utils
+from SphinxReport import CorrespondenceAnalysis
 
 from docutils.parsers.rst import directives
 
@@ -537,11 +533,21 @@ class Matrix(TableBase):
         self.debug("constructing matrix")
         for x,row in enumerate(rows):
             for y, column in enumerate(columns):
-                # deal with empty values from DataTree
+                # missing values from DataTree
                 try:
-                    matrix[x,y] = take_f( row, column )
+                    v = take_f( row, column )
                 except KeyError:
+                    continue
+
+                # empty values from DataTree
+                try:
+                    if len(v) == 0: continue
+                except TypeError:
                     pass
+
+                # convert
+                try:
+                    matrix[x,y] = v
                 except ValueError:
                     raise ValueError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
                 except TypeError:
