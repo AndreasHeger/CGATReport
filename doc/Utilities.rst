@@ -13,4 +13,8 @@ in detail.
 
 .. automodule:: SphinxReport.test
 
+.. automodule:: SphinxReport.profile
+
 .. automodule:: SphinxReport.get
+
+.. automodule:: SphinxReport.serve
