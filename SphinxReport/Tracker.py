@@ -220,7 +220,7 @@ class TrackerSQL( Tracker ):
         return name in set( [x.name for x in self.metadata.sorted_tables])
 
     def getTable( self, name ):
-        """return table with name *name*."""
+        """return table or view with name *name*."""
         self.connect()
         try:
             for table in self.metadata.sorted_tables:

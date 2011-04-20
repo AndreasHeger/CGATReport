@@ -92,9 +92,10 @@ class MatplotlibPlugin(Component):
 
             # for links - path is from rst file to internal root dir
             # one rst file for all
-            relative_imagepath = re.sub( "\\\\", "/", os.path.join( rst2rootdir, template_name ) )
+            relative_imagepath_rst = re.sub( "\\\\", "/", os.path.join( rst2rootdir, template_name ) )
+            relative_imagepath_img = re.sub( "\\\\", "/", os.path.join( rst2rootdir, outname ) )
 
-            linked_text = relative_imagepath + ".txt"
+            linked_text = relative_imagepath_rst + ".txt"
 
             if Config.HTML_IMAGE_FORMAT:
                 id, format, dpi = Config.HTML_IMAGE_FORMAT
@@ -104,19 +105,18 @@ class MatplotlibPlugin(Component):
    .. image:: %(linked_image)s
 %(display_options)s
 
-   [%(code_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
+   [%(code_url)s %(rst_url)s %(data_url)s %(extra_images)s]
 '''
-
                 linked_image = imagepath + ".%s" % format
 
                 extra_images=[]
                 for id, format, dpi in additional_formats:
-                    extra_images.append( "`%(id)s <%(relative_imagepath)s.%(format)s>`__" % locals())
+                    extra_images.append( "`%(id)s <%(relative_imagepath_img)s.%(format)s>`__" % locals())
                 if extra_images: extra_images = " " + " ".join( extra_images)
                 else: extra_images = ""
 
                 # construct additional urls
-                code_url, data_url, rst_url = "", "", ""
+                code_url, data_url, rst_url, table_url = "", "", "", ""
                 if "code" in urls:
                     code_url = "`code <%(linked_codename)s>`__" % locals()
 
