@@ -33,3 +33,11 @@ Pre-built images can be added, including flanking text.
    Plot pre-built images
 
 
+They can also appear in a table:
+
+.. report:: UserTrackers.Images2
+   :render: user
+
+   Plot pre-built images
+
+

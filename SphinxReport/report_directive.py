@@ -48,107 +48,6 @@ def exception_to_str(s = None):
     return sh.getvalue()
 
 
-def layoutBlocks( blocks, layout = "column"):
-    """layout blocks of rst text.
-
-    layout can be one of "column", "row", or "grid".
-
-    The layout uses an rst table to arrange elements.
-    """
-
-    lines = []
-    if len(blocks) == 0: return lines
-
-    # flatten blocks
-    x = ResultBlocks()
-    for b in blocks:
-        if b.title: b.updateTitle( b.title, "prefix" )
-        x.extend( b )
-    blocks = x
-
-    if layout == "column":
-        for block in blocks: 
-            if block.title:
-                lines.extend( block.title.split("\n") )
-                lines.append( "" )
-            else:
-                logging.warn( "report_directive.layoutBlocks: missing title" )
-
-            lines.extend(block.text.split("\n"))
-        lines.extend( [ "", ] )
-        return lines
-    elif layout in ("row", "grid"):
-        if layout == "row": ncols = len(blocks)
-        elif layout == "grid": ncols = int(math.ceil(math.sqrt( len(blocks) )))
-    elif layout.startswith("column"):
-        ncols = min( len(blocks), int(layout.split("-")[1]))
-    else:
-        raise ValueError( "unknown layout %s " % layout )
-
-    # compute column widths
-    widths = [ x.getWidth() for x in blocks ]
-    text_heights = [ x.getTextHeight() for x in blocks ]
-    title_heights = [ x.getTitleHeight() for x in blocks ]
-
-    columnwidths = []
-    for x in range(ncols):
-        columnwidths.append( max( [widths[y] for y in range( x, len(blocks), ncols ) ] ) )
-
-    separator = "+%s+" % "+".join( ["-" * x for x in columnwidths ] )
-
-    ## add empty blocks
-    if len(blocks) % ncols:
-        blocks.extend( [ ResultBlock( "", "" )]  * (ncols - len(blocks) % ncols) )
-
-    for nblock in range(0, len(blocks), ncols ):
-
-        ## add text
-        lines.append( separator )
-        max_height = max( text_heights[nblock:nblock+ncols] )
-        new_blocks = ResultBlocks()
-        
-        for xx in range(nblock, min(nblock+ncols,len(blocks))):
-            txt, col = blocks[xx].text.split("\n"), xx % ncols
-
-            max_width = columnwidths[col]
-
-            # add missig lines 
-            txt.extend( [""] * (max_height - len(txt)) )
-            # extend lines
-            txt = [ x + " " * (max_width - len(x)) for x in txt ]
-
-            new_blocks.append( txt )
-
-        for l in zip( *new_blocks ):
-            lines.append( "|%s|" % "|".join( l ) )
-
-        ## add subtitles
-        max_height = max( title_heights[nblock:nblock+ncols] )
-
-        if max_height > 0:
-
-            new_blocks = ResultBlocks()
-            lines.append( separator )
-
-            for xx in range(nblock, min(nblock+ncols,len(blocks))):
-                
-                txt, col = blocks[xx].title.split("\n"), xx % ncols
-
-                max_width = columnwidths[col]
-                # add missig lines 
-                txt.extend( [""] * (max_height - len(txt) ) )
-                # extend lines
-                txt = [ x + " " * (max_width - len(x)) for x in txt ]
-
-                new_blocks.append( txt )
-
-            for l in zip( *new_blocks ):
-                lines.append( "|%s|" % "|".join( l ) )
-            
-    lines.append( separator )
-    lines.append( "" )
-    return lines
-
 def selectAndDeleteOptions( options, select ):
     '''collect options in select.'''
     new_options = {}
@@ -219,7 +118,7 @@ def run(arguments,
 
     logging.debug( "report_directive.run: plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, srcdir=%s, builddir=%s" %\
                        (reference, basename, ext, fname, rstdir, srcdir, builddir ) )
-    logging.debug( "report_directive.run: reference=%s, basedir=%s, rst2root=%s, root2build=%s, outdir=%s, codename=%s" %\
+    logging.debug( "report_directive.run: reference=%s, basedir=%s, rst2src=%s, root2build=%s, outdir=%s, codename=%s" %\
                    (reference, basedir, rst2srcdir, rst2builddir, outdir, codename))
 
     # try to create. If several processes try to create it,
@@ -399,6 +298,7 @@ def run(arguments,
                                                    rstdir,
                                                    rst2srcdir,
                                                    rst2builddir,
+                                                   rst2srcdir,
                                                    content, 
                                                    display_options,
                                                    linked_codename,
@@ -415,7 +315,7 @@ def run(arguments,
     
     ###########################################################
     ## render the output taking into account the layout
-    lines = layoutBlocks( blocks, layout )
+    lines = Utils.layoutBlocks( blocks, layout )
 
     ###########################################################
     # add caption

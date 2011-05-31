@@ -14,8 +14,9 @@ class HTMLPlugin(Component):
                  template_name, 
                  outdir, 
                  rstdir,
-                 relative_linkdir, 
-                 root_linkdir,
+                 rst2rootdir, 
+                 rst2builddir,
+                 rst2srcdir,
                  content,
                  display_options,
                  linked_codename,
@@ -39,9 +40,12 @@ class HTMLPlugin(Component):
                 outf = open( outputpath, "w")
                 outf.write( block.html )
                 outf.close()
+                
+                #path = re.sub( "\\\\", "/", os.path.join( rst2rootdir, outname ) )
+                #link = os.path.abspath( path + "." + extension )
 
-                path = re.sub( "\\\\", "/", os.path.join( root_linkdir, outname ) )
-                link = os.path.abspath( path + "." + extension )
+                # use absolute path
+                link = os.path.abspath( outputpath )
 
                 rst_output = "%(link)s" % locals()
                 map_figure2text[ "#$html %s$#" % block.title] = rst_output

@@ -72,9 +72,9 @@ and the building of large documents.
 See the :ref:`Tutorials` for a more complete introduction on how to use the extension. 
 See :ref:`Running` on more advanced building methods.
 
-.. _Background:
+.. _History:
 
-Background
+History
 **********
 
 Scientific datasets these days are large and are usually processed by

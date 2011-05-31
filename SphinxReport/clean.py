@@ -61,12 +61,15 @@ def deleteFiles( test_f, dirs_to_check = (".",), dry_run = False ):
 
     return removed
 
-def removeTracker( tracker, dry_run = False ):
+def removeTracker( tracker, 
+                   dry_run = False,
+                   builddir = "report" ):
     """remove all files created by :class:Renderer objects
     that use tracker.
     """
     # get locations
-    dirs_to_check = ("_static", "_cache", "_build" )
+    # this is a patch - add configuration options from conf.py
+    dirs_to_check = ("_static", "_cache", "_build", builddir )
 
     # image and text files
     rx1 = re.compile("-%s%s" % (tracker,SEPARATOR) )
@@ -81,14 +84,14 @@ def removeTracker( tracker, dry_run = False ):
 
     return deleteFiles( test_f, dirs_to_check, dry_run = dry_run )
 
-def removeText( tracker, dry_run = False ):
+def removeText( tracker, dry_run = False, sourcedir = ".", builddir = "report" ):
     """remove all files that reference the ``tracker``."""
-    
+
     # find all .rst files that reference tracker
     nremoved = 0
     rx_tracker = re.compile( tracker )
     files_to_check = []
-    for root, dirs, files in os.walk("."):
+    for root, dirs, files in os.walk( sourcedir ):
         for f in files:
             if f.endswith( source_suffix ):
                 fn = os.path.join( root, f )
@@ -108,7 +111,7 @@ def removeText( tracker, dry_run = False ):
             if p.search(x): return True
         return False
 
-    dirs_to_check = ("_build",)
+    dirs_to_check = (builddir,)
 
     return deleteFiles( test_f, dirs_to_check, dry_run = dry_run )
 
@@ -123,11 +126,19 @@ def main():
                        choices=("tracker", "text"),
                        help="only clean from certain sections [default=%default]" )
 
+    parser.add_option( "-p", "--path", dest="path", type="string",
+                       help="path to rst source [default=%default]" )
+
+    parser.add_option( "-b", "--build", dest="builddir", type="string",
+                       help="path to build dir [default=%default]" )
+
     parser.add_option( "-n", "--dry-run", dest="dry_run", action="store_true",
                        help="only show what is about to be deleted, but do not delete [default=%default]" )
 
     parser.set_defaults( loglevel = 2,
                          dry_run = False,
+                         path = ".",
+                         builddir = ".",
                          sections = [] )
 
     (options, args) = parser.parse_args()
@@ -166,7 +177,10 @@ def main():
             if not options.sections or "tracker" in options.sections:
                 removed.extend( removeTracker( tracker, dry_run = options.dry_run ) )
             if not options.sections or "text" in options.sections:
-                removed.extend( removeText( tracker, dry_run = options.dry_run ) )
+                removed.extend( removeText( tracker, 
+                                            dry_run = options.dry_run,
+                                            sourcedir = options.path,
+                                            builddir = options.builddir ) )
             print "%i files (done)" % len(removed)
             if options.loglevel >= 3:
                 print "\n".join( removed )

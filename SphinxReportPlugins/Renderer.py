@@ -115,9 +115,9 @@ class TableBase( Renderer ):
         r = ResultBlock( "\n".join(lines), title = title)
         # create an html table
         data = ["<table>"]
-        data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( col_headers) )
+        data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( map(str,col_headers)) )
         for h, row in zip( row_headers, matrix):
-            data.append( "<tr><th>%s</th><td>%s</td></tr>" % (h, "</td><td>".join(row) ))
+            data.append( "<tr><th>%s</th><td>%s</td></tr>" % (h, "</td><td>".join(map(str,row)) ))
         data.append( "</table>\n" )
         r.html = "\n".join( data )
 
@@ -192,11 +192,11 @@ class Table( TableBase ):
 
         lines = []
         lines.append( ".. csv-table:: %s" % title )
-        lines.append( '   :header: "", "%s" ' % '","'.join( col_headers ) )
+        lines.append( '   :header: "", "%s" ' % '","'.join( map(str, col_headers) ) )
         lines.append( '' )
 
         for header, line in zip( row_headers, matrix ):
-            lines.append( '   "%s","%s"' % (header, '","'.join( line ) ) )
+            lines.append( '   "%s","%s"' % (str(header), '","'.join( map(str, line) ) ) )
 
         lines.append( "") 
         
@@ -646,16 +646,16 @@ class User(Renderer):
         results = ResultBlocks( title = path )
 
         # iterate over all items at leaf
-        for key in work:
-
-            if "text" in work:
-                # add a result block
-                results.append( ResultBlock( work["text"],
+        #for key in work:
+            
+        if "text" in work:
+            # add a result block
+            results.append( ResultBlock( work["text"],
                                              title = "" ) )
-            elif "rst" in work:
-                # add a result block
-                results.append( ResultBlock( work["rst"],
-                                             title = "" ) )
+        elif "rst" in work:
+            # add a result block
+            results.append( ResultBlock( work["rst"],
+                                         title = "" ) )
 
         return results
 

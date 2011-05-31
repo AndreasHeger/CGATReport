@@ -2,6 +2,9 @@ import sys, os, re, random, glob
 
 from SphinxReport.Tracker import Tracker
 from SphinxReport.odict import OrderedDict as odict
+from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
+from SphinxReport import Utils
+
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -54,3 +57,21 @@ This is a preface
 Some more text for the figure\n''' % track
 
         return odict( (("rst", rst_text),) )
+
+class Images2( Tracker ):
+
+    tracks = "all"
+
+    def __call__(self, track, slice = None ):
+
+        blocks = ResultBlocks()
+
+        block = '''
+.. figure:: %(image)s
+   :height: 300 
+'''
+        for image in glob.glob( os.path.join( IMAGEDIR, "*.png" )):
+            blocks.append( ResultBlock( text = block % locals(),
+                                        title = "image" ) )
+
+        return odict( (("rst", "\n".join( Utils.layoutBlocks( blocks, layout = "columns-2"))),))

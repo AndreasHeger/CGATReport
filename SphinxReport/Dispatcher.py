@@ -76,10 +76,10 @@ class Dispatcher(Component):
         try: self.mColumns = [ x.strip() for x in kwargs["columns"].split(",")]
         except KeyError: self.mColumns = None
 
-    def getData( self, track, slice ):
+    def getData( self, path ):
         """get data for track and slice. Save data in persistent cache for further use."""
 
-        key = "/".join( (str(track), str(slice)) )
+        key = DataTree.path2str(path)
 
         result, fromcache = None, False
         if not self.nocache:
@@ -89,15 +89,17 @@ class Dispatcher(Component):
             except KeyError:
                 pass
 
-        kwargs = {}
-        if track != None: kwargs['track'] = track
-        if slice != None: kwargs['slice'] = slice
+        #kwargs = {}
+        #if track != None: kwargs['track'] = track
+        #if slice != None: kwargs['slice'] = slice
         
         if result == None:
             try:
-                result = self.tracker( **kwargs )
+                result = self.tracker( *path )
             except Exception, msg:
-                self.warn( "exception for tracker '%s', track '%s' and slice '%s': msg=%s" % (str(self.tracker), track, slice, msg) )
+                self.warn( "exception for tracker '%s', path '%s': msg=%s" % (str(self.tracker),
+                                                                              DataTree.path2str(path), 
+                                                                              msg) )
                 if VERBOSE: self.warn( traceback.format_exc() )
                 raise
         
@@ -120,42 +122,96 @@ class Dispatcher(Component):
         If there is no match, the entry in input_list is submitted to 
         tracker.fun as a ``subset`` parameter for custom processing.
         '''
-        result = []
-
         if not hasattr( obj, fun ) and not hasattr( obj, attr ):
             # not a tracker, hence no tracks/slices
-            return True, result
+            return True, []
+
+        def filter( all_entries, input_list ):
+            result = []
+            if input_list:
+                for s in input_list:
+                    if s in all_entries:
+                        # collect exact matches
+                        result.append( s )
+                    elif s.startswith("r(") and s.endswith(")"):
+                        # collect pattern matches:
+                        # remove r()
+                        s = s[2:-1] 
+                        # remove flanking quotation marks
+                        if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
+                        rx = re.compile( s )
+                        result.extend( [ x for x in all_entries if rx.search( str(x) ) ] )
+            else:
+                result = all_entries
+            return result
 
         if hasattr( obj, attr ):
             # get tracks/slices via attribute
             all_entries = getattr( obj, attr )
             if all_entries:
-                if type(result) in types.StringTypes: result=[result,]
-                if input_list:
-                    for s in input_list:
-                        if s in all_entries:
-                            # collect exact matches
-                            result.append( s )
-                        elif s.startswith("r(") and s.endswith(")"):
-                            # collect pattern matches:
-                            # remove r()
-                            s = s[2:-1] 
-                            # remove flanking quotation marks
-                            if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
-                            rx = re.compile( s )
-                            result.extend( [ x for x in all_entries if rx.search( x ) ] )
-                else:
-                    result = all_entries
-
-                return False, result
+                return False, filter( all_entries, input_list )
 
         # get tracks/slices via function call
         # function
         f = getattr(obj, fun )
         if input_list:
-
             all_entries = set(f( subset = None ))
+            result = filter( all_entries, input_list )
+        else:
+            result = f( subset = None )
+            
+        if type(result) in types.StringTypes: result=[result,]
 
+        return False, result
+
+    def getDataPaths( self, obj ):
+        '''determine data paths from a tracker.
+
+        If obj is a function, returns True and an empty list.
+
+        returns False and a list of lists.
+        '''
+        data_paths = []
+
+        
+        if hasattr( obj, 'paths' ):
+            data_paths = getattr( obj, 'paths' )
+        elif hasattr( obj, 'getPaths' ):
+            data_paths = getattr( obj, 'getPaths' )
+
+        if not data_paths:
+            if hasattr( obj, 'tracks' ):
+                data_paths = [ getattr( obj, 'tracks' ) ]
+            elif hasattr( obj, 'getTracks' ):
+                data_paths = [ getattr( obj, 'getTracks' ) ]
+            else: 
+                # is a function
+                return True, []
+            
+            # get slices
+            if hasattr( obj, 'slices' ):
+                data_paths.append( getattr( obj, 'slices' ) )
+            elif hasattr( obj, 'getSlices' ):
+                data_paths.append( getattr( obj, 'getSlices' ) )
+                
+        # sanity check on data_paths. 
+        # Replace strings with one-element tuples
+        for x,y in enumerate(data_paths):
+            if type(y) in types.StringTypes: data_paths[x]=[y,]
+            
+        return False, data_paths
+
+
+    def filterDataPaths( self, datapaths ):
+        '''filter *datapaths*.
+
+        returns the filtered data paths.
+        '''
+        
+        if not datapaths: return
+
+        def _filter( all_entries, input_list ):
+            result = []
             for s in input_list:
                 if s in all_entries:
                     # collect exact matches
@@ -167,93 +223,113 @@ class Dispatcher(Component):
                     # remove flanking quotation marks
                     if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
                     rx = re.compile( s )
-                    result.extend( [ x for x in all_entries if rx.search( x ) ] )
-                else:
-                    result.extend( f( subset = [s,] ) )
-        else:
-            result = f( subset = None )
-            
-        if type(result) in types.StringTypes: result=[result,]
+                    result.extend( [ x for x in all_entries if rx.search( str(x) ) ] )
+            return result
 
-        return False, result
+        if self.mInputTracks:
+            datapaths[0] = _filter( datapaths[0], self.mInputTracks )
+        
+        if self.mInputSlices:
+            datapaths[1] = _filter( datapaths[1], self.mInputTracks )
 
-    def buildTracks( self ):
-        '''determine the tracks'''
-        is_function, self.tracks = self.buildTracksOrSlices( self.tracker, 
-                                                             "tracks", 
-                                                             "getTracks", 
-                                                             self.mInputTracks )
-        return is_function
-
-    def buildSlices( self ):
-        '''determine the slices'''
-        is_function, self.slices = self.buildTracksOrSlices( self.tracker, 
-                                                             "slices",
-                                                             "getSlices", 
-                                                             self.mInputSlices )
-        return is_function
+        return datapaths
 
     def collect( self ):
-        '''collect all the data
+        '''collect all data.
 
-        Data is stored in a two-level dictionary with track as
-        the first level and slice as the second level.
+        Data is stored in a multi-level dictionary (DataTree)
         '''
 
         self.data = DataTree.DataTree()
-        self.tracks = []
-        self.slices = []
 
-        is_function = self.buildTracks()
-
+        is_function, datapaths = self.getDataPaths(self.tracker)
+        
+        # if function, no datapaths
         if is_function:
-            d = self.getData( None, None )
+            d = self.getData( None )
             self.data[ "all" ] = odict( (( "all", d),))
             self.debug( "%s: collecting data finished for function." % (self.tracker))
             return
 
-        if len(self.tracks) == 0: 
+        # if no tracks, error
+        if len(datapaths) == 0 or len(datapaths[0]) == 0:
             self.warn( "%s: no tracks found - no output" % self.tracker )
-            raise ValueError( "no tracks found from %s" % (str(self.tracker)))
+            raise ValueError( "no tracks found from %s" % self.tracker )
+        
+        # filter data paths
+        datapaths = self.filterDataPaths( datapaths )
 
-        self.buildSlices()
+        # if no tracks, error
+        if len(datapaths) == 0 or len(datapaths[0]) == 0:
+            self.warn( "%s: no tracks found - no output" % self.tracker )
+            raise ValueError( "no tracks found from %s" % self.tracker )
 
-        tracks, slices = self.tracks, self.slices
+        all_paths = list(itertools.product( *datapaths ))
+        self.debug( "%s: collecting data started for %i data paths" % (self.tracker, 
+                                                                       len( all_paths) ) )
 
-        self.debug( "%s: collecting data started for %i pairs, %i tracks: %s, %i slices: %s" % (self.tracker, 
-                                                                                           len(tracks) * len(slices), 
-                                                                                           len(tracks), str(tracks),
-                                                                                           len(slices), str(slices) ) )
         self.data = DataTree.DataTree()
-        for track in tracks:
-            self.data[track] =  DataTree.DataTree()
-            if slices:
-                for slice in slices:
-                    d = self.getData( track, slice )
-                    if d == None: continue
-                    if type(d) in Utils.ContainerTypes:
-                        self.data[track][slice] = DataTree.DataTree( d )
-                    else:
-                        self.data[track][slice] = d
-            else:
-                d = self.getData( track, None )
-                self.data[track] = DataTree.DataTree( d )
+        for path in all_paths:
+            
+            d = self.getData( path )
 
-        self.debug( "%s: collecting data finished for %i pairs, %i tracks: %s, %i slices: %s" % (self.tracker, 
-                                                                                            len(tracks) * len(slices), 
-                                                                                            len(tracks), str(tracks),
-                                                                                            len(slices), str(slices) ) )
+            # ignore empty data sets
+            if d == None: continue
+
+            # save in data tree as leaf
+            self.data.setLeaf( path, d )
+
+        self.debug( "%s: collecting data finished for %i data paths" % (self.tracker, 
+                                                                       len( all_paths) ) )
+
     def transform(self): 
-        '''call data transformers
+        '''call data transformers and group tree
         '''
         for transformer in self.transformers:
             self.debug( "%s: applying %s" % (self.renderer, transformer ))
             self.data = transformer( self.data )
 
+    def group( self ):
+        '''rearrange data tree for grouping.
+
+        and set group level.
+        '''
+
+        data_paths = self.data.getPaths()
+        nlevels = len(data_paths)
+
+        # get number of levels required by renderer
+        try:
+            renderer_nlevels = self.renderer.nlevels
+        except AttributeError:
+            renderer_nlevels = 0
+        
+        if self.groupby == "none":
+            self.group_level = renderer_nlevels
+        
+        elif self.groupby == "track":
+            # track is first level
+            self.group_level = 0
+            
+        elif self.groupby == "slice":
+            # rearrange tracks and slices in data tree
+            if nlevels <= 2 :
+                raise ValueError( "grouping by slice, but only %i levels in data tree" % nlevels)
+
+            self.data.swop( 0, 1)
+            self.group_level = 0
+            
+        elif self.groupby == "all":
+            # group everthing together
+            self.group_level = -1
+        else:
+            # neither group by slice or track ("ungrouped")
+            self.group_level = -1
+
     def render( self ):
-        '''supply the :class:`Renderer.Renderer` with 
-        data to render. The data supplied will depend on
-        the ``group-by`` option.
+        '''supply the :class:`Renderer.Renderer` with the data to render. 
+        
+        The data supplied will depend on the ``groupby`` option.
 
         return resultblocks
         '''
@@ -262,87 +338,40 @@ class Dispatcher(Component):
         
         results = ResultBlocks( title="main" )
 
+        # get number of levels required by renderer
         try:
             renderer_nlevels = self.renderer.nlevels
         except AttributeError:
             renderer_nlevels = 0
 
-        labels = self.data.getPaths()
-        nlevels = len(labels)
-        self.debug( "%s: rendering data started: %s labels, %s minimum, %s" %\
-                        (self, str(nlevels), 
-                         str(renderer_nlevels),
-                         str(labels)[:100]))
+        data_paths = self.data.getPaths()
+        nlevels = len(data_paths)
 
-        if nlevels >= 2:
-            all_tracks, all_slices = labels[0], labels[1]
-        elif nlevels == 1:
-            all_tracks, all_slices = labels[0], []
+        group_level = self.group_level
 
-        self.debug( "%s: rendering: groupby=%s, input: tracks=%s, slices=%s; output: tracks=%s, slices=%s" %\
-                        (self, self.groupby, 
-                         self.tracks[:20], 
-                         self.slices[:20], 
-                         all_tracks[:20], 
-                         all_slices[:20])[:200])
-
-        tracks, slices = self.tracks, self.slices
+        self.debug( "%s: rendering data started. levels=%i, required levels>=%i, group_level=%i, data_paths=%s" %\
+                        (self, nlevels, 
+                         renderer_nlevels,
+                         group_level,
+                         str(data_paths)[:100]))
 
         if nlevels < renderer_nlevels:
-            grouped_by = "dummy"
             # add some dummy levels if levels is not enough
             d = self.data
             for x in range( renderer_nlevels - nlevels):
                 d = odict( (("all", d ),))
             results.append( self.renderer( DataTree.DataTree(d), path = ("all",) ) )
 
-        elif nlevels >= renderer_nlevels:
-            if self.groupby == "none":
-                # split at very lowest level
-                grouped_by = "none"
-                paths = list(itertools.product( *labels[:-renderer_nlevels] ))
-                for path in paths:
-                    subtitle = "/".join( path )
-                    work = self.data.getLeaf( path )
-                    if not work: continue
-                    for key,value in work.iteritems():
-                        vals = DataTree.DataTree( odict( ((key,value),) ))
-                        results.append( self.renderer( vals, path = path ))
-            elif nlevels == renderer_nlevels and self.groupby == "track":
-                # group by track
-                grouped_by = "track"
-                for track in all_tracks:
-                    vals = DataTree.DataTree( odict( ((track, self.data[track]),)))
-                    results.append( self.renderer( vals, path = (track,) ) )
-                
-            elif nlevels > renderer_nlevels and self.groupby == "track":
-                # group by track
-                grouped_by = "track"
-                for track in all_tracks:
-                    # slices can be absent
-                    d = [ (x,self.data[track][x]) for x in all_slices if x in self.data[track] ]
-                    if len(d) == 0: continue
-                    vals = DataTree.DataTree( odict( d ) )
-                    results.append( self.renderer( vals, path = (track,) ) )
-
-            elif nlevels > renderer_nlevels and self.groupby == "slice" and len(self.slices) > 0:
-                # group by slice
-                grouped_by = "slice"
-                for slice in all_slices:
-                    d = [ (x,self.data[x][slice]) for x in all_tracks if slice in self.data[x] ]
-                    if len(d) == 0: continue
-                    vals = DataTree.DataTree( odict( d ) )
-                    results.append( self.renderer( vals, path = (slice,) ) )
-            elif self.groupby == "all":
-                # group everything together
-                grouped_by = "all"
-                results.append( self.renderer( self.data, path = () ) )
-            else:
-                # neither group by slice or track ("ungrouped")
-                grouped_by = "default"
-                results.append( self.renderer( self.data, path = () ) )
-
-        self.debug( "grouping by %s " % grouped_by )
+        elif group_level < 0:
+            # no grouping
+            results.append( self.renderer( self.data, path = () ) )
+        else:
+            # group at level group_level
+            paths = list(itertools.product( *data_paths[:group_level+1] ))
+            for path in paths:
+                work = self.data.getLeaf( path )
+                if not work: continue
+                results.append( self.renderer( work, path = path ))
 
         if len(results) == 0:
             self.warn("tracker returned no data.")
@@ -364,14 +393,20 @@ class Dispatcher(Component):
 
         self.debug( "profile: finished: tracker: %s" % (self.tracker))
 
-        labels = self.data.getPaths()
-        self.debug( "%s: after collection: %i labels: %s" % (self,len(labels), str(labels)))
+        data_paths = self.data.getPaths()
+        self.debug( "%s: after collection: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
         
         try: self.transform()
         except: return Utils.buildException( "transformation" )
 
-        labels = self.data.getPaths()
-        self.debug( "%s: after transformation: %i labels: %s" % (self,len(labels), str(labels)))
+        data_paths = self.data.getPaths()
+        self.debug( "%s: after transformation: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
+
+        try: self.group()
+        except: return Utils.buildException( "grouping" )
+
+        data_paths = self.data.getPaths()
+        self.debug( "%s: after grouping: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         self.debug( "profile: started: renderer: %s" % (self.renderer))
 
@@ -379,7 +414,7 @@ class Dispatcher(Component):
         except: return Utils.buildException( "rendering" )
 
         self.debug( "profile: finished: renderer: %s" % (self.renderer))
-        
+
         return result
 
         

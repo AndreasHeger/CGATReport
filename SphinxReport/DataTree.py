@@ -91,9 +91,59 @@ class DataTree( object ):
                 try:
                     work = work[x]
                 except KeyError:
-                    work = None
-                    break
+                    work[x] = DataTree()
+                    work = work[x]
+
             work[path[-1]] = data
+
+    def swop( self, level1, level2 ):
+        '''swop two levels *level1* and *level2*.
+
+        For example, swop(0,1) on paths (a/1/x, a/1/y, b/2/x, c/1/y)
+        will result in 1/a/x, 1/a/y, 1/c/y, 2/b/x.
+        
+        Both levels must be smaller the len().
+        '''
+        if len(self._data) <= level1:
+            raise IndexError("level out of range: %i >= %i" % (level1, len(self._data)))
+        if len(self._data) <= level2:
+            raise IndexError("level out of range: %i >= %i" % (level2, len(self._data)))
+        if level1 == level2: return
+        if level1 > level2:
+            level1, level2 = level2, level1
+            
+        paths = self.getPaths()
+        prefixes = paths[:level1]
+        infixes = paths[level1+1:level2]
+        suffixes = paths[level2+1:]
+
+        if prefixes: prefixes = list(itertools.product( *prefixes ))
+        else: prefixes = [(None,)]
+
+        if infixes: infixes = list(itertools.product( *infixes ))
+        else: infixes = [(None,)]
+
+        if suffixes: suffixes = list(itertools.product( *suffixes ))
+        else: suffixes = [(None,)]
+
+        # write to new tree in order to ensure that labels
+        # that exist in both level1 and level2 are not 
+        # overwritten.
+        newtree = DataTree()
+
+        def _f(p): return tuple( [x for x in p if x != None] )
+
+        for p1, p2 in itertools.product( paths[level1], paths[level2] ):
+            for prefix, infix, suffix in itertools.product( prefixes, infixes, suffixes ):
+                oldpath = _f( prefix + (p1,) + infix + (p2,) + suffix )
+                newpath = _f(prefix + (p2,) + infix + (p1,) + suffix )
+                # note: getLeaf, setLeaf are inefficient in this 
+                # context as they traverse the tree again
+                data = self.getLeaf( oldpath )
+                if data == None: continue
+                newtree.setLeaf( newpath, data )
+
+        object.__setattr__( self, "_data", newtree._data)
 
     def removeLeaf( self, path ):
         '''remove leaf/branch at *path*.'''

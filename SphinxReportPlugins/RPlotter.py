@@ -151,7 +151,7 @@ class Plotter(object):
         # currently: collects only single plots.
         figid = getCurrentRDevice()
         blocks = ResultBlocks( ResultBlock( "\n".join( ("#$rpl %i$#" % (figid), "")), 
-                                            title = "/".join(path) ) )
+                                            title = "/".join(map(str, path)) ) )
         return blocks
 
 class LinePlot( Renderer, Plotter ):

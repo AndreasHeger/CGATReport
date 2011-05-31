@@ -15,6 +15,7 @@ Contents:
 
    Introduction.rst   
    Overview.rst
+   Background.rst
    Running.rst
    Utilities.rst
    Roles.rst

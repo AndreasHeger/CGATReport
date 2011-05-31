@@ -12,7 +12,7 @@ to do this.
 Converting to functors
 **********************
 
-Instead of using a python function as in the first tutorial, we will use a functior,
+Instead of using a python function as in the first tutorial, we will use a functor,
 a function object. The functor provides additional methods that allows the renderer 
 to query for available :term:`tracks`.
 

@@ -29,6 +29,7 @@ class MatplotlibPlugin(Component):
                  rstdir,
                  rst2rootdir, 
                  rst2builddir,
+                 rst2srcdir,
                  content,
                  display_options,
                  linked_codename,
