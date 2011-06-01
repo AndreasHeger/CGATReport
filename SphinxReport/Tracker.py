@@ -1,6 +1,6 @@
 from __future__ import with_statement 
 
-import os, sys, re, types, copy, warnings, ConfigParser, inspect, logging
+import os, sys, re, types, copy, warnings, ConfigParser, inspect, logging, glob
 
 import sqlalchemy
 import sqlalchemy.exceptions
@@ -43,23 +43,26 @@ class Tracker(object):
     cache = True
 
     # default: empty tracks/slices
-    tracks = []
-    slices = []
+    # tracks = []
+    # slices = []
+    # paths = []
 
     def __init__(self, *args, **kwargs):
         pass
 
-    def getTracks( self, subset = None ):
-        """return a list of all tracks that this tracker provides."""
-        if subset: return subset
-        return self.tracks
+    # def getTracks( self ):
+    #     """return a list of all tracks that this tracker provides."""
+    #     return self.tracks
 
-    def getSlices(self, subset = None):
-        """return a list of all slices that this tracker provides.
+    # def getSlices( self ):
+    #     """return a list of all slices that this tracker provides.
+    #     """
+    #     return self.slices
 
-        The optional subset argument can group slices together.
-        """
-        return self.slices
+    # def getPaths( self ):
+    #     """return all paths this tracker provides.
+    #     """
+    #     return self.paths
 
     def getShortCaption( self ):
         """return one line caption.
@@ -396,7 +399,7 @@ class TrackerSQLCheckTable(TrackerSQL):
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
 
-    def __call__(self, track, slice = None):
+    def __call__(self, track, *args ):
         """count number of entries in a table."""
 
         statement = "SELECT COUNT( %s) FROM %s WHERE %s IS NOT NULL" 
@@ -415,12 +418,15 @@ class TrackerSQLCheckTable(TrackerSQL):
         return odict( data )
 
 class Config( Tracker ):
-    '''tracker providing config values.'''
+    '''tracker providing config values of ini files
+    in current directory.
+    '''
+    tracks = glob.glob( "*.ini" )
 
     def __init__(self, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
 
-    def __call__(self, track, slice = None):
+    def __call__(self, track, *args ):
         """count number of entries in a table."""
 
         config = ConfigParser.ConfigParser()
@@ -457,7 +463,7 @@ class Empty( Tracker ):
         if subset: return subset
         return ["empty"]
 
-    def __call__(self, track, slice = None ):
+    def __call__(self, *args ):
         return odict( (("a", 1),))
 
 class SingleTableTrackerRows( TrackerSQL ):

@@ -139,7 +139,8 @@ A scatter plot with colours
 
    A scatter plot with colours.
 
-A scatter plot with pairwise variables, multiple plots:
+A scatter plot built from single trackers using the :class:`Transformer.TransformerCombinations`
+transformer. 
 
 .. report:: Trackers.SingleColumnDataExample
    :render: scatter-plot

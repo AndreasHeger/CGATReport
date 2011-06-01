@@ -77,9 +77,15 @@ class Dispatcher(Component):
         except KeyError: self.mColumns = None
 
     def getData( self, path ):
-        """get data for track and slice. Save data in persistent cache for further use."""
+        """get data for track and slice. Save data in persistent cache for further use.
 
-        key = DataTree.path2str(path)
+        For functions, path should be an empty tuple.
+        """
+
+        if path:
+            key = DataTree.path2str(path)
+        else:
+            key = "all"
 
         result, fromcache = None, False
         if not self.nocache:
@@ -108,62 +114,6 @@ class Dispatcher(Component):
 
         return result
 
-    def buildTracksOrSlices( self, obj, attr, fun, input_list = None ):
-        '''determine tracks/slices from a tracker.
-
-        All possible tracks/slices are collected from the tracker via
-        the *attr* attribute or *fun* function.
-
-        If input_list is given, they are then filtered by:
-
-        * exact matches to entries in input_list
-        * pattern matches to entries in input list that starting with "r("
-        
-        If there is no match, the entry in input_list is submitted to 
-        tracker.fun as a ``subset`` parameter for custom processing.
-        '''
-        if not hasattr( obj, fun ) and not hasattr( obj, attr ):
-            # not a tracker, hence no tracks/slices
-            return True, []
-
-        def filter( all_entries, input_list ):
-            result = []
-            if input_list:
-                for s in input_list:
-                    if s in all_entries:
-                        # collect exact matches
-                        result.append( s )
-                    elif s.startswith("r(") and s.endswith(")"):
-                        # collect pattern matches:
-                        # remove r()
-                        s = s[2:-1] 
-                        # remove flanking quotation marks
-                        if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
-                        rx = re.compile( s )
-                        result.extend( [ x for x in all_entries if rx.search( str(x) ) ] )
-            else:
-                result = all_entries
-            return result
-
-        if hasattr( obj, attr ):
-            # get tracks/slices via attribute
-            all_entries = getattr( obj, attr )
-            if all_entries:
-                return False, filter( all_entries, input_list )
-
-        # get tracks/slices via function call
-        # function
-        f = getattr(obj, fun )
-        if input_list:
-            all_entries = set(f( subset = None ))
-            result = filter( all_entries, input_list )
-        else:
-            result = f( subset = None )
-            
-        if type(result) in types.StringTypes: result=[result,]
-
-        return False, result
-
     def getDataPaths( self, obj ):
         '''determine data paths from a tracker.
 
@@ -172,27 +122,26 @@ class Dispatcher(Component):
         returns False and a list of lists.
         '''
         data_paths = []
-
         
         if hasattr( obj, 'paths' ):
             data_paths = getattr( obj, 'paths' )
         elif hasattr( obj, 'getPaths' ):
-            data_paths = getattr( obj, 'getPaths' )
+            data_paths = obj.getPaths()
 
         if not data_paths:
             if hasattr( obj, 'tracks' ):
                 data_paths = [ getattr( obj, 'tracks' ) ]
             elif hasattr( obj, 'getTracks' ):
-                data_paths = [ getattr( obj, 'getTracks' ) ]
+                data_paths = [ obj.getTracks() ]
             else: 
                 # is a function
                 return True, []
-            
+
             # get slices
             if hasattr( obj, 'slices' ):
                 data_paths.append( getattr( obj, 'slices' ) )
             elif hasattr( obj, 'getSlices' ):
-                data_paths.append( getattr( obj, 'getSlices' ) )
+                data_paths.append( obj.getSlices() )
                 
         # sanity check on data_paths. 
         # Replace strings with one-element tuples
@@ -200,7 +149,6 @@ class Dispatcher(Component):
             if type(y) in types.StringTypes: data_paths[x]=[y,]
             
         return False, data_paths
-
 
     def filterDataPaths( self, datapaths ):
         '''filter *datapaths*.
@@ -230,7 +178,7 @@ class Dispatcher(Component):
             datapaths[0] = _filter( datapaths[0], self.mInputTracks )
         
         if self.mInputSlices:
-            datapaths[1] = _filter( datapaths[1], self.mInputTracks )
+            datapaths[1] = _filter( datapaths[1], self.mInputSlices )
 
         return datapaths
 
@@ -246,8 +194,11 @@ class Dispatcher(Component):
         
         # if function, no datapaths
         if is_function:
-            d = self.getData( None )
-            self.data[ "all" ] = odict( (( "all", d),))
+            d = self.getData( () )
+
+            # save in data tree as leaf
+            self.data.setLeaf( ("all",), d )
+
             self.debug( "%s: collecting data finished for function." % (self.tracker))
             return
 
@@ -314,10 +265,11 @@ class Dispatcher(Component):
         elif self.groupby == "slice":
             # rearrange tracks and slices in data tree
             if nlevels <= 2 :
-                raise ValueError( "grouping by slice, but only %i levels in data tree" % nlevels)
-
-            self.data.swop( 0, 1)
-            self.group_level = 0
+                warn( "grouping by slice, but only %i levels in data tree - all are grouped" % nlevels)
+                self.group_level = -1
+            else:
+                self.data.swop( 0, 1)
+                self.group_level = 0
             
         elif self.groupby == "all":
             # group everthing together

@@ -13,7 +13,10 @@ def unique( iterables ):
 
 def path2str( path ):
     '''convert path to printable string.'''
-    return "/".join(path)
+    if path:
+        return "/".join(map(str,path))
+    else:
+        return ""
 
 class DataTree( object ):
     '''a DataTree.
@@ -31,9 +34,7 @@ class DataTree( object ):
     slots = "_data"
 
     def __init__(self, data = None ):
-        # do not put this in argument list, as
-        # it will always refer to the same object.
-        # if not data: data = collections.defaultdict( odict )
+        
         if not data: data = odict()
         object.__setattr__( self, "_data", data)
 
@@ -104,10 +105,11 @@ class DataTree( object ):
         
         Both levels must be smaller the len().
         '''
-        if len(self._data) <= level1:
-            raise IndexError("level out of range: %i >= %i" % (level1, len(self._data)))
-        if len(self._data) <= level2:
-            raise IndexError("level out of range: %i >= %i" % (level2, len(self._data)))
+        nlevels = len(self.getPaths())
+        if nlevels <= level1:
+            raise IndexError("level out of range: %i >= %i" % (level1, nlevels))
+        if nlevels <= level2:
+            raise IndexError("level out of range: %i >= %i" % (level2, nlevels))
         if level1 == level2: return
         if level1 > level2:
             level1, level2 = level2, level1

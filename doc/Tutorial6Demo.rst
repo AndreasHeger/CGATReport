@@ -12,7 +12,7 @@ The simplest plot:
    :tf-range: 0,100,4
 
    Expression level in house-keeping and regulatory genes
-   in two experimentsa.
+   in two experiments.
 
 A customized plot:
 

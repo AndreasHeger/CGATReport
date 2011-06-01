@@ -6,7 +6,7 @@ from SphinxReport.Tracker import *
 class MyDataOneTrack(Tracker):
     """My one-tracked data."""
     
-    def getTracks( self, subset = None):
+    def getTracks( self ):
         return ["all",]
 
     def __call__(self, track, slice = None ):
@@ -15,7 +15,7 @@ class MyDataOneTrack(Tracker):
 class MyDataTwoTracks(Tracker):
     """My one-tracked data."""
 
-    def getTracks( self, subset = None ):
+    def getTracks( self ):
         return ["track1","track2"]
 
     def __call__(self, track, slice = None ):

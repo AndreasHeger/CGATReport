@@ -198,6 +198,17 @@ class TransformerGroup( Transformer ):
 
 class TransformerCombinations( Transformer ):
     '''build combinations of the second lowest level.
+
+    input:
+    a/1/x
+    a/2/x
+    a/3/x
+    b/1/x
+    b/2/x
+
+    Output:
+    
+
     '''
     
     nlevels = 2
@@ -213,11 +224,11 @@ class TransformerCombinations( Transformer ):
             raise KeyError( "TransformerCombinations requires the `tf-fields` option to be set." )
 
     def transform(self, data, path):
+
         debug( "%s: called" % str(self))
 
         vals =  data.keys()
-        new_data = odict()
-        for x in vals: new_data[x] = odict()
+        new_data = DataTree()
 
         for x1 in range(len(vals)-1):
             n1 = vals[x1]
@@ -225,15 +236,16 @@ class TransformerCombinations( Transformer ):
             for x2 in range(x1+1, len(vals)):
                 n2 = vals[x2]
                 d2 = data[n2][self.fields]
+                ## check if array?
                 if len(d1) != len(d2):
                     raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
-                ## check if array?
+                
+                new_data.setLeaf( ( ("%s x %s" % (n1, n2) ), n1),
+                                  d1 )
 
-                new_data[n1][n2] =\
-                    odict( (\
-                        ("%s/%s" % (n1,self.fields), d1),
-                        ("%s/%s" % (n2,self.fields), d2), ) )
-
+                new_data.setLeaf( ( ("%s x %s" % (n1, n2) ), n2),
+                                  d2 )
+                                  
         return new_data
 
 class TransformerStats( Transformer ):
