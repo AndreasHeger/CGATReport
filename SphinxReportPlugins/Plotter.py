@@ -1651,7 +1651,8 @@ class ScatterPlotWithColor( ScatterPlot ):
         assert len(work) >= 3, "expected at least three arrays, got %i: %s" % (len(work), work.keys())
         
         xlabel, ylabel, zlabel = work.keys()[:3]
-        xvals, yvals, zvals = work.values()[:3]
+        xvals, yvals, zvals = Stats.filterNone( work.values()[:3])
+
         if len(xvals) == 0 or len(yvals) == 0 or len(zvals) == 0: 
             raise ValueError("no data" )
 
@@ -1662,7 +1663,7 @@ class ScatterPlotWithColor( ScatterPlot ):
             zvals[ zvals > vmax ] = vmax
         else:
             vmin, vmax = None, None
-            
+
         # plt.scatter does not permitting setting
         # options in rcParams, so all is explict
         plts.append(plt.scatter( xvals,

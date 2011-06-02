@@ -212,7 +212,7 @@ class Dispatcher(Component):
 
         # if no tracks, error
         if len(datapaths) == 0 or len(datapaths[0]) == 0:
-            self.warn( "%s: no tracks found - no output" % self.tracker )
+            self.warn( "%s: no tracks remain after filtering - no output" % self.tracker )
             raise ValueError( "no tracks found from %s" % self.tracker )
 
         all_paths = list(itertools.product( *datapaths ))
