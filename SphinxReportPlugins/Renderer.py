@@ -290,7 +290,8 @@ class Matrix(TableBase):
                 try:
                     self.mConverters.append( self.mMapKeywordToTransform[ kw ] )
                 except KeyError:
-                    raise ValueError("unknown matrix transformation %s" % kw )
+                    raise ValueError("unknown matrix transformation %s, possible values are: %s" \
+                                         % (kw, ",".join( sorted(self.mMapKeywordToTransform.keys()) ) ) )
 
 
     def transformAddRowTotal( self, matrix, row_headers, col_headers ):

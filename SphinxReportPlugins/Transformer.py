@@ -97,7 +97,6 @@ class TransformerIndicator( Transformer ):
 
         try: self.nlevels = int(kwargs["tf-level"])
         except KeyError: pass
-
                           
     def transform(self, data, path):
         debug( "%s: called" % str(self))
@@ -219,7 +218,7 @@ class TransformerCombinations( Transformer ):
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
 
-        try: self.fields = kwargs["tf-fields"]
+        try: self.fields = set(kwargs["tf-fields"].split(","))
         except KeyError: 
             raise KeyError( "TransformerCombinations requires the `tf-fields` option to be set." )
 
@@ -232,10 +231,21 @@ class TransformerCombinations( Transformer ):
 
         for x1 in range(len(vals)-1):
             n1 = vals[x1]
-            d1 = data[n1][self.fields]
+            # find the first that fits
+            for field in self.fields:
+                if field in data[n1]:
+                    d1 = data[n1][field]
+                    break
+            else:
+                raise KeyError("could not find any match from '%s' in '%s'" % (str(data[n1].keys()), str(self.fields )))
+
             for x2 in range(x1+1, len(vals)):
                 n2 = vals[x2]
-                d2 = data[n2][self.fields]
+                try:
+                    d2 = data[n2][field]
+                except KeyErrror:
+                    raise KeyError("no field %s in '%s'" % sttr(data[n2]))
+
                 ## check if array?
                 if len(d1) != len(d2):
                     raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
@@ -508,7 +518,7 @@ class TransformerHistogram( Transformer ):
             bins, values = self.toHistogram(values)
             if bins != None:
                 for converter in self.mConverters: values = converter(values)
-                data[header] =  odict( ((header,bins), ("frequency", values)) )
+                data[header] =  DataTree( odict( ((header, bins), ("frequency", values))) )
             else:
                 to_delete.add( header )
 
