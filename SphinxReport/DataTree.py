@@ -171,6 +171,119 @@ class DataTree( object ):
     def __setattr__(self, name, value):
         setattr(self._data, name, value) 
 
+
+def getPaths( work ):
+    '''extract labels from data.
+
+    returns a list of list with all labels within
+    the nested dictionary of data.
+    '''
+    labels = []
+
+    this_level = [work,]
+
+    while 1:
+        l, next_level = [], []
+        for x in [ x for x in this_level if hasattr( x, "keys")]:
+            l.extend( x.keys() )
+            next_level.extend( x.values() )
+        if not l: break
+        labels.append( list(unique(l)) )
+        this_level = next_level
+
+    return labels
+
+def getLeaf( work, path ):
+    '''get leaf/branch at *path*.'''
+    for x in path:
+        try:
+            work = work[x]
+        except KeyError:
+            work = None
+            break
+    return work
+
+def setLeaf( work, path, data ):
+    '''set leaf/branch at *path* to *data*.'''
+    for x in path[:-1]:
+        try:
+            work = work[x]
+        except KeyError:
+            work[x] = odict()
+            work = work[x]
+    work[path[-1]] = data
+
+def swop( work, level1, level2 ):
+    '''swop two levels *level1* and *level2*.
+
+    For example, swop(0,1) on paths (a/1/x, a/1/y, b/2/x, c/1/y)
+    will result in 1/a/x, 1/a/y, 1/c/y, 2/b/x.
+
+    Both levels must be smaller the len().
+    '''
+    paths = getPaths(work)
+    nlevels = len(paths)
+    if nlevels <= level1:
+        raise IndexError("level out of range: %i >= %i" % (level1, nlevels))
+    if nlevels <= level2:
+        raise IndexError("level out of range: %i >= %i" % (level2, nlevels))
+    if level1 == level2: return
+    if level1 > level2:
+        level1, level2 = level2, level1
+
+    prefixes = paths[:level1]
+    infixes = paths[level1+1:level2]
+    suffixes = paths[level2+1:]
+
+    if prefixes: prefixes = list(itertools.product( *prefixes ))
+    else: prefixes = [(None,)]
+
+    if infixes: infixes = list(itertools.product( *infixes ))
+    else: infixes = [(None,)]
+
+    if suffixes: suffixes = list(itertools.product( *suffixes ))
+    else: suffixes = [(None,)]
+
+    # write to new tree in order to ensure that labels
+    # that exist in both level1 and level2 are not 
+    # overwritten.
+    newtree = odict()
+
+    def _f(p): return tuple( [x for x in p if x != None] )
+
+    for p1, p2 in itertools.product( paths[level1], paths[level2] ):
+        for prefix, infix, suffix in itertools.product( prefixes, infixes, suffixes ):
+            oldpath = _f( prefix + (p1,) + infix + (p2,) + suffix )
+            newpath = _f(prefix + (p2,) + infix + (p1,) + suffix )
+            # note: getLeaf, setLeaf are inefficient in this 
+            # context as they traverse the tree again
+            data = getLeaf( work, oldpath )
+            if data == None: continue
+            setLeaf( newtree, newpath, data )
+            
+    return work
+
+def removeLeaf( work, path ):
+    '''remove leaf/branch at *path*.'''
+    
+    if len(path) == 0:
+        work.clear()
+    else:
+        for x in path[:-1]:
+            try:
+                work = work[x]
+            except KeyError:
+                work = None
+                break
+        del work[path[-1]]
+    return work
+
+def prettyprint(work):
+    paths = work.getPaths()
+    if len(paths) == 0: return "NA"
+    else: return "< datatree: %s >" % str(paths)
+
+
 def flatten(l, ltypes=(list, tuple)):
     '''flatten a nested list/tuple.'''
 
@@ -212,7 +325,7 @@ def tree2table( data, transpose = False ):
     returns matrix, row_headers, col_headers
     """
 
-    labels = data.getPaths()
+    labels = getPaths( data )
     
     if len(labels) < 2:
         raise ValueError( "expected at least two levels for building table, got %i: %s" %\
@@ -243,7 +356,7 @@ def tree2table( data, transpose = False ):
         for xx, path in enumerate(paths):
 
             # get data - skip if there is None
-            work = data.getLeaf( (row,) + path )
+            work = getLeaf( data, (row,) + path )
             if not work: continue
 
             row_data = [""] * ncols

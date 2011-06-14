@@ -16,8 +16,7 @@ import numpy as np
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, Matrix
 from SphinxReport.odict import OrderedDict as odict
-from SphinxReport import Utils
-from SphinxReport import Stats
+from SphinxReport import Utils, DataTree, Stats
 
 from docutils.parsers.rst import directives
 
@@ -596,7 +595,7 @@ class PlotterHinton(PlotterMatrix):
 
         if self.colour:
             # select label to take
-            labels = work.getPaths()
+            labels = DataTree.getPaths( work )
             label = list(set(labels[-1]).difference( set((self.colour,)) ))[0]
             self.matrix, self.rows, self.columns = Matrix.buildMatrix( self,
                                                                        work, 
@@ -906,11 +905,11 @@ class LinePlot( Renderer, Plotter ):
         nplotted = 0
 
         for line, data in work.iteritems():
-
+            
             self.initLine( line, data )
 
             for label, coords in data.iteritems():
-                
+
                 # sanity check on data
                 try: keys = coords.keys()
                 except AttributeError:
@@ -1203,7 +1202,7 @@ class BarPlot( Matrix, Plotter):
         
         if self.error or self.label:
             # select label to take
-            labels = work.getPaths()
+            labels = DataTree.getPaths( work )
             label = list(set(labels[-1]).difference( set((self.error, self.label)) ))[0]
             self.matrix, self.rows, self.columns = self.buildMatrix( work, 
                                                                      apply_transformations = True, 

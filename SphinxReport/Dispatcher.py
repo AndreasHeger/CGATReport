@@ -178,6 +178,8 @@ class Dispatcher(Component):
             datapaths[0] = _filter( datapaths[0], self.mInputTracks )
         
         if self.mInputSlices:
+            if len(datapaths) < 2:
+                raise ValueError( "slice filtering for `%s` without slices" % (self.mInputSlices))
             datapaths[1] = _filter( datapaths[1], self.mInputSlices )
 
         return datapaths
@@ -188,7 +190,7 @@ class Dispatcher(Component):
         Data is stored in a multi-level dictionary (DataTree)
         '''
 
-        self.data = DataTree.DataTree()
+        self.data = odict()
 
         is_function, datapaths = self.getDataPaths(self.tracker)
         
@@ -197,7 +199,7 @@ class Dispatcher(Component):
             d = self.getData( () )
 
             # save in data tree as leaf
-            self.data.setLeaf( ("all",), d )
+            DataTree.setLeaf( self.data, ("all",), d )
 
             self.debug( "%s: collecting data finished for function." % (self.tracker))
             return
@@ -219,7 +221,7 @@ class Dispatcher(Component):
         self.debug( "%s: collecting data started for %i data paths" % (self.tracker, 
                                                                        len( all_paths) ) )
 
-        self.data = DataTree.DataTree()
+        self.data = odict()
         for path in all_paths:
             
             d = self.getData( path )
@@ -228,7 +230,7 @@ class Dispatcher(Component):
             if d == None: continue
 
             # save in data tree as leaf
-            self.data.setLeaf( path, d )
+            DataTree.setLeaf( self.data, path, d )
 
         self.debug( "%s: collecting data finished for %i data paths" % (self.tracker, 
                                                                        len( all_paths) ) )
@@ -246,7 +248,7 @@ class Dispatcher(Component):
         and set group level.
         '''
 
-        data_paths = self.data.getPaths()
+        data_paths = DataTree.getPaths( self.data )
         nlevels = len(data_paths)
 
         # get number of levels required by renderer
@@ -261,14 +263,20 @@ class Dispatcher(Component):
         elif self.groupby == "track":
             # track is first level
             self.group_level = 0
-            
+            # add pseudo levels, if there are not enough levels
+            # to group by track
+            if nlevels == renderer_nlevels:
+                d = odict()
+                for x in data_paths[0]: d[x] = odict( ((x, self.data[x]),))
+                self.data = d
+
         elif self.groupby == "slice":
             # rearrange tracks and slices in data tree
             if nlevels <= 2 :
                 warn( "grouping by slice, but only %i levels in data tree - all are grouped" % nlevels)
                 self.group_level = -1
             else:
-                self.data.swop( 0, 1)
+                self.data = DataTree.swop( self.data, 0, 1)
                 self.group_level = 0
             
         elif self.groupby == "all":
@@ -296,7 +304,7 @@ class Dispatcher(Component):
         except AttributeError:
             renderer_nlevels = 0
 
-        data_paths = self.data.getPaths()
+        data_paths = DataTree.getPaths( self.data )
         nlevels = len(data_paths)
 
         group_level = self.group_level
@@ -312,7 +320,7 @@ class Dispatcher(Component):
             d = self.data
             for x in range( renderer_nlevels - nlevels):
                 d = odict( (("all", d ),))
-            results.append( self.renderer( DataTree.DataTree(d), path = ("all",) ) )
+            results.append( self.renderer( d, path = ("all",) ) )
 
         elif group_level < 0:
             # no grouping
@@ -321,7 +329,7 @@ class Dispatcher(Component):
             # group at level group_level
             paths = list(itertools.product( *data_paths[:group_level+1] ))
             for path in paths:
-                work = self.data.getLeaf( path )
+                work = DataTree.getLeaf( self.data, path )
                 if not work: continue
                 results.append( self.renderer( work, path = path ))
 
@@ -345,19 +353,19 @@ class Dispatcher(Component):
 
         self.debug( "profile: finished: tracker: %s" % (self.tracker))
 
-        data_paths = self.data.getPaths()
+        data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after collection: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
         
         try: self.transform()
         except: return Utils.buildException( "transformation" )
 
-        data_paths = self.data.getPaths()
+        data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after transformation: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         try: self.group()
         except: return Utils.buildException( "grouping" )
 
-        data_paths = self.data.getPaths()
+        data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after grouping: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         self.debug( "profile: started: renderer: %s" % (self.renderer))
@@ -368,7 +376,6 @@ class Dispatcher(Component):
         self.debug( "profile: finished: renderer: %s" % (self.renderer))
 
         return result
-
         
     def getTracks( self ):
         '''return tracks used by the dispatcher.

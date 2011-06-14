@@ -4,9 +4,8 @@ import numpy
 from numpy import arange
 
 from SphinxReport.odict import OrderedDict as odict
-from SphinxReport.DataTree import DataTree
 from SphinxReport.Component import *
-from SphinxReport import Stats
+from SphinxReport import Stats, DataTree
 
 from docutils.parsers.rst import directives
 
@@ -26,22 +25,26 @@ class Transformer(Component):
 
         if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
-        labels = data.getPaths()        
+        labels = DataTree.getPaths( data )        
         debug( "transform: started with paths: %s" % labels)
         assert len(labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
         
         paths = list(itertools.product( *labels[:-self.nlevels] ))
         for path in paths:
-            work = data.getLeaf( path )
+            work = DataTree.getLeaf( data, path )
             if not work: continue
             new_data = self.transform( work, path )
             if new_data:
-                data.setLeaf( path, new_data )
+                if path:
+                    DataTree.setLeaf( data, path, new_data )
+                else:
+                    # set new root
+                    data = new_data
             else:
                 warn( "no data at %s - removing branch" % str(path))
-                data.removeLeaf( path )
+                DataTree.removeLeaf( data, path )
 
-        debug( "transform: finished with paths: %s" % data.getPaths())
+        debug( "transform: finished with paths: %s" % DataTree.getPaths( data ))
 
         return data
         
@@ -227,11 +230,11 @@ class TransformerCombinations( Transformer ):
         debug( "%s: called" % str(self))
 
         vals =  data.keys()
-        new_data = DataTree()
+        new_data = odict()
 
         for x1 in range(len(vals)-1):
             n1 = vals[x1]
-            # find the first that fits
+            # find the first field that fits
             for field in self.fields:
                 if field in data[n1]:
                     d1 = data[n1][field]
@@ -250,10 +253,10 @@ class TransformerCombinations( Transformer ):
                 if len(d1) != len(d2):
                     raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
                 
-                new_data.setLeaf( ( ("%s x %s" % (n1, n2) ), n1),
+                DataTree.setLeaf( new_data, ( ("%s x %s" % (n1, n2) ), n1),
                                   d1 )
 
-                new_data.setLeaf( ( ("%s x %s" % (n1, n2) ), n2),
+                DataTree.setLeaf( new_data, ( ("%s x %s" % (n1, n2) ), n2),
                                   d2 )
                                   
         return new_data
@@ -518,7 +521,7 @@ class TransformerHistogram( Transformer ):
             bins, values = self.toHistogram(values)
             if bins != None:
                 for converter in self.mConverters: values = converter(values)
-                data[header] =  DataTree( odict( ((header, bins), ("frequency", values))) )
+                data[header] =  odict( ((header, bins), ("frequency", values)))
             else:
                 to_delete.add( header )
 

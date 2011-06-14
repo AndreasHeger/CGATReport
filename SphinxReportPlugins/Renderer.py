@@ -8,9 +8,9 @@ from math import *
 
 from SphinxReport.ResultBlock import ResultBlock, EmptyResultBlock, ResultBlocks
 from SphinxReport.odict import OrderedDict as odict
-from SphinxReport.DataTree import DataTree, path2str, tree2table
+from SphinxReport.DataTree import path2str, tree2table
 from SphinxReport.Component import *
-from SphinxReport import Utils
+from SphinxReport import Utils, DataTree
 from SphinxReport import CorrespondenceAnalysis
 
 from docutils.parsers.rst import directives
@@ -63,20 +63,20 @@ class Renderer(Component):
 
         result = ResultBlocks( title = path2str(path) )
 
-        labels = data.getPaths()
+        labels = DataTree.getPaths( data )
         if len(labels) < self.nlevels:
             self.warn( "at %s: expected at least %i levels - got %i: %s" %\
-                      (str(path), self.nlevels, len(labels), str(labels)) )
+                           (str(path), self.nlevels, len(labels), str(labels)) )
             result.append( EmptyResultBlock( title = path2str(path) ) )
             return result
 
         paths = list(itertools.product( *labels[:-self.nlevels] ))
 
         for p in paths:
-            work = data.getLeaf( p )
+            work = DataTree.getLeaf( data, p )
             if not work: continue
             try:
-                result.extend( self.render( DataTree(work), path + p ) )
+                result.extend( self.render( work, path + p ) )
             except:
                 self.warn("exeception raised in rendering for path: %s" % str(path+p))
                 raise 
@@ -516,7 +516,7 @@ class Matrix(TableBase):
         is set.
         """
 
-        labels = work.getPaths()
+        labels = DataTree.getPaths( work )
         levels = len(labels)
         if take:
             if levels != 3: raise ValueError( "expected three labels" )
