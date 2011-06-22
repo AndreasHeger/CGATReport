@@ -1,7 +1,7 @@
 .. _Running:
 
 =================
- Running a build
+Running a build
 =================
 
 Building a restructured text document is an iterative process that involves

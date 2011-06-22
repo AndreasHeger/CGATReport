@@ -223,6 +223,8 @@ class Plotter(object):
         figure(s).
         """
 
+        if not plts: return ResultBlocks()
+
         # set logscale before the xlim, as it re-scales the plot.
         if self.logscale:
             ax = plt.gca()
@@ -473,22 +475,27 @@ class PlotterMatrix(Plotter):
             vmin, vmax = None, None
 
         if self.mPalette:
-            if self.mReversePalette:
-                color_scheme = eval( "plt.cm.%s_r" % self.mPalette)                    
-            else:
-                color_scheme = eval( "plt.cm.%s" % self.mPalette)
+            try:
+                if self.mReversePalette:
+                    color_scheme = eval( "plt.cm.%s_r" % self.mPalette)                    
+                else:
+                    color_scheme = eval( "plt.cm.%s" % self.mPalette)
+            except AttributeError:
+                raise ValueError("unknown palette '%s'" % self.mPalette )
         else:
             color_scheme = None
 
-        plots = []
+        plots, labels = [], []
 
         split_row, split_col = nrows > self.mMaxRows, ncols > self.mMaxCols
 
         if (split_row and split_col) or not (split_row or split_col):
             self.debug("not splitting matrix")
             # do not split small or symmetric matrices
+
             cax = self.plotMatrix( matrix, row_headers, col_headers, vmin, vmax, color_scheme )
-            plots, labels = None, None
+            plots.append( cax )
+            # plots, labels = None, None
             self.rescaleForVerticalLabels( col_headers, cliplen = 12 )
             self.addColourBar()
 
@@ -527,12 +534,14 @@ class PlotterMatrix(Plotter):
                 plt.subplot( 1, nplots, x+1 )
                 start = x * self.mMaxRows
                 end = start+min(nrows,self.mMaxRows)
-                self.plotMatrix( matrix[start:end,:], 
-                                 new_headers[start:end], 
-                                 col_headers, 
-                                 vmin, vmax,
-                                 color_scheme )
-            labels = ["%s: %s" % x for x in zip( new_headers, row_headers) ]
+                cax = self.plotMatrix( matrix[start:end,:], 
+                                       new_headers[start:end], 
+                                       col_headers, 
+                                       vmin, vmax,
+                                       color_scheme )
+                plots.append( cax )
+            # labels = ["%s: %s" % x for x in zip( new_headers, row_headers) ] 
+
             self.legend_location = "extra"
             plt.subplots_adjust( **self.mMPLSubplotOptions )
             self.addColourBar()
@@ -547,12 +556,14 @@ class PlotterMatrix(Plotter):
                 plt.subplot( nplots, 1, x+1 )
                 start = x * self.mMaxCols
                 end = start+min(ncols,self.mMaxCols)
-                self.plotMatrix( matrix[:,start:end], 
-                                 row_headers, 
-                                 new_headers[start:end], 
-                                 vmin, vmax,
-                                 color_scheme ) 
-            labels = ["%s: %s" % x for x in zip( new_headers, col_headers) ]
+                cax = self.plotMatrix( matrix[:,start:end], 
+                                       row_headers, 
+                                       new_headers[start:end], 
+                                       vmin, vmax,
+                                       color_scheme ) 
+                plots.append( cax )
+            # labels = ["%s: %s" % x for x in zip( new_headers, col_headers) ] 
+
             self.legend_location = "extra"
             plt.subplots_adjust( **self.mMPLSubplotOptions )
             self.addColourBar()
@@ -1427,6 +1438,9 @@ class PiePlot(Renderer, Plotter):
 
         labels = self.sorted_headers.keys()
 
+        if sum(sorted_vals) == 0:
+            return self.endPlot( None, None, path )
+
         # subtract others from total - rest
         if self.mFirstIsTotal:
             sorted_vals[0] -= sum(sorted_vals[1:])
@@ -1509,14 +1523,14 @@ class BoxPlot(Renderer, Plotter):
 
         for line, data in work.iteritems():
 
-            assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
+            assert len(data) == 1, "multicolumn data not supported yet, got %i items" % len(data)
 
             for label, values in data.iteritems():
                 assert Utils.isArray( values ), "work is of type '%s'" % values
                 d = [ x for x in values if x != None ]
                 if len(d) > 0:
                     all_data.append( d )
-                    legend.append( "/".join((line,label)))
+                    legend.append( "/".join( (str(line),str(label))))
 
         plts.append( plt.boxplot( all_data ) )
         

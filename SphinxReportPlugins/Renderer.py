@@ -622,9 +622,8 @@ class Debug( Renderer ):
                 l = "na"
                 
             # add a result block.
-            results.append( ResultBlock( "debug: path=%s, key=%s, type=%s, len=%s" % \
-                                             ( path2str(path),
-                                               str(key),
+            results.append( ResultBlock( "debug: path=%s, type=%s, len=%s" % \
+                                             ( path2str(path + (key,)),
                                                t, l), title = "") )
 
         return results

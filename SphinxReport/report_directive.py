@@ -187,7 +187,7 @@ def run(arguments,
         # check for existing files
         # update strategy does not use file stamps, but checks
         # for presence/absence of text element and if all figures
-        # mentioned it the text element are present
+        # mentioned in the text element are present
         ###########################################################
         queries = [ re.compile( "%s(%s\S+.%s)" % ( root2builddir, outdir, suffix ) ) for suffix in ("png", "pdf") ]
 
@@ -197,7 +197,6 @@ def run(arguments,
         if os.path.exists( filename_text ):
 
             lines = [ x[:-1] for x in open( filename_text, "r").readlines() ]
-
             filenames = []
 
             # check if all figures are present

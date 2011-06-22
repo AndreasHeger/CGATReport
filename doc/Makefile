@@ -7,7 +7,8 @@ SPHINXBUILD   = sphinxreport-build --num-jobs=4 sphinx-build
 SPHINXCLEAN   = sphinxreport-clean
 PAPER         =
 
-PUBLISH       = ~/public_html/documentation/SphinxReport
+DIR_PUBLISH       = ~/public_html/documentation/SphinxReport
+URL_SUB="s/\/ifs\/devel\/SphinxReport\/doc\/doc/http:\/\/www.cgat.org\/~andreas\/documentation\/SphinxReport/"
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -107,6 +108,11 @@ doctest:
 	      "results in _build/doctest/output.txt."
 
 publish:
-	rm -rf $(PUBLISH)
-	mkdir $(PUBLISH)
-	cp -r _build/html/* $(PUBLISH)/
+	-mkdir -p $(DIR_PUBLISH)
+	@echo "copying data"
+	rsync --size-only -acvz _build/html/ $(DIR_PUBLISH)
+	@echo "setting permissions"
+	chmod -R a+x $(DIR_PUBLISH)
+	chmod -R a+r $(DIR_PUBLISH)
+	@echo "fixing URLs"
+	find $(DIR_PUBLISH)/ -name "*.html" -exec perl -p -i -e $(URL_SUB) {} \;

@@ -237,12 +237,12 @@ def getModule( name ):
     return module, pathname
 
 def getCode( cls, pathname ):
-    '''retrieve code.'''
+    '''retrieve code for methods and functions.'''
     # extract code
     code = []
     infile = open( pathname, "r")
     for line in infile:
-        x = re.search( "(\s*)class\s+%s" % cls, line ) 
+        x = re.search( "(\s*)(class|def)\s+%s" % cls, line ) 
         if x:
             indent = len( x.groups()[0] )
             code.append( line )
@@ -530,6 +530,8 @@ def layoutBlocks( blocks, layout = "column"):
         elif layout == "grid": ncols = int(math.ceil(math.sqrt( len(blocks) )))
     elif layout.startswith("column"):
         ncols = min( len(blocks), int(layout.split("-")[1]))
+        # fix for empty data
+        if ncols == 0: ncols = 1
     else:
         raise ValueError( "unknown layout %s " % layout )
 

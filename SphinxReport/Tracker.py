@@ -12,6 +12,45 @@ from odict import OrderedDict as odict
 class SQLError( Exception ):
     pass
 
+###########################################################################
+###########################################################################
+###########################################################################
+def prettyFloat( val, format = "%5.2f" ):
+    """output a float or "na" if not defined"""
+    try:
+        x = format % val
+    except (ValueError, TypeError):
+        x = "na"
+    return x
+    
+###########################################################################
+###########################################################################
+###########################################################################
+def prettyPercent( numerator, denominator, format = "%5.2f" ):
+    """output a percent value or "na" if not defined"""
+    try:
+        x = format % (100.0 * numerator / denominator )
+    except (ValueError, ZeroDivisionError):
+        x = "na"
+    return x
+
+###########################################################################
+###########################################################################
+###########################################################################
+def getCallerLocals( level = 3, decorators = 0):
+    '''returns locals of caller using frame.
+
+    optional pass number of decorators
+    
+    from http://pylab.blogspot.com/2009/02/python-accessing-caller-locals-from.html
+    '''
+    f = sys._getframe(level+decorators)
+    args = inspect.getargvalues(f)
+    return args[3]
+    
+###########################################################################
+###########################################################################
+###########################################################################
 class Tracker(object):
     """
     Base class for trackers. User trackers should be derived from this class.
@@ -102,6 +141,9 @@ class Tracker(object):
         if locals: return dict( l, **locals)
         else: return l
 
+###########################################################################
+###########################################################################
+###########################################################################
 class TrackerCSV( Tracker ):
     """Base class for trackers that fetch data from an CSV file.
     
@@ -121,17 +163,9 @@ class TrackerCSV( Tracker ):
         """return a data structure for track :param: track and slice :slice:"""
         raise NotImplementedError("not implemented")
 
-def getCallerLocals( level = 3, decorators = 0):
-    '''returns locals of caller using frame.
-
-    optional pass number of decorators
-    
-    from http://pylab.blogspot.com/2009/02/python-accessing-caller-locals-from.html
-    '''
-    f = sys._getframe(level+decorators)
-    args = inspect.getargvalues(f)
-    return args[3]
-    
+###########################################################################
+###########################################################################
+###########################################################################
 class TrackerSQL( Tracker ):
     """Base class for trackers that fetch data from an SQL database.
     
@@ -139,10 +173,10 @@ class TrackerSQL( Tracker ):
     certain pattern (:attr:`pattern`)
 
     This tracker connects to the database. Each tracker will establish
-    its own connection for multi-processing.
+    its own connection for efficient multi-processing.
 
     If :attr:`as_tables` is set, the full table names will be returned.
-    The default is to apply :attr:`pattern`.
+    The default is to apply :attr:`pattern` and return the result.
     """
 
     pattern = "(.*)"
@@ -194,11 +228,13 @@ class TrackerSQL( Tracker ):
             self.db = db
 
     def getTables(self, pattern = None ):
-        """return a list of table objects matching a :term:`track` pattern.
+        """return a list of tables matching a *pattern*.
 
-        Note that this function does not return views.
+        This function does not return table views.
+
+        returns a list of table objects.
         """
-        # old version of sqlalchemy have no sorted_tables attribute
+        # older versions of sqlalchemy have no sorted_tables attribute
         self.connect()
         try:
             sorted_tables = self.metadata.sorted_tables
@@ -214,29 +250,30 @@ class TrackerSQL( Tracker ):
             return sorted_tables
 
     def getTableNames( self, pattern = None ):
-        '''return a list of tablenames.'''
+        '''return a list of tablenames matching a *pattern*.
+        '''
         return [x.name for x in self.getTables( pattern ) ]
 
-    def hasTable( self, name ):
-        """return table with name *name*."""
+    def hasTable( self, tablename ):
+        """return table with name *tablename*."""
         self.connect()
-        return name in set( [x.name for x in self.metadata.sorted_tables])
+        return tablename in set( [x.name for x in self.metadata.sorted_tables])
 
-    def getTable( self, name ):
-        """return table or view with name *name*."""
+    def getTable( self, tablename ):
+        """return table or view with name *tablename*."""
         self.connect()
         try:
             for table in self.metadata.sorted_tables:
-                if table.name == name: return table
+                if table.name == tablename: return table
         except AttributeError, msg:
-            return self.metadata.tables[name]
+            return self.metadata.tables[tablename]
 
         raise IndexError( "table %s no found" % name )
 
-    def getColumns( self, name ):
-        '''return a list of column names.'''
-        c = self.getTable( name ).columns
-        return [ re.sub( "%s[.]" % name, "", x.name) for x in c ]
+    def getColumns( self, tablename ):
+        '''return a list of columns in table *tablename*.'''
+        c = self.getTable( tablename ).columns
+        return [ re.sub( "%s[.]" % tablename, "", x.name) for x in c ]
 
     def execute(self, stmt ):
         self.connect()
@@ -254,10 +291,12 @@ class TrackerSQL( Tracker ):
         return statement
 
     def getValue( self, stmt ):
-        """return a single value from an SQL statement.
+        """returns a single value from SQL statement *stmt*.
+
+        The SQL statement is subjected to variable interpolation.
 
         This function will return the first value in the first row
-        from an SELECT statement.
+        from a SELECT statement.
         """
         statement = self.buildStatement(stmt)
         result = self.execute(statement).fetchone()
@@ -266,21 +305,24 @@ class TrackerSQL( Tracker ):
         return result[0]
 
     def getFirstRow( self, stmt ):
-        """return a row of values from an SQL statement.
+        """return a row of values from SQL statement *stmt* as a list.
 
-        This function will return the first row
-        from an SELECT statement.
+        The SQL statement is subjected to variable interpolation.
+
+        This function will return the first row from a SELECT statement
+        as a list.
+
+        Returns None if result is empty.
         """
         e = self.execute(self.buildStatement(stmt)).fetchone()
         if e: return list(e)
         else: return None
 
     def getRow( self, stmt ):
-        """return a row of values from an SQL statement.
+        """return a row of values from an SQL statement as dictionary.
 
-        This function will return the first row
-        from an SELECT statement as a dictionary
-        of column-value mappings.
+        This function will return the first row from a SELECT 
+        statement as a dictionary of column-value mappings.
 
         Returns None if result is empty.
         """
@@ -290,15 +332,27 @@ class TrackerSQL( Tracker ):
         else: return None
 
     def getValues( self, stmt ):
-        """return all results from an SQL statement.
+        """return values from SQL statement *stmt* as a list.
 
         This function will return the first value in each row
         from an SELECT statement.
+
+        Returns an empty list if there is no result.
         """
-        return [x[0] for x in self.execute(self.buildStatement(stmt)).fetchall() ]
+        e = self.execute(self.buildStatement(stmt)).fetchall()
+        if e: return [x[0] for x in e]
+        return []
 
     def getAll( self, stmt ):
-        """return all results from an SQL statement.
+        """return all rows from SQL statement *stmt* as a dictionary.
+
+        The dictionary contains key/values pairs where keys are
+        the selected columns and the values are the results.
+
+        Example: SELECT column1, column2 FROM table
+        Example: { 'column1': [1,2,3], 'column2' : [2,4,2] }
+
+        Returns an empty dictionary if there is no result.
         """
         # convert to tuples
         e = self.execute(self.buildStatement(stmt))
@@ -307,13 +361,20 @@ class TrackerSQL( Tracker ):
         return odict( zip( columns, zip( *d ) ) )
 
     def get( self, stmt ):
-        """
-        return results from an SQL statement as list of tuples.
+        """return all results from an SQL statement as list of tuples.
+
+        Example: SELECT column1, column2 FROM table
+        Result: [(1,2),(2,4),(3,2)]
+
+        Returns an empty list if there is no result.
         """
         return self.execute(self.buildStatement(stmt)).fetchall()
 
     def getDict( self, stmt ):
-        """return all results from an SQL statement.
+        """return results from SQL statement *stmt* as a dictionary.
+
+        Example: SELECT column1, column2 FROM table
+        Result: { 1: 2, 2: 4, 3: 2}
 
         The first column is taken as the dictionary key
         """
@@ -326,13 +387,15 @@ class TrackerSQL( Tracker ):
         return result
 
     def getIter( self, stmt ):
-        """return an iterator of SQL results."""
+        '''returns an iterator over results of SQL statement *stmt*.
+        '''
         return self.execute(stmt)
     
     def getTracks(self, *args, **kwargs):
         """return a list of all tracks that this tracker provides.
 
-        The tracks are defined as tables matching the attribute :attr:`pattern`.
+        Tracks are defined as tables matching the attribute 
+        :attr:`pattern`.
         """
         rx = re.compile(self.pattern)
         tables = self.getTables( pattern = self.pattern )
@@ -340,6 +403,10 @@ class TrackerSQL( Tracker ):
             return sorted([ x.name for x in tables ] )
         else: 
             return sorted([rx.search( x.name).groups()[0] for x in tables] )
+
+###########################################################################
+###########################################################################
+###########################################################################
 
 class TrackerSQLCheckTables(TrackerSQL):
     """Tracker that examines the presence/absence of a certain
@@ -385,6 +452,10 @@ class TrackerSQLCheckTables(TrackerSQL):
                           self.getValue( "SELECT COUNT(DISTINCT %s) FROM %s" % (slice, table.name) ) ) )
         return odict( data )
         
+###########################################################################
+###########################################################################
+###########################################################################
+
 class TrackerSQLCheckTable(TrackerSQL):
     """Tracker that counts existing entries in a table.
 
@@ -417,9 +488,17 @@ class TrackerSQLCheckTable(TrackerSQL):
             data.append( (column, self.getValue( statement % (column, table.name, column) ) ) )
         return odict( data )
 
+###########################################################################
+###########################################################################
+###########################################################################
+
 class Config( Tracker ):
-    '''tracker providing config values of ini files
-    in current directory.
+    '''Tracker providing config values of ini files.
+
+    The .ini files need to be located in the directory
+    from which sphinxreport is called.
+
+    returns a dictionary of key,value pairs.
     '''
     tracks = glob.glob( "*.ini" )
 
@@ -454,9 +533,16 @@ class Config( Tracker ):
             result[section] = x
         
         return result
+
+###########################################################################
+###########################################################################
+###########################################################################
         
 class Empty( Tracker ):
-    '''empty tracker - placeholder for plots that require no input from a tracker.'''
+    '''Empty tracker
+
+    This tracker servers as placeholder for plots that require no input from a tracker.
+    '''
 
     def getTracks( self, subset = None ):
         """return a list of all tracks that this tracker provides."""
@@ -466,10 +552,24 @@ class Empty( Tracker ):
     def __call__(self, *args ):
         return odict( (("a", 1),))
 
-class SingleTableTrackerRows( TrackerSQL ):
-    '''Tracker to interrogate a single table.
+###########################################################################
+###########################################################################
+###########################################################################
 
-    Rows are unique in *field*.
+class SingleTableTrackerRows( TrackerSQL ):
+    '''Tracker representing a table with multiple tracks.
+
+    Returns a dictionary of values.
+
+    The tracks are given by rows in table :attribute:`table`. The tracks are
+    specified by the :attribute:`fields`. 
+
+    :attribute:`fields` is a tuple of column names (default = ``(track,)``).
+
+    If multiple columns are specified, they will all be used to define the 
+    tracks in the table.
+
+    Rows in the table need to be unique for any combination :attribute:`fields`.
     '''
     exclude_columns = ()
     table = None
@@ -496,7 +596,35 @@ class SingleTableTrackerRows( TrackerSQL ):
         wheres = " AND ".join([ "%s = '%s'" % (x,y) for x,y in zip( self.fields, track ) ] )
         return self.getValue( "SELECT %(slice)s FROM %(table)s WHERE %(wheres)s" ) 
 
+###########################################################################
+###########################################################################
+###########################################################################
+
 class SingleTableTrackerColumns( TrackerSQL ):
+    '''Tracker representing a table with multiple tracks.
+
+    Returns a dictionary of two sets of data, one given
+    by :attribute:`column` and one for a track.
+
+    The tracks are derived from all columns in table :attribute:`table`. By default,
+    all columns are taken as tracks apart from :attribute:`column` and those
+    listed in :attribute:`exclude_columns`.
+
+    An example for a table using this tracker would be::
+
+       bin   mouse_counts    human_counts
+       100   10              10
+       200   20              15
+       300   10              4
+
+    In the example above, the tracks will be ``mouse_counts`` and ``human_counts``. The 
+    Tracker could be defined as::
+ 
+       class MyTracker( SingleTableTrackerColumns ):
+          table = 'mytable'
+          column = 'bin'
+
+    '''
     exclude_columns = ("track,")
     table = None
     column = None
@@ -513,36 +641,15 @@ class SingleTableTrackerColumns( TrackerSQL ):
         data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
         return data
 
-class SingleTableTrackerHistogram( TrackerSQL ):
-    exclude_columns = ("track,")
-    table = None
-    column = None
+###########################################################################
+###########################################################################
+###########################################################################
 
-    def __init__(self, *args, **kwargs ):
-        TrackerSQL.__init__(self, *args, **kwargs )
+class SingleTableTrackerHistogram( SingleTableTrackerColumns ): 
+    pass
 
-    @property
-    def tracks(self):
-        columns = self.getColumns( self.table )
-        return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
-
-    def __call__(self, track, slice = None ):
-        data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
-        return data
+###########################################################################
+###########################################################################
+###########################################################################
 
 
-def prettyFloat( val, format = "%5.2f" ):
-    """output a float or "na" if not defined"""
-    try:
-        x = format % val
-    except (ValueError, TypeError):
-        x = "na"
-    return x
-    
-def prettyPercent( numerator, denominator, format = "%5.2f" ):
-    """output a percent value or "na" if not defined"""
-    try:
-        x = format % (100.0 * numerator / denominator )
-    except (ValueError, ZeroDivisionError):
-        x = "na"
-    return x
