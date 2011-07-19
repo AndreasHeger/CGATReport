@@ -228,26 +228,39 @@ class Plotter(object):
         # set logscale before the xlim, as it re-scales the plot.
         if self.logscale:
             ax = plt.gca()
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
             if "x" in self.logscale:
                 try:
                     ax.set_xscale('log')
+                    # rescale: log plots does not autoscale well if negative values
+                    # scale manually - needs to be overridden by the user if small
+                    # values are to be expected
+                    if xlim[0] < 0:
+                        ax.set_xlim( (0.01, None ))
                 except OverflowError:
                     ax.set_xscale('linear')
 
             if "y" in self.logscale:
                 try:
                     ax.set_yscale('log')
+                    # rescale: log plots does not autoscale well if negative values
+                    # scale manually - needs to be overridden by the user if small
+                    # values are to be expected
+                    if ylim[0] < 0:
+                        ax.set_ylim( (0.01, None ))
                 except OverflowError:
                     ax.set_yscale('linear')
-                
+
             ax.relim()
 
         if self.xrange:
             plt.xlim( self.xrange )
         if self.yrange:
             plt.ylim( self.yrange )
-            
-        if self.add_title: plt.suptitle( "/".join(path) )
+
+        if self.add_title: 
+            plt.suptitle( "/".join(path) )
 
         blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure), "")), title = "/".join(path) ) )
 

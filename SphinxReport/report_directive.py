@@ -268,13 +268,14 @@ def run(arguments,
         dispatcher = Dispatcher.Dispatcher( tracker, 
                                             renderer,
                                             transformers )     
+
         blocks = dispatcher( **dispatcher_options )
 
     except:
 
         logging.warn("report_directive.run: exception caught at %s:%i - see document" % (str(document), lineno) )
 
-        blocks = Utils.buildException( "invocation" )
+        blocks = ResultBlocks(ResultBlocks( Utils.buildException( "invocation" ) ))
         code = None
         tracker_id = None
 

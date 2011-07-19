@@ -374,13 +374,10 @@ def buildException( stage ):
 
         exception_value  = quote_rst( str(exceptionValue) )
 
-        return ResultBlocks( 
-            ResultBlocks( 
-                ResultBlock( EXCEPTION_TEMPLATE % locals(), 
-                         title = "" ) ) )
+        return ResultBlock( EXCEPTION_TEMPLATE % locals(), 
+                            title = "" )
     else:
-        return ResultBlocks()
-
+        return None
 
 def getTransformers( transformers, **kwargs ):
     '''find and instantiate all transformers.'''
@@ -525,13 +522,18 @@ def layoutBlocks( blocks, layout = "column"):
             lines.extend(block.text.split("\n"))
         lines.extend( [ "", ] )
         return lines
+
     elif layout in ("row", "grid"):
         if layout == "row": ncols = len(blocks)
         elif layout == "grid": ncols = int(math.ceil(math.sqrt( len(blocks) )))
+
     elif layout.startswith("column"):
         ncols = min( len(blocks), int(layout.split("-")[1]))
-        # fix for empty data
-        if ncols == 0: ncols = 1
+        # TODO: think about appropriate fix for empty data
+        if ncols == 0: 
+            ncols = 1
+            return lines
+
     else:
         raise ValueError( "unknown layout %s " % layout )
 

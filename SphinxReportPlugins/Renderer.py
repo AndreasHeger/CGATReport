@@ -629,7 +629,10 @@ class Debug( Renderer ):
         return results
         
 class User(Renderer):
-    """Renderer that does not rendering. 
+    """Renderer for user-implemented rendering.
+
+    The renderer itself creates no output, but returns the results
+    of the tracker.
 
     When called, a Renderer and its subclasses will return blocks of
     restructured text. Images are automatically collected from matplotlib
@@ -658,5 +661,66 @@ class User(Renderer):
                                          title = "" ) )
 
         return results
+
+class Status( Renderer ):
+    '''Renders a status report.
+
+    A status report is a two element table containing
+    status ('PASS', 'FAIL', 'WARNING', 'NA') and some information.
+
+    The column description is removed and added as a legend at
+    the bottom of the table.
+
+    '''
+
+    # read complete data
+    nlevels = -1
+
+    map_code2image = { 'FAIL' : "fail.png",
+                       'PASS' : "pass.png",
+                       'NA': "not_available.png",
+                       'WARNING' : "warning.png",
+                       'WARN': "warning.png" }
+
+    def __call__(self, data, path ):
+
+        lines = []
+        dirname = os.path.join( os.path.dirname(sys.modules["SphinxReport"].__file__), "images" )
+        descriptions = {}
+        title = "status"
+
+        # add header
+        lines.append( ".. csv-table:: %s" % "table" )
+        lines.append( '   :header: "Track", "Test", "", "Status", "Info" ' )
+        lines.append( '' )
+
+        for track, w in data.iteritems():
+            for slice, work in w.iteritems():
+            
+                status = str(work['status']).strip()
+                descriptions[slice] = work['description']
+                info = str(work['info']).strip()
+
+                try:
+                    image = ".. image:: %s" % os.path.join( dirname, self.map_code2image[status.upper()] )
+                except KeyError:
+                    image = ""
+
+                lines.append( '   "%(track)s","%(slice)s","%(image)s","%(status)s","%(info)s"' % locals() )
+                
+        lines.append( "") 
+        
+        # add legend
+        lines.append( ".. csv-table:: %s" % "legend" )
+        lines.append( '   :header: "Test", "Description" ' )
+        lines.append( '' )
+
+        for test, description in descriptions.iteritems():
+            lines.append( '   "%s","%s"' % (str(test), str(description ) ) )
+            
+        lines.append( "") 
+
+        return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )        
+
 
 

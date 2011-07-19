@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = sphinxreport-build --num-jobs=4 sphinx-build
+SPHINXBUILD   = xvfb-run -a sphinxreport-build --num-jobs=4 sphinx-build
 SPHINXCLEAN   = sphinxreport-clean
 PAPER         =
 

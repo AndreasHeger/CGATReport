@@ -555,6 +555,40 @@ class Empty( Tracker ):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+class Status( TrackerSQL ):
+    '''Tracker returning status information.
+    
+    Define tracks and slices. Slices will be translated into
+    calls to member functions starting with 'test'. 
+
+    Each test function should return a tuple with the test
+    status and some information.
+    
+    If this tracker is paired with a :class:`Renderer.Status`
+    renderer, the following values of a test status will be
+    translated into icons: ``PASS``, ``FAIL``, ``WARNING``, ``NOT AVAILABLE``.
+    
+    The docstring of the test function is used as description.
+    '''
+
+    def getSlices( self, subset = None ):
+        return [ x[4:] for x in dir(self) if x.startswith("test")]
+        
+    def __call__(self, track, slice ):
+        if not hasattr( self, "test%s" % slice ):
+            raise NotImplementedError( "test%s not implement" % slice )
+        
+        status, value = getattr( self, "test%s" % slice )(track)
+        description = getattr( self, "test%s" % slice ).__doc__
+        
+        return odict( 
+            (( 'status', status),
+             ( 'info', str(value)),
+             ( 'description', description ) ) )
+    
+###########################################################################
+###########################################################################
+###########################################################################
 
 class SingleTableTrackerRows( TrackerSQL ):
     '''Tracker representing a table with multiple tracks.

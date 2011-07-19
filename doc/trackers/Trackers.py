@@ -1,6 +1,8 @@
+'''This document contains a number of sample trackers.'''
+
 import sys, os, re, random
 
-from SphinxReport.Tracker import Tracker
+from SphinxReport.Tracker import Tracker, Status
 from SphinxReport.odict import OrderedDict as odict
 
 class LabeledDataExample( Tracker ):
@@ -192,7 +194,25 @@ class LabeledDataTest( Tracker ):
             return odict ( (("column1", 20),
                             ("column2", 10),
                             ("column3", 5),) )
-
-
     
+class StatusTracker( Status ):
+    tracks = ("track1", "track2", "track3")
+    
+    def testTest1( self, track ):
+        '''test1 passes'''
+        return "PASS", 0.5
+
+    def testTest2( self, track ):
+        '''test2 fails - 
+        A large test.'''
+        return "FAIL", 2
+
+    def testTest3( self, track ):
+        '''test3 gives a warning'''
+        return "WARN", "a string"
+
+    def testTest4( self, track ):
+        '''test4 is not available/applicable'''
+        return "NA", None
+
 

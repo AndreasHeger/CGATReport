@@ -322,7 +322,7 @@ class Dispatcher(Component):
                 d = odict( (("all", d ),))
             results.append( self.renderer( d, path = ("all",) ) )
 
-        elif group_level < 0:
+        elif group_level < 0 or renderer_nlevels < 0:
             # no grouping
             results.append( self.renderer( self.data, path = () ) )
         else:
@@ -331,7 +331,10 @@ class Dispatcher(Component):
             for path in paths:
                 work = DataTree.getLeaf( self.data, path )
                 if not work: continue
-                results.append( self.renderer( work, path = path ))
+                try:
+                    results.append( self.renderer( work, path = path ))
+                except:
+                    results.append( ResultBlocks( Utils.buildException( "rendering" ) ) )
 
         if len(results) == 0:
             self.warn("tracker returned no data.")
@@ -344,12 +347,12 @@ class Dispatcher(Component):
     def __call__(self, *args, **kwargs ):
 
         try: self.parseArguments( *args, **kwargs )
-        except: return Utils.buildException( "parsing" )
+        except: return ResultBlocks(ResultBlocks( Utils.buildException( "parsing" ) ))
 
         self.debug( "profile: started: tracker: %s" % (self.tracker))
 
         try: self.collect()
-        except: return Utils.buildException( "collection" )
+        except: return ResultBlocks(ResultBlocks( Utils.buildException( "collection" ) ))
 
         self.debug( "profile: finished: tracker: %s" % (self.tracker))
 
@@ -357,13 +360,13 @@ class Dispatcher(Component):
         self.debug( "%s: after collection: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
         
         try: self.transform()
-        except: return Utils.buildException( "transformation" )
+        except: return ResultBlocks(ResultBlocks( Utils.buildException( "transformation" ) ))
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after transformation: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         try: self.group()
-        except: return Utils.buildException( "grouping" )
+        except: return ResultBlocks(ResultBlocks( Utils.buildException( "grouping" ) ))
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after grouping: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
@@ -371,7 +374,7 @@ class Dispatcher(Component):
         self.debug( "profile: started: renderer: %s" % (self.renderer))
 
         try: result = self.render()
-        except: return Utils.buildException( "rendering" )
+        except: return ResultBlocks(ResultBlocks( Utils.buildException( "rendering" ) ))
 
         self.debug( "profile: finished: renderer: %s" % (self.renderer))
 
