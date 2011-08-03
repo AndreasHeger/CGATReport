@@ -5,6 +5,8 @@ import sys, os, re, random
 from SphinxReport.Tracker import Tracker, Status
 from SphinxReport.odict import OrderedDict as odict
 
+def BarData(): return dict( [("bar1", 20), ("bar2", 10)] )
+
 class LabeledDataExample( Tracker ):
     slices = ("slice1", "slice2")
     tracks = ("track1", "track2", "track3")
@@ -86,6 +88,21 @@ class SingleColumnDataExample( Tracker ):
         random.shuffle( s )
         return odict( (("data", s),) )
 
+class ArrayDataExample( Tracker ):
+    '''return two arrays of data.'''
+    
+    slices = [ "slice%i" % x for x in range(0,2) ]
+    tracks = [ "track%i" % x for x in range(0,3) ]
+
+    def __call__(self, track, slice = None):
+
+        scale = (3-int(track[-1])) 
+        
+        data = odict( (("x", range(0,50)),
+                       ("y", [ x * scale for x in range(0,50) ] ) ) )
+        
+        return data
+
 class SingleColumnDataLargeExample( Tracker ):
     '''return a single column of data.'''
     slices = ("slice1", "slice2")
@@ -145,21 +162,6 @@ class MultipleColumnDataFullExample( Tracker ):
                 data.append( [ y + random.gauss( 0, 0.5 ) for y in range(20) ] )
         return odict( zip(self.mColumns, data) )
 
-class MultipleColumnsExample( Tracker ):
-    '''multiple columns each with single value.'''
-    mColumns = [ "col1", "col2", "col3" ]
-    slices = ("slice1", "slice2")
-    tracks = ("track1", "track2")
-    def __call__(self, track, slice = None):
-        data = []
-        if slice == "slice1":
-            for x in range(len(self.mColumns)-1):
-                data.append( x+1 )
-        elif slice == "slice2":
-            for x in range(len(self.mColumns)):
-                data.append( x+1 )
-        return odict( zip(self.mColumns, data) )
-
 class ErrorInTracker1( Tracker ):
     '''A tracker that creates an error - exception while collecting data.'''
     slices = ("slice1", "slice2")
@@ -216,3 +218,5 @@ class StatusTracker( Status ):
         return "NA", None
 
 
+def getSingleValue(): return 12
+    

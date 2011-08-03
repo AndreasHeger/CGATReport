@@ -622,9 +622,12 @@ class Debug( Renderer ):
                 l = "na"
                 
             # add a result block.
-            results.append( ResultBlock( "debug: path=%s, type=%s, len=%s" % \
+            data = str(work[key])
+            if len(data) > 30: data=data[:30] + "..."
+            results.append( ResultBlock( "path= %s, type= %s, len= %s, data= %s" % \
                                              ( path2str(path + (key,)),
-                                               t, l), title = "") )
+                                               t, l, data), 
+                                         title = "") )
 
         return results
         
@@ -668,9 +671,8 @@ class Status( Renderer ):
     A status report is a two element table containing
     status ('PASS', 'FAIL', 'WARNING', 'NA') and some information.
 
-    The column description is removed and added as a legend at
-    the bottom of the table.
-
+    The __doc__ string of the tracker is added as a legend below
+    the status report.
     '''
 
     # read complete data
@@ -694,33 +696,28 @@ class Status( Renderer ):
         lines.append( '   :header: "Track", "Test", "", "Status", "Info" ' )
         lines.append( '' )
 
-        for track, w in data.iteritems():
-            for slice, work in w.iteritems():
+        for testname, w in data.iteritems():
+            for track, work in w.iteritems():
             
                 status = str(work['status']).strip()
-                descriptions[slice] = work['description']
+                descriptions[testname] = work['description']
                 info = str(work['info']).strip()
-
                 try:
                     image = ".. image:: %s" % os.path.join( dirname, self.map_code2image[status.upper()] )
                 except KeyError:
                     image = ""
 
-                lines.append( '   "%(track)s","%(slice)s","%(image)s","%(status)s","%(info)s"' % locals() )
+                lines.append( '   "%(track)s",":term:`%(testname)s`","%(image)s","%(status)s","%(info)s"' % locals() )
                 
         lines.append( "") 
         
-        # add legend
-        lines.append( ".. csv-table:: %s" % "legend" )
-        lines.append( '   :header: "Test", "Description" ' )
-        lines.append( '' )
+        lines.append( ".. glossary::" )
+        lines.append( "" )
 
         for test, description in descriptions.iteritems():
-            lines.append( '   "%s","%s"' % (str(test), str(description ) ) )
-            
-        lines.append( "") 
-
-        return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )        
+            lines.append( '%s\n%s\n' % (Utils.indent(test,3), Utils.indent( description,6) ) )
+        
+        return ResultBlocks( ResultBlock( "\n".join(lines), title = "") )        
 
 
 

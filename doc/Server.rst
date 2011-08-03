@@ -2,7 +2,7 @@
 Server
 ******
 
-:mod:`server`
+sphinxreport`server`
 =============
 
 .. automodule:: server

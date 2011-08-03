@@ -15,8 +15,6 @@ import rpy2.robjects.numpy2ri
 
 def getCurrentRDevice():
     '''return the numerical device id of the current device.'''
-    #R.dev_off()
-    #return R.dev_cur().values()[0]
     return R["dev.cur"]()[0]
 
 class MatplotlibData( Tracker ):

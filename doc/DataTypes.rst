@@ -8,7 +8,7 @@ Inheritance diagram
 .. inheritance-diagram:: SphinxReport.DataTree
    :parts: 1
 
-:mod:`DataTree`
+sphinxreport`DataTree`
 =======================
 
 .. automodule:: DataTree

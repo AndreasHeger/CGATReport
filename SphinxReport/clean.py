@@ -13,6 +13,27 @@ time :command:`sphinx` is invoked as::
 The full list of command line options is listed by suppling :option:`-h/--help`
 on the command line.
 
+The options are:
+
+**-v/--verbose** verbosity level
+   Increase the number of status messages displayed.
+
+**-n/--dry-run** 
+   Show all files that will be removed but do not remove them.
+
+**-s/--section** choice
+   Only clean within certain types of documents. The default is all. Possible choices are
+   ``tracker`` and ``text``.
+
+**-b/--build** path
+   Path to build directory. By default, documents are examined in the current directory.
+
+
+**-w/--path** path
+   Path with restructured document. By default, the ``.rst`` files are assumed to reside
+   in the current directory. Without the documents, the clean command will not be able
+   to remove all documents that refer to a :term:`tracker`.
+
 If there is only one target and it is ``clean``, ``distclean``,
 the full build we cleaned up. If it is ``cache``, only the cache
 will be cleaned forcing newly built :class:`Tracker` objects to recompute
@@ -21,7 +42,12 @@ their data.
 Alternatively, if one or more than one :class:`Tracker` is given, all 
 documents referencing these will be removed to force a re-built next
 time :command:`sphinx` is invoked. The names can contain shell-like
-regular expression patterns (see glob in the python reference).
+regular expression patterns (see glob in the python reference). For example,
+the following will remove all data from the cache and all previously build 
+documents containing trackers matching the word ``OldData``::
+
+   sphinxreport-clean .*OldData.*
+
 """
 
 import sys, os, imp, cStringIO, re, types, glob, optparse, shutil
@@ -39,10 +65,14 @@ from SphinxReport.Tracker import Tracker
 SEPARATOR="@"
 
 # import conf.py for source_suffix
-if not os.path.exists("conf.py"):
-    source_suffix = ".rst"
-else:
+if os.path.exists("conf.py"):
     execfile( "conf.py" )
+else:
+    source_suffix = ".rst"
+
+RSTDIR = "."
+if "docsdir" in locals():
+    RSTDIR = docsdir
 
 def deleteFiles( test_f, dirs_to_check = (".",), dry_run = False ):
     """remove all files that test_f returns True for.
@@ -95,7 +125,11 @@ def removeText( tracker, dry_run = False, sourcedir = ".", builddir = "report" )
         for f in files:
             if f.endswith( source_suffix ):
                 fn = os.path.join( root, f )
-                found = rx_tracker.search( "".join(open(fn,"r").readlines()) )
+                try:
+                    found = rx_tracker.search( "".join(open(fn,"r").readlines()) )
+                except IOError:
+                    continue
+
                 if found:
                     files_to_check.append( f )
 
@@ -137,7 +171,7 @@ def main():
 
     parser.set_defaults( loglevel = 2,
                          dry_run = False,
-                         path = ".",
+                         path = RSTDIR,
                          builddir = ".",
                          sections = [] )
 

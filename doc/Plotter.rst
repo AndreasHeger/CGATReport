@@ -8,7 +8,7 @@ Inheritance diagram
 .. inheritance-diagram:: SphinxReportPlugins.Plotter.Plotter
    :parts: 1
 
-:mod:`Plotter`
+sphinxreport`Plotter`
 =======================
 
 .. automodule:: Plotter

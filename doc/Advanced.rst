@@ -1,8 +1,18 @@
+.. _Advanced topics:
+
 ===============
 Advanced topics
 ===============
 
 This page collects a few advanced techniques for working with sphinxreport.
+
+User generated plots
+====================
+
+If the basic plots included in SphinxReport are not enough (and there
+is no reason why they shouldn't), plotting can be done within a tracker
+while skipping the rendering step. See the :ref:`user` directive on
+examples of using this.
 
 Referring to other sphinxreport documents
 =========================================

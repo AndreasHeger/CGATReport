@@ -1,8 +1,11 @@
 .. _Tracker:
 
-****************
+*******
 Tracker
-****************
+*******
+
+The base class of all :term:`trackers` is the class 
+:class:`SphinxReport.Tracker.Tracker`. 
 
 Inheritance diagram
 ===================
@@ -11,7 +14,7 @@ Inheritance diagram
    :parts: 1
 
 
-:mod:`Tracker`
+sphinxreport`Tracker`
 =======================
 
 .. automodule:: Tracker

@@ -4,7 +4,7 @@
 Tutorial 7: Adding active content
 =================================
 
-Per default, :mod:`Sphinx` builds static documents. If the document
+Per default, sphinxreport`Sphinx` builds static documents. If the document
 is rendered as html, active content can be added by running a 
 web server.
 
@@ -13,7 +13,7 @@ web server.
    run a web server if you know what you are doing. Also, do
    not assume that I know what I am doing.
 
-:mod:`SphinxReport` uses `web.py <http://webpy.org>`_ as a server.
+sphinxreport uses `web.py <http://webpy.org>`_ as a server.
 Make sure it is installed. To test if it is, run::
 
    import web

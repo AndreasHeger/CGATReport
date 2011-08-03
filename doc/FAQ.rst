@@ -28,7 +28,7 @@ I get the error message ``RuntimeError: maximum recursion depth exceeded while c
 This is possibly a data type error. If the type of a database column is defined as text (for example
 if there are so few values that the correct type can not be guessed), the Trackers might return a
 string instead of a numeric value, for example ``(u'0.64425349087',)`` instead of ``(u'0.64425349087',)``.
-These should be caught by the :mod:`SphinxReport.DataTypes`.
+These should be caught by the sphinxreport`SphinxReport.DataTypes`.
 
 sphinxreport-build freezes keyboard and mouse when run with multiple processes
 ******************************************************************************

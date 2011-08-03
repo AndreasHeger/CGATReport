@@ -18,6 +18,13 @@ def path2str( path ):
     else:
         return ""
 
+## This module needs to be properly refactored to use
+## proper tree traversal algorithms. It currently is
+## a collection of not very efficient hacks.
+
+## The DataTree data structure is discontinued
+## - a nested dictionary was more general from a user
+##   point of view.
 class DataTree( object ):
     '''a DataTree.
 
@@ -213,6 +220,24 @@ def setLeaf( work, path, data ):
             work = work[x]
     work[path[-1]] = data
 
+def getPrefixes( work, level ):
+    '''get all possible paths up to *level*.'''
+    paths = getPaths(work)
+    return list(itertools.product( *paths[:level] ))
+
+def removeLevel( work, level ):
+    '''remove *level* in *work*.'''
+    prefixes = getPrefixes( work, level )
+    for path in prefixes:
+        leaf = getLeaf(work, path )
+        keys = leaf.keys()
+        for key in keys:
+            # there might be a subkey the same as key
+            d = leaf[key]
+            del leaf[key]
+            for subkey, item in d.iteritems():
+                leaf[subkey] = item
+
 def swop( work, level1, level2 ):
     '''swop two levels *level1* and *level2*.
 
@@ -261,7 +286,7 @@ def swop( work, level1, level2 ):
             if data == None: continue
             setLeaf( newtree, newpath, data )
             
-    return work
+    return newtree
 
 def removeLeaf( work, path ):
     '''remove leaf/branch at *path*.'''
@@ -278,11 +303,41 @@ def removeLeaf( work, path ):
         del work[path[-1]]
     return work
 
+def removeEmptyLeaves( work ):
+    '''traverse data tree in DFS order and remove empty 
+    leaves.
+    '''
+
+    to_delete = []
+    try:
+        for label, w in work.iteritems():
+            keep = removeEmptyLeaves( w )
+            if not keep: to_delete.append(label)
+
+        for label in to_delete:
+            del work[label]
+
+        if len(work) == 0:
+            return False
+        else:
+            return True
+    except AttributeError:
+        pass
+
+    # return True if not empty
+    # numpy arrays do not test True if they contain
+    # elements.
+    try:
+        if work: return True
+        else: return False
+    except ValueError:
+        # for numpy arrays
+        return len(work) > 0
+
 def prettyprint(work):
     paths = work.getPaths()
     if len(paths) == 0: return "NA"
     else: return "< datatree: %s >" % str(paths)
-
 
 def flatten(l, ltypes=(list, tuple)):
     '''flatten a nested list/tuple.'''

@@ -12,16 +12,16 @@ options.
 The options are:
 
 **-t/--tracker** tracker
-   :class:`Tracker` to use.
+   :term:`tracker` to use.
 
 **-r/--renderer** renderer
-   :class:`Renderer` to use.
+   :term:`renderer` to use.
 
 **-f/--force** 
-   force update of a :class:`Tracker`.
+   force update of a :class:`Tracker`. Removes all data from cache.
 
 **-m/--transformer** transformer
-   :class:`Transformer` to use.
+   :class:`Transformer` to use. Several transformers can be applied via multiple **-m** options.
 
 **-a/--tracks** tracks
    Tracks to display as a comma-separated list.
@@ -38,10 +38,14 @@ The options are:
 **--no-print**
    Do not print an rst text template corresponding to the displayed plots.
 
-**--no-plot**
-   Do not plot.
+**--no-show**
+   Do not show plot. Use this to just display the tracks/slices that will be generated.
 
-If no command line arguments are given all :class:`Tracker` are build in parallel. 
+**-w/--path** path
+   Path with trackers. By default, :term:`trackers` are searched in the directory :file`trackers` 
+   within the current directory.
+
+If no command line arguments are given all :term:`trackers` are build in parallel. 
 
 Usage
 -----
@@ -49,7 +53,7 @@ Usage
 There are three main usages of :command:`sphinxreport-test`:
 
 Fine-tuning plots
------------------
++++++++++++++++++
 
 Given a :class:`Tracker` and :class:`Renderer`, sphinxreport-test
 will call the :class:`Tracker` and supply it to the :class:`Renderer`::
@@ -61,7 +65,7 @@ using the ``-o`` command line option. The script will output a template
 restructured text snippet that can be directly inserted into a document.
 
 Rendering a document
---------------------
+++++++++++++++++++++
 
 With the ``-p/--page`` option, ``sphinxreport-test`` will create the restructured
 text document as it is supplied to sphinx::
@@ -71,7 +75,7 @@ text document as it is supplied to sphinx::
 This functionality is useful for debugging.
 
 Testing trackers
-----------------
+++++++++++++++++
 
 Running sphinxreport-test without options::
 
@@ -80,7 +84,6 @@ Running sphinxreport-test without options::
 will collect all :class:`Trackers` and will execute them.
 Use this method to see if all :class:`Trackers` can access
 their data sources.
-
 """
 
 
@@ -111,6 +114,15 @@ try:
     from multiprocessing import Process
 except ImportError:
     from threading import Thread as Process
+
+if os.path.exists("conf.py"):
+    execfile("conf.py")
+
+# set default directory where trackers can be found
+TRACKERDIR = "trackers"
+if "docsdir" in locals():
+    TRACKERDIR = os.path.join( docsdir, "trackers" )
+
 
 RST_TEMPLATE = """.. _%(label)s:
 
@@ -206,7 +218,7 @@ def main():
         do_show = True,
         do_print = True,
         force = False,
-        dir_trackers = "trackers",
+        dir_trackers = TRACKERDIR,
         label = "GenericLabel",
         caption = "add caption here" )
     
@@ -217,6 +229,8 @@ def main():
         
     # configure options
     options.dir_trackers = os.path.abspath( os.path.expanduser( options.dir_trackers ) )
+    if not os.path.exists( options.dir_trackers ):
+        raise IOError("directory %s does not exist" % options.dir_trackers )
     sys.path.append( options.dir_trackers )
     # test plugins
     kwargs = {}

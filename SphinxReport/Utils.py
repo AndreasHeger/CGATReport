@@ -254,6 +254,11 @@ def getCode( cls, pathname ):
 
     return code
 
+def indent( text, indent ):
+    '''return *text( indented by *indent*.'''
+
+    return "\n".join( [ " " * indent + x for x in text.split("\n") ] )
+
 def isClass( obj ):
     '''return true if obj is a class.
     

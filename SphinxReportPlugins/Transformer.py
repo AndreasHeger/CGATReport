@@ -485,11 +485,15 @@ class TransformerHistogram( Transformer ):
                 except ValueError:
                     raise SyntaxError( "expected log-xxx, got %s" % self.mBins )
                 nbins = float(b)
-                if ma < 0: raise ValueError( "can not bin logarithmically for negative values.")
+                if ma < 0 or mi < 0: raise ValueError( "can not bin logarithmically for negative values.")
                 if mi == 0: mi = numpy.MachAr().epsneg
                 ma = numpy.log10( ma )
                 mi = numpy.log10( mi )
-                bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
+                try:
+                    bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
+                except ValueError, msg:
+                    raise ValueError("can not compute %i bins for %f-%f: %s" % \
+                                         (nbins, mi, ma, msg ) )
             elif binsize != None:
                 # make sure that ma is part of bins
                 data.sort()

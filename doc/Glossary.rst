@@ -1,4 +1,4 @@
-*********
+d*********
 Glossary
 *********
 
@@ -14,39 +14,50 @@ Glossary
    slice
       A slice through a data set, for example gender like "male" and "female". 
 
-   Tracker
-      A python function or functor returning data for a track, see :class:`Tracker.Tracker`.
+   tracker
+      A python function or functor returning data, see
+      :class:`SphinxReport.Tracker.Tracker`.
+
+   transformer
+      A python class transforming data before rendering. 
+
+   renderer
+      An object displaying data returned from a :term:`Tracker`.
 
    path
       Data is stored hierarchically in a nested dictionary. The sequence of keys to 
       access a data item is called the path.
 
-   SingleColumnData
-      Return type of a :class:`Tracker.Tracker`. SingleColumnData is a single list or tuple of data,
-      for example ``(1,2,3,4)``.
-      
-   MultipleColumnData
-      Return type of a :class:`Tracker.Tracker`. MultipleColumnData is a list/tuple of lists/tuples.
-      The first tuple/list contains column labels, while each subsequent tuple/list contains the values
-      of a column. For example ``( ("column1","column2), ((1,2,3,4), (5,6,7,8)) )`` corresponds to the
-      following data::
-      
-         column1 column2
-         1	 5
-         2	 6
-	 3	 7
-	 4	 8
+   functor
+      A python object that can be used as a function. Functors define a ``__call__`` method. 
 
-       In contrast to :term:`LabeledData`, all the columns are required to have the same length.
+   labeled values
+      ``label, value`` pairs in a nested dictionary. This
+      data structure is understood by many renderers. An example of
+      labeled data is::
 
-   LabeledData
-      Return type of a :class:`Tracker.Tracker`. MultipleColumnData is a list/tuple of lists/tuples.
-      The first tuple/list contains column labels, while each subsequent tuple/list contains the values
-      of a column. For example ``( ("data1", 1), ("data2", 2))`` corresponds to the
-      following data::
-         
-         data1   data2 
-         1	 2
+            blue/car/wheels=4
+      	    blue/car/doors=3
+	    blue/bike/wheels=2
+	    blue/bike/doors=0
+	    red/car/wheels=4
+	    red/car/doors=5
+
+      Here, ``blue`` and ``red`` are :term:`track`, ``car`` and
+      ``bike`` are :term:`slice` and ``weels=4`` is a ``label,value`` pair.
+
+   numerical arrays
+      numerical arrays are lists of numbers.
+
+   labeled values with errors
+      :term:`labeled values` can be extended with labels or errors.
+
+            blue/car/wheels/data=4
+            blue/car/wheels/data=4
+
+
+      Here, ``blue`` and ``red`` are a :term:`track`, ``car`` and
+      ``bike`` are a :term:`slice` and ``weels=4`` is a ``label,value`` pair.
 
    source directory
       The directory which, including its subdirectories, contains all source
@@ -57,3 +68,8 @@ Glossary
       the :term:`source directory`, but can be set differently with the **-c**
       command-line option.
 
+   data tree
+      nested dictionary used to represent labeled data
+
+   data path
+      path towards some data in a :term:`data tree`.

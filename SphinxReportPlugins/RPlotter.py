@@ -306,13 +306,19 @@ class SmoothScatterPlot(Renderer, Plotter):
 
     coords[dict]
     """
-    options = Renderer.options + Plotter.options
+    options = Renderer.options + Plotter.options +\
+        ( ('bins', directives.unchanged), )
     
     nlevels = 1
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
+
+        self.nbins = kwargs.get("nbins", "128" )
+        if self.nbins:
+            if "," in self.nbins: self.nbins=map(int, self.nbins.split(","))
+            else: self.nbins=int(self.nbins)
 
     def render(self, work, path ):
         
@@ -337,6 +343,8 @@ class SmoothScatterPlot(Renderer, Plotter):
             if "y" in self.logscale:
                 yvals = R.log10(yvals)
                 
-        R.smoothScatter( xvals, yvals, xlab=xlabel, ylab=ylabel)
+        R.smoothScatter( xvals, yvals, 
+                         xlab=xlabel, ylab=ylabel,
+                         nbin = self.nbins )
 
         return self.endPlot( work, path )

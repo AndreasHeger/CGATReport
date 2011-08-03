@@ -54,7 +54,7 @@ Testing this data source::
 
    sphinxreport-test -t WordCounter -r table 
 
-The tabular output is not very informative in this case. :mod:`SphinxReport` contains methods (objects of the type :class:`Tranformer`) 
+The tabular output is not very informative in this case. sphinxreport contains methods (objects of the type :class:`Tranformer`) 
 modify data before display. For example, the :class:`TransformerHistogram` computes a histogram (``-m histogram`` or
 ``--transformer=histogram``)::
 

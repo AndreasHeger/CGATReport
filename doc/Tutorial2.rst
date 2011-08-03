@@ -32,7 +32,7 @@ the following code::
       def __call__(self, track, slice = None ):
 	  return dict( (("header1", 10), ("header2", 20)),)
 
-The module :mod:`Trackers` is imported and the data source ``MyData`` is derived from it::
+The module sphinxreport`Trackers` is imported and the data source ``MyData`` is derived from it::
    
    class MyData(Tracker):
 

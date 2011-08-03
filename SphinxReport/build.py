@@ -13,6 +13,13 @@ the :command:`sphinx` command line::
 
 The full list of command line options is listed by suppling :option:`-h/--help`
 on the command line.
+
+**-a/--num-jobs** number of jobs
+    Number of jobs to start for parallel pre-processing.
+
+**-v/--verbose** verbosity level
+    Increase the number of status messages displayed.
+
 """
 
 import sys, os, re, types, glob, optparse, traceback, hashlib

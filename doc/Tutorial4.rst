@@ -52,7 +52,7 @@ Add the following code to :file:`Tutorial3.py`::
 
 This counter again counts word sizes in ``.py`` and ``.rst`` files, but collects counts separately
 for words starting with vocals and consonants. What is counted is determined by the ``slice`` option.
-:mod:`SphinxReport` will query the :attr:`slices` attribute and then call the Tracker with all combinations
+sphinxreport will query the :attr:`slices` attribute and then call the Tracker with all combinations
 of :term:`tracks` and :term:`slices`.
 
 Testing the data source::

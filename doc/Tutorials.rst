@@ -5,9 +5,10 @@ Tutorials
 *********
 
 The tutorials provide step-by-step introductions to the 
-main features of :mod:`SphinxReport`.
+main features of sphinxreport.
 
-Tutorials:
+Tutorials
+=========
 
 .. toctree::
    :maxdepth: 2
@@ -21,7 +22,8 @@ Tutorials:
    Tutorial7.rst 
    Tutorial8.rst
 
-Tutorial results:
+Tutorial results
+================
 
 .. toctree::
    :maxdepth: 1

@@ -76,6 +76,8 @@ class Dispatcher(Component):
         try: self.mColumns = [ x.strip() for x in kwargs["columns"].split(",")]
         except KeyError: self.mColumns = None
 
+        self.tracker_options = kwargs.get( "tracker" , None )
+        
     def getData( self, path ):
         """get data for track and slice. Save data in persistent cache for further use.
 
@@ -88,20 +90,20 @@ class Dispatcher(Component):
             key = "all"
 
         result, fromcache = None, False
-        if not self.nocache:
+        if not self.nocache or self.tracker_options:
             try:
                 result = self.cache[ key ]
                 fromcache = True
             except KeyError:
                 pass
 
-        #kwargs = {}
-        #if track != None: kwargs['track'] = track
-        #if slice != None: kwargs['slice'] = slice
+        kwargs = {}
+        if self.tracker_options:
+            kwargs['options'] = self.tracker_options
         
         if result == None:
             try:
-                result = self.tracker( *path )
+                result = self.tracker( *path, **kwargs )
             except Exception, msg:
                 self.warn( "exception for tracker '%s', path '%s': msg=%s" % (str(self.tracker),
                                                                               DataTree.path2str(path), 
@@ -159,11 +161,14 @@ class Dispatcher(Component):
         if not datapaths: return
 
         def _filter( all_entries, input_list ):
+            # need to preserve type of all_entries
             result = []
+            search_entries = map(str, all_entries )
+            m = dict( zip( search_entries, all_entries) )
             for s in input_list:
-                if s in all_entries:
+                if s in search_entries:
                     # collect exact matches
-                    result.append( s )
+                    result.append( all_entries[search_entries.index(s)] )
                 elif s.startswith("r(") and s.endswith(")"):
                     # collect pattern matches:
                     # remove r()
@@ -171,7 +176,7 @@ class Dispatcher(Component):
                     # remove flanking quotation marks
                     if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
                     rx = re.compile( s )
-                    result.extend( [ x for x in all_entries if rx.search( str(x) ) ] )
+                    result.extend( [ all_entries[y] for y,x in enumerate( search_entries ) if rx.search( str(x) ) ] )
             return result
 
         if self.mInputTracks:
@@ -286,6 +291,60 @@ class Dispatcher(Component):
             # neither group by slice or track ("ungrouped")
             self.group_level = -1
 
+    def prune( self ):
+        '''prune data tree.
+
+        Remove all empty leaves.
+
+        Remove all levels from the data tree that are
+        superfluous, i.e. levels that contain only a single label
+        all labels in the hierarchy below are the same.
+       
+        Ignore both the first and last level for this analyis.
+        '''
+
+        # remove all empty leaves        
+        DataTree.removeEmptyLeaves( self.data )
+
+        # prune superfluous levels
+        data_paths = DataTree.getPaths( self.data )
+        nlevels = len(data_paths)
+
+        # get number of levels required by renderer
+        try:
+            renderer_nlevels = self.renderer.nlevels
+        except AttributeError:
+            renderer_nlevels = 0
+        
+        # do not prune for renderers that want all data
+        if renderer_nlevels < 0: return
+
+        levels_to_prune = []
+
+        for level in range( 1, nlevels-1):
+
+            # check for single label in level
+            if len(data_paths[level]) == 1:
+                label = data_paths[level][0]
+                prefixes = DataTree.getPrefixes( self.data, level )
+                keep = False
+                for prefix in prefixes:
+                    leaves = DataTree.getLeaf( self.data, prefix )
+                    if len(leaves) > 1 or label not in leaves:
+                        keep = True
+                        break
+                if not keep: levels_to_prune.append( (level, label) )
+
+        levels_to_prune.reverse()
+
+        # only prune to the minimum of levels required by renderer at most
+        #levels_to_prune = levels_to_prune[:nlevels - renderer_nlevels]
+
+        for level, label in levels_to_prune:
+            self.debug( "pruning level %i from data tree: label='%s'" % (level, label) )
+            DataTree.removeLevel( self.data, level )
+            
+
     def render( self ):
         '''supply the :class:`Renderer.Renderer` with the data to render. 
         
@@ -359,12 +418,21 @@ class Dispatcher(Component):
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after collection: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
         
+        # transform data
         try: self.transform()
         except: return ResultBlocks(ResultBlocks( Utils.buildException( "transformation" ) ))
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after transformation: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
+        # remove superfluous levels
+        try: self.prune()
+        except: return ResultBlocks(ResultBlocks( Utils.buildException( "pruning" ) ))
+
+        data_paths = DataTree.getPaths( self.data )
+        self.debug( "%s: after pruning: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
+
+        # remove group plots
         try: self.group()
         except: return ResultBlocks(ResultBlocks( Utils.buildException( "grouping" ) ))
 

@@ -32,9 +32,9 @@ class Result(object):
         '''
         for x,y in take:
             if y:
-                self._data[x] = r_result[y]
+                self._data[x] = r_result.rx(y)[0][0]
             else:
-                self._data[x] = r_result[x]
+                self._data[x] = r_result.rx(x)[0][0]
 
         return self
     def __getattr__(self, key):
@@ -491,7 +491,9 @@ def filterNone( args, missing = ("na", "Nan", None, ""), dtype = numpy.float ):
     >>> Stats.filterNone( ((None,2,3), (4,None,6)) )
     [array([ 3.]), array([ 6.])]
     '''
-    assert min([len(x) for x in args]) == max([len(x) for x in args]), "arrays have unequal length to start with."
+    mi = min([len(x) for x in args])
+    ma = max([len(x) for x in args])
+    assert mi == ma, "arrays have unequal length to start with: min=%i, max=%i." % (mi,ma)
     
     mask = [ sum( [z in missing for z in x] ) for x in zip(*args) ]
 
@@ -642,7 +644,7 @@ def doMannWhitneyUTest( xvals, yvals ):
     '''apply the Mann-Whitney U test to test for the difference of medians.'''
 
 
-    r_result = R.wilcox_test( xvals, yvals, paired = False )
+    r_result = R['wilcox.test']( xvals, yvals, paired = False )
 
     result = Result().fromR( 
         ( ("pvalue", 'p.value'),

@@ -7,7 +7,7 @@ Tutorial 5: Using SQL
 Trackers allow you to use all the flexibility of python to generate
 data sources. In the previous Tutorial :ref:`Tutorial4` the data
 was computed directly by the Tracker. More often, the data is computed
-elsewhere and stored in a database. :mod:`SphinxReport` provides a
+elsewhere and stored in a database. sphinxreport provides a
 tracker :class:`Tracker.TrackerSQL` that facilitates obtaining data
 from an SQL database.
 
@@ -16,7 +16,7 @@ Configuration
 
 In order to use SQL connectivity, the option ``sql_backend`` needs to be set.
 in the file :file:`conf.py`. ``sql_backend`` is passed ot the 
-:mod:`sql_alchemy` :meth:`create_engine` method to connect to an SQL database. 
+sphinxreport`sql_alchemy` :meth:`create_engine` method to connect to an SQL database. 
 For more information see the `sqlalchemy documentation <http://www.sqlalchemy.org/docs/04/dbengine.html>`_.
 
 The tutorial assumes that `sqlite <http://www.sqlite.org/>`_ has been installed. 

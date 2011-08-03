@@ -79,8 +79,8 @@ Create the following rst file:`Tutorial1.rst`::
        My first bar plot.
 
 The :term:`report` directive is used to insert the graph into 
-the restructured text document. Behind the scenes, :mod:`sphinx` will call 
-the :mod:`SphinxReport` extension and request a barplot. The :mod:`SphinxReport` in 
+the restructured text document. Behind the scenes, sphinxreport`sphinx` will call 
+the sphinxreport extension and request a barplot. The sphinxreport in 
 turn will look for a data source :meth:``MyDataFunction`` in the module :file:``Tutorial1.py`` 
 that should be somewhere in your :env:``PYTHONPATH` or added in :file:`conf.py`.
 The default location for these is in the :file:``python`` subdirectory under the main installation

@@ -10,8 +10,14 @@ computes some summary statistics on rendering times.
    sphinxreport-profile
 
 The full list of command line options is listed by suppling :option:`-h/--help`
-on the command line.
+on the command line. The options are:
 
+**-s/--section** choice
+   Only examine performance of certain aspects of sphinxreport. Possible choices are
+   ``tracker``, ``rst``, and ``renderer``.
+
+**-t/--time** choice
+   Report times either as ``milliseconds`` or ``seconds``.
 
 .. note::
 
@@ -76,31 +82,25 @@ def main():
 
     parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE )
 
-    parser.add_option( "-v", "--verbose", dest="loglevel", type="int",
-                       help="loglevel. The higher, the more output [default=%default]" )
-
     parser.add_option( "-s", "--section", dest="sections", type="choice", action="append",
-                       choices=("tracker", "text"),
-                       help="only clean from certain sections [default=%default]" )
-
-    parser.add_option( "-n", "--dry-run", dest="dry_run", action="store_true",
-                       help="only show what is about to be deleted, but do not delete [default=%default]" )
-
+                       choices=("tracker", "rst", "renderer"),
+                       help="only examine certain sections [default=%default]" )
 
     parser.add_option( "-t", "--time", dest="time", type="choice",
                        choices=("seconds", "milliseconds" ),
                        help="time to show [default=%default]" )
 
-    parser.set_defaults( loglevel = 2,
-                         dry_run = False,
-                         sections = [],
+    parser.set_defaults( sections = [],
                          time = "seconds" )
 
     (options, args) = parser.parse_args()
 
     rx = re.compile("^[0-9]+" )
 
-    profile_sections = ("rst", "tracker", "renderer" )
+    if options.sections:
+        profile_sections = options.sections
+    else:
+        profile_sections = ("rst", "tracker", "renderer" )
 
     counts = {}
     for section in profile_sections:

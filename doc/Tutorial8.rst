@@ -4,7 +4,7 @@
 Tutorial 8: Extending SphinxReport
 ==================================
 
-:mod:`SphinxReport` can be extended via plugins.
+sphinxreport can be extended via plugins.
 Extension points are available to add new
 Renderers and Transformers.
 
@@ -19,7 +19,7 @@ Quick and dirty extension
 
    An example of a plot that does not require data
 
-Here, :mod:`SphinxReport` can not match ``MyPlots.ExampleWithoutData``
+Here, sphinxreport can not match ``MyPlots.ExampleWithoutData``
 with any of the known :term:`Renderers`. Instead, it will try to import
 the function ``ExampleWithoutData`` from the module ``MyPlots``. The
 latter should be somewhere within the :envvar:`PYTHONPATH`.
@@ -49,7 +49,7 @@ At some stage, a Renderer has been refined to such an extent
 that it has become generally useful.
 
 In order to make a Renderer available
-to :mod:`SphinxReport` it needs to be packaged.
+to sphinxreport it needs to be packaged.
 
 TODO
 

@@ -2,6 +2,18 @@
 
 # generate a thumbnail gallery of plots
 # taken from the maptlotlib documentation
+"""
+sphinxreport-gallery
+--------------------
+
+The :file:`sphinxreport-gallery` utility examines the build directory for images
+and constructs a gallery. It should be called from the :term:`source directory`.
+
+   $ sphinxreport-gallery
+
+Calling :file:`sphinxreport-gallery` is usually not necessary if :file:`sphinxreport-build`
+is used.
+"""
 
 import os, glob, re, collections, sys
 

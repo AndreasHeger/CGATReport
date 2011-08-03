@@ -59,8 +59,6 @@ class Plotter(object):
 
        :term:`legend-location`: specify the location of the legend
 
-       :term:`as-lines`: do not plot symbols
-
        :term:`xrange`: restrict plot a part of the x-axis
 
        :term:`yrange`: restrict plot a part of the y-axis
@@ -108,7 +106,6 @@ class Plotter(object):
         ('mpl-legend',  directives.unchanged),
         ('mpl-subplot',  directives.unchanged),
         ('mpl-rc',  directives.unchanged), 
-        ('as-lines', directives.flag),
         ('legend-location',  directives.unchanged),
         )
 
@@ -130,18 +127,10 @@ class Plotter(object):
         self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
 
         self.width = kwargs.get("width", 0.50 )
-        self.mAsLines = "as-lines" in kwargs
         self.xrange = parseRanges(kwargs.get("xrange", None ))
         self.yrange = parseRanges(kwargs.get("yrange", None ))
         self.zrange = parseRanges(kwargs.get("zrange", None ))
 
-        if self.mAsLines:
-            self.mSymbols = []
-            for y in ("-",":","--"):
-                for x in "gbrcmyk":
-                    self.mSymbols.append( y+x )
-
- 
         def setupMPLOption( key ):
             options = {}
             try: 
@@ -345,7 +334,11 @@ class PlotterMatrix(Plotter):
 
        :term:`palette`: numerical format for the colorbar.
 
-       :term:`zrange`: restrict plot a part of the z-axis.
+       :term:`reverse-palette`: invert palette
+
+       :term:`max-rows`: maximum number of rows per plot
+
+       :term:`max-cols`: maximum number of columns per plot
 
     """
 
@@ -844,9 +837,9 @@ def hinton(W, maxWeight=None):
 class LinePlot( Renderer, Plotter ):
     '''create a line plot.
 
-    This :class:`Renderer` requires at least three levels:
+    This :class:`Renderer` requires at least three levels with
 
-    line / data / coords.
+    line / label / coords
 
     This is a base class that provides several hooks for
     derived classes.
@@ -856,7 +849,7 @@ class LinePlot( Renderer, Plotter ):
     for line, data in work:
         initLine()
 
-        for coords in data:
+        for label, coords in data:
             xlabel, ylabels = initCoords()
             for ylabel in ylabels:
                 addData( xlabel, ylabel )
@@ -864,14 +857,31 @@ class LinePlot( Renderer, Plotter ):
         finishLine()
 
     finishPlot()
+
+    This plotter accepts the following options:
+
+       :term:`as-lines`: do not plot symbols
     '''
-    nlevels = 3
+    nlevels = 2
+
+    options = Plotter.options +\
+        ( ('as-lines', directives.flag),
+          )
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def initPlot(self, fig, work, path ):
+        self.mAsLines = "as-lines" in kwargs
+
+        if self.mAsLines:
+            self.mSymbols = []
+            for y in ("-",":","--"):
+                for x in "gbrcmyk":
+                    self.mSymbols.append( y+x )
+
+    def initPlot(self, fig, work, path ): 
+
         '''initialize plot.'''
  
         self.legend = []
@@ -924,6 +934,10 @@ class LinePlot( Renderer, Plotter ):
         
         fig = self.startPlot()
 
+        # add a default line if there are no lines
+        labels = DataTree.getPaths( work )
+        if len(labels) == 2: work = odict( (("", work),) )
+
         self.initPlot( fig, work, path )
 
         nplotted = 0
@@ -953,9 +967,9 @@ class LinePlot( Renderer, Plotter ):
                     nplotted += 1
 
                     if len(ylabels) > 1:
-                        self.legend.append( "/".join((line,label,ylabel) ))
+                        self.legend.append( "/".join((map(str, (line,label,ylabel)))))
                     else:
-                        self.legend.append( "/".join((line,label) ))
+                        self.legend.append( "/".join((map(str, (line,label)) )))
                                 
                 self.xlabels.append(xlabel)
 
@@ -979,7 +993,7 @@ class HistogramPlot(LinePlot):
 
     line / data / coords.
     '''
-    nlevels = 3
+    nlevels = 2
 
     # column to use for error bars
     error = None
@@ -1059,7 +1073,7 @@ class HistogramGradientPlot(LinePlot):
 
     line / data / coords.
     '''
-    nlevels = 3
+    nlevels = 2
 
     options = LinePlot.options +\
         ( ('palette', directives.unchanged),
@@ -1247,7 +1261,7 @@ class BarPlot( Matrix, Plotter):
 
         else:
             self.matrix, self.rows, self.columns = self.buildMatrix( work )
-
+            
     def render( self, work, path ):
 
         self.buildMatrices( work )
@@ -1434,6 +1448,8 @@ class PiePlot(Renderer, Plotter):
 
         self.mFirstIsTotal = kwargs.get( "pie-first-is-total", None )
 
+        # store a list of sorted headers to ensure the same sort order
+        # in all plots.
         self.sorted_headers = odict()
 
     def render( self, work, path ):
@@ -1447,7 +1463,14 @@ class PiePlot(Renderer, Plotter):
         sorted_vals = [0] * len(self.sorted_headers)
 
         for key, value in work.iteritems():
-            sorted_vals[self.sorted_headers[key]] = value
+            if value < self.mPieMinimumPercentage:
+                sorted_vals[self.sorted_headers[key]] = 0
+                if "other" not in self.sorted_headers:
+                    self.sorted_headers["other"] = len(self.sorted_headers)
+                    sorted_vals.append( 0 )
+                sorted_vals[self.sorted_headers["other"]] += value
+            else:
+                sorted_vals[self.sorted_headers[key]] = value
 
         labels = self.sorted_headers.keys()
 
@@ -1597,33 +1620,37 @@ class ScatterPlot(Renderer, Plotter):
         xlabels, ylabels = [], []
 
         for label, coords in work.iteritems():
-            
             assert len(coords) >= 2, "expected at least two arrays, got %i" % len(coords)
-
-            xlabel, ylabel = coords.keys()[:2]
-            xvals, yvals = Stats.filterNone( coords.values()[:2])
-
-            marker = self.mMarkers[nplotted % len(self.mMarkers)]
-            color = self.mColors[nplotted % len(self.mColors)]
-            if len(xvals) == 0 or len(yvals) == 0: continue
-
-            # plt.scatter does not permitting setting
-            # options in rcParams, so all is explict
-            plts.append(plt.scatter( xvals,
-                                     yvals,
-                                     marker = marker,
-                                     c = color,
-                                     linewidths = self.markeredgewidth,
-                                     s = self.markersize) )
-            legend.append( label )
-
-            nplotted += 1
             
-            xlabels.append( xlabel )
-            ylabels.append( ylabel )
+            k = coords.keys()
             
-        plt.xlabel( "-".join( set(xlabels) ) )
-        plt.ylabel( "-".join( set(ylabels) ) )
+            xlabel = k[0]
+
+            for ylabel in k[1:]:
+                xvals, yvals = Stats.filterNone( (coords[xlabel],
+                                                  coords[ylabel]) )
+
+                marker = self.mMarkers[nplotted % len(self.mMarkers)]
+                color = self.mColors[nplotted % len(self.mColors)]
+                if len(xvals) == 0 or len(yvals) == 0: continue
+
+                # plt.scatter does not permitting setting
+                # options in rcParams, so all is explict
+                plts.append(plt.scatter( xvals,
+                                         yvals,
+                                         marker = marker,
+                                         c = color,
+                                         linewidths = self.markeredgewidth,
+                                         s = self.markersize) )
+                legend.append( label )
+
+                nplotted += 1
+
+                xlabels.append( xlabel )
+                ylabels.append( ylabel )
+            
+        plt.xlabel( ":".join( set(xlabels) ) )
+        plt.ylabel( ":".join( set(ylabels) ) )
         
         return self.endPlot( plts, legend, path )
 

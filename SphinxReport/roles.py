@@ -63,7 +63,7 @@ def param_role( role, rawtext, text, lineno, inliner,
     except AttributeError:
         msg = inliner.reporter.error(
             ':param: can not find variable %s in '
-            ': "%s" is invalid.' % (parameter_name, class_name), line=lineno)
+            ': "%s" is invalid -tracker=%s.' % (parameter_name, class_name, str(tracker)), line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 
@@ -77,8 +77,38 @@ def param_role( role, rawtext, text, lineno, inliner,
 
     return [node], []
 
+def value_role( role, rawtext, text, lineno, inliner,
+                options={}, content=[]):
+    
+    class_name = text
+
+    try:
+        code, tracker = Utils.makeTracker( class_name )
+    except (AttributeError, ImportError):
+        tracker = None
+
+    if not tracker:
+        msg = inliner.reporter.error(
+            ':value: can not find class '
+            '"%s".' % class_name, line=lineno)
+        prb = inliner.problematic(rawtext, rawtext, msg)
+        return [prb], [msg]
+
+    value = str( tracker() )
+
+    # Base URL mainly used by inliner.rfc_reference, so this is correct:
+    # ref = inliner.document.settings.rfc_base_url + inliner.rfc_url % value
+    # in example, but deprecated
+    # set_classes(options)
+    node = nodes.literal(rawtext, 
+                        utils.unescape(str(value)), 
+                        **options)
+
+    return [node], []
+
 roles.register_local_role('pmid', pmid_reference_role)
 roles.register_local_role('param', param_role)
+roles.register_local_role('value', value_role)
 
 def setup( self ):
     pass

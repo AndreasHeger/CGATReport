@@ -1,27 +1,26 @@
-.. _Overwiew:
+.. _Overview:
 
 ********
 Overview
 ********
 
-The :mod:`SphinxReport` module is an extension for :mod:`sphinx`
-that provides facilities for data retrieval and data rendering
-within reStructured text. 
+This section explains the main features of sphinxreport and demonstrates its usage.
 
 .. _Features:
 
 Features
 ********
 
-:mod:`SphinxReport` is a report generator that is implemented as an extension
-to :mod:`Sphinx`. It is easy to use and powerful enough to give all the flexibility 
+
+sphinxreport is a report generator that is implemented as an extension
+to sphinxreport`Sphinx`. It is easy to use and powerful enough to give all the flexibility 
 needed during the development of computational pipelines and robustness during the
 production use of a pipeline.
 
 It is intended for developers and computational scientists with ``python`` scripting experience.
 
-Briefly, the :mod:`SphinxReport` is a report generator that is implemented as an extension
-to :mod:`Sphinx`. It
+Briefly, the sphinxreport is a report generator that is implemented as an extension
+to sphinxreport`Sphinx`. It
 
 * uses simple markup in the form of restructured text
 * supports both automated and narrative analysis
@@ -33,44 +32,66 @@ to :mod:`Sphinx`. It
 Usage
 *****
 
-Three steps are required to include rendered images into restructured text
-using :mod:`SphinxReport`:
+You can think of sphinxreport as providing a
+*macro* ability to restructured text documents. These macros will be evaluated every time a restructured text
+document is rebuilt.
 
-1. Provide a data source. Data are provided by objects of the type :class:`Tracker`. The data can be obtained from
-   data sources like flat files, SQL tables and more. Trackers provide data by :term:`track` and :term:`slice`. 
-   Tracks are principal collections of data, for example data measurements taken from different species. Slices 
-   are subsections of the data. For example, a :class:`Tracker` might provide *weight* measurements of different species
-   according to the slice *gender*.
+Macros are added into restructured text documents via the ``:report:``
+directive. The ``:report:`` directive has two components. Firstly, there
+is a data source (or :term:`tracker`) that provides data. Secondly,
+there is a :term:`renderer`, a method to display the data provided by the :term:`tracker`.
 
-2. Insert a ``report`` directive into a restructered text document. ``:report:`` directives invoke
-   objects of the type :class:`Renderer`. These are provided by the :mod:`SphinxReport` extension 
-   and are used to display data as graphs or tables. 
+Data sources are provided by the user and implemented as python classes
+(more specifically, as objects derived of subclasses of the class
+:class:`Tracker`). As data sources are implemented by the user,
+almost any type of data source can be used: flat files, SQL database,
+etc. Data could even be obtained remotely. sphinxreport
+provides some utility functions for interaction with SQL databases.
 
-3. Run :file:``sphinxreport-build`` to build the document. 
+sphinxreport comes with a collection of pre-defined renderers
+covering most basic and common plotting needs.
 
-The following minimal example illustrates how this process works. A ``:report:`` directive like::
+The following minimal example illustrates how sphinxreport
+works. On inserting a ``:report:`` directive like the following into a
+restructured text document::
 
    .. report:: Trackers.BarData
-      :render: bars
+      :render: bar-plot
 
-will insert a barplot (:class:`RendererInterleavedBars`) at the current location. The Renderer will 
-obtain the data from a python class or function *BarData* in the file
-:file:`Trackers.py` that should be somewhere in the python search path (see :ref:`Configuration`).
+      A bar plot.
+
+will insert a barplot (:class:`SphinxReportPlugins.Renderer.BarPlot`) at 
+the current location. The :term:`renderer` will obtain the data from a
+python class or function called *BarData* in the python module 
+:file:`Trackers.py` that should be somewhere in the python search path 
+(see :ref:`Configuration`).
+
 The :file:`Trackers.py` should contain a function *BarData*, that might look like this::
 
-   def BarData( track, slice = None ): return dict( [("bar1", 10), ("bar2", 20)] )
+   def BarData(): return dict( [("bar1", 20), ("bar2", 10)] )
 
 Instead of plain functions, function objects can be used as well. 
 
-Finally, the document is built using the usual :mod:`Sphinx` process::
+Finally, the document is built using the usual sphinxreport`Sphinx` process::
 
    sphinx-build -b html -d _build/doctrees   . _build/html
 
-The :mod:`SphinxReport` module comes with additional utilities for to aid debugging
-and the building of large documents. 
+The resultant-plot is here:
 
-See the :ref:`Tutorials` for a more complete introduction on how to use the extension. 
-See :ref:`Running` on more advanced building methods.
+.. report:: Trackers.BarData
+   :render: bar-plot
+
+   A bar plot
+
+Of course, the same data could be displayed differently::
+
+   .. report:: Trackers.BarData
+      :render: bar-plot
+
+.. report:: Trackers.BarData
+   :render: pie-plot
+
+   A pie plot
 
 .. _History:
 
@@ -98,7 +119,7 @@ of the results. There is also an interactive component, where plots are
 selected to highlight unexpected deviations that are the bread-and-butter of science.
 
 We found no tool that easily bridges the divide of interactive analysis and
-automatic updating. On one end of the spectrum is office software with macros
+automation. On one end of the spectrum is office software with macros
 or embedded images linked to physical files. Writing in office software is easy, 
 there is drag & drop and the result is very close to the desired product: a
 publishable manuscript. However, with complicated analyses the macros become 
@@ -118,10 +139,10 @@ static documents, but are designed to be run often and on different datasets.
 These are powerful, but often have a steep learning curve. We also found them
 lacking in plotting capabilities. 
 
-We thought the combination of :mod:``Sphinx`` and :mod:``matplotlib``
+We thought the combination of sphinxreport``Sphinx`` and :mod:``matplotlib``
 and ideal combination and extended the ``matplotlib`` ``:plot:`` directive
 to interactively collect data. We are heavily indebted to these two
-projects.
+projects. 
 
 .. seealso::
 

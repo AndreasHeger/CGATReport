@@ -12,15 +12,8 @@ The following features are planned:
 error bars
    add error bars to scatter plots
 
-web server
-   implement setting up and http server with web.py
-
 latex/pdf
    test latex/pdf rendering of documents
-
-data download
-   add method to provide data from cache from the
-   command line and possibly the web pages.
 
 add automatic history
     keep automatic track of releases/versions of
@@ -34,17 +27,8 @@ examine memory usage
     investigate if this can be optimized, for example
     by using numpy more efficiently
 
-plugin architecture
-    clean up Renderer.py so that adding custom renderers
-    will become easy. Consider adding a generic interface
-    to matplotlib plotting functions.
-
 upload
     add upload to galaxy and/or UCSC
-
-rpy integration
-    check if it is possible to use rpy as rendering engine and
-    for statistical tests.
 
 optional pdf support
     pdf rendering takes a while and could be post-poned until
@@ -55,6 +39,28 @@ optional pdf support
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
 
+Version 1.2
+===========
+
+rpy integration
+    R Plotting is now possible with the RPlot Plugin.
+
+plugin architecture
+    A plugin architecture has been added to allow easy
+    extension of sphinxreport with additional renderes,
+    transformers and plotting engines.
+
+data download
+   data from cache can be retrieved via the sphinxreport-get
+   utility
+
+web server
+   sphinxreport-server has been added to serve a report 
+   and add interactive components.
+
+refactoring
+   Trackers can now provide tracks, slices or paths as properties
+   in addition to functions resulting in cleaner syntax.
 
 Version 1.1
 ===========
