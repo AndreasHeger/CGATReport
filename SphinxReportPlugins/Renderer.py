@@ -251,7 +251,10 @@ class Matrix(TableBase):
            * *add-column-total* : add the column total as a last column
 
     Requires two levels:
-    rows[dict] / columns[dict]
+
+       rows[dict] / columns[dict] / value
+
+    All values need to be numerical.
     """
 
     nlevels = 2

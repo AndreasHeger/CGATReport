@@ -50,6 +50,13 @@ class Transformer(Component):
         
 class TransformerFilter( Transformer ):
     '''select columns in the deepest dictionary.
+
+    filter removes all branches in a :term:`data tree`
+    on level :term:`tf-level` that do not match the 
+    :term:`tf-fields` option.
+
+    Level is counted from the deepest branch. By default,
+    leaves (level = 1) are removed.
     '''
     
     nlevels = 1
@@ -66,8 +73,7 @@ class TransformerFilter( Transformer ):
         except KeyError: 
             raise KeyError( "TransformerFilter requires the `tf-fields` option to be set." )
 
-        try: self.nlevels = int(kwargs["tf-level"])
-        except KeyError: pass
+        self.nlevels = int(kwargs.get("tf-level"),self.nlevels)
                           
     def transform(self, data, path):
         debug( "%s: called" % str(self))
@@ -78,9 +84,55 @@ class TransformerFilter( Transformer ):
             
         return data
 
+########################################################################
+########################################################################
+########################################################################
+class TransformerToLabels( Transformer ):
+    '''convert :term:`numerical arrays` to :term:`labeled data`.
+
+    By default, the items are labeled numerically. If `tf-labels`
+    is given it is used instead.
+    '''
+    nlevels = 1
+
+    options = Transformer.options +\
+        ( ('tf-labels', directives.unchanged), )
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        self.labels = kwargs.get("tf-labels", None)
+        
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        if len(data) == 0: return data
+        
+        keys = data.keys()
+
+        if self.labels: 
+            labels = data[self.labels]
+            del keys[keys.index(self.labels)]
+            if len(keys) < 1: 
+                raise ValueError( "TransformerToLabels requires at least two arrays, got only 1, if tf-labels is set" )
+        else: 
+            max_nkeys = max([len(x) for x in data.values() ])
+            labels = range(1, max_nkeys + 1)
+
+        labels = map(str, labels)
+
+        if len(data) == 2:
+            new_data = odict(zip(labels, data[keys[0]]))
+        else:
+            new_data = odict()
+            for key in keys:
+                new_data[key] = odict(zip(labels, data[key]))
+                
+        return new_data
+
 class TransformerIndicator( Transformer ):
     '''take a field from the lowest level and
-    build and indicator out of it.
+    build an absent/present indicator out of it.
     '''
     
     nlevels = 1
@@ -144,6 +196,9 @@ class TransformerSelect( Transformer ):
 
         return data
 
+########################################################################
+########################################################################
+########################################################################
 class TransformerGroup( Transformer ):
     '''group second-to-last level by lowest level.
 
@@ -198,6 +253,9 @@ class TransformerGroup( Transformer ):
 
         return new_data
 
+########################################################################
+########################################################################
+########################################################################
 class TransformerCombinations( Transformer ):
     '''build combinations of the second lowest level.
 
@@ -261,6 +319,9 @@ class TransformerCombinations( Transformer ):
                                   
         return new_data
 
+########################################################################
+########################################################################
+########################################################################
 class TransformerStats( Transformer ):
     '''compute summary statistics.
 
@@ -290,6 +351,9 @@ class TransformerStats( Transformer ):
 
         return data
 
+########################################################################
+########################################################################
+########################################################################
 class TransformerPairwise( Transformer ):
     '''for each pair of columns on the lowest level compute
     the pearson correlation coefficient and other stats.
@@ -362,9 +426,12 @@ class TransformerMannWhitneyU( TransformerPairwise ):
         xx = numpy.array( [ x for x in xvals if x != None ] )
         yy = numpy.array( [ y for y in yvals if y != None ] )
         return Stats.doMannWhitneyUTest( xx, yy )
-    
+
+########################################################################
+########################################################################
+########################################################################
 class TransformerHistogram( Transformer ):
-    '''compute a histogram of values.'''
+    '''compute a histograms of :term:`numerical arrays`.'''
 
     nlevels = 1
 

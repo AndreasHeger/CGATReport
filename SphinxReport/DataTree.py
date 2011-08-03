@@ -208,6 +208,10 @@ def getLeaf( work, path ):
         except KeyError:
             work = None
             break
+        except TypeError:
+            work = None
+            break
+
     return work
 
 def setLeaf( work, path, data ):

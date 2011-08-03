@@ -47,7 +47,12 @@ Glossary
       ``bike`` are :term:`slice` and ``weels=4`` is a ``label,value`` pair.
 
    numerical arrays
-      numerical arrays are lists of numbers.
+      numerical arrays are lists of numbers, for example::
+
+         blue/car/tankfillings=(40,40,45,30,20)
+         blue/car/pumpprices=(60,62,40,32,21)
+         red/car/tankfillings=(30,30,35,30,20)
+         red/car/pumpprices=(30,32,30,32,21)
 
    labeled values with errors
       :term:`labeled values` can be extended with labels or errors.

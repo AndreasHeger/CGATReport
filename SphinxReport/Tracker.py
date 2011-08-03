@@ -3,7 +3,10 @@ from __future__ import with_statement
 import os, sys, re, types, copy, warnings, ConfigParser, inspect, logging, glob
 
 import sqlalchemy
-import sqlalchemy.exceptions
+try:
+    import sqlalchemy.exceptions as exc
+except ImportError:
+    import sqlalchemy.exc as exc
 
 from SphinxReport import Utils
 
@@ -279,7 +282,7 @@ class TrackerSQL( Tracker ):
         self.connect()
         try:
             r = self.db.execute(stmt)
-        except sqlalchemy.exceptions.SQLError, msg:
+        except exc.SQLError, msg:
             raise SQLError(msg)
         return r
 

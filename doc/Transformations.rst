@@ -314,5 +314,58 @@ group
 indicator
 =========
 
+.. _tolabels:
+
+tolabels
+========
+
+The :class:`SphinxReportPlugins.Transformer.TransformerToLabels` converts
+:term:`numerical arrays` to :term:`labeled data`. Imagine you have the following
+data::
+   
+   data1/x/(2,4,3,4)
+   data1/y/(4,5,5,6)
+
+These data can be displayed as a :ref:`scatter-plot` or a :ref:`line-plot`. However,
+if you tried displaying these as a :ref:`bar-plot` you will get a ``malformatted data``
+error message as :ref:`bar-plot` expects :term:`labeled data`. 
+
+The :ref:`tolabels` transformation can help transform the data. In the example above,
+the transformation would result in::
+
+   data1/x/1/2   data1/y/1/4
+        /x/2/4        /y/2/5
+	/x/3/3        /y/3/5
+        /x/4/4        /y/5/6
+
+   .. report:: Trackers.MultipleColumnDataExample
+      :render: interleaved-bar-plot
+      :transform: tolabels
+
+      An interleaved bar plot
+
+.. report:: Trackers.MultipleColumnDataExample
+   :render: interleaved-bar-plot
+   :transform: tolabels
+
+    An interleaved bar plot
+
+Options
+-------
+
+The :class:`SphinxReportPlugins.Transformer.TransformerFilter` understands the
+following options:
+
+.. glossary::
+
+   tf-fields
+      string
+
+      fields to select. This option is required.
+
+   tf-level
+      int
+
+      level in the :term:`data tree` on which to act.
 
 
