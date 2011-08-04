@@ -63,6 +63,9 @@ class Plotter(object):
 
        :term:`yrange`: restrict plot a part of the y-axis
 
+       :term:`function`: add a function to the plot. Multiple
+          functions can be supplied as a ,-separated list.
+
     With some plots default layout options will result in plots 
     that are misaligned (legends truncated, etc.). To fix this it might
     be necessary to increase plot size, reduce font size, or others.
@@ -102,6 +105,7 @@ class Plotter(object):
         ('xrange',  directives.unchanged),
         ('yrange',  directives.unchanged),
         ('zrange', directives.unchanged),
+        ('function', directives.unchanged),
         ('mpl-figure',  directives.unchanged),
         ('mpl-legend',  directives.unchanged),
         ('mpl-subplot',  directives.unchanged),
@@ -122,7 +126,11 @@ class Plotter(object):
         self.add_title = "add-title" in kwargs
         self.xlabel = kwargs.get("xtitle", None )
         self.ylabel = kwargs.get("ytitle", None )
+        self.functions = kwargs.get("function", None )
 
+        if "," in self.functions: self.functions = self.functions.split(",")
+        else: self.functions = [self.functions]
+            
         # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
         self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
 
@@ -206,17 +214,24 @@ class Plotter(object):
         return newtext
 
     def endPlot( self, plts, legends, path ):
-        """close a plot.
+        """close plots.
 
-        Returns blocks of restructured text with place holders for the current 
-        figure(s).
+        This method performs common post-processing options on matplotlib
+        rendered plots:
+
+           * rescaling the axes
+           * legend placement
+           * adding a function to the plot
+
+        returns blocks of restructured text with place holders for the 
+        figure.
         """
 
         if not plts: return ResultBlocks()
 
+        ax = plt.gca()
         # set logscale before the xlim, as it re-scales the plot.
         if self.logscale:
-            ax = plt.gca()
             xlim = ax.get_xlim()
             ylim = ax.get_ylim()
             if "x" in self.logscale:
@@ -248,10 +263,24 @@ class Plotter(object):
         if self.yrange:
             plt.ylim( self.yrange )
 
+        if self.functions:
+            xstart, xend = ax.get_xlim()
+            increment = (xend - xstart) / 100.0
+            for function in self.functions:
+                exec("f = lambda x: %s" % function )
+                xvals = np.arange( xstart, xend, increment)
+                yvals = [ f(x) for x in xvals ]
+                plt.plot( xvals, yvals )
+
+        # add labels and titles
         if self.add_title: 
             plt.suptitle( "/".join(path) )
 
-        blocks = ResultBlocks( ResultBlock( "\n".join( ("#$mpl %i$#" % (self.mFigure), "")), title = "/".join(path) ) )
+        if self.xlabel: plt.xlabel( self.xlabel )
+        if self.ylabel: plt.ylabel( self.ylabel )
+
+        blocks = ResultBlocks( ResultBlock( "\n".join( 
+                    ("#$mpl %i$#" % (self.mFigure), "")), title = "/".join(path) ) )
 
         legend = None
         maxlen = 0

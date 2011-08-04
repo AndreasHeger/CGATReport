@@ -86,6 +86,9 @@ is only applicable to plots, but not tables.
 
 Superfluous options are ignored.
 
+.. glossary::
+   :sorted:
+
    logscale  
       choice of 'x', 'y', 'xy'
 
@@ -113,12 +116,17 @@ Superfluous options are ignored.
 
       add title within in each plot
 
-   force
-      flag
+   function
+      string
 
-      force display of large tables and matrices. If given,
-      the large table will be inserted. The default behaviour is to create
-      a separate file for the table and link to it.
+      add a function to a plot. The string given is evaluated on
+      the current data range. Multiple functions can be separated
+      by a ``,``. Some examples::
+
+          :function: x       .. diagonal, y=x
+	  :function: x**2    .. parabola, y=x**2
+	  :function: 3       .. horizontal line at y=3
+          :function: 3,6     .. two horizontal lines y=3 and y=6
 
    reverse-palette  
       flag

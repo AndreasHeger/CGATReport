@@ -25,13 +25,19 @@ Options
 
 :class:`SphinxReportPlugions.Renderer.Table` permits the following options:
 
-transpose
-   switch columns and rows.
+.. glossary::
 
-force
-   show table, even if it is very large. By default, large
-   tables are displayed in a separate page and only a link
-   is inserted into the document.
+   transpose
+      flag
+
+      switch columns and rows.
+
+   force
+      flag
+
+      show table, even if it is very large. By default, large
+      tables are displayed in a separate page and only a link
+      is inserted into the document.
 
 Grouping tables
 ---------------

@@ -44,6 +44,13 @@ following options:
       * *add-row-total* : add the row total as as another column
       * *add-column-total* : add the row total as another row
 
+   force
+      flag
+
+      show table, even if it is very large. By default, large
+      tables are displayed in a separate page and only a link
+      is inserted into the document.
+
 .. _matrix-plot:
 
 matrix-plot
