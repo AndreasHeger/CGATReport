@@ -1,7 +1,7 @@
 """Mixin classes for Renderers that plot.
 """
 
-import os, sys, re, math
+import os, sys, re, math, itertools
 
 import matplotlib
 matplotlib.use('Agg', warn = False)
@@ -113,13 +113,15 @@ class Plotter(object):
         ('legend-location',  directives.unchanged),
         )
 
+    mColors = "bgrcmk"
+    mSymbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
+    mMarkers = "so^>dph8+x"
+    mPatterns = [None, '/','\\','|','-','+','x','o','O','.','*']
+
     def __init__(self, *args, **kwargs ):
         """parse option arguments."""
 
         self.mFigure = 0
-        self.mColors = "bgrcmk"
-        self.mSymbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
-        self.mMarkers = "so^>dph8+x"
 
         self.logscale = kwargs.get("logscale", None )
         self.title = kwargs.get("title", None )
@@ -128,8 +130,9 @@ class Plotter(object):
         self.ylabel = kwargs.get("ytitle", None )
         self.functions = kwargs.get("function", None )
 
-        if "," in self.functions: self.functions = self.functions.split(",")
-        else: self.functions = [self.functions]
+        if self.functions:
+            if "," in self.functions: self.functions = self.functions.split(",")
+            else: self.functions = [self.functions]
             
         # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
         self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
@@ -1250,6 +1253,8 @@ class BarPlot( Matrix, Plotter):
         if self.error or self.label:
             self.nlevels += 1
  
+        self.bar_patterns = list(itertools.product( self.mPatterns, self.mColors) )
+
     def addLabels( self, xvals, yvals, labels ):
         '''add labels at x,y at current plot.'''
 
@@ -1312,13 +1317,16 @@ class BarPlot( Matrix, Plotter):
             # set to 0. Nan values elsewhere are fine.
             if np.isnan(vals[0]) or np.isinf( vals[0] ): 
                 vals[0] = 0
+            
+            hatch, color = self.bar_patterns[ y % len(self.bar_patterns) ]
 
             plts.append( plt.bar( xvals, 
                                   vals,
                                   self.width, 
                                   yerr = error,
                                   ecolor = "black",
-                                  color = self.mColors[ y % len(self.mColors) ],
+                                  color = color,
+                                  hatch = hatch,
                                   )[0] )
 
             if self.label and self.label_matrix != None: 
@@ -1370,13 +1378,16 @@ class InterleavedBarPlot(BarPlot):
             if np.isnan(vals[0]) or np.isinf( vals[0] ): 
                 vals[0] = 0
 
+            hatch, color = self.bar_patterns[ row % len(self.bar_patterns) ]
+
             plts.append( plt.bar( xvals + offset, 
                                   vals,
                                   width,
                                   yerr = error,
                                   align = "edge",
                                   ecolor = "black",
-                                  color = self.mColors[ row % len(self.mColors) ],
+                                  color = color,
+                                  hatch = hatch,
                                   )[0])
             
             if self.label and self.label_matrix != None: 
@@ -1427,11 +1438,14 @@ class StackedBarPlot(BarPlot ):
             if np.isnan(vals[0]) or np.isinf( vals[0] ): 
                 vals[0] = 0
                 
+            hatch, color = self.bar_patterns[ y % len(self.bar_patterns) ]
+
             plts.append( plt.bar( xvals, 
                                   vals, 
                                   self.width, 
                                   yerr = error,
-                                  color = self.mColors[ y % len(self.mColors) ],
+                                  color = color,
+                                  hatch = hatch,
                                   ecolor = "black",
                                   bottom = sums )[0] )
 
@@ -1618,8 +1632,17 @@ class ScatterPlot(Renderer, Plotter):
 
     This :class:`Renderer` requires two levels:
     track[dict] / coords[dict]
+
+    :regression:
+       int
+
+       add linear regression function of a certain degree
+       (straight line is degree 1).
+
     """
-    options = Renderer.options + Plotter.options
+    options = Renderer.options + Plotter.options +\
+        ( ('regression', directives.unchanged), 
+          )
     
     nlevels = 2
 
@@ -1637,8 +1660,9 @@ class ScatterPlot(Renderer, Plotter):
         self.markeredgewidth = self.mMPLRC.get( "lines.markeredgewith", 
                                                 plt.rcParams.get("lines.markeredgewidth",
                                                                  0.5 ) )
-
-
+        
+        self.regression = int(kwargs.get( "regression", 0 ))
+        
     def render(self, work, path ):
         
         self.startPlot()
@@ -1672,6 +1696,17 @@ class ScatterPlot(Renderer, Plotter):
                                          linewidths = self.markeredgewidth,
                                          s = self.markersize) )
                 legend.append( label )
+                
+                if self.regression:
+                    coeffs = np.polyfit(xvals, yvals, self.regression)
+                    p = np.poly1d(coeffs)
+                    svals = sorted( xvals )
+                    plts.append( plt.plot( svals, 
+                                           [ p(x) for x in svals ],
+                                           c = color,
+                                           marker = 'None') )
+                    
+                legend.append( "regression %s" % label )
 
                 nplotted += 1
 

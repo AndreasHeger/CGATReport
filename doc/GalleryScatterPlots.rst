@@ -15,9 +15,16 @@ The :class:`SphinxReportPlugins.Plotter.ScatterPlot` class presents
 Options
 =======
 
-:class:`SphinxReportPlugins.Plotter.ScatterPlot` has no additional
-options apart from :ref:`common plot options`. 
+:class:`SphinxReportPlugins.Plotter.ScatterPlot` understands the
+:ref:`common plot options` and the following options:
 
+.. glossary::
+
+   regression
+      int
+
+      Add a linear polynomaial regression line of degree <int> 
+      to the plot. A linear regression line has degree 1.
 
 ====================
 rainbow-scatter-plot

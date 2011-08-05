@@ -73,7 +73,7 @@ class TransformerFilter( Transformer ):
         except KeyError: 
             raise KeyError( "TransformerFilter requires the `tf-fields` option to be set." )
 
-        self.nlevels = int(kwargs.get("tf-level"),self.nlevels)
+        self.nlevels = int(kwargs.get("tf-level", self.nlevels) )
                           
     def transform(self, data, path):
         debug( "%s: called" % str(self))
