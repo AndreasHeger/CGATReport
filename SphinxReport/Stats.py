@@ -37,6 +37,7 @@ class Result(object):
                 self._data[x] = r_result.rx(x)[0][0]
 
         return self
+    def __len__(self): return self._data.__len__()
     def __getattr__(self, key):
         if not key.startswith("_"):
             try: return object.__getattribute__(self,"_data")[key]

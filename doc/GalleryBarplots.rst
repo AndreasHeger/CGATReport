@@ -18,10 +18,17 @@ Options
 :class:`SphinxReportPlugins.Plotter.BarPlot` understands the
 :ref:`common plot options` and the following options:
 
+.. glossary::
+   :sorted:
+
    label
+      string
+
       field to use for data labels. See :term:`labeled values with labels`
       
    error
+      string
+
       field to use for error bars. See :term:`labeled values with errors`
 
 ================

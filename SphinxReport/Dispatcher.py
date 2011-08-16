@@ -146,10 +146,17 @@ class Dispatcher(Component):
                 data_paths.append( obj.getSlices() )
                 
         # sanity check on data_paths. 
-        # Replace strings with one-element tuples
+
+        # 1. Replace strings with one-element tuples
+        # 2. Remove empty levels in the paths
+        to_remove = []
         for x,y in enumerate(data_paths):
             if type(y) in types.StringTypes: data_paths[x]=[y,]
+            if len(y) == 0: to_remove.append(x)
             
+        for x in to_remove[::-1]:
+            del data_paths[x]
+
         return False, data_paths
 
     def filterDataPaths( self, datapaths ):

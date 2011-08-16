@@ -1706,7 +1706,7 @@ class ScatterPlot(Renderer, Plotter):
                                            c = color,
                                            marker = 'None') )
                     
-                legend.append( "regression %s" % label )
+                    legend.append( "regression %s" % label )
 
                 nplotted += 1
 
