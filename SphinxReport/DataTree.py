@@ -332,8 +332,7 @@ def removeEmptyLeaves( work ):
     # numpy arrays do not test True if they contain
     # elements.
     try:
-        if work: return True
-        else: return False
+        return work != "" or work != None
     except ValueError:
         # for numpy arrays
         return len(work) > 0

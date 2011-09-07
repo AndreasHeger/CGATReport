@@ -277,13 +277,13 @@ class Plotter(object):
 
         # add labels and titles
         if self.add_title: 
-            plt.suptitle( "/".join(path) )
+            plt.suptitle( DataTree.path2str( path ) )
 
         if self.xlabel: plt.xlabel( self.xlabel )
         if self.ylabel: plt.ylabel( self.ylabel )
 
         blocks = ResultBlocks( ResultBlock( "\n".join( 
-                    ("#$mpl %i$#" % (self.mFigure), "")), title = "/".join(path) ) )
+                    ("#$mpl %i$#" % (self.mFigure), "")), title = DataTree.path2str(path) ) )
 
         legend = None
         maxlen = 0

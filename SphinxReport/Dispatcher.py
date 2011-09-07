@@ -342,15 +342,14 @@ class Dispatcher(Component):
                         break
                 if not keep: levels_to_prune.append( (level, label) )
 
+
         levels_to_prune.reverse()
 
         # only prune to the minimum of levels required by renderer at most
         #levels_to_prune = levels_to_prune[:nlevels - renderer_nlevels]
-
         for level, label in levels_to_prune:
             self.debug( "pruning level %i from data tree: label='%s'" % (level, label) )
             DataTree.removeLevel( self.data, level )
-            
 
     def render( self ):
         '''supply the :class:`Renderer.Renderer` with the data to render. 

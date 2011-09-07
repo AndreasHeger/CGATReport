@@ -654,7 +654,9 @@ class SingleTableTrackerColumns( TrackerSQL ):
        200   20              15
        300   10              4
 
-    In the example above, the tracks will be ``mouse_counts`` and ``human_counts``. The 
+    In the example above, the tracks will be ``mouse_counts`` and ``human_counts``. The slices
+    will be ``100``, ``200``, ``300``
+
     Tracker could be defined as::
  
        class MyTracker( SingleTableTrackerColumns ):
@@ -674,16 +676,61 @@ class SingleTableTrackerColumns( TrackerSQL ):
         columns = self.getColumns( self.table )
         return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
 
+    @property
+    def slices(self):
+        return self.getValues( "SELECT DISTINCT %(column)s FROM %(table)s" )
+
     def __call__(self, track, slice = None ):
-        data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
+        data = self.getValue( "SELECT %(track)s FROM %(table)s WHERE %(column)s = '%(slice)s'" )
         return data
 
 ###########################################################################
 ###########################################################################
 ###########################################################################
 
-class SingleTableTrackerHistogram( SingleTableTrackerColumns ): 
-    pass
+class SingleTableTrackerHistogram( TrackerSQL ): 
+    '''Tracker representing a table with multiple tracks.
+
+    Returns a dictionary of two sets of data, one given
+    by :attribute:`column` and one for a track.
+
+    The tracks are derived from all columns in table :attribute:`table`. By default,
+    all columns are taken as tracks apart from :attribute:`column` and those
+    listed in :attribute:`exclude_columns`.
+
+    An example for a table using this tracker would be::
+
+       bin   mouse_counts    human_counts
+       100   10              10
+       200   20              15
+       300   10              4
+
+    In the example above, the tracks will be ``mouse_counts`` and ``human_counts``. The 
+    Tracker could be defined as::
+ 
+       class MyTracker( SingleTableTrackerHistogram ):
+          table = 'mytable'
+          column = 'bin'
+
+    '''
+    exclude_columns = ("track,")
+    table = None
+    column = None
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    @property
+    def tracks(self):
+        if self.column == None: raise NotImplementedError( "column not set - Tracker not fully implemented" )
+        columns = self.getColumns( self.table )
+        return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
+
+    def __call__(self, track, slice = None ):
+        if self.column == None: raise NotImplementedError( "column not set - Tracker not fully implemented" )
+        data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
+        return data
+
 
 ###########################################################################
 ###########################################################################

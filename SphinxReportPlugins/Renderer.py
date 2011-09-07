@@ -83,6 +83,14 @@ class Renderer(Component):
             
         return result
 
+    def toString( self, value ):
+        '''returns a number as string
+        
+        If not a number, return empty string.'''
+        
+        try: return self.format % value
+        except TypeError: return ""
+
 class TableBase( Renderer ):
     '''base classes for tables and matrices.'''
 
@@ -181,7 +189,7 @@ class Table( TableBase ):
         
         matrix, row_headers, col_headers = self.buildTable( data )
 
-        title = "/".join(path)
+        title = path2str(path)
 
         if matrix == None: 
             return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
@@ -212,7 +220,7 @@ class Glossary( Table ):
 
         if matrix == None: return lines
 
-        title = "/".join(path)
+        title = path2str(path)
 
         lines.append( ".. glossary::" )
 
@@ -576,14 +584,14 @@ class Matrix(TableBase):
         results = ResultBlocks( title = path )
 
         matrix, rows, columns = self.buildMatrix( work )
-        title = "/".join(path)
+        title = path2str(path)
 
         if len(rows) == 0:
             return ResultBlocks( ResultBlock( "", title = title) )
 
         # do not output large matrices as rst files
         if not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols):
-            return self.asFile( [ [ self.format % x for x in r ] for r in matrix ], 
+            return self.asFile( [ [ self.toString(x) for x in r ] for r in matrix ], 
                                 rows, 
                                 columns, 
                                 title )
@@ -593,10 +601,10 @@ class Matrix(TableBase):
         lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
         lines.append( '')
         for x in range(len(rows)):
-            lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.format % x for x in matrix[x,:] ] ) ) )
+            lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.toString(x) for x in matrix[x,:] ] ) ) )
         lines.append( "") 
         if not path: subtitle = ""
-        else: subtitle = "/".join(path)
+        else: subtitle = path2str(path)
 
         results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
 
