@@ -150,7 +150,6 @@ def getTrackers( fullpath ):
 
     module_name = os.path.basename(name)
     module, pathname = Utils.getModule( name )
-
     trackers = []
 
     for name in dir(module):
@@ -231,7 +230,9 @@ def main():
     options.dir_trackers = os.path.abspath( os.path.expanduser( options.dir_trackers ) )
     if not os.path.exists( options.dir_trackers ):
         raise IOError("directory %s does not exist" % options.dir_trackers )
-    sys.path.append( options.dir_trackers )
+
+    sys.path.insert( 0, options.dir_trackers )
+
     # test plugins
     kwargs = {}
     for x in options.options:

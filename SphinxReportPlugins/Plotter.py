@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
-from SphinxReportPlugins.Renderer import Renderer, Matrix
+from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
 from SphinxReport.odict import OrderedDict as odict
 from SphinxReport import Utils, DataTree, Stats
 
@@ -389,7 +389,10 @@ class PlotterMatrix(Plotter):
           ('reverse-palette', directives.flag),
           ('max-rows', directives.unchanged),
           ('max-cols', directives.unchanged),
-          ('colorbar-format', directives.unchanged) )
+          ('colorbar-format', directives.unchanged),
+          ('nolabel-rows', directives.flag ),
+          ('nolabel-cols', directives.flag ),
+          )
 
     def __init__(self, *args, **kwargs ):
         Plotter.__init__(self, *args, **kwargs)
@@ -407,6 +410,8 @@ class PlotterMatrix(Plotter):
         except KeyError: self.mMaxCols = 20
 
         self.mReversePalette = "reverse-palette" in kwargs
+        self.label_rows = "nolabel-rows" not in kwargs
+        self.label_cols = "nolabel-cols" not in kwargs
 
     def addColourBar( self ):
         plt.colorbar( format = self.mBarFormat)        
@@ -472,21 +477,21 @@ class PlotterMatrix(Plotter):
         # offset=0.5: y=top/x=right
         offset = 0.0
 
-        col_headers = [ str(x) for x in col_headers ]
-        row_headers = [ str(x) for x in row_headers ]
-        
-        # determine fontsize for labels
-        xfontsize, col_headers = self.mFontSize, col_headers
-        yfontsize, row_headers = self.mFontSize, row_headers
+        if self.label_rows:
+            row_headers = [ str(x) for x in row_headers ]
+            yfontsize, row_headers = self.mFontSize, row_headers
+            plt.yticks( [ offset + y for y in range(len(row_headers)) ],
+                        row_headers,
+                        fontsize=yfontsize )
 
-        plt.xticks( [ offset + x for x in range(len(col_headers)) ],
-                    col_headers,
-                    rotation="vertical",
-                    fontsize=xfontsize )
+        if self.label_cols:
+            col_headers = [ str(x) for x in col_headers ]
+            xfontsize, col_headers = self.mFontSize, col_headers
+            plt.xticks( [ offset + x for x in range(len(col_headers)) ],
+                        col_headers,
+                        rotation="vertical",
+                        fontsize=xfontsize )
 
-        plt.yticks( [ offset + y for y in range(len(row_headers)) ],
-                    row_headers,
-                    fontsize=yfontsize )
 
         self.debug("plot matrix finished")            
 
@@ -525,7 +530,9 @@ class PlotterMatrix(Plotter):
 
         plots, labels = [], []
 
-        split_row, split_col = nrows > self.mMaxRows, ncols > self.mMaxCols
+        split_row = self.mMaxRows > 0 and nrows > self.mMaxRows
+        split_col = self.mMaxCols > 0 and ncols > self.mMaxCols
+
 
         if (split_row and split_col) or not (split_row or split_col):
             self.debug("not splitting matrix")
@@ -646,7 +653,7 @@ class PlotterHinton(PlotterMatrix):
             # select label to take
             labels = DataTree.getPaths( work )
             label = list(set(labels[-1]).difference( set((self.colour,)) ))[0]
-            self.matrix, self.rows, self.columns = Matrix.buildMatrix( self,
+            self.matrix, self.rows, self.columns = TableMatrix.buildMatrix( self,
                                                                        work, 
                                                                        apply_transformations = True, 
                                                                        take = label,
@@ -654,7 +661,7 @@ class PlotterHinton(PlotterMatrix):
                                                                        )
 
             if self.colour and self.colour in labels[-1]:
-                self.colour_matrix, rows, colums = Matrix.buildMatrix( self,
+                self.colour_matrix, rows, colums = TableMatrix.buildMatrix( self,
                                                                        work, 
                                                                        apply_transformations = False, 
                                                                        take = self.colour, 
@@ -662,7 +669,7 @@ class PlotterHinton(PlotterMatrix):
                                                                        )
 
         else:
-            self.matrix, self.rows, self.columns = Matrix.buildMatrix( self, work, **kwargs )
+            self.matrix, self.rows, self.columns = TableMatrix.buildMatrix( self, work, **kwargs )
 
         return self.matrix, self.rows, self.columns
 
@@ -726,7 +733,7 @@ class PlotterHinton(PlotterMatrix):
         offset = 0.5
         xfontsize, col_headers = self.mFontSize, col_headers
         yfontsize, row_headers = self.mFontSize, row_headers
-        
+
         plt.xticks( [ offset + x for x in range(len(col_headers)) ],
                     col_headers,
                     rotation="vertical",
@@ -1223,14 +1230,14 @@ class HistogramGradientPlot(LinePlot):
         cax = plt.axes([0.85, 0.1, 0.075, 0.8])
         plt.colorbar(cax=cax, format=self.mBarFormat )
 
-class BarPlot( Matrix, Plotter):
+class BarPlot( TableMatrix, Plotter):
     '''A bar plot.
 
     This :class:`Renderer` requires two levels:
     rows[dict] / cols[dict]
     '''
 
-    options = Matrix.options + Plotter.options +\
+    options = TableMatrix.options + Plotter.options +\
         ( ('label', directives.unchanged),
           ('error', directives.unchanged), )
         
@@ -1244,7 +1251,7 @@ class BarPlot( Matrix, Plotter):
     label_offset_y = 5
 
     def __init__(self, *args, **kwargs):
-        Matrix.__init__(self, *args, **kwargs )
+        TableMatrix.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
         self.error = kwargs.get("error", None )
@@ -1477,7 +1484,7 @@ class PiePlot(Renderer, Plotter):
     is assumed to be the total and all the other values
     are subtracted. It is renamed by the value of *pie-first-is-total*.
     """
-    options = Matrix.options + Plotter.options +\
+    options = TableMatrix.options + Plotter.options +\
         (('pie-min-percentage', directives.unchanged),
          ('pie-first-is-total', directives.unchanged), )
 
@@ -1528,13 +1535,13 @@ class PiePlot(Renderer, Plotter):
 
         return self.endPlot( plt.pie( sorted_vals, labels = labels ), None, path )
 
-class MatrixPlot(Matrix, PlotterMatrix):
+class TableMatrixPlot(TableMatrix, PlotterMatrix):
     """Render a matrix as a matrix plot.
     """
-    options = Matrix.options + PlotterMatrix.options
+    options = TableMatrix.options + PlotterMatrix.options
 
     def __init__(self, *args, **kwargs):
-        Matrix.__init__(self, *args, **kwargs )
+        TableMatrix.__init__(self, *args, **kwargs )
         PlotterMatrix.__init__(self, *args, **kwargs )
 
     def render( self, work, path ):
@@ -1545,7 +1552,27 @@ class MatrixPlot(Matrix, PlotterMatrix):
         self.debug("building matrix finished")
         return self.plot( matrix, rows, columns, path )
 
-class HintonPlot(Matrix, PlotterHinton):
+# for compatibility
+MatrixPlot = TableMatrixPlot
+
+class NumpyMatrixPlot(NumpyMatrix, PlotterMatrix):
+    """Render a matrix as a matrix plot.
+    """
+    options = NumpyMatrix.options + PlotterMatrix.options
+
+    def __init__(self, *args, **kwargs):
+        NumpyMatrix.__init__(self, *args, **kwargs )
+        PlotterMatrix.__init__(self, *args, **kwargs )
+
+    def render( self, work, path ):
+        """render the data."""
+
+        self.debug("building matrix started")
+        matrix, rows, columns = self.buildMatrix( work )
+        self.debug("building matrix finished")
+        return self.plot( matrix, rows, columns, path )
+
+class HintonPlot(TableMatrix, PlotterHinton):
     """Render a matrix as a hinton plot.
 
     Draws a Hinton diagram for visualizing a weight matrix. 
@@ -1557,7 +1584,7 @@ class HintonPlot(Matrix, PlotterHinton):
        :term:`colours`: colour boxes according to value.
 
     """
-    options = Matrix.options + PlotterHinton.options +\
+    options = TableMatrix.options + PlotterHinton.options +\
         ( ('colours', directives.unchanged), 
           )
 
@@ -1565,7 +1592,7 @@ class HintonPlot(Matrix, PlotterHinton):
     colour = None
 
     def __init__(self, *args, **kwargs):
-        Matrix.__init__(self, *args, **kwargs )
+        TableMatrix.__init__(self, *args, **kwargs )
         PlotterHinton.__init__(self, *args, **kwargs )
 
         self.colour = kwargs.get("colour", None )

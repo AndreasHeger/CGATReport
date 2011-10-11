@@ -2,6 +2,8 @@
 
 import sys, os, re, random
 
+import numpy
+
 from SphinxReport.Tracker import Tracker, Status
 from SphinxReport.odict import OrderedDict as odict
 
@@ -217,6 +219,26 @@ class StatusTracker( Status ):
         '''test4 is not available/applicable'''
         return "NA", None
 
+
+class MatrixTracker( Tracker ):
+    '''returns matrices.'''
+
+    tracks = 'example1', 'example2'
+    
+    def __call__(self, track ):
+        
+        if track == 'example1':
+            matrix =  numpy.arange( 0, 10 )
+        elif track == 'example2':
+            matrix = numpy.arange( 10,0,-1 )
+            
+        matrix.shape = (2,5)
+
+        r = { 'rows' : map(str, xrange( 0, 2 ) ),
+              'columns' : map(str, xrange( 0, 5 ) ),
+              'matrix' : matrix  }
+
+        return r
 
 def getSingleValue(): return 12
     

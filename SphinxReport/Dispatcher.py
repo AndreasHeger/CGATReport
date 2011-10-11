@@ -152,7 +152,7 @@ class Dispatcher(Component):
         to_remove = []
         for x,y in enumerate(data_paths):
             if type(y) in types.StringTypes: data_paths[x]=[y,]
-            if len(y) == 0: to_remove.append(x)
+            if y == None or len(y) == 0: to_remove.append(x)
             
         for x in to_remove[::-1]:
             del data_paths[x]
@@ -219,7 +219,7 @@ class Dispatcher(Component):
         # if no tracks, error
         if len(datapaths) == 0 or len(datapaths[0]) == 0:
             self.warn( "%s: no tracks found - no output" % self.tracker )
-            raise ValueError( "no tracks found from %s" % self.tracker )
+            return
         
         # filter data paths
         datapaths = self.filterDataPaths( datapaths )
@@ -227,7 +227,7 @@ class Dispatcher(Component):
         # if no tracks, error
         if len(datapaths) == 0 or len(datapaths[0]) == 0:
             self.warn( "%s: no tracks remain after filtering - no output" % self.tracker )
-            raise ValueError( "no tracks found from %s" % self.tracker )
+            return
 
         all_paths = list(itertools.product( *datapaths ))
         self.debug( "%s: collecting data started for %i data paths" % (self.tracker, 
@@ -399,6 +399,7 @@ class Dispatcher(Component):
                 try:
                     results.append( self.renderer( work, path = path ))
                 except:
+                    self.error( "%s: exception in rendering" % self )
                     results.append( ResultBlocks( Utils.buildException( "rendering" ) ) )
 
         if len(results) == 0:
@@ -412,35 +413,49 @@ class Dispatcher(Component):
     def __call__(self, *args, **kwargs ):
 
         try: self.parseArguments( *args, **kwargs )
-        except: return ResultBlocks(ResultBlocks( Utils.buildException( "parsing" ) ))
+        except: 
+            self.error( "%s: exception in parsing" % self )
+            return ResultBlocks(ResultBlocks( Utils.buildException( "parsing" ) ))
 
         self.debug( "profile: started: tracker: %s" % (self.tracker))
 
         try: self.collect()
-        except: return ResultBlocks(ResultBlocks( Utils.buildException( "collection" ) ))
+        except: 
+            self.error( "%s: exception in collection" % self )
+            return ResultBlocks(ResultBlocks( Utils.buildException( "collection" ) ))
 
         self.debug( "profile: finished: tracker: %s" % (self.tracker))
+
+        if len(self.data) == 0: 
+            self.info( "%s: no data - processing complete" )
+            return None
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after collection: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
         
         # transform data
         try: self.transform()
-        except: return ResultBlocks(ResultBlocks( Utils.buildException( "transformation" ) ))
+        except: 
+            self.error( "%s: exception in transformation" % self )
+            return ResultBlocks(ResultBlocks( Utils.buildException( "transformation" ) ))
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after transformation: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         # remove superfluous levels
         try: self.prune()
-        except: return ResultBlocks(ResultBlocks( Utils.buildException( "pruning" ) ))
+        except: 
+            self.error( "%s: exception in pruning" % self )
+            return ResultBlocks(ResultBlocks( Utils.buildException( "pruning" ) ))
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after pruning: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         # remove group plots
         try: self.group()
-        except: return ResultBlocks(ResultBlocks( Utils.buildException( "grouping" ) ))
+        except: 
+            self.error( "%s: exception in grouping" % self )
+            return ResultBlocks(ResultBlocks( Utils.buildException( "grouping" ) ))
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after grouping: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
@@ -448,7 +463,10 @@ class Dispatcher(Component):
         self.debug( "profile: started: renderer: %s" % (self.renderer))
 
         try: result = self.render()
-        except: return ResultBlocks(ResultBlocks( Utils.buildException( "rendering" ) ))
+        except: 
+            print "exception in rendering %s" % self
+            self.error( "%s: exception in rendering" % self )
+            return ResultBlocks(ResultBlocks( Utils.buildException( "rendering" ) ))
 
         self.debug( "profile: finished: renderer: %s" % (self.renderer))
 

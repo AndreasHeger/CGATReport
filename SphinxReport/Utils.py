@@ -184,10 +184,9 @@ def getModule( name ):
     """load module in fullpath
     """
     # remove leading '.'
-    debug( "entered getModule with `%s`" % name )
+    logging.debug( "entered getModule with `%s`" % name )
 
     parts = name.split(".")
-
     if parts[0] == "Tracker":
         # special case: Trackers shipped with SphinxReport
         if len(parts) > 2:
@@ -220,11 +219,13 @@ def getModule( name ):
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
     debug( "loading module: %s: %s, %s, %s" % (name, file, pathname, description) )
+    # imp.load_module modifies sys.path - save original and restore
+    oldpath = sys.path
 
     # add to sys.path to ensure that imports in the directory work
     if pathname not in sys.path:
         sys.path.append( os.path.dirname( pathname ) )
-    
+
     try:
         module = imp.load_module(name, file, pathname, description )
     except:
@@ -233,6 +234,7 @@ def getModule( name ):
     finally:
         file.close()
         sys.stdout = stdout
+        sys.path = oldpath
 
     return module, pathname
 
@@ -344,6 +346,22 @@ def makeTransformer( path, *args, **kwargs ):
     return obj
 
 
+def buildWarning( message ):
+    '''build a sphinxreport warning message.
+    '''
+    if PARAMS["report_show_errors"]:
+        WARNING_TEMPLATE = '''
+
+.. error:: WARNING 
+
+   * message: %(message)s
+
+'''
+        return ResultBlock( WARNING_TEMPLATE % locals(), 
+                            title = "" )
+    else:
+        return None
+        
 def buildException( stage ):
     '''build an exception text element.
     
@@ -431,11 +449,13 @@ def updateOptions( kwargs ):
 def getRenderer( renderer_name, **kwargs ):
     '''find and instantiate renderer.'''
 
+    renderer = None
     try:
         cls = getPlugins()["render"]["render-%s" % renderer_name]
         renderer = cls( **kwargs )
     except KeyError:
-        renderer = makeRenderer( renderer_name, **kwargs)
+        # renderer = makeRenderer( renderer_name, **kwargs)
+        pass
 
     if not renderer:
         raise KeyError( "could not find renderer '%s'. Available renderers:\n  %s" % \

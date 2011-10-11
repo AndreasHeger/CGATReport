@@ -235,8 +235,10 @@ class Glossary( Table ):
 
         return ResultBlocks( "\n".join(lines), title = title )
 
-class Matrix(TableBase):    
-    """A table with numerical columns.
+class MatrixBase:
+    '''base class for matrices.
+
+    This base class provides utility functions for rectangular 2D matrices.
 
     It implements column-wise and row-wise transformations.
 
@@ -263,16 +265,10 @@ class Matrix(TableBase):
        rows[dict] / columns[dict] / value
 
     All values need to be numerical.
-    """
+    '''
 
-    nlevels = 2
-
-    options = TableBase.options +\
-        ( ('transform-matrix', directives.unchanged), )
-
-    def __init__(self, *args, **kwargs):
-        TableBase.__init__(self, *args, **kwargs )
-
+    def __init__( self, *args, **kwargs ):
+    
         self.mMapKeywordToTransform = {
             "correspondence-analysis": self.transformCorrespondenceAnalysis,
             "transpose": self.transformTranspose,
@@ -303,7 +299,6 @@ class Matrix(TableBase):
                 except KeyError:
                     raise ValueError("unknown matrix transformation %s, possible values are: %s" \
                                          % (kw, ",".join( sorted(self.mMapKeywordToTransform.keys()) ) ) )
-
 
     def transformAddRowTotal( self, matrix, row_headers, col_headers ):
         '''add row total to the matrix.'''
@@ -512,6 +507,57 @@ class Matrix(TableBase):
                     matrix[x,y] /= m
         return matrix, rows, cols
 
+    def render( self, work, path ):
+        """render the data.
+        """
+
+        results = ResultBlocks( title = path )
+
+        matrix, rows, columns = self.buildMatrix( work )
+        title = path2str(path)
+
+        if len(rows) == 0:
+            return ResultBlocks( ResultBlock( "", title = title) )
+
+        # do not output large matrices as rst files
+        if not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols):
+            return self.asFile( [ [ self.toString(x) for x in r ] for r in matrix ], 
+                                rows, 
+                                columns, 
+                                title )
+
+        lines = []
+        lines.append( ".. csv-table:: %s" % title )
+        lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
+        lines.append( '')
+        for x in range(len(rows)):
+            lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.toString(x) for x in matrix[x,:] ] ) ) )
+        lines.append( "") 
+        if not path: subtitle = ""
+        else: subtitle = path2str(path)
+
+        results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
+
+        return results
+
+class TableMatrix(TableBase, MatrixBase):    
+    """A table with numerical columns.
+
+       rows[dict] / columns[dict] / value
+
+    All values need to be numerical.
+    """
+
+    nlevels = 2
+
+    options = TableBase.options +\
+        ( ('transform-matrix', directives.unchanged), )
+
+    def __init__(self, *args, **kwargs):
+
+        TableBase.__init__(self, *args, **kwargs )
+        MatrixBase.__init__(self, *args, **kwargs )
+
     def buildMatrix( self, 
                      work, 
                      missing_value = 0, 
@@ -577,38 +623,90 @@ class Matrix(TableBase):
 
         return matrix, rows, columns
 
-    def render( self, work, path ):
-        """render the data.
-        """
+# for compatibility
+Matrix = TableMatrix
 
-        results = ResultBlocks( title = path )
+class NumpyMatrix( TableBase, MatrixBase ): 
+    """A nxm matrix.
 
-        matrix, rows, columns = self.buildMatrix( work )
-        title = path2str(path)
+    It implements column-wise and row-wise transformations.
 
-        if len(rows) == 0:
-            return ResultBlocks( ResultBlock( "", title = title) )
+    This class adds the following options to the :term:`report` directive.
 
-        # do not output large matrices as rst files
-        if not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols):
-            return self.asFile( [ [ self.toString(x) for x in r ] for r in matrix ], 
-                                rows, 
-                                columns, 
-                                title )
+        :term:`transform-matrix`: apply a matrix transform. Possible choices are:
 
-        lines = []
-        lines.append( ".. csv-table:: %s" % title )
-        lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
-        lines.append( '')
-        for x in range(len(rows)):
-            lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.toString(x) for x in matrix[x,:] ] ) ) )
-        lines.append( "") 
-        if not path: subtitle = ""
-        else: subtitle = path2str(path)
+           * *correspondence-analysis*: use correspondence analysis to permute rows/columns 
+           * *normalized-column-total*: normalize by column total
+           * *normalized-column-max*: normalize by column maximum
+           * *normalized-row-total*: normalize by row total
+           * *normalized-row-max*: normalize by row maximum
+           * *normalized-total*: normalize over whole matrix
+           * *normalized-max*: normalize over whole matrix
+           * *sort* : sort matrix rows and columns alphanumerically.
+           * filter-by-rows: only take columns that are also present in rows
+           * filter-by-cols: only take columns that are also present in cols
+           * square: make square matrix (only take rows and columns present in both)
+           * *add-row-total* : add the row total at the bottom
+           * *add-column-total* : add the column total as a last column
 
-        results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
+    Requires one level with three fields:
 
-        return results
+       rows
+       columns
+       matrix
+
+    All values need to be numerical.
+    """
+    
+    nlevels = 1
+
+    options = TableBase.options +\
+        ( ('transform-matrix', directives.unchanged), )
+
+    def __init__(self, *args, **kwargs):
+
+        TableBase.__init__(self, *args, **kwargs )
+        MatrixBase.__init__(self, *args, **kwargs )
+
+    def buildMatrix( self, 
+                     work, 
+                     missing_value = 0, 
+                     apply_transformations = True,
+                     take = None,
+                     dtype = numpy.float ):
+        """build a matrix from work, a single level dictionary with 
+        three fields: rows, columns, matrix."""
+        
+        try: rows = work["rows"]
+        except KeyError: raise KeyError( "expected rownames in field 'rows' - no 'rows' present: %s " % \
+                                             str(work.keys() ))
+
+        try: columns = work["columns"]
+        except KeyError: raise KeyError( "expected column names in field 'columns' - no 'columns' present: %s " % \
+                                             str(work.keys()) )
+
+        try: matrix = work["matrix"]
+        except KeyError: raise KeyError( "expected matrix in field 'matrix' - no 'matrix' present: %s" % \
+                                             str(work.keys()) )
+        
+        nrows, ncolumns = matrix.shape
+
+        if len(rows) != nrows:
+            raise ValueError("number of rows does not correspond to matrix: %i != %i" % (len(rows), nrows))
+
+        if len(columns) != ncolumns:
+            raise ValueError("number of columns does not correspond to matrix: %i != %i" % (len(columns), ncolumns))
+
+        # convert rows/columns to str (might be None)
+        rows = [ str(x) for x in rows ]
+        columns = [ str(x) for x in columns ]
+
+        if self.mConverters and apply_transformations:
+            for converter in self.mConverters: 
+                self.debug("applying converter %s" % converter)
+                matrix, rows, columns = converter(matrix, rows, columns)
+        
+        return matrix, rows, columns
 
 class Debug( Renderer ):
     '''a simple renderer, returning the type of data and the number of items at each path.'''
@@ -711,7 +809,7 @@ class Status( Renderer ):
             for track, work in w.iteritems():
             
                 status = str(work['status']).strip()
-                descriptions[testname] = work['description']
+                descriptions[testname] = work.get('description', "")
                 info = str(work['info']).strip()
                 try:
                     image = ".. image:: %s" % os.path.join( dirname, self.map_code2image[status.upper()] )

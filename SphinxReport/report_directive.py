@@ -82,6 +82,7 @@ def run(arguments,
     """
 
     tag = "%s:%i" % (str(document), lineno)
+
     logging.debug( "report_directive.run: profile: started: rst: %s" % tag )
 
     # sort out the paths
@@ -101,6 +102,9 @@ def run(arguments,
     if not builddir:
         builddir = setup.confdir
     
+    # remove symbolic links
+    # srcdir, builddir, rstdir, outdir = [ os.path.realpath(x) for x in (srcdir, builddir, rstdir, outdir) ]
+
     # path to root relative to rst
     rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
 
@@ -239,7 +243,7 @@ def run(arguments,
         logging.debug( "report_directive.run: collecting tracker %s." % reference )
         code, tracker = Utils.makeTracker( reference )
         if not tracker: 
-            logging.debug( "report_directive.run: no tracker - no output from %s " % str(document) )
+            logging.error( "report_directive.run: no tracker - no output from %s " % str(document) )
             raise ValueError( "tracker `%s` not found" % reference )
 
         logging.debug( "report_directive.run: collected tracker." )
@@ -257,6 +261,7 @@ def run(arguments,
         logging.debug( "report_directive.run: creating renderer." )
         
         if renderer_name == None:
+            logging.error( "report_directive.run: no renderer - no output from %s" % str(document))
             raise ValueError("the report directive requires a renderer.")
 
         renderer = Utils.getRenderer( renderer_name, **renderer_options )
@@ -271,6 +276,11 @@ def run(arguments,
 
         blocks = dispatcher( **dispatcher_options )
 
+        if blocks == None:
+            blocks = ResultBlocks(ResultBlocks( Utils.buildWarning( "no - data" ) ))
+            code = None
+            tracker_id = None
+            
     except:
 
         logging.warn("report_directive.run: exception caught at %s:%i - see document" % (str(document), lineno) )

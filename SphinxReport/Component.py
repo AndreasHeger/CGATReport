@@ -3,7 +3,7 @@
 
 import os, sys
 import pkg_resources
-from logging import warn, log, debug, info, critical
+from logging import warn, log, debug, info, critical, error
 import logging
 import collections
 from docutils.parsers.rst import directives
@@ -31,7 +31,9 @@ class Component(object):
     def warn( self, msg ):
         warn( "disp%s: %s" % (id(self),msg) ) 
     def info( self, msg ):
-        info( "disp%s: %s" % (id(self),msg) ) 
+        logging.info( "disp%s: %s" % (id(self),msg) ) 
+    def error( self, msg ):
+        error( "disp%s: %s" % (id(self),msg) ) 
     def critical( self, msg ):
         critical( "disp%s: %s" % (id(self),msg) ) 
 
