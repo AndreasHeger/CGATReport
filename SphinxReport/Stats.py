@@ -481,7 +481,7 @@ def filterMasked( xvals, yvals, missing = ("na", "Nan", None, ""), dtype = numpy
     return (numpy.array( [xvals[i] for i in range(len(xvals)) if not xmask[i]], dtype = dtype  ),
             numpy.array( [yvals[i] for i in range(len(yvals)) if not ymask[i]], dtype = dtype) )
 
-def filterNone( args, missing = ("na", "Nan", None, ""), dtype = numpy.float ):
+def filterNone( args, missing = ("na", "Nan", None, "", 'None', 'none'), dtype = numpy.float ):
     '''convert arrays in 'args' to numpy arrays of 'dtype', skipping where any of
     the columns have a value of missing.
 

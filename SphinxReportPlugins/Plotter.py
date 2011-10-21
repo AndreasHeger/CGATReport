@@ -936,8 +936,10 @@ class LinePlot( Renderer, Plotter ):
 
         s = self.mSymbols[nplotted % len(self.mSymbols)]
         
-        self.plots.append( plt.plot( xvals,
-                                     yvals,
+        xxvals, yyvals = Stats.filterNone( (xvals, yvals) )
+
+        self.plots.append( plt.plot( xxvals,
+                                     yyvals,
                                      s ) )
         
         self.ylabels.append(ylabel)
