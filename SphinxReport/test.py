@@ -123,7 +123,6 @@ TRACKERDIR = "trackers"
 if "docsdir" in locals():
     TRACKERDIR = os.path.join( docsdir, "trackers" )
 
-
 RST_TEMPLATE = """.. _%(label)s:
 
 .. report:: %(tracker)s

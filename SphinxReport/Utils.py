@@ -454,8 +454,10 @@ def getRenderer( renderer_name, **kwargs ):
         cls = getPlugins()["render"]["render-%s" % renderer_name]
         renderer = cls( **kwargs )
     except KeyError:
-        # renderer = makeRenderer( renderer_name, **kwargs)
-        pass
+        # This was uncommented to fix one bug
+        # but uncommenting invalidates user renderers
+        # TODO: needs to be revisited
+        renderer = makeRenderer( renderer_name, **kwargs)
 
     if not renderer:
         raise KeyError( "could not find renderer '%s'. Available renderers:\n  %s" % \

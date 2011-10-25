@@ -217,6 +217,8 @@ def buildPlots( rst_files, options, args, sourcedir ):
 
     if options.num_jobs > 1:
         pool = Pool( options.num_jobs )
+        # todo: async execution with timeouts
+        #res = pool.map_async( run, work )
         errors = pool.map( run, work )
         pool.close()
         pool.join()

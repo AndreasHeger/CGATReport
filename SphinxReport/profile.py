@@ -25,7 +25,7 @@ on the command line. The options are:
 
 """
 
-import sys, os, imp, cStringIO, re, types, glob, optparse, shutil, datetime
+import sys, os, imp, cStringIO, re, types, glob, optparse, shutil, datetime, logging
 import collections
 
 USAGE = """python %s [OPTIONS] target
@@ -46,37 +46,45 @@ class Counter(object):
     '''
 
     def __init__(self):
-        self.durations = collections.defaultdict( list )
-        self.started = collections.defaultdict( int )
+        self._durations = collections.defaultdict( list )
+        self._started = collections.defaultdict( int )
+        self._calls = collections.defaultdict( int )
 
     def add( self, started, dt, source = None ):
-        if self.started[source] != 0 and not started:
-            self.durations[source].append( dt - self.started[source] )
-            self.started[source] = 0
-        elif self.started[source] == 0 and started:
-            self.started[source] = dt
+        if self._started[source] != 0 and not started:
+            self._durations[source].append( dt - self._started[source] )            
+            self._started[source] = 0
+        elif self._started[source] == 0 and started:
+            self._calls[source] += 1
+            self._started[source] = dt
         else:
-            raise ValueError("inconsistent time points, %s, %s" % (self.started[source], started))
+            raise ValueError("inconsistent time points, has_started=%s, is_started=%s" % (self._started[source], started))
 
     def reset( self, source = None):
         '''reset last event.'''
-        self.started[source] = None
+        self._started[source] = None
+        self._calls[source] = 0
 
     def getDuration( self ): 
-        if self.durations:
+        if self._durations:
             x = None
-            for source, durations in self.durations.iteritems():
+            for source, durations in self._durations.iteritems():
                 if x == None: x = durations[0] 
                 for y in durations[1:]: x += y
             return x
         else:
             return datetime.timedelta()
-
+        
     def getCalls( self ): 
-        return sum( [ len(x) for x in self.durations.values() ] )
+        return sum( self._calls.values() )
+
+    def getRunning( self ):
+        '''get numbers of tasks unfinished or still running.'''
+        return len( [x for x,y in self._started.iteritems() if y != 0 ] )
 
     duration = property(getDuration)
     calls = property(getCalls)
+    running = property(getRunning)
 
 def main():
 
@@ -90,7 +98,12 @@ def main():
                        choices=("seconds", "milliseconds" ),
                        help="time to show [default=%default]" )
 
+    parser.add_option( "-f", "--filter", dest="filter", type="choice",
+                       choices=("unfinished", "running", "completed", "all" ),
+                       help="apply filter to output [default=%default]" )
+
     parser.set_defaults( sections = [],
+                         filter = "all",
                          time = "seconds" )
 
     (options, args) = parser.parse_args()
@@ -111,10 +124,9 @@ def main():
     if len(args) == 1:
         infile = open( args[0] )
     else:
-        infile = open(Component.LOGFILE )
+        infile = open( Component.LOGFILE )
 
     for line in infile:
-
         if not rx.match( line ): continue
         data = line[:-1].split()
         if len(data) < 5: continue
@@ -133,7 +145,7 @@ def main():
             print data[5:]
             print "malformatted line in logfile: %s" % line 
             continue
-        
+
         if section.endswith( ":" ): section = section[:-1]
         
         if source == "report_directive.run:": continue
@@ -141,7 +153,7 @@ def main():
 
         if source == "build.py:":
             if is_start:
-                print "# reseting counts at", line,
+                logging.info( "resetting counts at line=%s" % line[:-1] )
                 counts = {}
                 for s in profile_sections:
                     counts[s] = collections.defaultdict( Counter )
@@ -149,15 +161,16 @@ def main():
 
         try:
             counts[section][point].add( is_start, dt, source )
-        except ValueError:
+        except ValueError, msg:
             # if there are errors, there is no finish, reset counter
-
-            if is_start: counts[section[:-1]][point].reset( source )
+            if is_start: counts[section][point].reset( source )
             try:
-                counts[section[:-1]][point].add( is_start, dt, source )
-            except ValueError:
-                print "error in line: (is_start=%s), %s" % (is_start,line)
-                raise
+                counts[section][point].add( is_start, dt, source )
+            except ValueError, msg:
+                logging.warn( "%s: line=%s" % (msg,line) )
+            except KeyError, msg:
+                print data
+                print "error in line: (is_start=%s), msg='%s', %s" % (is_start,msg,line)
 
     if options.time == "milliseconds":
         f = lambda d: d.seconds + d.microseconds / 1000
@@ -165,19 +178,27 @@ def main():
         f = lambda d: d.seconds + d.microseconds / 1000000
 
     for section in profile_sections:
-        sys.stdout.write( "\t".join( ("section", "object", "ncalls", "duration", "percall") ) + "\n" )
+        sys.stdout.write( "\t".join( ("section", "object", "ncalls", "duration", "percall", "running") ) + "\n" )
         for objct, c in counts[section].iteritems():
+            
+            # apply filters
+            if options.filter in ("unfinished", "running") and c.running == 0: 
+                continue
+
             d = f(c.duration)
             if c.calls > 0:
                 percall = "%6.3f" %( d / float(c.calls))
             else:
                 percall = "na"
+
+
             sys.stdout.write( "\t".join( \
                     (map( str, \
                               (section, objct, 
                                c.calls,
                                d,
                                percall,
+                               c.running,
                                )))) + "\n" )
             
         sys.stdout.write( "\n" * 3 )

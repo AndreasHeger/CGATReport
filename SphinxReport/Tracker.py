@@ -271,7 +271,7 @@ class TrackerSQL( Tracker ):
         except AttributeError, msg:
             return self.metadata.tables[tablename]
 
-        raise IndexError( "table %s no found" % name )
+        raise IndexError( "table %s not found" % tablename )
 
     def getColumns( self, tablename ):
         '''return a list of columns in table *tablename*.'''
