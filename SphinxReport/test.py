@@ -133,8 +133,10 @@ RST_TEMPLATE = """.. _%(label)s:
 """
 
 def getTrackers( fullpath ):
-    """retrieve an instantiated tracker and its associated code.
+    """retrieve a tracker and its associated code.
     
+    The tracker is not instantiated.
+
     returns a tuple (code, tracker, module, flag).
 
     The flag indicates whether that tracker is derived from the 
@@ -206,6 +208,11 @@ def main():
     parser.add_option( "--no-show", dest="do_show", action="store_false",
                        help = "do not show a plot [default=%default]." )
 
+    parser.add_option( "--hardcopy", dest="hardcopy", type="string",
+                       help = "output images of plots. The parameter should contain one or more %s "
+                              " The suffix determines the type of plot. "
+                              " [default=%default]." )
+
     parser.set_defaults(
         tracker=None,
         transformers = [],
@@ -218,7 +225,8 @@ def main():
         force = False,
         dir_trackers = TRACKERDIR,
         label = "GenericLabel",
-        caption = "add caption here" )
+        caption = "add caption here",
+        dpi = 100 )
     
     (options, args) = parser.parse_args()
 
@@ -249,9 +257,13 @@ def main():
 
     kwargs = Utils.updateOptions( kwargs )
 
-    renderer = Utils.getRenderer( options.renderer, **kwargs )
+    option_map = getOptionMap()
+    renderer_options = Utils.selectAndDeleteOptions( kwargs, option_map["render"])
+    transformer_options = Utils.selectAndDeleteOptions( kwargs, option_map["transform"])
 
-    transformers = Utils.getTransformers( options.transformers, **kwargs )
+    renderer = Utils.getRenderer( options.renderer, renderer_options )
+
+    transformers = Utils.getTransformers( options.transformers, transformer_options )
 
     exclude = set( ("Tracker", 
                     "TrackerSQL", 
@@ -288,7 +300,7 @@ def main():
             print "removed all data for tracker %s: %i files" % (name, len(removed))
 
         # instantiate functors
-        if is_derived: t = tracker()
+        if is_derived: t = tracker( **kwargs )
         # but not functions
         else: t = tracker
 
@@ -299,7 +311,7 @@ def main():
 
         if options.do_print:                        
             options_rst = []
-            for key,val in kwargs.items():
+            for key,val in kwargs.items() + renderer_options.items() + transformer_options.items():
                 if val == None:
                     options_rst.append(":%s:" % key )
                 else:
@@ -324,6 +336,16 @@ def main():
                 print "title:", r.title
                 for s in r:
                     print str(s)
+                    
+        if options.hardcopy:
+            
+            fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
+            # create all the images
+            for figman in fig_managers:
+                # create all images
+                figid = figman.num
+                outfile = re.sub( "%s", str(figid), options.hardcopy)
+                figman.canvas.figure.savefig( outfile, dpi=options.dpi )
 
         if options.do_show: 
             if options.renderer.startswith("r-"):

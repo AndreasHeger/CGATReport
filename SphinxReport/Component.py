@@ -101,11 +101,16 @@ def getOptionMap():
                     pass
         options["dispatch"] = {
             'groupby': directives.unchanged,
-            'tracker': directives.unchanged,
             'tracks': directives.unchanged,
             'slices': directives.unchanged,
             'layout': directives.unchanged,
+            'restrict': directives.unchanged,
+            'exclude': directives.unchanged,
             'nocache': directives.flag,
+            }
+
+        options["tracker"] = {
+            'tracker': directives.unchanged
             }
 
         options["display"]  = {

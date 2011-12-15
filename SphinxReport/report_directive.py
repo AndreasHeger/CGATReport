@@ -48,15 +48,6 @@ def exception_to_str(s = None):
     return sh.getvalue()
 
 
-def selectAndDeleteOptions( options, select ):
-    '''collect options in select.'''
-    new_options = {}
-    for k, v in options.items():
-        if k in select:
-            new_options[k] = v
-            del options[k]
-    return new_options
-
 def buildPaths( reference ):
     '''return paths.'''
 
@@ -148,13 +139,15 @@ def run(arguments,
     layout = options.get( "layout", "column" )
 
     option_map = getOptionMap()
-    renderer_options = selectAndDeleteOptions( options, option_map["render"])
-    transformer_options = selectAndDeleteOptions( options, option_map["transform"])
-    dispatcher_options = selectAndDeleteOptions( options, option_map["dispatch"] )
-        
+    renderer_options = Utils.selectAndDeleteOptions( options, option_map["render"])
+    transformer_options = Utils.selectAndDeleteOptions( options, option_map["transform"])
+    dispatcher_options = Utils.selectAndDeleteOptions( options, option_map["dispatch"] )
+    tracker_options = Utils.selectAndDeleteOptions( options, option_map["tracker"] )
+
     logging.debug( "report_directive.run: renderer options: %s" % str(renderer_options) )
     logging.debug( "report_directive.run: transformer options: %s" % str(transformer_options) )
     logging.debug( "report_directive.run: dispatcher options: %s" % str(dispatcher_options) )
+    logging.debug( "report_directive.run: tracker options: %s" % str(tracker_options) )
 
     if options.has_key("transform"): 
         transformer_names = options["transform"].split(",")
@@ -240,21 +233,21 @@ def run(arguments,
     try:
         ########################################################
         # find the tracker
-        logging.debug( "report_directive.run: collecting tracker %s." % reference )
-        code, tracker = Utils.makeTracker( reference )
+        logging.debug( "report_directive.run: collecting tracker %s with options %s " % (reference, tracker_options) )
+        code, tracker = Utils.makeTracker( reference, (), tracker_options )
         if not tracker: 
             logging.error( "report_directive.run: no tracker - no output from %s " % str(document) )
             raise ValueError( "tracker `%s` not found" % reference )
 
-        logging.debug( "report_directive.run: collected tracker." )
+        logging.debug( "report_directive.run: collected tracker %s" % reference )
 
         tracker_id = Cache.tracker2key( tracker )
 
         ########################################################
         # determine the transformer
-        logging.debug( "report_directive.run: creating transformers." )
+        logging.debug( "report_directive.run: creating transformers" )
 
-        transformers = Utils.getTransformers( transformer_names, **transformer_options )
+        transformers = Utils.getTransformers( transformer_names, transformer_options )
 
         ########################################################
         # determine the renderer
@@ -262,9 +255,9 @@ def run(arguments,
         
         if renderer_name == None:
             logging.error( "report_directive.run: no renderer - no output from %s" % str(document))
-            raise ValueError("the report directive requires a renderer.")
+            raise ValueError("the report directive requires a renderer")
 
-        renderer = Utils.getRenderer( renderer_name, **renderer_options )
+        renderer = Utils.getRenderer( renderer_name, renderer_options )
 
         ########################################################
         # create and call dispatcher
@@ -272,12 +265,15 @@ def run(arguments,
 
         dispatcher = Dispatcher.Dispatcher( tracker, 
                                             renderer,
-                                            transformers )     
+                                            transformers )
 
+        # add the tracker options
+        dispatcher_options.update( tracker_options )
         blocks = dispatcher( **dispatcher_options )
 
         if blocks == None:
-            blocks = ResultBlocks(ResultBlocks( Utils.buildWarning( "no - data" ) ))
+            blocks = ResultBlocks(ResultBlocks( 
+                    Utils.buildWarning( "NoData", "tracker %s returned no Data" % str(tracker)) ))
             code = None
             tracker_id = None
             
@@ -407,7 +403,6 @@ def setup(app):
     setup.config = app.config
     setup.confdir = app.confdir
     setup.srcdir = app.srcdir
-    app.add_config_value('sphinxreport_show_warnings', True, False)
     app.add_directive('report', report_directive)
 
 directives.register_directive('report', report_directive)

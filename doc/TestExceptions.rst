@@ -36,3 +36,10 @@ Tests exceptions
 
    An unknown transform
 
+Test warnings
+=============
+
+.. report:: Trackers.EmptyTracker
+   :render: table
+   
+   A tracker which is empty

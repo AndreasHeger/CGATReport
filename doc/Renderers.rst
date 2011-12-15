@@ -20,6 +20,7 @@ that are included in sphinxreport.
    GalleryScatterPlots.rst
    GalleryConfig.rst
    GalleryStatus.rst
+   GalleryGallery.rst
    GalleryUser.rst
    GalleryRPlots.rst
    GalleryDebug.rst

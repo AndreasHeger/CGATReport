@@ -266,6 +266,9 @@ class TransformerCombinations( Transformer ):
     b/1/x
     b/2/x
 
+    Uses the ``tf-fields`` option to combine a certain field.
+    Otherwise, it combines the first data found.
+
     Output:
     
 
@@ -281,7 +284,7 @@ class TransformerCombinations( Transformer ):
 
         try: self.fields = set(kwargs["tf-fields"].split(","))
         except KeyError: 
-            raise KeyError( "TransformerCombinations requires the `tf-fields` option to be set." )
+            self.fields = None
 
     def transform(self, data, path):
 
@@ -293,19 +296,25 @@ class TransformerCombinations( Transformer ):
         for x1 in range(len(vals)-1):
             n1 = vals[x1]
             # find the first field that fits
-            for field in self.fields:
-                if field in data[n1]:
-                    d1 = data[n1][field]
-                    break
+            if self.fields:
+                for field in self.fields:
+                    if field in data[n1]:
+                        d1 = data[n1][field]
+                        break
+                else:
+                    raise KeyError("could not find any match from '%s' in '%s'" % (str(data[n1].keys()), str(self.fields )))
             else:
-                raise KeyError("could not find any match from '%s' in '%s'" % (str(data[n1].keys()), str(self.fields )))
+                d1 = data[n1]
 
             for x2 in range(x1+1, len(vals)):
                 n2 = vals[x2]
-                try:
-                    d2 = data[n2][field]
-                except KeyErrror:
-                    raise KeyError("no field %s in '%s'" % sttr(data[n2]))
+                if self.fields:
+                    try:
+                        d2 = data[n2][field]
+                    except KeyErrror:
+                        raise KeyError("no field %s in '%s'" % sttr(data[n2]))
+                else:
+                    d2 = data[n2]
 
                 ## check if array?
                 if len(d1) != len(d2):

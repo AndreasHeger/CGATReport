@@ -247,10 +247,12 @@ class MatrixBase:
         :term:`transform-matrix`: apply a matrix transform. Possible choices are:
 
            * *correspondence-analysis*: use correspondence analysis to permute rows/columns 
-           * *normalized-column-total*: normalize by column total
-           * *normalized-column-max*: normalize by column maximum
+           * *normalized-col-total*: normalize by column total
+           * *normalized-col-max*: normalize by column maximum,
+           * *normalized-col-first*: normalize by first column. The first column is then removed.
            * *normalized-row-total*: normalize by row total
            * *normalized-row-max*: normalize by row maximum
+           * *normalized-row-first*: normalize by first row. The first row is then removed.
            * *normalized-total*: normalize over whole matrix
            * *normalized-max*: normalize over whole matrix
            * *sort* : sort matrix rows and columns alphanumerically.
@@ -274,8 +276,10 @@ class MatrixBase:
             "transpose": self.transformTranspose,
             "normalized-row-total" : self.transformNormalizeRowTotal,
             "normalized-row-max" : self.transformNormalizeRowMax,
+            "normalized-row-first" : self.transformNormalizeRowFirst,
             "normalized-col-total" : self.transformNormalizeColumnTotal,
-            "normalized-col-max" : self.transformNormalizeColumnMax ,
+            "normalized-col-max" : self.transformNormalizeColumnMax,
+            "normalized-col-first" : self.transformNormalizeColumnFirst ,
             "normalized-total" : self.transformNormalizeTotal,
             "normalized-max" : self.transformNormalizeMax,
             "symmetric-max" : self.transformSymmetricMax,
@@ -481,6 +485,20 @@ class MatrixBase:
                     matrix[x,y] /= m
         return matrix, rows, cols
 
+    def transformNormalizeRowFirst( self, matrix, rows, cols ):
+        """normalize a matrix row by the row maximum.
+
+        Returns the normalized matrix.
+        """
+        nrows, ncols = matrix.shape
+
+        for x in range(1, nrows) :
+            for y in range(ncols):
+                m = matrix[0,y]
+                if m != 0: matrix[x,y] /= m
+        matrix = numpy.delete( matrix, 0, 0 )
+        return matrix, rows[1:], cols
+
     def transformNormalizeColumnTotal( self, matrix, rows, cols ):
         """normalize a matrix by the column total.
 
@@ -492,6 +510,20 @@ class MatrixBase:
                 m = totals[y]
                 if m != 0: matrix[x,y] /= m
         return matrix, rows, cols
+
+    def transformNormalizeColumnFirst( self, matrix, rows, cols ):
+        """normalize a matrix by the first column.
+
+        Removes the first column.
+
+        Returns the normalized matrix."""
+        nrows, ncols = matrix.shape
+        for x in range(nrows):
+            m = matrix[x,0]
+            for y in range(1,ncols):
+                if m != 0: matrix[x,y] /= m
+        matrix = numpy.delete( matrix, 0, 1)
+        return matrix, rows, cols[1:]
 
     def transformNormalizeColumnMax( self, matrix, rows, cols ):
         """normalize a matrix by the column maximum

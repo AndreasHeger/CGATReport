@@ -55,6 +55,7 @@ def quote_rst( text ):
 # default values
 PARAMS = {
     "report_show_errors" : True,
+    "report_show_warnings" : True,
     "report_sql_backend" : "sqlite:///./csvdb",
     "report_cachedir" : "_cache",
     "report_urls" : "data,code,rst",
@@ -135,6 +136,18 @@ def getParameters( filenames = ["sphinxreport.ini",] ):
 
 getParameters( filenames = ["sphinxreport.ini",] )
 
+def selectAndDeleteOptions( options, select ):
+    '''collect options in *select* and from *options* and remove those found.
+
+    returns dictionary of options found.
+    '''
+    new_options = {}
+    for k, v in options.items():
+        if k in select:
+            new_options[k] = v
+            del options[k]
+    return new_options
+
 def getImageFormats( ):
     '''return list of image formats to render (in addition to the default format).'''
     default_format = SphinxReport.Config.HTML_IMAGE_FORMAT
@@ -165,7 +178,7 @@ class memoized(object):
    def __init__(self, func):
       self.func = func
       self.cache = {}
-   def __call__(self, *args):
+   def __call__(self, *args ):
       try:
           return self.cache[args]
       except KeyError:
@@ -284,7 +297,7 @@ def isClass( obj ):
     
     raise ValueError("can not make sense of tracker %s" % str(obj))
 
-def makeObject( path, *args, **kwargs ):
+def makeObject( path, args = (), kwargs = {} ):
     '''return object of type *path*
 
     This function is similar to an import statement, but
@@ -317,46 +330,50 @@ def makeObject( path, *args, **kwargs ):
     return obj, module, pathname, cls
     
 @memoized
-def makeTracker( path, *args, **kwargs ):
+def makeTracker( path, args = (), kwargs = {} ):
     """retrieve an instantiated tracker and its associated code.
     
     returns a tuple (code, tracker).
     """
-
-    obj, module, pathname, cls = makeObject( path, *args, **kwargs )
+    obj, module, pathname, cls = makeObject( path, args, kwargs )
     code = getCode( cls, pathname )
     return code, obj
 
 @memoized
-def makeRenderer( path, *args, **kwargs ):
+def makeRenderer( path, args = (), kwargs = {}):
     """retrieve an instantiated Renderer.
     
     returns the object.
     """
-    obj, module, pathname, cls = makeObject( path, *args, **kwargs )
+    obj, module, pathname, cls = makeObject( path, args, kwargs )
     return obj
 
 @memoized
-def makeTransformer( path, *args, **kwargs ):
+def makeTransformer( path, args = (), kwargs = {}):
     """retrieve an instantiated Transformer.
     
     returns the object.
     """
-    obj, module, pathname, cls = makeObject( path, *args, **kwargs )
+    obj, module, pathname, cls = makeObject( path, args, kwargs )
     return obj
 
 
-def buildWarning( message ):
-    '''build a sphinxreport warning message.
+def buildWarning( name, message ):
+    '''build a sphinxreport warning message with name *name*
+    and message *message*.
+
+    Note that *name* should not contain any spaces.
+
     '''
-    if PARAMS["report_show_errors"]:
+    if PARAMS["report_show_warnings"]:
         WARNING_TEMPLATE = '''
 
-.. error:: WARNING 
+.. warning:: %(name)s
 
-   * message: %(message)s
+   * %(message)s
 
 '''
+        name = re.sub("\s", "_", name )
         return ResultBlock( WARNING_TEMPLATE % locals(), 
                             title = "" )
     else:
@@ -402,7 +419,7 @@ def buildException( stage ):
     else:
         return None
 
-def getTransformers( transformers, **kwargs ):
+def getTransformers( transformers, kwargs = {} ):
     '''find and instantiate all transformers.'''
 
     result = []
@@ -412,7 +429,7 @@ def getTransformers( transformers, **kwargs ):
             cls = getPlugins()["transform"][k]
             instance = cls( **kwargs)
         else:
-            instance = makeTransformer( transformer )
+            instance = makeTransformer( transformer, (), kwargs )
 
         if not instance:
             msg = "could not find transformer '%s'. Available transformers:\n  %s" % \
@@ -446,10 +463,11 @@ def updateOptions( kwargs ):
 
     return kwargs
 
-def getRenderer( renderer_name, **kwargs ):
+def getRenderer( renderer_name, kwargs = {} ):
     '''find and instantiate renderer.'''
 
     renderer = None
+
     try:
         cls = getPlugins()["render"]["render-%s" % renderer_name]
         renderer = cls( **kwargs )
@@ -457,7 +475,7 @@ def getRenderer( renderer_name, **kwargs ):
         # This was uncommented to fix one bug
         # but uncommenting invalidates user renderers
         # TODO: needs to be revisited
-        renderer = makeRenderer( renderer_name, **kwargs)
+        renderer = makeRenderer( renderer_name, kwargs)
 
     if not renderer:
         raise KeyError( "could not find renderer '%s'. Available renderers:\n  %s" % \

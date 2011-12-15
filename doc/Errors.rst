@@ -3,3 +3,11 @@ Errors
 ======
 
 .. errorlist::
+
+
+========
+Warnings
+========
+
+.. warninglist::
+

@@ -12,6 +12,6 @@ that are included in sphinxreport.
 
    GalleryConfig.rst
    GalleryStatus.rst
-   
+   GalleryGallery.rst   
 
 

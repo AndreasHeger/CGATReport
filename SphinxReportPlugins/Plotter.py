@@ -353,7 +353,6 @@ class Plotter(object):
                                       currentAxesPos.width,
                                       currentAxesPos.height -offset))
 
-
 class PlotterMatrix(Plotter):
     """Plot a matrix.
 
@@ -466,6 +465,19 @@ class PlotterMatrix(Plotter):
 
         self.debug("plot matrix started")
 
+        # when matrix is very different from square matrix
+        # adjust figure size
+        # better would be to move the axes as well to the left of
+        # the figure.
+        if len(row_headers) > 2 * len(col_headers):
+            r = float(len(row_headers)) /  len(col_headers) * 0.5
+            w,h = self.mCurrentFigure.get_size_inches()
+            self.mCurrentFigure.set_size_inches( w, h * r )
+        elif len(col_headers) > 2 * len(row_headers):
+            r = float(len(col_headers)) /  len(row_headers)
+            w,h = self.mCurrentFigure.get_size_inches() * 0.5
+            self.mCurrentFigure.set_size_inches( w * r, h  )
+
         plot = plt.imshow(matrix,
                           cmap=color_scheme,
                           origin='lower',
@@ -473,6 +485,7 @@ class PlotterMatrix(Plotter):
                           vmin = vmin,
                           interpolation='nearest')
 
+            
         # offset=0: x=center,y=center
         # offset=0.5: y=top/x=right
         offset = 0.0
@@ -937,7 +950,7 @@ class LinePlot( Renderer, Plotter ):
         s = self.mSymbols[nplotted % len(self.mSymbols)]
         
         xxvals, yyvals = Stats.filterNone( (xvals, yvals) )
-
+        
         self.plots.append( plt.plot( xxvals,
                                      yyvals,
                                      s ) )
@@ -1654,6 +1667,32 @@ class BoxPlot(Renderer, Plotter):
 
         return self.endPlot( plts, None, path )
 
+class GalleryPlot(Renderer, Plotter):
+    '''Plot an image.
+    '''
+
+    options = Renderer.options + Plotter.options
+    
+    nlevels = 1
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def render(self, work, path ):
+
+        if "filename" not in work: 
+            self.warn( "no 'filename' key in path %s" % path )
+            return
+
+        self.startPlot()
+        
+        plts = []
+        data = plt.imread( work["filename"] )
+        plts.append( plt.imshow( data ) )
+
+        return self.endPlot( plts, None, path )
+                                     
 class ScatterPlot(Renderer, Plotter):
     """Scatter plot.
 

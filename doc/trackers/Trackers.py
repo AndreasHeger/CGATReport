@@ -180,9 +180,16 @@ class ErrorInTracker2( Tracker ):
         return odict( (("data", range(0,10)),) )
 
 class ErrorInTracker3( Tracker ):
-    '''A tracker that creates an error - problems while returning tracks.'''
+    '''A tracker that creates an error - no data.'''
     slices = ("slice1", "slice2")
     tracks = ("track1", "track2")
+    def __call__(self, track, slice = None):
+        return None
+
+class EmptyTracker( Tracker ):
+    '''A tracker that creates a warning.'''
+    slices = ("slice1", "slice2")
+    tracks = []
     def __call__(self, track, slice = None):
         return None
 

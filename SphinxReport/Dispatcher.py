@@ -28,7 +28,8 @@ class Dispatcher(Component):
 
     """
 
-    def __init__(self, tracker, renderer, transformers = None ):
+    def __init__(self, tracker, renderer, 
+                 transformers = None ):
         '''render images using an instance of a :class:`Tracker.Tracker`
         to obtain data, an optional :class:`Transformer` to transform
         the data and a :class:`Renderer.Renderer` to render the output.
@@ -72,6 +73,12 @@ class Dispatcher(Component):
 
         try: self.mInputSlices = [ x.strip() for x in kwargs["slices"].split(",")]
         except KeyError: self.mInputSlices = None
+
+        try: self.restrict_paths = [ x.strip() for x in kwargs["restrict"].split(",")]
+        except KeyError: self.restrict_paths = None
+
+        try: self.exclude_paths = [ x.strip() for x in kwargs["exclude"].split(",")]
+        except KeyError: self.exclude_paths = None
         
         try: self.mColumns = [ x.strip() for x in kwargs["columns"].split(",")]
         except KeyError: self.mColumns = None
@@ -90,7 +97,8 @@ class Dispatcher(Component):
             key = "all"
 
         result, fromcache = None, False
-        if not self.nocache or self.tracker_options:
+        # trackers with options are not cached
+        if not self.nocache and not self.tracker_options:
             try:
                 result = self.cache[ key ]
                 fromcache = True
@@ -132,12 +140,19 @@ class Dispatcher(Component):
 
         if not data_paths:
             if hasattr( obj, 'tracks' ):
-                data_paths = [ getattr( obj, 'tracks' ) ]
+                tracks = getattr( obj, 'tracks' )
             elif hasattr( obj, 'getTracks' ):
-                data_paths = [ obj.getTracks() ]
+                tracks = obj.getTracks() 
             else: 
                 # is a function
                 return True, []
+            
+            # if tracks specified and no tracks found - return
+            # no data paths.
+            if tracks == None or len(tracks) == 0:
+                return False, []
+
+            data_paths = [ tracks ]
 
             # get slices
             if hasattr( obj, 'slices' ):
@@ -235,7 +250,7 @@ class Dispatcher(Component):
 
         self.data = odict()
         for path in all_paths:
-            
+
             d = self.getData( path )
 
             # ignore empty data sets
@@ -246,6 +261,66 @@ class Dispatcher(Component):
 
         self.debug( "%s: collecting data finished for %i data paths" % (self.tracker, 
                                                                        len( all_paths) ) )
+
+    def restrict( self ):
+        '''restrict data paths.
+
+        Only those data paths matching the restrict term are accepted.
+        '''
+        if not self.restrict_paths: return
+        
+        data_paths = DataTree.getPaths( self.data )
+
+        # currently enumerates - bfs more efficient
+
+        all_paths = list(itertools.product( *data_paths ))
+
+        for path in all_paths:
+            for s in self.restrict_paths:
+                if s in path: break
+                elif s.startswith("r(") and s.endswith(")"):
+                    # collect pattern matches:
+                    # remove r()
+                    s = s[2:-1] 
+                    # remove flanking quotation marks
+                    if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
+                    rx = re.compile( s )
+                    if any( ( rx.search( p ) for p in path ) ):
+                        break
+            else:
+                self.debug( "%s: ignoring path %s because of :restrict=%s" % (self.tracker, path, s))
+                try: DataTree.removeLeaf( self.data, path )
+                except KeyError: pass
+
+    def exclude( self ):
+        '''exclude data paths.
+
+        Only those data paths not matching the exclude term are accepted.
+        '''
+        if not self.exclude_paths: return
+        
+        data_paths = DataTree.getPaths( self.data )
+
+        # currently enumerates - bfs more efficient
+        all_paths = list(itertools.product( *data_paths ))
+
+        for path in all_paths:
+            for s in self.exclude_paths:
+                if s in path:
+                    self.debug( "%s: ignoring path %s because of :exclude:=%s" % (self.tracker, path, s))
+                    try: DataTree.removeLeaf( self.data, path )
+                    except KeyError: pass
+                elif s.startswith("r(") and s.endswith(")"):
+                    # collect pattern matches:
+                    # remove r()
+                    s = s[2:-1] 
+                    # remove flanking quotation marks
+                    if s[0] in ('"', "'") and s[-1] in ('"', "'"): s = s[1:-1]
+                    rx = re.compile( s )
+                    if any( ( rx.search( p ) for p in path ) ):
+                        self.debug( "%s: ignoring path %s because of :exclude:=%s" % (self.tracker, path, s))
+                        try: DataTree.removeLeaf( self.data, path )
+                        except KeyError: pass
 
     def transform(self): 
         '''call data transformers and group tree
@@ -285,15 +360,16 @@ class Dispatcher(Component):
         elif self.groupby == "slice":
             # rearrange tracks and slices in data tree
             if nlevels <= 2 :
-                warn( "grouping by slice, but only %i levels in data tree - all are grouped" % nlevels)
+                self.warn( "grouping by slice, but only %i levels in data tree - all are grouped" % nlevels)
                 self.group_level = -1
             else:
                 self.data = DataTree.swop( self.data, 0, 1)
                 self.group_level = 0
-            
+
         elif self.groupby == "all":
             # group everthing together
             self.group_level = -1
+
         else:
             # neither group by slice or track ("ungrouped")
             self.group_level = -1
@@ -427,7 +503,7 @@ class Dispatcher(Component):
         self.debug( "profile: finished: tracker: %s" % (self.tracker))
 
         if len(self.data) == 0: 
-            self.info( "%s: no data - processing complete" )
+            self.info( "%s: no data - processing complete" % self.tracker )
             return None
 
         data_paths = DataTree.getPaths( self.data )
@@ -441,6 +517,24 @@ class Dispatcher(Component):
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after transformation: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
+
+        # restrict
+        try: self.restrict()
+        except:
+            self.error( "%s: exception in restrict" % self )
+            return ResultBlocks(ResultBlocks( Utils.buildException( "restrict" ) ))
+
+        data_paths = DataTree.getPaths( self.data )
+        self.debug( "%s: after restrict: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
+
+        # exclude
+        try: self.exclude()
+        except:
+            self.error( "%s: exception in exclude" % self )
+            return ResultBlocks(ResultBlocks( Utils.buildException( "exclude" ) ))
+
+        data_paths = DataTree.getPaths( self.data )
+        self.debug( "%s: after exclude: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         # remove superfluous levels
         try: self.prune()
@@ -461,7 +555,7 @@ class Dispatcher(Component):
         self.debug( "%s: after grouping: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         self.debug( "profile: started: renderer: %s" % (self.renderer))
-
+        
         try: result = self.render()
         except: 
             print "exception in rendering %s" % self

@@ -3,10 +3,7 @@ from __future__ import with_statement
 import os, sys, re, types, copy, warnings, ConfigParser, inspect, logging, glob
 
 import sqlalchemy
-try:
-    import sqlalchemy.exceptions as exc
-except ImportError:
-    import sqlalchemy.exc as exc
+import sqlalchemy.exc as exc
 
 from SphinxReport import Utils
 
@@ -166,6 +163,23 @@ class TrackerCSV( Tracker ):
         """return a data structure for track :param: track and slice :slice:"""
         raise NotImplementedError("not implemented")
 
+class TrackerImages( Tracker ):
+    '''Collect image files and arrange them in a gallery.
+    '''
+    
+    def __init__(self, *args, **kwargs ):
+        Tracker.__init__(self, *args, **kwargs )
+        if "tracker" not in kwargs:
+            raise ValueError( "TrackerImages requires a :tracker: parameter" )
+        self.glob = kwargs["tracker"]
+
+    def getTracks(self, subset = None ):
+        return glob.glob( self.glob )
+    
+    def __call__(self, track, **kwargs ):
+        """return a data structure for track :param: track and slice :slice:"""
+        return odict( ( ('name', track), ( 'filename', track) ) )
+
 ###########################################################################
 ###########################################################################
 ###########################################################################
@@ -282,7 +296,7 @@ class TrackerSQL( Tracker ):
         self.connect()
         try:
             r = self.db.execute(stmt)
-        except exc.SQLError, msg:
+        except exc.SQLAlchemyError, msg:
             raise SQLError(msg)
         return r
 
@@ -304,7 +318,7 @@ class TrackerSQL( Tracker ):
         statement = self.buildStatement(stmt)
         result = self.execute(statement).fetchone()
         if result == None:
-            raise SQLError( "no result from %s" % statement )
+            raise SQLAlchemyError( "no result from %s" % statement )
         return result[0]
 
     def getFirstRow( self, stmt ):
@@ -617,6 +631,7 @@ class SingleTableTrackerRows( TrackerSQL ):
 
     @property
     def tracks( self ):
+        if not self.hasTable( self.table ): return []
         d = self.get( "SELECT DISTINCT %s FROM %s" % (",".join(self.fields), self.table ))
         if len(self.fields) == 1:
             return tuple( [x[0] for x in d ] )
@@ -673,6 +688,7 @@ class SingleTableTrackerColumns( TrackerSQL ):
 
     @property
     def tracks(self):
+        if not self.hasTable( self.table ): return []
         columns = self.getColumns( self.table )
         return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
 
@@ -723,6 +739,7 @@ class SingleTableTrackerHistogram( TrackerSQL ):
     @property
     def tracks(self):
         if self.column == None: raise NotImplementedError( "column not set - Tracker not fully implemented" )
+        if not self.hasTable( self.table ): return []
         columns = self.getColumns( self.table )
         return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
 

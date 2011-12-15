@@ -34,6 +34,9 @@ sphinxreport_sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 # add errors into the document
 sphinxreport_show_errors = True
 
+# add warnings into the document
+sphinxreport_show_warnings = True
+
 # static images to create for each plot
 # a tuple of (id, format, dpi).
 sphinxreport_images=( ( "hires", "hires.png", 200),
@@ -54,6 +57,7 @@ extensions = ['sphinx.ext.autodoc',
               'SphinxReport.only_directives', 
               'SphinxReport.roles', 
               'SphinxReport.errors_directive', 
+	      'SphinxReport.warnings_directive',
               'SphinxReport.report_directive' ]
 
 # Add any paths that contain templates here, relative to this directory.

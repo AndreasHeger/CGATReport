@@ -293,17 +293,16 @@ def swop( work, level1, level2 ):
     return newtree
 
 def removeLeaf( work, path ):
-    '''remove leaf/branch at *path*.'''
+    '''remove leaf/branch at *path*.
+
+    raises KeyError if path is not found.
+    '''
     
     if len(path) == 0:
         work.clear()
     else:
         for x in path[:-1]:
-            try:
-                work = work[x]
-            except KeyError:
-                work = None
-                break
+            work = work[x]
         del work[path[-1]]
     return work
 
