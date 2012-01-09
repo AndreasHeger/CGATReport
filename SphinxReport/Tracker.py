@@ -220,14 +220,15 @@ class TrackerSQL( Tracker ):
             warnings.warn( "mAsTables is deprecated, use as_tables instead", DeprecationWarning )
             self.as_tables = self.mAsTables
 
-    def connect( self ):
+    def connect( self, creator = None ):
         """lazy connection function."""
 
         if not self.db:
             
             logging.debug( "connecting to %s" % self.backend )
-            db = sqlalchemy.create_engine( self.backend )
-
+            db = sqlalchemy.create_engine( self.backend, echo = False,
+                                           creator = creator )
+            
             if not db:
                 raise ValueError( "could not connect to database %s" % self.backend )
 
