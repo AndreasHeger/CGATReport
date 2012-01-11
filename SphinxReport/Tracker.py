@@ -226,8 +226,12 @@ class TrackerSQL( Tracker ):
         if not self.db:
             
             logging.debug( "connecting to %s" % self.backend )
-            db = sqlalchemy.create_engine( self.backend, echo = False,
-                                           creator = creator )
+            # creator can not not be None.
+            if creator:
+                db = sqlalchemy.create_engine( self.backend, echo = False,
+                                               creator = creator )
+            else:
+                db = sqlalchemy.create_engine( self.backend, echo = False )
             
             if not db:
                 raise ValueError( "could not connect to database %s" % self.backend )
