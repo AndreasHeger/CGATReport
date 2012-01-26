@@ -163,6 +163,9 @@ class TrackerCSV( Tracker ):
         """return a data structure for track :param: track and slice :slice:"""
         raise NotImplementedError("not implemented")
 
+###########################################################################
+###########################################################################
+###########################################################################
 class TrackerImages( Tracker ):
     '''Collect image files and arrange them in a gallery.
     '''
@@ -226,7 +229,7 @@ class TrackerSQL( Tracker ):
         if not self.db:
             
             logging.debug( "connecting to %s" % self.backend )
-            # creator can not not be None.
+            # creator can not be None.
             if creator:
                 db = sqlalchemy.create_engine( self.backend, echo = False,
                                                creator = creator )
@@ -323,7 +326,7 @@ class TrackerSQL( Tracker ):
         statement = self.buildStatement(stmt)
         result = self.execute(statement).fetchone()
         if result == None:
-            raise SQLAlchemyError( "no result from %s" % statement )
+            raise exc.SQLAlchemyError( "no result from %s" % statement )
         return result[0]
 
     def getFirstRow( self, stmt ):
@@ -611,7 +614,6 @@ class Status( TrackerSQL ):
 ###########################################################################
 ###########################################################################
 ###########################################################################
-
 class SingleTableTrackerRows( TrackerSQL ):
     '''Tracker representing a table with multiple tracks.
 
@@ -757,5 +759,47 @@ class SingleTableTrackerHistogram( TrackerSQL ):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+class SingleTableTrackerEdgeList( TrackerSQL ):
+    '''Tracker representing a table with matrix type data.
 
+    Returns a dictionary of values.
 
+    The tracks are given by entries in the :attribute:`row` column in a table :attribute:`table`. 
+    The slices are given by entries in the :attribute:`column` column in a table.
+
+    The :attribute:`fields` is a third column specifying the value returned. If :attribute:`where`
+    is set, it is added to the SQL statement to permit some filtering.
+
+    If :attribute:`transform` is set, it is applied to the value.
+
+    This method is inefficient, particularly so if there are no indices on :attribute:`row` and :attribute:`column`.
+
+    '''
+    table = None
+    row = None
+    column = None
+    value = None
+    transform = None
+    where = "1"
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    @property
+    def tracks( self ):
+        if not self.hasTable( self.table ): return []
+        return [ x[0] for x in self.get( "SELECT DISTINCT %s FROM %s" % (self.row, self.table )) ]
+
+    @property
+    def slices( self ):
+        if not self.hasTable( self.table ): return []
+        return [ x[0] for x in self.get( "SELECT DISTINCT %s FROM %s" % (self.row, self.table )) ]
+
+    def __call__(self, track, slice = None ):
+        try:
+            val = self.getValue( "SELECT %(value)s FROM %(table)s WHERE %(row)s = '%(track)s' AND %(column)s = '%(slice)s' AND %(where)s" )
+        except exc.SQLAlchemyError:
+            return None
+
+        if self.transform: return self.transform(val)
+        return val
