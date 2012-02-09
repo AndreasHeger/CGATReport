@@ -23,9 +23,8 @@ class RPlotPlugin(Component):
                  template_name, 
                  outdir, 
                  rstdir,
-                 rst2rootdir, 
-                 rst2builddir,
-                 rst2srcdir,
+                 builddir,
+                 srcdir,
                  content,
                  display_options,
                  linked_codename,
@@ -39,6 +38,12 @@ class RPlotPlugin(Component):
 
         returns a map of place holder to placeholder text.
         '''
+        
+        # path to build directory from rst directory
+        rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
+
+        # path to src directory from rst directory
+        rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
         
         map_figure2text = {}
 
@@ -111,7 +116,7 @@ class RPlotPlugin(Component):
             # for image diretive - image path is relative from rst file to external build dir
             imagepath = re.sub( "\\\\", "/", os.path.join( rst2builddir, outname ) )
             # for links - path is from rst file to internal root dir
-            relative_imagepath = re.sub( "\\\\", "/", os.path.join( rst2rootdir, outname ) )
+            relative_imagepath = re.sub( "\\\\", "/", os.path.join( rst2srcdir, outname ) )
 
             linked_text = relative_imagepath + ".txt"
 

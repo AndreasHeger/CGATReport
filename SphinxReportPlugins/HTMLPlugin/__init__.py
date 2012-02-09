@@ -14,9 +14,8 @@ class HTMLPlugin(Component):
                  template_name, 
                  outdir, 
                  rstdir,
-                 rst2rootdir, 
-                 rst2builddir,
-                 rst2srcdir,
+                 builddir,
+                 srcdir,
                  content,
                  display_options,
                  linked_codename,
@@ -41,9 +40,6 @@ class HTMLPlugin(Component):
                 outf.write( block.html )
                 outf.close()
                 
-                #path = re.sub( "\\\\", "/", os.path.join( rst2rootdir, outname ) )
-                #link = os.path.abspath( path + "." + extension )
-
                 # use absolute path
                 link = os.path.abspath( outputpath )
 

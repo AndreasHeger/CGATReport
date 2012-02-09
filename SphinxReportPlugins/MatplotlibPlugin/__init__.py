@@ -27,9 +27,8 @@ class MatplotlibPlugin(Component):
                  template_name, 
                  outdir, 
                  rstdir,
-                 rst2rootdir, 
-                 rst2builddir,
-                 rst2srcdir,
+                 builddir,
+                 srcdir,
                  content,
                  display_options,
                  linked_codename,
@@ -50,6 +49,12 @@ class MatplotlibPlugin(Component):
         default_format, additional_formats = Utils.getImageFormats()
         all_formats = [default_format,] + additional_formats
         urls = Utils.asList( Utils.PARAMS["report_urls"] )
+
+        # path to build directory from rst directory
+        rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
+        
+        # path to src directory from rst directory
+        rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
 
         # create all the images
         for figman in fig_managers:
@@ -93,8 +98,8 @@ class MatplotlibPlugin(Component):
 
             # for links - path is from rst file to internal root dir
             # one rst file for all
-            relative_imagepath_rst = re.sub( "\\\\", "/", os.path.join( rst2rootdir, template_name ) )
-            relative_imagepath_img = re.sub( "\\\\", "/", os.path.join( rst2rootdir, outname ) )
+            relative_imagepath_rst = re.sub( "\\\\", "/", os.path.join( rst2srcdir, template_name ) )
+            relative_imagepath_img = re.sub( "\\\\", "/", os.path.join( rst2srcdir, outname ) )
 
             linked_text = relative_imagepath_rst + ".txt"
 

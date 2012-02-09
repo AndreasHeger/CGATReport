@@ -94,7 +94,12 @@ def run(arguments,
         builddir = setup.confdir
     
     # remove symbolic links
-    # srcdir, builddir, rstdir, outdir = [ os.path.realpath(x) for x in (srcdir, builddir, rstdir, outdir) ]
+    srcdir, builddir, rstdir = [ os.path.realpath(x) for x in (srcdir, builddir, rstdir) ]
+
+    # there are three directories:
+    # builddir = directory where document is built in (usually _build/html or similar)
+    # rstdir   = directory where rst sources are located
+    # srcdir   = directory from which the build process is started
 
     # path to root relative to rst
     rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
@@ -172,6 +177,7 @@ def run(arguments,
         options_hash = hashlib.md5( str(renderer_options) +\
                                         str(transformer_options) +\
                                         str(dispatcher_options) +\
+                                        str(tracker_options) +\
                                         str(transformer_names) ).hexdigest()
 
         template_name = Utils.quote_filename( \
@@ -302,9 +308,8 @@ def run(arguments,
                                                    template_name, 
                                                    outdir, 
                                                    rstdir,
-                                                   rst2srcdir,
-                                                   rst2builddir,
-                                                   rst2srcdir,
+                                                   builddir,
+                                                   srcdir,
                                                    content, 
                                                    display_options,
                                                    linked_codename,
