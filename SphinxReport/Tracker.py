@@ -199,7 +199,7 @@ class TrackerSQL( Tracker ):
     The default is to apply :attr:`pattern` and return the result.
     """
 
-    pattern = "(.*)"
+    pattern = None
     as_tables = False
 
     def __init__(self, backend = None, *args, **kwargs ):
@@ -422,12 +422,15 @@ class TrackerSQL( Tracker ):
         Tracks are defined as tables matching the attribute 
         :attr:`pattern`.
         """
-        rx = re.compile(self.pattern)
-        tables = self.getTables( pattern = self.pattern )
-        if self.as_tables:
-            return sorted([ x.name for x in tables ] )
-        else: 
-            return sorted([rx.search( x.name).groups()[0] for x in tables] )
+        if self.pattern:
+            rx = re.compile(self.pattern)
+            tables = self.getTables( pattern = self.pattern )
+            if self.as_tables:
+                return sorted([ x.name for x in tables ] )
+            else: 
+                return sorted([rx.search( x.name).groups()[0] for x in tables] )
+        else:
+            return "all"
 
 ###########################################################################
 ###########################################################################
