@@ -114,15 +114,18 @@ def getOptionMap():
             }
 
         options["display"]  = {
+            # general image options
             'alt': directives.unchanged,
             'height': directives.length_or_unitless,
             'width': directives.length_or_percentage_or_unitless,
             'scale': directives.nonnegative_int,
-            # 'align': align,
             'class': directives.class_option,
+            # 'align': align,
+            # options for sphinxreport
             'render' : directives.unchanged,
             'transform' : directives.unchanged,
-            'include-source': directives.flag 
+            'display': directives.unchanged,
+            'extra-formats' : directives.unchanged,
             }
 
     return options

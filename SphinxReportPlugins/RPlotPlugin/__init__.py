@@ -6,6 +6,7 @@ import os, re
 from rpy2.robjects import r as R
 import rpy2.robjects as ro
 import rpy2.robjects.numpy2ri
+import rpy2.rinterface
 
 import matplotlib.image as image
 
@@ -38,6 +39,8 @@ class RPlotPlugin(Component):
 
         returns a map of place holder to placeholder text.
         '''
+
+        print "rplotpling", display_options
         
         # path to build directory from rst directory
         rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
@@ -48,8 +51,10 @@ class RPlotPlugin(Component):
         map_figure2text = {}
 
         # determine the image formats to create
-        default_format, additional_formats = Utils.getImageFormats()
+        default_format, additional_formats = Utils.getImageFormats( display_options )
         all_formats = [default_format,] + additional_formats
+        image_options = Utils.getImageOptions( display_options )
+
         urls = Utils.asList( Utils.PARAMS["report_urls"] )
 
         devices = R["dev.list"]()
@@ -69,10 +74,25 @@ class RPlotPlugin(Component):
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
 
                 if format.endswith( "png" ):
-                    R["dev.copy"]( device = R.png,
-                                   filename = outpath,
-                                   res = dpi )
-                    R["dev.off"]()
+                    # for busy images there is a problem with figure margins
+                    # simply increase dpi until it works.
+                    R["dev.set"]( figid )
+
+                    width = height = 480 * dpi / 80
+                    x = 0
+                    while 1:
+                        try: 
+                            R["dev.copy"]( device = R.png,
+                                           filename = outpath,
+                                           width = width, 
+                                           height = height )
+                            R["dev.off"]()
+                        except rpy2.rinterface.RRuntimeError:
+                            width *= 2
+                            height *= 2
+                            if x < 5:
+                                continue
+                        break
 
                 elif format.endswith( "svg" ):
                     R["dev.copy"]( device = R.svg,
@@ -126,7 +146,7 @@ class RPlotPlugin(Component):
 .. htmlonly::
 
    .. image:: %(linked_image)s
-%(display_options)s
+%(image_options)s
 
    [%(code_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
 '''
@@ -159,7 +179,7 @@ class RPlotPlugin(Component):
 .. latexonly::
 
    .. image:: %(linked_image)s
-%(display_options)s
+%(image_options)s
 '''
                 linked_image = imagepath + ".%s" % format
                 rst_output += template % locals()

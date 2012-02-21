@@ -5,7 +5,7 @@ import os, sys, re, math, tempfile
 
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
-from SphinxReportPlugins.Renderer import Renderer
+from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix
 from SphinxReport.odict import OrderedDict as odict
 from SphinxReport import Utils
 from SphinxReport import Stats
@@ -348,3 +348,58 @@ class SmoothScatterPlot(Renderer, Plotter):
                          nbin = self.nbins )
 
         return self.endPlot( work, path )
+
+class HeatmapPlot(NumpyMatrix, Plotter):
+    """A heatmap plot
+
+    See R.heatmap.2 in the gplots package
+
+    This :class:`Renderer` requires one levels:
+
+    coords[dict]
+    """
+    options = NumpyMatrix.options + Plotter.options 
+    
+    nlevels = 1
+
+    def __init__(self, *args, **kwargs):
+        NumpyMatrix.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def plot( self,  matrix, row_headers, col_headers, path ):
+        '''plot matrix. 
+
+        Large matrices are split into several plots.
+        '''
+
+        self.debug("HeatmapPlot started")
+
+        self.startPlot()
+
+        R.library( 'gplots' )
+        
+        R["heatmap.2"]( matrix,
+                        trace = 'none',
+                        dendrogram = 'none',
+                        col=R.bluered(75),
+                        symbreaks = True,
+                        symkey = True,
+                        cexCol = 0.5,
+                        cexRow = 0.5,
+                        labRow = row_headers,
+                        labCol = col_headers,
+                        mar = ro.IntVector((10,10)),
+                        keysize = 1 )
+
+        self.debug("HeatmapPlot finished")
+
+        return self.endPlot( None, path )
+
+    def render(self, work, path ):
+        
+        self.debug("building matrix started")
+        matrix, rows, columns = self.buildMatrix( work )
+        self.debug("building matrix finished")
+
+        return self.plot( matrix, rows, columns, path )
+

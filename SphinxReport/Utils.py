@@ -148,12 +148,31 @@ def selectAndDeleteOptions( options, select ):
             del options[k]
     return new_options
 
-def getImageFormats( ):
+def getImageFormats( display_options = None ):
     '''return list of image formats to render (in addition to the default format).'''
-    default_format = SphinxReport.Config.HTML_IMAGE_FORMAT
 
+    def _toFormat( format ):
+        if len(data) == 1:
+            return (data[0], data[0], 100 ) 
+        elif len(data) == 2:
+            return (data[0], data[1], 100 )
+        elif len(data) == 3:
+            return (data[0], data[1], int(data[2]) )
+        else: raise ValueError( ":format: option expects one to three params, not %s" % data)
+
+    if "display" in display_options:
+        all_data = [ x.strip() for x in display_options["display"].split(";")]
+        if len(all_data) > 1: 
+            warn(":display: only expects one format, additional ignored at %s" % display_options["display"])
+        data = asList( all_data[0] )
+        default_format = _toFormat( data )
+    else:
+        default_format = SphinxReport.Config.HTML_IMAGE_FORMAT
+
+    print 'options=', display_options, default_format
+
+    # get default extra formats from the config file
     additional_formats = []
-
     if "report_images" in PARAMS:
         data = asList( PARAMS["report_images"] )
         if len(data) % 3 != 0: raise ValueError( "need multiple of 3 number of arguments to report_images option" )
@@ -162,9 +181,25 @@ def getImageFormats( ):
     else:
             additional_formats.extend( SphinxReport.Config.ADDITIONAL_FORMATS )
 
+    # add formats specified in the document
+    if "extra-formats" in display_options:
+        all_data = [ x.strip() for x in display_options["extra-formats"].split(";")]
+        for data in all_data:
+            data = asList( all_data[0] )
+            additional_formats.append( _toFormat( data ) )
+
     if SphinxReport.Config.LATEX_IMAGE_FORMAT: additional_formats.append( SphinxReport.Config.LATEX_IMAGE_FORMAT )
         
     return default_format, additional_formats
+
+def getImageOptions( display_options = None):
+    '''return string with display_options for ``:image:`` directive.'''
+    if display_options:
+        return "\n".join( \
+            ['      :%s: %s' % (key, val) for key, val in display_options.iteritems() \
+                 if key not in ('format', 'extra-formats')] )
+    else:
+        return ''
 
 ## read placeholders from config file in current directory
 ## It would be nice to read default values, but the location 

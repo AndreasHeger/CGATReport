@@ -180,4 +180,19 @@ Superfluous options are ignored.
       separated by ;, for example 
       ``:mpl-rc: figure.figsize=(20,10);legend.fontsize=4``
 
+   format
+      Image format of display image. The image format is a tuple 
+      of the three items ``(<format>,<link>,<dpi>)``.
 
+   extra-formats
+      ``;`` separated list of extra image formats to generate. Extra
+      formats are inserted as links below the default image.
+      Each format is a tuple of the three items
+      ``(<format>,<link>,<dpi>)``. For example, the following option
+      will create two images, one hires png image and one svg image::
+
+            :extra-formats: png,hires,200;svg,svg,100
+      
+        
+
+      

@@ -607,15 +607,21 @@ class TableMatrix(TableBase, MatrixBase):
 
         labels = DataTree.getPaths( work )
         levels = len(labels)
+
+        rows, columns = labels[:2]
+
         if take:
-            if levels != 3: raise ValueError( "expected three labels" )
-            if take not in labels[-1]: raise ValueError( "no data on `%s`" % take )
-            take_f = lambda row,column: work[row][column][take]
+            if levels == 3: 
+                if take not in labels[-1]: raise ValueError( "no data on `%s`" % take )
+                take_f = lambda row,column: work[row][column][take]
+            elif levels == 2:
+                take_f = lambda row,column: work[row][take]
+                columns = [take]
+            else:
+                raise ValueError( "expected two or three levels, got %i: '%s'" % (levels, labels) )
         else:
             if levels != 2: raise ValueError( "expected two levels" )
             take_f = lambda row,column: work[row][column]
-
-        rows, columns = labels[:2]
 
         self.debug("creating matrix")
         matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), dtype )

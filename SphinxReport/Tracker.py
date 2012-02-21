@@ -631,10 +631,15 @@ class SingleTableTrackerRows( TrackerSQL ):
     tracks in the table.
 
     Rows in the table need to be unique for any combination :attribute:`fields`.
+
+    attribute:`extra_columns` can be used to add additional columns to the table.
+    This attribute is a dictionary.
     '''
     exclude_columns = ()
     table = None
     fields = ("track",)
+    extra_columns = {}
+    sort = None
 
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
@@ -642,7 +647,9 @@ class SingleTableTrackerRows( TrackerSQL ):
     @property
     def tracks( self ):
         if not self.hasTable( self.table ): return []
-        d = self.get( "SELECT DISTINCT %s FROM %s" % (",".join(self.fields), self.table ))
+        if self.sort: sort = "ORDER BY %s" % self.sort
+        else: sort = ""
+        d = self.get( "SELECT DISTINCT %s FROM %s %s" % (",".join(self.fields), self.table, sort ))
         if len(self.fields) == 1:
             return tuple( [x[0] for x in d ] )
         else:
@@ -650,12 +657,14 @@ class SingleTableTrackerRows( TrackerSQL ):
 
     @property
     def slices( self ):
-        columns = self.getColumns( self.table )
-        return [ x for x in columns if x not in self.exclude_columns and x not in self.fields ]
+        columns = self.getColumns( self.table ) 
+        return [ x for x in columns if x not in self.exclude_columns and x not in self.fields ] + self.extra_columns.keys()
 
     def __call__(self, track, slice = None ):
         if len(self.fields) == 1: track = (track,)
         wheres = " AND ".join([ "%s = '%s'" % (x,y) for x,y in zip( self.fields, track ) ] )
+        if slice in self.extra_columns: 
+            slice = "%s AS %s" % (self.extra_columns[slice], slice)
         return self.getValue( "SELECT %(slice)s FROM %(table)s WHERE %(wheres)s" ) 
 
 ###########################################################################
@@ -757,7 +766,6 @@ class SingleTableTrackerHistogram( TrackerSQL ):
         if self.column == None: raise NotImplementedError( "column not set - Tracker not fully implemented" )
         data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
         return data
-
 
 ###########################################################################
 ###########################################################################

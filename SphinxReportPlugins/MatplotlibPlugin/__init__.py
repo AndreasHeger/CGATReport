@@ -46,9 +46,10 @@ class MatplotlibPlugin(Component):
         map_figure2text = {}
 
         # determine the image formats to create
-        default_format, additional_formats = Utils.getImageFormats()
+        default_format, additional_formats = Utils.getImageFormats( display_options )
         all_formats = [default_format,] + additional_formats
         urls = Utils.asList( Utils.PARAMS["report_urls"] )
+        image_options = Utils.getImageOptions( display_options )
 
         # path to build directory from rst directory
         rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
@@ -109,7 +110,7 @@ class MatplotlibPlugin(Component):
 .. htmlonly::
 
    .. image:: %(linked_image)s
-%(display_options)s
+%(image_options)s
 
    [%(code_url)s %(rst_url)s %(data_url)s %(extra_images)s]
 '''
@@ -141,7 +142,7 @@ class MatplotlibPlugin(Component):
 .. latexonly::
 
    .. image:: %(linked_image)s
-%(display_options)s
+%(image_options)s
 '''
                 linked_image = imagepath + ".%s" % format
                 rst_output += template % locals()

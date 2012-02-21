@@ -1254,7 +1254,9 @@ class BarPlot( TableMatrix, Plotter):
 
     options = TableMatrix.options + Plotter.options +\
         ( ('label', directives.unchanged),
-          ('error', directives.unchanged), )
+          ('error', directives.unchanged), 
+          ('colour', directives.unchanged) )
+          
         
     # column to use for error bars
     error = None
@@ -1271,6 +1273,7 @@ class BarPlot( TableMatrix, Plotter):
 
         self.error = kwargs.get("error", None )
         self.label = kwargs.get("label", None )
+        self.colour = kwargs.get("colour", None )
 
         if self.error or self.label:
             self.nlevels += 1
@@ -1293,11 +1296,12 @@ class BarPlot( TableMatrix, Plotter):
         '''
         self.error_matrix = None
         self.label_matrix = None
-        
-        if self.error or self.label:
+        self.colour_matrix = None
+
+        if self.error or self.label or self.colour:
             # select label to take
             labels = DataTree.getPaths( work )
-            label = list(set(labels[-1]).difference( set((self.error, self.label)) ))[0]
+            label = list(set(labels[-1]).difference( set((self.error, self.label,self.colour)) ))[0]
             self.matrix, self.rows, self.columns = self.buildMatrix( work, 
                                                                      apply_transformations = True, 
                                                                      take = label
@@ -1314,9 +1318,25 @@ class BarPlot( TableMatrix, Plotter):
                                                                     take = self.label,
                                                                     dtype = "S20",
                                                                     )
-
+            if self.colour and self.colour in labels[-1]:
+                self.colour_matrix, rows, colums = self.buildMatrix( work, 
+                                                                     apply_transformations = False, 
+                                                                     missing_value = "",
+                                                                     take = self.colour,
+                                                                     dtype = "S20",
+                                                                     )
         else:
             self.matrix, self.rows, self.columns = self.buildMatrix( work )
+
+    def getColour( self, idx, column ):
+        '''return hatch and colour.'''
+        
+        if self.colour:
+            color = self.colour_matrix[:,column]
+            hatch = None
+        else:
+            hatch, color = self.bar_patterns[ idx % len(self.bar_patterns) ]
+        return hatch, color
             
     def render( self, work, path ):
 
@@ -1339,8 +1359,8 @@ class BarPlot( TableMatrix, Plotter):
             # set to 0. Nan values elsewhere are fine.
             if np.isnan(vals[0]) or np.isinf( vals[0] ): 
                 vals[0] = 0
-            
-            hatch, color = self.bar_patterns[ y % len(self.bar_patterns) ]
+                
+            hatch, color = self.getColour( y, column )
 
             plts.append( plt.bar( xvals, 
                                   vals,
@@ -1400,7 +1420,7 @@ class InterleavedBarPlot(BarPlot):
             if np.isnan(vals[0]) or np.isinf( vals[0] ): 
                 vals[0] = 0
 
-            hatch, color = self.bar_patterns[ row % len(self.bar_patterns) ]
+            hatch, color = self.getColour( row, column )
 
             plts.append( plt.bar( xvals + offset, 
                                   vals,
@@ -1459,8 +1479,8 @@ class StackedBarPlot(BarPlot ):
             # set to 0. Nan values elsewhere are fine.
             if np.isnan(vals[0]) or np.isinf( vals[0] ): 
                 vals[0] = 0
-                
-            hatch, color = self.bar_patterns[ y % len(self.bar_patterns) ]
+
+            hatch, color = self.getColour( y, column )                
 
             plts.append( plt.bar( xvals, 
                                   vals, 

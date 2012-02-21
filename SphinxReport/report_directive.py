@@ -9,8 +9,6 @@ Given a path to a .py file, it includes the source code inline, then:
 This directive supports all of the options of the `image` directive,
 except for `target` (since plot will add its own target).
 
-Additionally, if the :include-source: option is provided, the literal
-source will be included inline, as well as a link to the source.
 """
 
 import sys, os, glob, shutil, imp, warnings, cStringIO
@@ -148,27 +146,21 @@ def run(arguments,
     transformer_options = Utils.selectAndDeleteOptions( options, option_map["transform"])
     dispatcher_options = Utils.selectAndDeleteOptions( options, option_map["dispatch"] )
     tracker_options = Utils.selectAndDeleteOptions( options, option_map["tracker"] )
+    display_options = Utils.selectAndDeleteOptions( options, option_map["display"] )
 
     logging.debug( "report_directive.run: renderer options: %s" % str(renderer_options) )
     logging.debug( "report_directive.run: transformer options: %s" % str(transformer_options) )
     logging.debug( "report_directive.run: dispatcher options: %s" % str(dispatcher_options) )
     logging.debug( "report_directive.run: tracker options: %s" % str(tracker_options) )
+    logging.debug( "report_directive.run: display options: %s" % str(display_options) )
 
-    if options.has_key("transform"): 
-        transformer_names = options["transform"].split(",")
-        del options["transform"]
+    if display_options.has_key("transform"): 
+        transformer_names = display_options["transform"].split(",")
+        del display_options["transform"]
 
-    if options.has_key("render"): 
-        renderer_name = options["render"]
-        del options["render"]
-
-    ########################################################
-    # add sphinx options for image display
-    if options.items:
-        display_options = "\n".join( \
-            ['      :%s: %s' % (key, val) for key, val in options.items()] )
-    else:
-        display_options = ''
+    if display_options.has_key("render"): 
+        renderer_name = display_options["render"]
+        del display_options["render"]
 
     ########################################################        
     # check for missing files
