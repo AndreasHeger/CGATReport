@@ -494,13 +494,16 @@ def fromCache( cache,
     if tracks == None: tracks = set([ x[0] for x in keys] )
     else: tracks = tracks.split(",")
 
-    if slices == None: slices = set([ x[1] for x in keys] )
+    if slices == None: slices = set([ x[1] for x in keys if len(x) > 1]  )
     else: slices = slices.split(",")
     
     def tokey( track, slice ):
         return "/".join( (track,slice))
 
-    if groupby == "slice" or groupby == "all":
+    if not slices:
+        for track in tracks:
+            data[track] = cache[track]
+    elif groupby == "slice" or groupby == "all":
         for slice in slices:
             data[slice]=odict()
             for track in tracks:

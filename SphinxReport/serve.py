@@ -85,7 +85,7 @@ def main():
     parser.add_option( "-p", "--port", dest="port", type="int",
                        help="the port to use [default=%default]" )
 
-    parser.add_option( "-t", "--html", dest="html", type="int",
+    parser.add_option( "-t", "--html", dest="htmldir", type="string",
                        help="html directory [default=%default]" )
 
     parser.add_option( "-a", "--action", dest="action", type="choice",

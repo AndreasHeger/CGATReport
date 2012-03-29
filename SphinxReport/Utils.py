@@ -169,8 +169,6 @@ def getImageFormats( display_options = None ):
     else:
         default_format = SphinxReport.Config.HTML_IMAGE_FORMAT
 
-    print 'options=', display_options, default_format
-
     # get default extra formats from the config file
     additional_formats = []
     if "report_images" in PARAMS:

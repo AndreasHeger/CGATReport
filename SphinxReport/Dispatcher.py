@@ -205,9 +205,8 @@ class Dispatcher(Component):
             datapaths[0] = _filter( datapaths[0], self.mInputTracks )
         
         if self.mInputSlices:
-            if len(datapaths) < 2:
-                raise ValueError( "slice filtering for `%s` without slices" % (self.mInputSlices))
-            datapaths[1] = _filter( datapaths[1], self.mInputSlices )
+            if len(datapaths) >= 2:
+                datapaths[1] = _filter( datapaths[1], self.mInputSlices )
 
         return datapaths
 

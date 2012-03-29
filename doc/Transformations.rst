@@ -242,7 +242,7 @@ following options:
    :sorted:
    
    tf-aggregate
-      cumulative|reverse-cumulative|normalized-max|normalized-total
+      cumulative|reverse-cumulative|normalized-max|normalized-total|relevel-first
 
       normalize or cumulate values in a histogram
 
@@ -250,6 +250,8 @@ following options:
       * normalized-total - normalize histogram with sum of values
       * cumulative - compute cumulative histogram
       * reverse-cumulative - compute reverse cumulative histogram
+      * relevel-first - relevel by adding the first bin to all others.
+        
       
    tf-bins
       int or sequence of scalars, optional

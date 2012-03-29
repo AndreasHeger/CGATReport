@@ -260,6 +260,7 @@ def main():
     option_map = getOptionMap()
     renderer_options = Utils.selectAndDeleteOptions( kwargs, option_map["render"])
     transformer_options = Utils.selectAndDeleteOptions( kwargs, option_map["transform"])
+    display_options = Utils.selectAndDeleteOptions( kwargs, option_map["display"])
 
     renderer = Utils.getRenderer( options.renderer, renderer_options )
 
@@ -311,7 +312,7 @@ def main():
 
         if options.do_print:                        
             options_rst = []
-            for key,val in kwargs.items() + renderer_options.items() + transformer_options.items():
+            for key,val in kwargs.items() + renderer_options.items() + transformer_options.items() + display_options.items():
                 if val == None:
                     options_rst.append(":%s:" % key )
                 else:
@@ -363,6 +364,8 @@ def main():
         blocks = build.rst_reader( open( options.page, "r") )
         for block in blocks:
             build.run( ( (options.page, block ),) )
+    else:
+        raise ValueError("please specify either a tracker (-t/--tracker) or a page (-p/--page) to test")
             
 if __name__ == "__main__":
     sys.exit(main())

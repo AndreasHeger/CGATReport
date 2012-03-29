@@ -95,7 +95,9 @@ class TableBase( Renderer ):
     '''base classes for tables and matrices.'''
 
     options = Renderer.options +\
-        ( ('force', directives.unchanged), )
+        ( ('force', directives.unchanged), 
+          ('separate', directives.unchanged), 
+          )
     
     max_rows = 50
     max_cols = 20
@@ -104,6 +106,7 @@ class TableBase( Renderer ):
         Renderer.__init__(self, *args, **kwargs )
 
         self.force = "force" in kwargs            
+        self.separate = "separate" in kwargs
 
     def asFile( self, matrix, row_headers, col_headers, title ):
         '''save the table as HTML file.
@@ -141,7 +144,8 @@ class Table( TableBase ):
     towards a file.
     '''
     options = TableBase.options +\
-        ( ('transpose', directives.unchanged), )
+        ( ('transpose', directives.unchanged),
+          ('add_rowindex', directives.unchanged), )
 
     nlevels = 2
 
@@ -151,6 +155,7 @@ class Table( TableBase ):
         TableBase.__init__(self, *args, **kwargs )
 
         self.transpose = "transpose" in kwargs
+        self.add_rowindex = "add_rowindex" in kwargs
 
     def getHeaders( self, data ):
         """return a list of headers and a mapping of header to column.
@@ -183,7 +188,8 @@ class Table( TableBase ):
 
         returns matrix, row_headers, col_headers
         """
-        return tree2table( data, self.transpose )
+        matrix, row_headers, col_headers = tree2table( data, self.transpose )
+        return matrix, row_headers, col_headers
 
     def __call__(self, data, path):
         
@@ -195,16 +201,28 @@ class Table( TableBase ):
             return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
         # do not output large matrices as rst files
-        if not self.force and (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols):
+        if self.separate or (not self.force and 
+                             (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols)):
             return self.asFile( matrix, row_headers, col_headers, title )
 
         lines = []
         lines.append( ".. csv-table:: %s" % title )
-        lines.append( '   :header: "", "%s" ' % '","'.join( map(str, col_headers) ) )
-        lines.append( '' )
 
-        for header, line in zip( row_headers, matrix ):
-            lines.append( '   "%s","%s"' % (str(header), '","'.join( map(str, line) ) ) )
+        if self.add_rowindex:
+            lines.append( '   :header: "row", "", "%s" ' % '","'.join( map(str, col_headers) ) )
+            lines.append( '' )
+
+            x = 0
+            for header, line in zip( row_headers, matrix ):
+                x += 1
+                lines.append( '   %i,"%s","%s"' % (x, str(header), '","'.join( map(str, line) ) ) )
+
+        else:
+            lines.append( '   :header: "", "%s" ' % '","'.join( map(str, col_headers) ) )
+            lines.append( '' )
+
+            for header, line in zip( row_headers, matrix ):
+                lines.append( '   "%s","%s"' % (str(header), '","'.join( map(str, line) ) ) )
 
         lines.append( "") 
         
@@ -552,7 +570,8 @@ class MatrixBase:
             return ResultBlocks( ResultBlock( "", title = title) )
 
         # do not output large matrices as rst files
-        if not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols):
+        # separate and force need to be mixed in.
+        if self.separate or (not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols)):
             return self.asFile( [ [ self.toString(x) for x in r ] for r in matrix ], 
                                 rows, 
                                 columns, 

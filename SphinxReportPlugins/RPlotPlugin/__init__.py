@@ -40,8 +40,6 @@ class RPlotPlugin(Component):
         returns a map of place holder to placeholder text.
         '''
 
-        print "rplotpling", display_options
-        
         # path to build directory from rst directory
         rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
 

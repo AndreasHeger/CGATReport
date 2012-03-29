@@ -14,6 +14,26 @@ is no reason why they shouldn't), plotting can be done within a tracker
 while skipping the rendering step. See the :ref:`user` directive on
 examples of using this.
 
+Parameterizing sphinxreport documents
+=====================================
+
+Sphinxreport documents can access configuration parameters in the
+:file:`sphinxreport.ini` file. For example, if
+:file:`sphinxreport.ini`
+contains the following section::
+
+   [geneset]
+   # genesets to report in the summary pages
+   summary=abinitio,novel,lincrna,r(ref.*)
+
+the variable ``geneset_summary`` can be used inside a :term:`report` directive::
+
+   .. report:: Genemodels.GenesetSummary
+      :render: table
+      :tracks: @geneset_summary@
+
+      Summary of gene sets
+
 Referring to other sphinxreport documents
 =========================================
 
@@ -25,7 +45,7 @@ your :file:`conf.py` configuration file::
 
     intersphinx_mapping = {'<identifier>': ('<>', None) }
 
-where identifier is a suitable identifier and ``absolute path name to html`` is 
+where identifier is a suitable identifier and ``absolute path name to html`` is
 the absolute location of the html build of the sphinx document you want
 to refer to. This directory should contain the :file:`objects.inv` file. The
 file is automatically created by sphinx, but sphinx needs to be run at least
@@ -42,12 +62,12 @@ Using macros from another sphinxreport document
 
 Using macros from another sphinxreport document is possible if the
 ``linked-to`` sphinxreport document follows certain coding conventions. Basically,
-the ``linked-to`` sphinxreport document needs to encapsulate all the configuration 
+the ``linked-to`` sphinxreport document needs to encapsulate all the configuration
 information that is specific to a project, in particular the location of data and database.
 Here is an example of how it works.
 
 Let's say we have a ``master`` document that wants to refer to the document created by an automated
-generic rnaseq pipeline and a generic chipseq pipeline. 
+generic rnaseq pipeline and a generic chipseq pipeline.
 
 The ``linked-to`` rnaseq document reads all its configuration from the ``rnaseq`` section in the :file:``sphinxreport.ini``::
 
@@ -76,7 +96,7 @@ the master documents in the file hierarchy::
    datadir=.
    backend=sqlite:///./chipseq/csvdb
 
-In order embed a macro from the ``linked-to`` rnaseq document, the ``master`` document 
+In order embed a macro from the ``linked-to`` rnaseq document, the ``master`` document
 will contain text like::
 
    .. report:: pipeline_docs.pipeline_rnaseq.trackers.Mapping.TophatSummary
@@ -97,10 +117,10 @@ Implementation issues
 ---------------------
 
 If you want that other sphinxreport documents can refer to your trackers, you need to make sure that
-you encapsulate all configuration information into a single configuration section. Thus you should 
-refrain from using and of the generic sections like ``[report]`` or ``[general]``. 
+you encapsulate all configuration information into a single configuration section. Thus you should
+refrain from using and of the generic sections like ``[report]`` or ``[general]``.
 
-The best way to do this is to create a base tracker that all trackers within a project are derived from. 
+The best way to do this is to create a base tracker that all trackers within a project are derived from.
 In the example below, the trackers are all derived from the :class:`RnaseqTracker` class::
 
    from SphinxReport.Tracker import *
@@ -120,7 +140,7 @@ In the example below, the trackers are all derived from the :class:`RnaseqTracke
 
    class TranscriptCoverage(RnaseqTracker):
        """Coverage of reference transcripts."""
-       pattern = "(.*)_transcript_counts$" 
+       pattern = "(.*)_transcript_counts$"
        def __call__(self, track, slice = None ):
            data = self.getValues( """SELECT coverage_pcovered FROM %(track)s_transcript_counts""" )
            return odict( (("covered", data ) ,) )

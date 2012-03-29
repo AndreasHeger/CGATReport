@@ -1650,7 +1650,8 @@ class BoxPlot(Renderer, Plotter):
     """
     options = Renderer.options + Plotter.options
 
-    nlevels = 2
+    nlevels = 1
+
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
@@ -1662,16 +1663,16 @@ class BoxPlot(Renderer, Plotter):
         plts, legend = [], []
         all_data = []
 
-        for line, data in work.iteritems():
+        # for line, data in work.iteritems():
 
-            assert len(data) == 1, "multicolumn data not supported yet, got %i items" % len(data)
+            # assert len(data) == 1, "multicolumn data not supported yet, got %i items" % len(data)
 
-            for label, values in data.iteritems():
-                assert Utils.isArray( values ), "work is of type '%s'" % values
-                d = [ x for x in values if x != None ]
-                if len(d) > 0:
-                    all_data.append( d )
-                    legend.append( "/".join( (str(line),str(label))))
+        for label, values in work.iteritems():
+            assert Utils.isArray( values ), "work is of type '%s'" % values
+            d = [ x for x in values if x != None ]
+            if len(d) > 0:
+                all_data.append( d )
+                legend.append( "/".join( (str(path),str(label))))
 
         plts.append( plt.boxplot( all_data ) )
         
@@ -1705,12 +1706,29 @@ class GalleryPlot(Renderer, Plotter):
             self.warn( "no 'filename' key in path %s" % path )
             return
 
+
+        rst_text = '''.. figure:: %(fn)s
+
+'''
+        fn = work["filename"]
+        # do not render svg images
+        if fn.endswith(".svg" ):
+            title = os.path.basename( fn )
+            return ResultBlocks( ResultBlock( text = rst_text % locals(),
+                                              title = title ) )
+        
         self.startPlot()
         
         plts = []
-        data = plt.imread( work["filename"] )
+        try:
+            data = plt.imread( fn )
+        except IOError:
+            raise ValueError( "file format for file '%s' not recognized" % fn )
+    
+        ax = plt.gca()
+        ax.axison = False
         plts.append( plt.imshow( data ) )
-
+        
         return self.endPlot( plts, None, path )
                                      
 class ScatterPlot(Renderer, Plotter):

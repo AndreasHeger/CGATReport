@@ -2,6 +2,8 @@ from __future__ import with_statement
 
 import os, sys, re, types, copy, warnings, ConfigParser, inspect, logging, glob
 
+import numpy
+
 import sqlalchemy
 import sqlalchemy.exc as exc
 
@@ -144,24 +146,87 @@ class Tracker(object):
 ###########################################################################
 ###########################################################################
 ###########################################################################
-class TrackerCSV( Tracker ):
+class TrackerTSV( Tracker ):
     """Base class for trackers that fetch data from an CSV file.
-    
+
+    Each track is a column in the file.
     """
     def __init__(self, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
-        try: self.filename = kwargs["filename"]
-        except KeyError: pass
+        if "tracker" not in kwargs:
+            raise ValueError( "TrackerTSV requires a :tracker: parameter" )
+        
+        self.filename = kwargs['tracker'].strip()
+        self._data = None
+        self._tracks = None
 
     def getTracks(self, subset = None ):
-        return ["all",]
-    
-    def getSlices(self, subset = None ):
-        return []
+        if self.filename.endswith( ".gz" ):
+            inf = gzip.open( self.filename, "r" )
+        else:
+            inf = open( self.filename, "r" )
 
-    def __call__(self, track, slice = None):
-        """return a data structure for track :param: track and slice :slice:"""
-        raise NotImplementedError("not implemented")
+        for line in inf:
+            if line.startswith("#"): continue
+            tracks = line[:-1].split( "\t" )
+            break
+        inf.close()
+        self._tracks = tracks
+        return tracks
+    
+    def readData( self ):
+        if self._data == None:
+            if self.filename.endswith( ".gz" ):
+                inf = gzip.open( self.filename, "r" )
+            else:
+                inf = open( self.filename, "r" )
+
+            data = [ x.split() for x in inf.readlines() if not x.startswith("#")]
+            inf.close()
+
+            self.data = dict( zip( data[0], zip( *data[1:] ) ) )
+
+    def __call__(self, track, **kwargs ):
+        """return a data structure for track :param: track"""
+        self.readData()
+        return self.data[track]
+
+class TrackerMatrix( TrackerTSV ):
+    """Return matrix data from a matrix in flat-file format.
+    """
+    def getTracks(self, subset = None ):
+        return glob.glob( self.glob )
+
+    def __init__(self, *args, **kwargs ):
+        TrackerTSV.__init__(self, *args, **kwargs )
+        self.glob = kwargs['tracker'].strip()
+
+    def __call__(self, track, **kwargs ):
+        """return a data structure for track :param: track"""
+        
+        if track.endswith( ".gz" ):
+            infile = gzip.open( track, "r" )
+        else:
+            infile = open( track, "r" )
+        
+        dtype = numpy.float
+
+        lines = [ l for l in infile.readlines() if not l.startswith("#") ]
+        infile.close()
+        nrows = len(lines) - 1
+        col_headers = lines[0][:-1].split("\t")[1:]
+        ncols = len(col_headers)
+        matrix = numpy.zeros( (nrows, ncols), dtype = dtype )
+        row_headers = []
+        
+        for row, l in enumerate(lines[1:]):
+            data = l.split("\t")
+            row_headers.append( data[0] )
+            matrix[row] = numpy.array(data[1:], dtype = dtype)
+        
+        return odict( ( ('matrix', matrix),
+                        ('rows', row_headers),
+                        ('columns', col_headers) ) )
 
 ###########################################################################
 ###########################################################################
@@ -670,7 +735,6 @@ class SingleTableTrackerRows( TrackerSQL ):
 ###########################################################################
 ###########################################################################
 ###########################################################################
-
 class SingleTableTrackerColumns( TrackerSQL ):
     '''Tracker representing a table with multiple tracks.
 
@@ -713,10 +777,16 @@ class SingleTableTrackerColumns( TrackerSQL ):
 
     @property
     def slices(self):
-        return self.getValues( "SELECT DISTINCT %(column)s FROM %(table)s" )
+        if column:
+            return self.getValues( "SELECT DISTINCT %(column)s FROM %(table)s" )
+        else:
+            return []
 
     def __call__(self, track, slice = None ):
-        data = self.getValue( "SELECT %(track)s FROM %(table)s WHERE %(column)s = '%(slice)s'" )
+        if slice:
+            data = self.getValue( "SELECT %(track)s FROM %(table)s WHERE %(column)s = '%(slice)s'" )
+        else:
+            data = self.getValues( "SELECT %(track)s FROM %(table)s" )
         return data
 
 ###########################################################################

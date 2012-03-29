@@ -462,6 +462,7 @@ class TransformerHistogram( Transformer ):
             "normalized-total" : self.normalize_total,
             "cumulative" : self.cumulate,
             "reverse-cumulative": self.reverse_cumulate,
+            "relevel-with-first": self.relevel_with_first,
             }
 
         if "tf-aggregate" in kwargs:
@@ -494,6 +495,16 @@ class TransformerHistogram( Transformer ):
         data = data.astype( numpy.float )
         # numpy does not throw at division by zero, but sets values to Inf
         return data / m
+
+    def relevel_with_first( self, data ):
+        """re-level data - add value of first bin to all other bins
+        and set first bin to 0.
+        """
+        if data == None or len(data) == 0: return data
+        v = data[0]
+        data += v
+        data[0] -= v
+        return data
 
     def normalize_total( self, data ):
         """normalize a data vector by the total"""
