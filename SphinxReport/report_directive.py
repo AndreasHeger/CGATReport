@@ -132,8 +132,12 @@ def run(arguments,
     ########################################################
     # collect options
     # replace placedholders
-    options = Utils.updateOptions( options )
-    logging.debug( "report_directive.run: updated options=%s" % (str(options),) )
+    try:
+        options = Utils.updateOptions( options )
+    except ValueError, msg:
+        logging.warn( "failure while updating options: %s" % msg )
+
+    logging.debug( "report_directive.run: options=%s" % (str(options),) )
 
     transformer_names = []
     renderer_name = None

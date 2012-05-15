@@ -75,3 +75,13 @@ Large tables
 
    Rendering a large table
 
+A table with images
+
+.. report:: Trackers.DataWithImagesExample
+   :render: table
+
+   The default table.
+
+Tables can display most data types and are the most versatile
+of all renderers.
+

@@ -916,6 +916,9 @@ class LinePlot( Renderer, Plotter ):
     '''
     nlevels = 2
 
+    # do not plot more than five tracks in one plot
+    split_at = 5
+
     options = Plotter.options +\
         ( ('as-lines', directives.flag),
           )

@@ -257,14 +257,14 @@ def getModule( name ):
 
     # find module
     try:
-        (file, pathname, description) = imp.find_module( name, path )
+        (modulefile, pathname, description) = imp.find_module( name, path )
     except ImportError, msg:
         warn("could not find module %s: msg=%s" % (name,msg) )        
         raise ImportError("could not find module %s: msg=%s" % (name,msg) )
 
     stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
-    debug( "loading module: %s: %s, %s, %s" % (name, file, pathname, description) )
+    debug( "loading module: %s: %s, %s, %s" % (name, modulefile, pathname, description) )
     # imp.load_module modifies sys.path - save original and restore
     oldpath = sys.path
 
@@ -273,12 +273,12 @@ def getModule( name ):
         sys.path.append( os.path.dirname( pathname ) )
 
     try:
-        module = imp.load_module(name, file, pathname, description )
+        module = imp.load_module(name, modulefile, pathname, description )
     except:
         warn("could not load module %s" % name )        
         raise
     finally:
-        file.close()
+        modulefile.close()
         sys.stdout = stdout
         sys.path = oldpath
 

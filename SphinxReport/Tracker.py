@@ -6,6 +6,7 @@ import numpy
 
 import sqlalchemy
 import sqlalchemy.exc as exc
+import sqlalchemy.engine
 
 from SphinxReport import Utils
 
@@ -49,6 +50,23 @@ def getCallerLocals( level = 3, decorators = 0):
     f = sys._getframe(level+decorators)
     args = inspect.getargvalues(f)
     return args[3]
+
+###########################################################################
+###########################################################################
+###########################################################################
+@Utils.memoized
+def getTableNames( db ):
+    '''return a set of table names.'''
+    inspector = sqlalchemy.engine.reflection.Inspector.from_engine(db) 
+    return set(inspector.get_table_names())
+
+###########################################################################
+###########################################################################
+###########################################################################
+def getTableColumns( db, tablename ):
+    '''return a list of columns for table *tablename*.'''
+    inspector = sqlalchemy.engine.reflection.Inspector.from_engine(db) 
+    return inspector.get_columns(tablename)
     
 ###########################################################################
 ###########################################################################
@@ -294,12 +312,15 @@ class TrackerSQL( Tracker ):
         if not self.db:
             
             logging.debug( "connecting to %s" % self.backend )
+
             # creator can not be None.
             if creator:
-                db = sqlalchemy.create_engine( self.backend, echo = False,
+                db = sqlalchemy.create_engine( self.backend, 
+                                               echo = False,
                                                creator = creator )
             else:
-                db = sqlalchemy.create_engine( self.backend, echo = False )
+                db = sqlalchemy.create_engine( self.backend, 
+                                               echo = False )
             
             if not db:
                 raise ValueError( "could not connect to database %s" % self.backend )
@@ -307,7 +328,9 @@ class TrackerSQL( Tracker ):
             db.echo = False  
 
             # ignore unknown type BigInt warnings
-            if db:
+            # Note that this step can take a while on large databases
+            # with many tables and many columns
+            if db and False:
                 try:
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
@@ -324,46 +347,31 @@ class TrackerSQL( Tracker ):
 
         returns a list of table objects.
         """
-        # older versions of sqlalchemy have no sorted_tables attribute
         self.connect()
-        try:
-            sorted_tables = self.metadata.sorted_tables
-        except AttributeError, msg:
-            sorted_tables = []
-            for x in sorted(self.metadata.tables.keys()):
-                sorted_tables.append( self.metadata.tables[x])
+        sorted_tables = sorted(getTableNames( self.db ))
 
         if pattern:
             rx = re.compile(pattern)
-            return [ x for x in sorted_tables if rx.search( x.name ) ]
+            return [ x for x in sorted_tables if rx.search( x ) ]
         else:
             return sorted_tables
 
     def getTableNames( self, pattern = None ):
         '''return a list of tablenames matching a *pattern*.
         '''
-        return [x.name for x in self.getTables( pattern ) ]
+        return self.getTables( pattern )
 
     def hasTable( self, tablename ):
         """return table with name *tablename*."""
         self.connect()
-        return tablename in set( [x.name for x in self.metadata.sorted_tables])
-
-    def getTable( self, tablename ):
-        """return table or view with name *tablename*."""
-        self.connect()
-        try:
-            for table in self.metadata.sorted_tables:
-                if table.name == tablename: return table
-        except AttributeError, msg:
-            return self.metadata.tables[tablename]
-
-        raise IndexError( "table %s not found" % tablename )
+        return tablename in getTableNames( self.db )
 
     def getColumns( self, tablename ):
         '''return a list of columns in table *tablename*.'''
-        c = self.getTable( tablename ).columns
-        return [ re.sub( "%s[.]" % tablename, "", x.name) for x in c ]
+        
+        self.connect()
+        columns = getTableColumns( self.db, tablename )
+        return [ re.sub( "%s[.]" % tablename, "", x['name']) for x in columns ]
 
     def execute(self, stmt ):
         self.connect()
@@ -491,9 +499,9 @@ class TrackerSQL( Tracker ):
             rx = re.compile(self.pattern)
             tables = self.getTables( pattern = self.pattern )
             if self.as_tables:
-                return sorted([ x.name for x in tables ] )
+                return sorted([ x for x in tables ] )
             else: 
-                return sorted([rx.search( x.name).groups()[0] for x in tables] )
+                return sorted([rx.search(x).groups()[0] for x in tables] )
         else:
             return "all"
 
@@ -558,7 +566,7 @@ class TrackerSQLCheckTable(TrackerSQL):
     """
 
     mExcludePattern = None
-    pattern = "_evol$"
+    pattern = "(.*)_evol$"
     
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
@@ -568,17 +576,18 @@ class TrackerSQLCheckTable(TrackerSQL):
 
         statement = "SELECT COUNT( %s) FROM %s WHERE %s IS NOT NULL" 
 
-        table = self.getTable( track + "_evol" )
-        data = []
-
         if self.mExcludePattern: 
             fskip = lambda x: re.search( self.mExcludePattern, x )
         else:
             fskip = lambda x: False
+
+        tablename = track + "_evol" 
+        columns = self.getColumns( tablename )
+        data = []
             
-        for column in [x.name for x in table.columns]:
+        for column in columns:
             if fskip( column ): continue
-            data.append( (column, self.getValue( statement % (column, table.name, column) ) ) )
+            data.append( (column, self.getValue( statement % (column, tablename, column) ) ) )
         return odict( data )
 
 ###########################################################################
@@ -722,7 +731,9 @@ class SingleTableTrackerRows( TrackerSQL ):
 
     @property
     def slices( self ):
+        print "slices"
         columns = self.getColumns( self.table ) 
+        print "columnes"
         return [ x for x in columns if x not in self.exclude_columns and x not in self.fields ] + self.extra_columns.keys()
 
     def __call__(self, track, slice = None ):

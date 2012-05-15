@@ -115,8 +115,12 @@ try:
 except ImportError:
     from threading import Thread as Process
 
+# import conf.py
 if os.path.exists("conf.py"):
-    execfile("conf.py")
+    try:
+        execfile( "conf.py" )
+    except ValueError:
+        pass
 
 # set default directory where trackers can be found
 TRACKERDIR = "trackers"
@@ -214,6 +218,7 @@ def main():
                               " [default=%default]." )
 
     parser.set_defaults(
+        loglevel = 1,
         tracker=None,
         transformers = [],
         tracks=None,
@@ -360,10 +365,22 @@ def main():
         import build
         SphinxReport.report_directive.DEBUG = True
         SphinxReport.report_directive.FORCE = True
+        
+        if not os.path.exists( options.page ):
+            raise IOError( "page %s does not exist" % options.page)
 
-        blocks = build.rst_reader( open( options.page, "r") )
-        for block in blocks:
-            build.run( ( (options.page, block ),) )
+        options.num_jobs = 1
+
+        build.buildPlots( [ options.page, ], options, [], os.path.dirname( options.page ) )
+
+        if options.do_show: 
+            if options.renderer.startswith("r-"):
+                print "press Ctrl-c to stop"
+                while 1: pass
+            
+            elif _pylab_helpers.Gcf.get_all_fig_managers() > 0:
+                plt.show()
+
     else:
         raise ValueError("please specify either a tracker (-t/--tracker) or a page (-p/--page) to test")
             

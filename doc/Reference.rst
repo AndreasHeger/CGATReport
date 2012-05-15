@@ -193,6 +193,11 @@ Superfluous options are ignored.
 
             :extra-formats: png,hires,200;svg,svg,100
       
-        
+
+   split-at
+      non-negative int
+       
+      Split a figure after # graphical elements in order to avoid over-plotting.
+      Different renderers have different defaults.       
 
       

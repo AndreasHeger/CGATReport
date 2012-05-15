@@ -1,6 +1,6 @@
 '''This document contains a number of sample trackers.'''
 
-import sys, os, re, random
+import sys, os, re, random, glob
 
 import numpy
 
@@ -249,3 +249,17 @@ class MatrixTracker( Tracker ):
 
 def getSingleValue(): return 12
     
+IMAGEDIR = os.path.join( os.path.dirname( os.path.abspath( __file__ )), "..", "images")
+
+class DataWithImagesExample( Tracker ):
+    tracks = ("all",)
+
+    def __call__(self, track):
+
+        images = glob.glob( os.path.join( IMAGEDIR, "*.png") )
+
+        data = odict()
+        data["numbers"] = range( len(images))
+        data["images"] = [".. image:: %s"  % x for x in images ]
+        
+        return data

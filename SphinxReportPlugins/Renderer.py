@@ -32,13 +32,17 @@ class Renderer(Component):
     # plugin fields
     capabilities = ["render"]
 
-    options = ( ('format', directives.unchanged), )
+    options = ( ('format', directives.unchanged), 
+                ('split-at', directives.nonnegative_int), )
 
     # required levels in DataTree
     nlevels = None
 
     # default number format
     format = "%i"
+
+    # split number of tracks
+    split_at = 0
 
     def __init__(self, *args, **kwargs ):
         """create an Renderer object using an instance of 
@@ -50,6 +54,8 @@ class Renderer(Component):
         try: self.format = kwargs["format"]
         except KeyError: pass
 
+        self.split_at = int(kwargs.get( "split-at", 0))
+        
     def __call__(self):
         return None
 
@@ -75,11 +81,21 @@ class Renderer(Component):
         for p in paths:
             work = DataTree.getLeaf( data, p )
             if not work: continue
-            try:
-                result.extend( self.render( work, path + p ) )
-            except:
-                self.warn("exeception raised in rendering for path: %s" % str(path+p))
-                raise 
+            if self.split_at:
+                k = work.keys()
+                for z, x in enumerate(xrange( 0, len(k), self.split_at)) :
+                    w = dict( [ (xx, work[xx]) for xx in k[x:x+self.split_at] ] )
+                    try:
+                        result.extend( self.render( w, path + p + (str(z),) ) )
+                    except:
+                        self.warn("exeception raised in rendering for path: %s" % str(path+p+str((z,))))
+                        raise 
+            else:
+                try:
+                    result.extend( self.render( work, path + p ) )
+                except:
+                    self.warn("exeception raised in rendering for path: %s" % str(path+p))
+                    raise 
             
         return result
 
@@ -207,6 +223,7 @@ class Table( TableBase ):
 
         lines = []
         lines.append( ".. csv-table:: %s" % title )
+        lines.append( "   :class: sortable" )
 
         if self.add_rowindex:
             lines.append( '   :header: "row", "", "%s" ' % '","'.join( map(str, col_headers) ) )
@@ -226,6 +243,43 @@ class Table( TableBase ):
 
         lines.append( "") 
         
+        return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
+
+class RstTable( Table ):
+    '''an rst formatted table.'''
+
+    def __call__(self, data, path):
+        
+        matrix, row_headers, col_headers = self.buildTable( data )
+
+        title = path2str(path)
+
+        if matrix == None: 
+            return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
+
+        # do not output large matrices as rst files
+        if self.separate or (not self.force and 
+                             (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols)):
+            return self.asFile( matrix, row_headers, col_headers, title )
+
+        lines = []
+        
+        # add row and column headers
+        matrix.insert( 0, col_headers )
+        max_widths = [ max( len(x) for x in row_headers ) ]
+        max_widths.extend( [ max([len(str(row[x])) for row in matrix]) for x in range(len(col_headers)) ] )
+
+        separator = "+" + "+".join( [ "-" * (x + 2) for x in max_widths ] ) + "+"
+        format = "|" + "|".join( [" %%%is " % x for x in max_widths] ) + "|"
+
+        lines.append( separator )
+        lines.append( format % tuple( [""] + map(str,col_headers) ))
+        lines.append( separator )
+
+        for h, row in zip(row_headers,matrix[1:]):
+            lines.append( format % tuple(map(str,[h] + row) ))
+            lines.append( separator )
+
         return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
 class Glossary( Table ):
@@ -579,6 +633,7 @@ class MatrixBase:
 
         lines = []
         lines.append( ".. csv-table:: %s" % title )
+        lines.append( "   :class: sortable" )
         lines.append( '   :header: "track","%s" ' % '","'.join( columns ) )
         lines.append( '')
         for x in range(len(rows)):
@@ -772,14 +827,14 @@ class Debug( Renderer ):
     nlevels = 1
 
     def render( self, work, path ):
-
+        
         # initiate output structure
         results = ResultBlocks( title = path )
 
         # iterate over all items at leaf
         for key in work:
-
             t = type(work[key])
+
             try:
                 l = "%i" % len(work[key])
             except AttributeError:
@@ -859,6 +914,7 @@ class Status( Renderer ):
 
         # add header
         lines.append( ".. csv-table:: %s" % "table" )
+        lines.append( "   :class: sortable" )
         lines.append( '   :header: "Track", "Test", "", "Status", "Info" ' )
         lines.append( '' )
 

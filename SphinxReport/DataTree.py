@@ -234,14 +234,22 @@ def removeLevel( work, level ):
     prefixes = getPrefixes( work, level )
     for path in prefixes:
         leaf = getLeaf(work, path )
+        # skip truncated branches
+        if leaf == None: continue
+        
+        # delete all in leaf
         keys = leaf.keys()
         for key in keys:
             # there might be a subkey the same as key
             d = leaf[key]
             del leaf[key]
-            for subkey, item in d.iteritems():
-                leaf[subkey] = item
-
+            try:
+                for subkey, item in d.iteritems():
+                    leaf[subkey] = item
+            except AttributeError:
+                # for items that are not dict
+                setLeaf( work, path, d )
+                
 def swop( work, level1, level2 ):
     '''swop two levels *level1* and *level2*.
 

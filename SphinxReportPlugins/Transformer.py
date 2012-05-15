@@ -343,20 +343,26 @@ class TransformerStats( Transformer ):
 
     def transform(self, data, path ):
         debug( "%s: called" % str(self))
+        # do not use iteritems as loop motifies dictionary
+
+        to_delete = []
         for header, values in data.iteritems():
             if len(values) == 0: 
-                warn( "empty histogram for %s -removing" % header)
-                del data[header]
+                warn( "no data for %s -removing" % header)
+                to_delete.append( header )
                 continue
             
             try:
                 data[header] = Stats.Summary( values )._data
             except TypeError:
                 warn("%s: could not compute stats: expected an array of values, but got '%s'" % (str(self), str(values)) )
-                del data[header]
+                to_delete.append( header )
             except ValueError, msg:
                 warn("%s: could not compute stats: '%s'" % (str(self), msg) )
-                del data[header]
+                to_delete.append( header )
+
+        for header in to_delete:
+            del data[header]
 
         return data
 
@@ -435,6 +441,12 @@ class TransformerMannWhitneyU( TransformerPairwise ):
         xx = numpy.array( [ x for x in xvals if x != None ] )
         yy = numpy.array( [ y for y in yvals if y != None ] )
         return Stats.doMannWhitneyUTest( xx, yy )
+
+class TransformerContingency( TransformerPairwise ):
+    '''return number of identical entries'''
+    paired = False
+    def apply( self, xvals, yvals ):
+        return len( set(xvals).intersection( set(yvals)) )
 
 ########################################################################
 ########################################################################

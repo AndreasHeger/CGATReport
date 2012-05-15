@@ -387,7 +387,7 @@ class Dispatcher(Component):
 
         # remove all empty leaves        
         DataTree.removeEmptyLeaves( self.data )
-
+        
         # prune superfluous levels
         data_paths = DataTree.getPaths( self.data )
         nlevels = len(data_paths)
@@ -403,7 +403,7 @@ class Dispatcher(Component):
 
         levels_to_prune = []
 
-        for level in range( 1, nlevels-1):
+        for level in range( 1, nlevels):
 
             # check for single label in level
             if len(data_paths[level]) == 1:
@@ -412,11 +412,11 @@ class Dispatcher(Component):
                 keep = False
                 for prefix in prefixes:
                     leaves = DataTree.getLeaf( self.data, prefix )
+                    if leaves == None: continue
                     if len(leaves) > 1 or label not in leaves:
                         keep = True
                         break
                 if not keep: levels_to_prune.append( (level, label) )
-
 
         levels_to_prune.reverse()
 
