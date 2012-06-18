@@ -13,6 +13,10 @@ import types, copy, numpy
 
 ContainerTypes = (types.TupleType, types.ListType, type(numpy.zeros(0)))
 
+# set with keywords that will not be pruned
+# This is important for the User Tracker
+TrackerKeywords = set( ( "text", "rst", "xls", ) )
+
 # Taken from numpy.scalartype, but removing the types object and unicode
 # None is allowed to represent missing values. numpy.float128 is a recent
 # numpy addition.
@@ -350,8 +354,10 @@ def makeObject( path, args = (), kwargs = {} ):
     module, pathname = getModule( name )
 
     # get class from module
-    obj = getattr( module, cls)
-
+    try:
+        obj = getattr( module, cls)
+    except AttributeError:
+        raise AttributeError( "%s has no attribute '%s'" % (module, pathname, cls) )
     # instantiate, if it is a class
     if isClass( obj ):
         try:
