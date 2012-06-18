@@ -139,8 +139,10 @@ Superfluous options are ignored.
    legend-location
       choice
 
-      specify the location of the legend. See sphinxreportmatplotlib for options. The default 
-      option 'outer' displays the legend next to the plot.
+      specify the location of the legend. See sphinxreportmatplotlib
+      for the basic options. Additional options are prefixed by ``outer``
+      to place the legend outside a plot. Specify ``none`` to show no legend.
+      The default option ``outer-top`` displays the legend above the plot. 
 
    xrange
       a pair of comma separate values

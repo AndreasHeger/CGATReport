@@ -66,7 +66,10 @@ def getTableNames( db ):
 def getTableColumns( db, tablename ):
     '''return a list of columns for table *tablename*.'''
     inspector = sqlalchemy.engine.reflection.Inspector.from_engine(db) 
-    return inspector.get_columns(tablename)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        vals = inspector.get_columns(tablename)
+    return vals
     
 ###########################################################################
 ###########################################################################
@@ -731,9 +734,7 @@ class SingleTableTrackerRows( TrackerSQL ):
 
     @property
     def slices( self ):
-        print "slices"
         columns = self.getColumns( self.table ) 
-        print "columnes"
         return [ x for x in columns if x not in self.exclude_columns and x not in self.fields ] + self.extra_columns.keys()
 
     def __call__(self, track, slice = None ):

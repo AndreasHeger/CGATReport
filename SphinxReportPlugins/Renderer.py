@@ -15,6 +15,9 @@ from SphinxReport import CorrespondenceAnalysis
 
 from docutils.parsers.rst import directives
 
+# for output of work books
+import xlwt
+
 class Renderer(Component):
     """Base class of renderers that render data into restructured text.
 
@@ -113,6 +116,8 @@ class TableBase( Renderer ):
     options = Renderer.options +\
         ( ('force', directives.unchanged), 
           ('separate', directives.unchanged), 
+          ('max_rows', directives.length_or_unitless),
+          ('max_cols', directives.length_or_unitless),
           )
     
     max_rows = 50
@@ -123,6 +128,8 @@ class TableBase( Renderer ):
 
         self.force = "force" in kwargs            
         self.separate = "separate" in kwargs
+        self.max_rows = kwargs.get( "max_rows", 50 )
+        self.max_cols = kwargs.get( "max_cols", 20 )
 
     def asFile( self, matrix, row_headers, col_headers, title ):
         '''save the table as HTML file.
@@ -148,7 +155,40 @@ class TableBase( Renderer ):
         data.append( "</table>\n" )
         r.html = "\n".join( data )
 
-        return ResultBlocks( r )
+        return r
+
+    def asSpreadSheet( self, matrix, row_headers, col_headers, title ):
+        '''save the table as an xls file.
+
+        Multiple files of the same Renderer/Tracker combination are distinguished 
+        by the title.
+        '''
+        
+        self.debug("%s: saving %i x %i table as spread-sheet'"% (id(self), 
+                                                                 len(row_headers), 
+                                                                 len(col_headers)))
+        lines = []
+        lines.append("`%i x %i table <#$xls %s$#>`__" %\
+                     (len(row_headers), len(col_headers),
+                      title) )
+
+        r = ResultBlock( "\n".join(lines), title = title)
+
+        # create an html table
+        wb = xlwt.Workbook()
+
+        ws = wb.add_sheet( "sheet1")
+
+        for x, h in enumerate( row_headers ): ws.write( x+1, 0, h )
+        for y, h in enumerate( col_headers ): ws.write( 0, y+1, h )
+
+        for x,row in enumerate( matrix ):
+            for y,val in enumerate( row ):
+                ws.write( x+1, y+1, val )
+
+        r.xls = wb
+
+        return r
 
 class Table( TableBase ):
     '''a basic table. 
@@ -158,10 +198,16 @@ class Table( TableBase ):
     If the has more rows than :attr:`max_rows` or more columns
     than :attr:`max_cols`, a placeholder will be inserted pointing
     towards a file.
+
+    The attribute :attr:`large` determines where large tables are written
+    to. The default is html. Alternative values are ``xls`` for excel spread-sheets.
+
     '''
     options = TableBase.options +\
         ( ('transpose', directives.unchanged),
-          ('add_rowindex', directives.unchanged), )
+          ('add_rowindex', directives.unchanged),
+          ('large', directives.unchanged),
+          ('preview', directives.unchanged) )
 
     nlevels = 2
 
@@ -172,6 +218,8 @@ class Table( TableBase ):
 
         self.transpose = "transpose" in kwargs
         self.add_rowindex = "add_rowindex" in kwargs
+        self.large = kwargs.get( "large", "html")
+        self.preview = "preview" in kwargs
 
     def getHeaders( self, data ):
         """return a list of headers and a mapping of header to column.
@@ -216,11 +264,23 @@ class Table( TableBase ):
         if matrix == None: 
             return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
 
+        results = ResultBlocks()
+
         # do not output large matrices as rst files
         if self.separate or (not self.force and 
                              (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols)):
-            return self.asFile( matrix, row_headers, col_headers, title )
+            if self.large == "xls":
+                results.append( self.asSpreadSheet( matrix, row_headers, col_headers, "full" ) )
+            else:
+                results.append( self.asFile( matrix, row_headers, col_headers, "full" ) )
 
+            if self.preview:
+                row_headers = row_headers[:self.max_rows]
+                col_headers = col_headers[:self.max_cols]
+                matrix = [ x[:self.max_cols] for x in matrix[:self.max_rows] ]
+            else:
+                return results
+            
         lines = []
         lines.append( ".. csv-table:: %s" % title )
         lines.append( "   :class: sortable" )
@@ -243,7 +303,9 @@ class Table( TableBase ):
 
         lines.append( "") 
         
-        return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
+        results.append( ResultBlock( "\n".join(lines), title = title) )
+
+        return results
 
 class RstTable( Table ):
     '''an rst formatted table.'''
@@ -870,20 +932,17 @@ class User(Renderer):
     def render( self, work, path ):
         
         # initiate output structure
-        results = ResultBlocks( title = path )
+        results = ResultBlocks( title = path2str(path) )
 
         # iterate over all items at leaf
         #for key in work:
-            
-        if "text" in work:
-            # add a result block
-            results.append( ResultBlock( work["text"],
-                                             title = "" ) )
-        elif "rst" in work:
-            # add a result block
-            results.append( ResultBlock( work["rst"],
-                                         title = "" ) )
 
+        for key in Utils.TrackerKeywords:
+            if key in work:
+                # add a result block
+                results.append( ResultBlock( work[key],
+                                             title = "" ) )
+            
         return results
 
 class Status( Renderer ):

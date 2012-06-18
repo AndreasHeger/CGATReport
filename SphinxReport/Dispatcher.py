@@ -380,8 +380,11 @@ class Dispatcher(Component):
 
         Remove all levels from the data tree that are
         superfluous, i.e. levels that contain only a single label
-        all labels in the hierarchy below are the same.
+        and all labels in the hierarchy below are the same.
        
+        This method ignores some labels with reserved key-words
+        such as ``text``, ``rst``, ``xls``
+
         Ignore both the first and last level for this analyis.
         '''
 
@@ -408,6 +411,7 @@ class Dispatcher(Component):
             # check for single label in level
             if len(data_paths[level]) == 1:
                 label = data_paths[level][0]
+                if label in Utils.TrackerKeywords: continue
                 prefixes = DataTree.getPrefixes( self.data, level )
                 keep = False
                 for prefix in prefixes:

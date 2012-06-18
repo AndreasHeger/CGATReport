@@ -39,6 +39,27 @@ Options
       tables are displayed in a separate page and only a link
       is inserted into the document.
 
+   max_rows
+      int
+      
+      Number of rows to display. If the table contains more rows,
+      only a preview is created and the table is stored in an
+      alternative format (see :attr:`large`),
+
+   max_cols
+      int
+      
+      Number of columns to display. If the table contains more columns,
+      only a preview is created and the table is stored in an
+      alternative format (see :attr:`large`),
+
+   large
+      choice
+
+      Display large tables in alternate format. Possible formats are:
+      ``html`` (defaul) for an html-formatted table and ``xls`` for
+      an excel spreadsheet.
+      
 Grouping tables
 ---------------
 
@@ -73,7 +94,13 @@ Large tables
 .. report:: TestCases.LargeTable
    :render: table
 
-   Rendering a large table
+   Rendering a large table (as html)
+
+.. report:: TestCases.LargeTable
+   :render: table
+   :large: xls
+
+   Rendering a large table (as xls)
 
 A table with images
 

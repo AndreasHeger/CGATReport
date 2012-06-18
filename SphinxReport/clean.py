@@ -66,13 +66,12 @@ from SphinxReport.Tracker import Tracker
 SEPARATOR="@"
 
 # import conf.py for source_suffix
+source_suffix = ".rst"
 if os.path.exists("conf.py"):
     try:
         execfile( "conf.py" )
     except ValueError:
         pass
-else:
-    source_suffix = ".rst"
 
 RSTDIR = "."
 if "docsdir" in locals():
