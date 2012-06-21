@@ -270,9 +270,9 @@ class Table( TableBase ):
         if self.separate or (not self.force and 
                              (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols)):
             if self.large == "xls":
-                results.append( self.asSpreadSheet( matrix, row_headers, col_headers, "full" ) )
+                results.append( self.asSpreadSheet( matrix, row_headers, col_headers, title ) )
             else:
-                results.append( self.asFile( matrix, row_headers, col_headers, "full" ) )
+                results.append( self.asFile( matrix, row_headers, col_headers, title ) )
 
             if self.preview:
                 row_headers = row_headers[:self.max_rows]
