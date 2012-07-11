@@ -104,6 +104,8 @@ class Dispatcher(Component):
                 fromcache = True
             except KeyError:
                 pass
+            except RuntimeError, msg:
+                raise RuntimeError( "error when accessing key %s from cache: %s - potential problem with unpickable object?" % (key, msg))
 
         kwargs = {}
         if self.tracker_options:

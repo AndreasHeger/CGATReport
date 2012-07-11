@@ -60,6 +60,14 @@ class Result(object):
             self._data[key] = value
         else:
             object.__setattr__(self,key,value)
+    def __getstate__(self,d):
+        # required for correct pickling/unpickling
+        return object.__getattribute__(self,"_data")
+            
+    def __setstate__(self,d):
+        # required for correct unpickling, otherwise
+        # maximum recursion threshold will be reached
+        object.__setattr__(self, "_data", d)
 
 #################################################################
 #################################################################
