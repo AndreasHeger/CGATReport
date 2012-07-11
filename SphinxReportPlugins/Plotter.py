@@ -1686,8 +1686,7 @@ class BoxPlot(Renderer, Plotter):
 
         plt.xticks( [ x + 1 for x in range(0,len(legend)) ],
                     legend,
-                    rotation = rotation,
-                    fontsize="8" )
+                    rotation = rotation )
 
         return self.endPlot( plts, None, path )
 
