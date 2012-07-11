@@ -372,7 +372,7 @@ def main():
         options.num_jobs = 1
 
         build.buildPlots( [ options.page, ], options, [], os.path.dirname( options.page ) )
-
+        
         if options.do_show: 
             if options.renderer.startswith("r-"):
                 print "press Ctrl-c to stop"

@@ -26,8 +26,7 @@ class XLSPlugin(Component):
         the place holder.
         '''
         map_figure2text = {}
-        extension = "xls"
-        
+        extension = "xlsx"
         for xblocks in blocks:
             for block in xblocks:
                 if not hasattr( block, "xls" ): continue

@@ -16,7 +16,9 @@ from SphinxReport import CorrespondenceAnalysis
 from docutils.parsers.rst import directives
 
 # for output of work books
-import xlwt
+# import xlwt
+import openpyxl
+from openpyxl.cell import get_column_letter
 
 class Renderer(Component):
     """Base class of renderers that render data into restructured text.
@@ -175,16 +177,14 @@ class TableBase( Renderer ):
         r = ResultBlock( "\n".join(lines), title = title)
 
         # create an html table
-        wb = xlwt.Workbook()
+        wb = openpyxl.Workbook( optimized_write = True)
 
-        ws = wb.add_sheet( "sheet1")
+        ws = wb.create_sheet()
+        ws.title = title
 
-        for x, h in enumerate( row_headers ): ws.write( x+1, 0, h )
-        for y, h in enumerate( col_headers ): ws.write( 0, y+1, h )
-
+        ws.append( [""] + list(col_headers) )
         for x,row in enumerate( matrix ):
-            for y,val in enumerate( row ):
-                ws.write( x+1, y+1, val )
+            ws.append( [row_headers[x]] + row )
 
         r.xls = wb
 
