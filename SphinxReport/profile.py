@@ -113,7 +113,7 @@ def main():
     if options.sections:
         profile_sections = options.sections
     else:
-        profile_sections = ("rst", "tracker", "renderer" )
+        profile_sections = ("rst", "tracker", "renderer", "transformer" )
 
     counts = {}
     for section in profile_sections:
@@ -179,6 +179,8 @@ def main():
 
     for section in profile_sections:
         sys.stdout.write( "\t".join( ("section", "object", "ncalls", "duration", "percall", "running") ) + "\n" )
+
+        running = []
         for objct, c in counts[section].iteritems():
             
             # apply filters
@@ -201,7 +203,13 @@ def main():
                                c.running,
                                )))) + "\n" )
             
+            running.extend( [x for x,y in c._started.iteritems() if y != 0 ] )
+
+        print "running"
+        print "\n".join( map(str, running )) 
         sys.stdout.write( "\n" * 3 )
+
+
 
 if __name__ == "__main__":
     sys.exit(main())

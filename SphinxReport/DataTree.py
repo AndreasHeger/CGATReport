@@ -253,10 +253,13 @@ def removeLevel( work, level ):
 def swop( work, level1, level2 ):
     '''swop two levels *level1* and *level2*.
 
-    For example, swop(0,1) on paths (a/1/x, a/1/y, b/2/x, c/1/y)
-    will result in 1/a/x, 1/a/y, 1/c/y, 2/b/x.
+    For example, swop(0,1) on paths (a/1/x, a/1/y, b/2/y, b/2/x, c/1/y)
+    will result in 1/a/x, 1/a/y, 1/c/y, 2/b/a, 2/b/x.
 
     Both levels must be smaller the len().
+
+    The sort order in lower levels is preserved, i.e. 
+    it will be 2/b/y, 2/b/x.
     '''
     paths = getPaths(work)
     nlevels = len(paths)
@@ -289,14 +292,25 @@ def swop( work, level1, level2 ):
     def _f(p): return tuple( [x for x in p if x != None] )
 
     for p1, p2 in itertools.product( paths[level1], paths[level2] ):
-        for prefix, infix, suffix in itertools.product( prefixes, infixes, suffixes ):
-            oldpath = _f( prefix + (p1,) + infix + (p2,) + suffix )
-            newpath = _f(prefix + (p2,) + infix + (p1,) + suffix )
-            # note: getLeaf, setLeaf are inefficient in this 
-            # context as they traverse the tree again
-            data = getLeaf( work, oldpath )
-            if data == None: continue
-            setLeaf( newtree, newpath, data )
+
+        for prefix, infix in itertools.product( prefixes, infixes ):
+
+            w = getLeaf( work, _f( prefix + (p1,) + infix + (p2,) ) )
+            subpaths = getPaths(w)
+            if subpaths:
+                suffixes = list( itertools.product( subpaths[0] ) )
+            else:
+                suffixes = [(None,)]
+
+            for suffix in suffixes:
+                oldpath = _f( prefix + (p1,) + infix + (p2,) + suffix )
+                newpath = _f(prefix + (p2,) + infix + (p1,) + suffix )
+
+                # note: getLeaf, setLeaf are inefficient in this 
+                # context as they traverse the tree again
+                data = getLeaf( work, oldpath )
+                if data == None: continue
+                setLeaf( newtree, newpath, data )
             
     return newtree
 

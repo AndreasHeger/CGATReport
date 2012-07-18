@@ -60,7 +60,7 @@ class Result(object):
             self._data[key] = value
         else:
             object.__setattr__(self,key,value)
-    def __getstate__(self,d):
+    def __getstate__(self):
         # required for correct pickling/unpickling
         return object.__getattribute__(self,"_data")
             

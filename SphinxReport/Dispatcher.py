@@ -163,12 +163,13 @@ class Dispatcher(Component):
                 data_paths.append( obj.getSlices() )
                 
         # sanity check on data_paths. 
-
         # 1. Replace strings with one-element tuples
         # 2. Remove empty levels in the paths
+        # 3. Replace sets and other non-containers with lists
         to_remove = []
         for x,y in enumerate(data_paths):
             if type(y) in types.StringTypes: data_paths[x]=[y,]
+            elif type(y) not in Utils.ContainerTypes: data_paths[x] = list(y)
             if y == None or len(y) == 0: to_remove.append(x)
             
         for x in to_remove[::-1]:
@@ -327,8 +328,13 @@ class Dispatcher(Component):
         '''call data transformers and group tree
         '''
         for transformer in self.transformers:
+            self.debug( "profile: started: transformer: %s" % (transformer))
             self.debug( "%s: applying %s" % (self.renderer, transformer ))
-            self.data = transformer( self.data )
+
+            try:
+                self.data = transformer( self.data )
+            finally:
+                self.debug( "profile: finished: transformer: %s" % (transformer))
 
     def group( self ):
         '''rearrange data tree for grouping.
@@ -504,8 +510,8 @@ class Dispatcher(Component):
         except: 
             self.error( "%s: exception in collection" % self )
             return ResultBlocks(ResultBlocks( Utils.buildException( "collection" ) ))
-
-        self.debug( "profile: finished: tracker: %s" % (self.tracker))
+        finally:
+            self.debug( "profile: finished: tracker: %s" % (self.tracker))
 
         if len(self.data) == 0: 
             self.info( "%s: no data - processing complete" % self.tracker )
@@ -566,8 +572,8 @@ class Dispatcher(Component):
             print "exception in rendering %s" % self
             self.error( "%s: exception in rendering" % self )
             return ResultBlocks(ResultBlocks( Utils.buildException( "rendering" ) ))
-
-        self.debug( "profile: finished: renderer: %s" % (self.renderer))
+        finally:
+            self.debug( "profile: finished: renderer: %s" % (self.renderer))
 
         return result
         

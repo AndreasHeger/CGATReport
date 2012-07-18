@@ -148,7 +148,7 @@ class TableBase( Renderer ):
                      (len(row_headers), len(col_headers),
                       title) )
 
-        r = ResultBlock( "\n".join(lines), title = title)
+        r = ResultBlock( "\n".join(lines) + "\n", title = title)
         # create an html table
         data = ["<table>"]
         data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( map(str,col_headers)) )
@@ -187,6 +187,10 @@ class TableBase( Renderer ):
             ws.append( [row_headers[x]] + row )
 
         r.xls = wb
+
+        self.debug("%s: saved %i x %i table as spread-sheet'"% (id(self), 
+                                                                len(row_headers), 
+                                                                len(col_headers)))
 
         return r
 
