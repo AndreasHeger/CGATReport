@@ -168,9 +168,12 @@ class Dispatcher(Component):
         # 3. Replace sets and other non-containers with lists
         to_remove = []
         for x,y in enumerate(data_paths):
+            if y == None or len(y) == 0: 
+                to_remove.append(x)
+                continue
             if type(y) in types.StringTypes: data_paths[x]=[y,]
             elif type(y) not in Utils.ContainerTypes: data_paths[x] = list(y)
-            if y == None or len(y) == 0: to_remove.append(x)
+
             
         for x in to_remove[::-1]:
             del data_paths[x]
