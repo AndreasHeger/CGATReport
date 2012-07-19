@@ -161,7 +161,7 @@ class Dispatcher(Component):
                 data_paths.append( getattr( obj, 'slices' ) )
             elif hasattr( obj, 'getSlices' ):
                 data_paths.append( obj.getSlices() )
-                
+
         # sanity check on data_paths. 
         # 1. Replace strings with one-element tuples
         # 2. Remove empty levels in the paths
@@ -173,7 +173,6 @@ class Dispatcher(Component):
                 continue
             if type(y) in types.StringTypes: data_paths[x]=[y,]
             elif type(y) not in Utils.ContainerTypes: data_paths[x] = list(y)
-
             
         for x in to_remove[::-1]:
             del data_paths[x]

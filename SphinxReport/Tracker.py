@@ -506,7 +506,7 @@ class TrackerSQL( Tracker ):
             else: 
                 return sorted([rx.search(x).groups()[0] for x in tables] )
         else:
-            return "all"
+            return [ "all" ] 
 
 ###########################################################################
 ###########################################################################
