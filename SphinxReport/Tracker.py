@@ -278,6 +278,9 @@ class TrackerSQL( Tracker ):
     The basic tracker identifies tracks as tables that match a
     certain pattern (:attr:`pattern`)
 
+    The pattern should contain at least one group. If there are multiple
+    groups, these will be associated as tracks/slices.
+
     This tracker connects to the database. Each tracker will establish
     its own connection for efficient multi-processing.
 
@@ -342,6 +345,8 @@ class TrackerSQL( Tracker ):
                     self.metadata = sqlalchemy.MetaData(db, reflect = True)
 
             self.db = db
+
+            logging.debug( "connected to %s" % self.backend )
 
     def getTables(self, pattern = None ):
         """return a list of tables matching a *pattern*.
@@ -492,21 +497,43 @@ class TrackerSQL( Tracker ):
         '''
         return self.execute(stmt)
     
-    def getTracks(self, *args, **kwargs):
-        """return a list of all tracks that this tracker provides.
+    # def getTracks(self, *args, **kwargs):
+    #     """return a list of all tracks that this tracker provides.
 
-        Tracks are defined as tables matching the attribute 
-        :attr:`pattern`.
-        """
-        if self.pattern:
+    #     Tracks are defined as tables matching the attribute 
+    #     :attr:`pattern`.
+    #     """
+    #     if self.pattern:
+    #         rx = re.compile(self.pattern)
+    #         tables = self.getTables( pattern = self.pattern )
+    #         if self.as_tables:
+    #             return sorted([ x for x in tables ] )
+    #         else: 
+    #             return sorted([rx.search(x).groups()[0] for x in tables] )
+    #     else:
+    #         return [ "all" ] 
+
+    def getPaths( self ):
+         """return all paths this tracker provides.
+
+         Tracks are defined as tables matching the attribute 
+         :attr:`pattern`. 
+
+         """
+         if self.pattern:
             rx = re.compile(self.pattern)
             tables = self.getTables( pattern = self.pattern )
             if self.as_tables:
                 return sorted([ x for x in tables ] )
             else: 
-                return sorted([rx.search(x).groups()[0] for x in tables] )
-        else:
-            return [ "all" ] 
+                parts = [rx.search(x).groups() for x in tables]
+                result = []
+                for x in range(rx.groups):
+                    result.append( sorted( set( [ part[x] for part in parts ] ) ) )
+                return result
+         else:
+             return [ "all" ] 
+         
 
 ###########################################################################
 ###########################################################################

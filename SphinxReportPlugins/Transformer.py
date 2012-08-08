@@ -451,16 +451,13 @@ class TransformerContingency( TransformerPairwise ):
 ########################################################################
 ########################################################################
 ########################################################################
-class TransformerHistogram( Transformer ):
-    '''compute a histograms of :term:`numerical arrays`.'''
+class TransformerAggregate( Transformer ):
+    '''aggregate histogram like data.'''
 
     nlevels = 1
 
     options = Transformer.options +\
-        ( ('tf-aggregate', directives.unchanged), 
-          ('tf-bins', directives.unchanged), 
-          ('tf-range', directives.unchanged), 
-          )
+        ( ('tf-aggregate', directives.unchanged), )
 
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
@@ -535,6 +532,55 @@ class TransformerHistogram( Transformer ):
     def reverse_cumulate( self, data ):
         return data[::-1].cumsum()[::-1]
 
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        to_delete = set()
+        first = True
+        for key, values in data.iteritems():
+            # first pair is bins - do not transform
+            if first:
+                first = False
+                continue
+            
+            values = numpy.array( values, dtype = numpy.float )
+            for converter in self.mConverters: values = converter(values)
+            data[key] = values
+
+        return data
+
+########################################################################
+########################################################################
+########################################################################
+class TransformerHistogram( TransformerAggregate ):
+    '''compute a histograms of :term:`numerical arrays`.'''
+
+    nlevels = 1
+
+    options = Transformer.options +\
+        ( ('tf-bins', directives.unchanged), 
+          ('tf-range', directives.unchanged), 
+          )
+
+    def __init__(self, *args, **kwargs):
+        TransformerAggregate.__init__(self, *args, **kwargs)
+
+        self.mConverters = []
+        self.mFormat = "%i"
+        self.mBinMarker = "left"
+
+        self.mBins = kwargs.get( "tf-bins", "100" )
+        self.mRange = kwargs.get( "tf-range", None )
+
+        f = []
+        if self.normalize_total in self.mConverters: f.append( "relative" )
+        else: f.append( "absolute" )
+        if self.cumulate in self.mConverters: f.append( "cumulative" )
+        if self.reverse_cumulate in self.mConverters: f.append( "cumulative" )
+        f.append("frequency")
+
+        self.mYLabel = " ".join(f)
+
     def binToX( self, bins ):
         """convert bins to x-values."""
         if self.mBinMarker == "left": return bins[:-1]
@@ -544,7 +590,7 @@ class TransformerHistogram( Transformer ):
 
     def toHistogram( self, data ):
         '''compute the histogram.'''
-        ndata = [ x for x in data if x != None ]
+        ndata = [ x for x in data if x != None and x != 'None' ]
         nremoved = len(data) - len(ndata)
         if nremoved:
             warn( "removed %i None values" % nremoved )

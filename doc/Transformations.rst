@@ -305,6 +305,31 @@ Working with multiple columns
 
 ..    testing multiple histograms with grid layout.
 
+.. _aggregate:
+
+aggregate
+=========
+
+The :class:`SphinxReportPlugins.Transformer.Aggregate` takes
+histogrammed data and performs various aggregation or normalization
+tasks.
+
+The transformer expects dictionaries of lists of numerical values. 
+The first list is assumed to be bins and not transformed.
+
+   .. report:: Trackers.ArrayDataExample
+      :render: line-plot
+      :transform: aggregate
+      :tf-aggregate: cumulative
+      		  
+      cumulative data
+
+.. report:: Trackers.ArrayDataExample
+   :render: line-plot
+   :transform: aggregate
+   :tf-aggregate: cumulative
+      		  
+   cumulative data
 
 .. _group:
 

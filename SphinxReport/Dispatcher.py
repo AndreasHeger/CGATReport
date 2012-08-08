@@ -7,6 +7,8 @@ from SphinxReport import Utils
 from SphinxReport import Cache
 
 VERBOSE=True
+# maximimum number of levels in data tree
+MAX_PATH_NESTING=5
 
 from odict import OrderedDict as odict
 
@@ -223,8 +225,10 @@ class Dispatcher(Component):
 
         self.data = odict()
 
+        self.debug( "%s: collecting data paths." % (self.tracker))        
         is_function, datapaths = self.getDataPaths(self.tracker)
-        
+        self.debug( "%s: collected data paths." % (self.tracker))        
+
         # if function, no datapaths
         if is_function:
             d = self.getData( () )
@@ -239,14 +243,21 @@ class Dispatcher(Component):
         if len(datapaths) == 0 or len(datapaths[0]) == 0:
             self.warn( "%s: no tracks found - no output" % self.tracker )
             return
-        
+
+        self.debug( "%s: filtering data paths." % (self.tracker))        
         # filter data paths
         datapaths = self.filterDataPaths( datapaths )
+        self.debug( "%s: filtered data paths." % (self.tracker))        
 
         # if no tracks, error
         if len(datapaths) == 0 or len(datapaths[0]) == 0:
             self.warn( "%s: no tracks remain after filtering - no output" % self.tracker )
             return
+
+        self.debug( "%s: building all_paths" % (self.tracker ) )
+        if len(datapaths) > MAX_PATH_NESTING:
+            self.warn( "%s: number of nesting in data paths too large: %i" % (self.tracker, len(all_paths)))
+            raise ValueError( "%s: number of nesting in data paths too large: %i" % (self.tracker, len(all_paths)))
 
         all_paths = list(itertools.product( *datapaths ))
         self.debug( "%s: collecting data started for %i data paths" % (self.tracker, 

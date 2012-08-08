@@ -209,7 +209,5 @@ def main():
         print "\n".join( map(str, running )) 
         sys.stdout.write( "\n" * 3 )
 
-
-
 if __name__ == "__main__":
     sys.exit(main())

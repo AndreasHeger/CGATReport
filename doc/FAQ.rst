@@ -52,5 +52,25 @@ other processes will then hang. The solutions are to either
    ``sphinx-build -b html -d _build/doctrees   . _build/html``
 
 
+How do I insert a link into a document
+**************************************
+
+In order to add a link to a document, use the restructured text
+linking mechanism. Note that path names should be absolute path names.
+For example::
+
+    class ReportsList( Tracker ):
+	'''provide links to reports in subdirectories.'''
+
+	tracks = glob.glob("subdir*")
+
+	def __call__( self, track ):
+	    datadir = os.path.abspath(os.curdir())
+	    return "`medip_%(track)s <%(datadir)s/%(track)s/report/html/contents.html>`_" % locals()
+
+
+
+
+
 
 
