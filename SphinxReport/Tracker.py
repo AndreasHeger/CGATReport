@@ -497,21 +497,21 @@ class TrackerSQL( Tracker ):
         '''
         return self.execute(stmt)
     
-    # def getTracks(self, *args, **kwargs):
-    #     """return a list of all tracks that this tracker provides.
+    def getTracks(self, *args, **kwargs):
+        """return a list of all tracks that this tracker provides.
 
-    #     Tracks are defined as tables matching the attribute 
-    #     :attr:`pattern`.
-    #     """
-    #     if self.pattern:
-    #         rx = re.compile(self.pattern)
-    #         tables = self.getTables( pattern = self.pattern )
-    #         if self.as_tables:
-    #             return sorted([ x for x in tables ] )
-    #         else: 
-    #             return sorted([rx.search(x).groups()[0] for x in tables] )
-    #     else:
-    #         return [ "all" ] 
+        Tracks are defined as tables matching the attribute 
+        :attr:`pattern`.
+        """
+        if self.pattern:
+            rx = re.compile(self.pattern)
+            tables = self.getTables( pattern = self.pattern )
+            if self.as_tables:
+                return sorted([ x for x in tables ] )
+            else: 
+                return sorted([rx.search(x).groups()[0] for x in tables] )
+        else:
+            return [ "all" ] 
 
     def getPaths( self ):
          """return all paths this tracker provides.
@@ -522,17 +522,15 @@ class TrackerSQL( Tracker ):
          """
          if self.pattern:
             rx = re.compile(self.pattern)
+            # let getTracks handle a single group
+            if rx.groups < 2: return None
             tables = self.getTables( pattern = self.pattern )
-            if self.as_tables:
-                return sorted([ x for x in tables ] )
-            else: 
-                parts = [rx.search(x).groups() for x in tables]
-                result = []
-                for x in range(rx.groups):
-                    result.append( sorted( set( [ part[x] for part in parts ] ) ) )
-                return result
-         else:
-             return [ "all" ] 
+            parts = [rx.search(x).groups() for x in tables]
+            result = []
+            for x in range(rx.groups):
+                result.append( sorted( set( [ part[x] for part in parts ] ) ) )
+            return result
+         return None
          
 
 ###########################################################################

@@ -1,6 +1,7 @@
 import os, re
 from SphinxReport.Component import *
 from SphinxReport import Config
+from SphinxReport import Utils
 
 class HTMLPlugin(Component):
 
@@ -32,7 +33,10 @@ class HTMLPlugin(Component):
             for block in xblocks:
                 if not hasattr( block, "html" ): continue
 
-                outname = "%s_%s" % (template_name, block.title)
+                # remove special characters from filename. I think the docutils
+                # system removes these from links which later causes problems
+                # as the link does not point to the correct location of the file.
+                outname = Utils.quote_filename( "%s_%s" % (template_name, block.title) )
                 outputpath = os.path.join(outdir, '%s.%s' % (outname, extension))
 
                 # save to file

@@ -56,6 +56,10 @@ def quote_rst( text ):
     '''quote text for restructured text.'''
     return re.sub( r"([*])", r"\\\1", str(text))
 
+def quote_filename( text ):
+    '''quote filename for use as link in restructured text (remove spaces, etc).'''
+    return re.sub( r"""[ '"()\[\]]""", r"_", str(text))
+
 # default values
 PARAMS = {
     "report_show_errors" : True,
