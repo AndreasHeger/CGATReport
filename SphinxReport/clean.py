@@ -105,16 +105,14 @@ def removeTracker( tracker,
     dirs_to_check = ("_static", "_cache", "_build", builddir )
 
     pattern = ".*%s.*" % tracker
-
     # image and text files
-    rx1 = re.compile("-%s%s" % (pattern,SEPARATOR) )
+    rx1 = re.compile("_%s%s" % (pattern,SEPARATOR) )
     # files in cache
-    rx2 = re.compile("-%s$" % (pattern) )
+    rx2 = re.compile("_%s$" % (pattern) )
     # .code files
-    rx3 = re.compile("-%s%s" % (pattern,".code") )
+    rx3 = re.compile("_%s%s" % (pattern,".code") )
     # .html files
-    rx4 = re.compile("-%s%s" % (pattern,".html") )
-
+    rx4 = re.compile("_%s%s" % (pattern,".html") )
     test_f = lambda x: rx1.search(x) or rx2.search(x) or rx3.search(x) or rx4.search(x)
 
     return deleteFiles( test_f, dirs_to_check, dry_run = dry_run )

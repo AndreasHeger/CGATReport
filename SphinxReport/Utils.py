@@ -40,12 +40,6 @@ def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
     return all(hasattr(obj, attr) for attr in attrs)
 
-def quote_filename( fn ):
-    '''quote a filename.
-    latex does not permit a "." for image files - replace it with "-"
-    '''
-    return re.sub( "[.]", "-", fn )
-
 def asList( param ):
     '''return a param as a list'''
     if type(param) not in (types.ListType, types.TupleType):
@@ -57,8 +51,13 @@ def quote_rst( text ):
     return re.sub( r"([*])", r"\\\1", str(text))
 
 def quote_filename( text ):
-    '''quote filename for use as link in restructured text (remove spaces, etc).'''
-    return re.sub( r"""[ '"()\[\]]""", r"_", str(text))
+    '''quote filename for use as link in restructured text (remove spaces, quotes, etc).
+
+    latex does not permit a "." for image files.
+
+    Replace all with "_"
+    '''
+    return re.sub( r"""[ '"()\[\].]""", r"_", str(text))
 
 # default values
 PARAMS = {

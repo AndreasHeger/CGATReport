@@ -814,13 +814,13 @@ class SingleTableTrackerColumns( TrackerSQL ):
 
     @property
     def slices(self):
-        if column:
+        if self.column:
             return self.getValues( "SELECT DISTINCT %(column)s FROM %(table)s" )
         else:
             return []
 
     def __call__(self, track, slice = None ):
-        if slice:
+        if slice != None:
             data = self.getValue( "SELECT %(track)s FROM %(table)s WHERE %(column)s = '%(slice)s'" )
         else:
             data = self.getValues( "SELECT %(track)s FROM %(table)s" )
