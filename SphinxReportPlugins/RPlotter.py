@@ -14,6 +14,8 @@ from rpy2.robjects import r as R
 import rpy2.robjects as ro
 import rpy2.robjects.numpy2ri
 rpy2.robjects.numpy2ri.activate()
+import rpy2.robjects.lib.ggplot2 as ggplot2
+
 
 from docutils.parsers.rst import directives
 
@@ -270,7 +272,7 @@ class BoxPlot( Renderer, Plotter ):
     """
     options = Renderer.options + Plotter.options
 
-    nlevels = 2
+    nlevels = 1
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
@@ -283,16 +285,16 @@ class BoxPlot( Renderer, Plotter ):
         plts, legend = [], []
         all_data = []
 
-        for line, data in work.iteritems():
+        #for line, data in work.iteritems():
 
-            assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
+        #    assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
 
-            for label, values in data.iteritems():
-                assert Utils.isArray( values ), "work is of type '%s'" % values
-                d = [ x for x in values if x != None ]
-                if len(d) > 0:
-                    all_data.append( ro.FloatVector( d ) )
-                    legend.append( "/".join((line,label)))
+        for label, values in work.iteritems():
+            assert Utils.isArray( values ), "work is of type '%s'" % values
+            d = [ x for x in values if x != None ]
+            if len(d) > 0:
+                all_data.append( ro.FloatVector( d ) )
+                legend.append( "/".join((str(path),str(label))))
 
         R.boxplot( all_data )
 
@@ -403,4 +405,63 @@ class HeatmapPlot(NumpyMatrix, Plotter):
         self.debug("building matrix finished")
 
         return self.plot( matrix, rows, columns, path )
+
+class GGPlot( Renderer, Plotter ):
+    """Write a set of box plots.
+    
+    This :class:`Renderer` requires two levels.
+
+    labels[dict] / data[array]
+    """
+    options = (
+        ('statement',  directives.unchanged),
+        ) + Renderer.options + Plotter.options
+
+    nlevels = 1
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+        
+        if "statement" not in kwargs:
+            raise ValueError("r-ggplot renderer requires a statement option" )
+
+        self.statement = kwargs.get( 'statement' )
+
+    def render(self, work, path ):
+
+        R.library( 'ggplot2' )
+
+        results = ResultBlocks()
+
+        for title, dataframe in work.iteritems():
+            
+            self.startPlot()
+
+            # force conversion to dataframe. This is necessary for objects that
+            # have been retrieved from the cache. Their type has changed from
+            # dataframe to SexpVector.
+            if type(dataframe) != type(ro.DataFrame({})):
+                try:
+                    dataframe = ro.DataFrame( dataframe )
+                except ValueError:
+                    raise ValueError( "expected a data frame, got %s" % type(dataframe) )
+            
+            R.assign( "df", dataframe )
+            
+            # start plot
+            R('''gp = ggplot( df )''')
+
+            # add aesthetics and geometries
+            try:
+                pp = R('''gp + %s ''' % self.statement )
+            except ValueError, msg:
+                raise ValueError( "could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg ))
+
+            # plot
+            R.plot( pp )
+
+            results.extend( self.endPlot( work, path ) )
+
+        return results
 

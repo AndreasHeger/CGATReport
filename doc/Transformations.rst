@@ -331,6 +331,28 @@ The first list is assumed to be bins and not transformed.
       		  
    cumulative data
 
+.. _tolist:
+
+toList
+======
+
+The :class:`SphinxReportPlugins.Transformer.List` takes
+labeled data and converts it into lists. For example,
+if you have the following data::
+
+   data1/x/1/2   data1/y/1/4
+   data2/x/2/4   data2/y/2/5
+   data3/x/3/3   data3/y/3/5
+   data4/x/4/4   data4/y/4/6
+
+Transformation results in:
+
+   x/(2,4,3,4)
+   y/(4,5,5,6)
+
+Note how the higher level of the path is discarded. The operation is
+in some ways the reverse of the :ref:`tolables` transformation.
+
 .. _group:
 
 group

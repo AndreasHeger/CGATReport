@@ -22,20 +22,36 @@ TrackerKeywords = set( ( "text", "rst", "xls", ) )
 # numpy addition.
 try:
     NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
-               numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
-               numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
-               numpy.float32, numpy.float64, numpy.float128 )
+                   numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
+                   numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
+                   numpy.float32, numpy.float64, numpy.float128 )
+    FloatTypes = (types.FloatType, 
+                  numpy.float32, numpy.float64, numpy.float128 )
+    IntTypes = ( types.IntType, types.LongType, 
+                 numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
+                 numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64)
+
 except AttributeError, msg:
     NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
                numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
                numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
                numpy.float32, numpy.float64 )
-    
+    FloatTypes = (types.FloatType, 
+                  numpy.float32, numpy.float64 )
+    IntTypes = ( types.IntType, types.LongType, 
+                 numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
+                 numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64)
 
 def isArray( data ):
     '''return True if data is an array.'''
     return type(data) in ContainerTypes
     
+def isInt( obj ):
+    return type(obj) in IntTypes
+
+def isFloat( obj ):
+    return type(obj) in FloatTypes
+
 def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
     return all(hasattr(obj, attr) for attr in attrs)
@@ -360,7 +376,7 @@ def makeObject( path, args = (), kwargs = {} ):
     try:
         obj = getattr( module, cls)
     except AttributeError:
-        raise AttributeError( "%s has no attribute '%s'" % (module, pathname, cls) )
+        raise AttributeError( "module %s (%s) has no attribute '%s'" % (module, pathname, cls) )
     # instantiate, if it is a class
     if isClass( obj ):
         try:

@@ -8,6 +8,10 @@ import sqlalchemy
 import sqlalchemy.exc as exc
 import sqlalchemy.engine
 
+# for rpy2 for data frames
+import rpy2
+from rpy2.robjects import r as R
+
 from SphinxReport import Utils
 
 from odict import OrderedDict as odict
@@ -50,6 +54,12 @@ def getCallerLocals( level = 3, decorators = 0):
     f = sys._getframe(level+decorators)
     args = inspect.getargvalues(f)
     return args[3]
+
+def quoteField( s ):
+    '''returns a quoted version of s for inclusion in SQL statements.'''
+    # replace internal "'" with "\'"
+    return re.sub( "'", "''", s)
+
 
 ###########################################################################
 ###########################################################################
@@ -294,7 +304,11 @@ class TrackerSQL( Tracker ):
     def __init__(self, backend = None, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
 
+        # connection within python
         self.db = None
+
+        # connection within R
+        self.rdb = None
 
         if backend != None:
             # backend given - use it
@@ -347,6 +361,17 @@ class TrackerSQL( Tracker ):
             self.db = db
 
             logging.debug( "connected to %s" % self.backend )
+
+    def rconnect( self ):
+        '''open connection within R to database.'''
+
+        if not self.rdb:
+            if self.backend.startswith( 'sqlite' ):
+                R.library( 'RSQLite' )
+                self.rdb = R.dbConnect(R.SQLite(), dbname=re.sub( "sqlite:///./", "", self.backend ) )
+            else:
+                raise NotImplementedError("can not connect to %s in R" % self.backend )
+
 
     def getTables(self, pattern = None ):
         """return a list of tables matching a *pattern*.
@@ -513,6 +538,12 @@ class TrackerSQL( Tracker ):
         else:
             return [ "all" ] 
 
+    def getDataFrame( self, stmt ):
+        '''return an R data frame as rpy2 object.
+        '''
+        self.rconnect()
+        return R.dbGetQuery(self.rdb, self.buildStatement(stmt) )
+    
     def getPaths( self ):
          """return all paths this tracker provides.
 
@@ -764,7 +795,7 @@ class SingleTableTrackerRows( TrackerSQL ):
 
     def __call__(self, track, slice = None ):
         if len(self.fields) == 1: track = (track,)
-        wheres = " AND ".join([ "%s = '%s'" % (x,y) for x,y in zip( self.fields, track ) ] )
+        wheres = " AND ".join([ "%s = '%s'" % (x,quoteField(y)) for x,y in zip( self.fields, track ) ] )
         if slice in self.extra_columns: 
             slice = "%s AS %s" % (self.extra_columns[slice], slice)
         return self.getValue( "SELECT %(slice)s FROM %(table)s WHERE %(wheres)s" ) 

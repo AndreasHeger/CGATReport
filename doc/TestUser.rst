@@ -1,3 +1,5 @@
+.. _UserCreatedPlots:
+
 ==================
 User created plots
 ==================

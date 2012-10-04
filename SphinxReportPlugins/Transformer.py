@@ -5,13 +5,20 @@ from numpy import arange
 
 from SphinxReport.odict import OrderedDict as odict
 from SphinxReport.Component import *
-from SphinxReport import Stats, DataTree
+from SphinxReport import Stats, DataTree, Utils
 
 from docutils.parsers.rst import directives
+
+# for rpy2 for data frames
+import rpy2
+from rpy2.robjects import r as R
 
 # ignore numpy histogram warnings in versions 1.3
 import warnings
 
+########################################################################
+########################################################################
+########################################################################
 class Transformer(Component):
 
     capabilities = ['transform']
@@ -48,6 +55,9 @@ class Transformer(Component):
 
         return data
         
+########################################################################
+########################################################################
+########################################################################
 class TransformerFilter( Transformer ):
     '''select columns in the deepest dictionary.
 
@@ -130,6 +140,83 @@ class TransformerToLabels( Transformer ):
                 
         return new_data
 
+########################################################################
+########################################################################
+########################################################################
+class TransformerToList( Transformer ):
+    '''transform categorized data into lists.
+    '''
+    nlevels = 2
+    
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+    def transform(self, data, path ):
+        debug( "%s: called" % str(self))
+
+        lists = odict()
+
+        for major_key, values in data.iteritems():
+            for minor_key, value in values.iteritems():
+                if minor_key in lists:
+                    lists[minor_key].append( value )
+                else:
+                    lists[minor_key] = [value]
+
+        sizes = [ len(x) for x in lists.values() ]
+        if max(sizes) != min(sizes):
+            warn( "%s: list of unequal sizes: min=%i, max=%i" % (self, min(sizes), max(sizes)))
+        return lists
+
+########################################################################
+########################################################################
+########################################################################
+class TransformerToDataFrame( Transformer ):
+    '''transform data into one or more data frames.
+
+    experiment1/expression = [1,2,3]
+    experiment1/counts = [3,4,5]
+    experiment2/expression = [8,9,1]
+    experiment2/counts = [4,5,6]
+
+    will be converted to two data frames:
+
+    experiment1 = df({ expression : [1,2,3], counts : [3,4,5] })
+    experiment2 = df({ expression : [8,9,1], counts : [4,5,6] })
+
+    '''
+    nlevels = 2
+    
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+    def transform(self, data, path ):
+        debug( "%s: called" % str(self))
+
+        new_data = odict()
+
+        for major_key, values in data.iteritems():
+            
+            t = odict()
+            for minor_key, values in values.iteritems():
+                if not Utils.isArray(values): raise ValueError("expected a list for data frame creation, got %s", type(data))
+                if len(values) == 0: raise ValueError( "empty list for %s:%s" % (major_key, minor_key))
+                v = values[0]
+                if Utils.isInt( v ):
+                    t[minor_key] = rpy2.robjects.IntVector( values )
+                elif Utils.isFloat(v):
+                    t[minor_key] = rpy2.robjects.FloatVector( values )
+                else:
+                    t[minor_key] = rpy2.robjects.StrVector( values )
+
+            new_data[major_key] = rpy2.robjects.DataFrame(t)
+
+
+        return new_data
+
+########################################################################
+########################################################################
+########################################################################
 class TransformerIndicator( Transformer ):
     '''take a field from the lowest level and
     build an absent/present indicator out of it.
@@ -159,6 +246,9 @@ class TransformerIndicator( Transformer ):
         vals = data[self.filter]
         return odict(zip( vals, [1] * len(vals) ))
 
+########################################################################
+########################################################################
+########################################################################
 class TransformerSelect( Transformer ):
     '''replace the lowest hierarchy with a single value.
     '''
@@ -399,7 +489,8 @@ class TransformerPairwise( Transformer ):
                 if len(xvals) != len(yvals):
                     raise ValueError("expected to arrays of the same length, %i != %i" % (len(xvals),
                                                                                           len(yvals)))
-                take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None ]
+                take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None \
+                            and type(xvals[i]) in (float,int,long) and type(yvals[i]) in (float,int,long) ]
                 xvals = [xvals[i] for i in take ]
                 yvals = [yvals[i] for i in take ]
 
