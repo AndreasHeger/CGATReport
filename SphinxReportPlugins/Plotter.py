@@ -11,7 +11,7 @@ matplotlib.use('Agg', warn = False)
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
-import numpy as np
+import numpy 
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
@@ -380,7 +380,7 @@ class Plotter(object):
             increment = (xend - xstart) / 100.0
             for function in self.functions:
                 exec("f = lambda x: %s" % function )
-                xvals = np.arange( xstart, xend, increment)
+                xvals = numpy.arange( xstart, xend, increment)
                 yvals = [ f(x) for x in xvals ]
                 plt.plot( xvals, yvals )
 
@@ -811,9 +811,9 @@ class PlotterHinton(PlotterMatrix):
             Draws a square-shaped blob with the given area (< 1) at
             the given coordinates.
             """
-            hs = np.sqrt(area) / 2
-            xcorners = np.array([x - hs, x + hs, x + hs, x - hs])
-            ycorners = np.array([y - hs, y - hs, y + hs, y + hs])
+            hs = numpy.sqrt(area) / 2
+            xcorners = numpy.array([x - hs, x + hs, x + hs, x - hs])
+            ycorners = numpy.array([y - hs, y - hs, y + hs, y + hs])
             plt.fill(xcorners, ycorners, 
                      edgecolor = colour,
                      facecolor = colour) 
@@ -821,7 +821,7 @@ class PlotterHinton(PlotterMatrix):
         plt.clf()
 
         height, width = weight_matrix.shape
-        if vmax == None: vmax = weight_matrix.max() # 2**np.ceil(np.log(np.max(np.abs(weight_matrix)))/np.log(2))
+        if vmax == None: vmax = weight_matrix.max() # 2**numpy.ceil(numpy.log(numpy.max(numpy.abs(weight_matrix)))/numpy.log(2))
         if vmin == None: vmin = weight_matrix.min()
 
         scale = vmax - vmin
@@ -963,9 +963,9 @@ def hinton(W, maxWeight=None):
         Draws a square-shaped blob with the given area (< 1) at
         the given coordinates.
         """
-        hs = np.sqrt(area) / 2
-        xcorners = np.array([x - hs, x + hs, x + hs, x - hs])
-        ycorners = np.array([y - hs, y - hs, y + hs, y + hs])
+        hs = numpy.sqrt(area) / 2
+        xcorners = numpy.array([x - hs, x + hs, x + hs, x - hs])
+        ycorners = numpy.array([y - hs, y - hs, y + hs, y + hs])
         plt.fill(xcorners, ycorners, colour, edgecolor=colour)
 
     reenable = False
@@ -977,9 +977,9 @@ def hinton(W, maxWeight=None):
 
     height, width = W.shape
     if not maxWeight:
-        maxWeight = 2**np.ceil(np.log(np.max(np.abs(W)))/np.log(2))
+        maxWeight = 2**numpy.ceil(numpy.log(numpy.max(numpy.abs(W)))/numpy.log(2))
 
-    plot = plt.fill(np.array([0,width,width,0]),np.array([0,0,height,height]),'gray')
+    plot = plt.fill(numpy.array([0,width,width,0]),numpy.array([0,0,height,height]),'gray')
 
     plt.axis('off')
     plt.axis('equal')
@@ -1287,7 +1287,7 @@ class HistogramGradientPlot(LinePlot):
                 xvals = coords[keys[0]]
                 if self.xvals == None:
                     self.xvals = xvals
-                elif not np.all(self.xvals == xvals):
+                elif not numpy.all(self.xvals == xvals):
                     raise ValueError("Gradient-Histogram-Plot requires the same x values.")
 
                 if xmin == None: 
@@ -1322,7 +1322,7 @@ class HistogramGradientPlot(LinePlot):
             yvals[ yvals < vmin ] = vmin
             yvals[ yvals > vmax ] = vmax
 
-        a = np.vstack((yvals,yvals))
+        a = numpy.vstack((yvals,yvals))
 
         ax = plt.subplot(self.nrows, 1, nplotted+1)
         self.plots.append( plt.imshow(a,
@@ -1369,14 +1369,27 @@ class BarPlot( TableMatrix, Plotter):
     options = TableMatrix.options + Plotter.options +\
         ( ('label', directives.unchanged),
           ('error', directives.unchanged), 
-          ('colour', directives.unchanged) )
-          
+          ('colour', directives.unchanged),
+          ('transparency', directives.unchanged),
+          ('bottom-value', directives.unchanged),
+          )
         
     # column to use for error bars
     error = None
 
     # column to use for labels
     label = None
+
+    # column to use for custom colours
+    colour = None
+
+    # column to use for transparency values
+    # transparency does not work yet - bar plot does not 
+    # accept a list of transparency values
+    transparency = None
+
+    # bottom value of bars (can be used to move intersection of x-axis with y-axis)
+    bottom_value = None
 
     label_offset_x = 10
     label_offset_y = 5
@@ -1388,9 +1401,13 @@ class BarPlot( TableMatrix, Plotter):
         self.error = kwargs.get("error", None )
         self.label = kwargs.get("label", None )
         self.colour = kwargs.get("colour", None )
+        self.transparency = kwargs.get("transparency", None )
+        if self.transparency: raise NotImplementedError( "transparency not implemented yet")
 
         if self.error or self.label:
             self.nlevels += 1
+
+        self.bottom_value = kwargs.get("bottom-value", None )
  
         self.bar_patterns = list(itertools.product( self.mPatterns, self.mColors) )
 
@@ -1411,8 +1428,9 @@ class BarPlot( TableMatrix, Plotter):
         self.error_matrix = None
         self.label_matrix = None
         self.colour_matrix = None
+        self.transparency_matrix = None
 
-        if self.error or self.label or self.colour:
+        if self.error or self.label or self.colour or self.transparency:
             # select label to take
             labels = DataTree.getPaths( work )
             label = list(set(labels[-1]).difference( set((self.error, self.label,self.colour)) ))[0]
@@ -1439,18 +1457,32 @@ class BarPlot( TableMatrix, Plotter):
                                                                      take = self.colour,
                                                                      dtype = "S20",
                                                                      )
+
+            if self.transparency and self.transparency in labels[-1]:
+                self.transparency_matrix, rows, colums = self.buildMatrix( work, 
+                                                                           apply_transformations = False, 
+                                                                           missing_value = 1.0,
+                                                                           take = self.transparency,
+                                                                           dtype = numpy.float,
+                                                                     )
+                
         else:
             self.matrix, self.rows, self.columns = self.buildMatrix( work )
 
     def getColour( self, idx, column ):
         '''return hatch and colour.'''
         
-        if self.colour:
+        if self.transparency_matrix != None:
+            alpha = self.transparency_matrix[:,column]
+        else:
+            alpha = None
+        
+        if self.colour_matrix != None:
             color = self.colour_matrix[:,column]
             hatch = None
         else:
             hatch, color = self.bar_patterns[ idx % len(self.bar_patterns) ]
-        return hatch, color
+        return hatch, color, alpha
             
     def render( self, work, path ):
 
@@ -1459,7 +1491,7 @@ class BarPlot( TableMatrix, Plotter):
 
         self.startPlot()
 
-        xvals = np.arange( 0, len(self.rows) )
+        xvals = numpy.arange( 0, len(self.rows) )
 
         # plot by row
         y, error = 0, None
@@ -1471,10 +1503,16 @@ class BarPlot( TableMatrix, Plotter):
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
-            if np.isnan(vals[0]) or np.isinf( vals[0] ): 
+            if numpy.isnan(vals[0]) or numpy.isinf( vals[0] ): 
                 vals[0] = 0
                 
-            hatch, color = self.getColour( y, column )
+            hatch, color, alpha = self.getColour( y, column )
+
+            
+            if self.bottom_value != None:
+                bottom = numpy.array( [float(self.bottom_value) * len(vals)] )
+            else:
+                bottom = None
 
             plts.append( plt.bar( xvals, 
                                   vals,
@@ -1483,6 +1521,7 @@ class BarPlot( TableMatrix, Plotter):
                                   ecolor = "black",
                                   color = color,
                                   hatch = hatch,
+                                  alpha = alpha,
                                   )[0] )
 
             if self.label and self.label_matrix != None: 
@@ -1518,7 +1557,7 @@ class InterleavedBarPlot(BarPlot):
 
         width = 1.0 / (len(self.columns) + 1 )
         plts, error = [], None
-        xvals = np.arange( 0, len(self.rows) )
+        xvals = numpy.arange( 0, len(self.rows) )
         offset = width / 2.0
 
         # plot by row
@@ -1531,10 +1570,15 @@ class InterleavedBarPlot(BarPlot):
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
-            if np.isnan(vals[0]) or np.isinf( vals[0] ): 
+            if numpy.isnan(vals[0]) or numpy.isinf( vals[0] ): 
                 vals[0] = 0
 
-            hatch, color = self.getColour( row, column )
+            hatch, color, alpha = self.getColour( row, column )
+            
+            if self.bottom_value != None:
+                bottom = numpy.array( [float(self.bottom_value) * len(vals)] )
+            else:
+                bottom = None
 
             plts.append( plt.bar( xvals + offset, 
                                   vals,
@@ -1544,6 +1588,8 @@ class InterleavedBarPlot(BarPlot):
                                   ecolor = "black",
                                   color = color,
                                   hatch = hatch,
+                                  alpha = alpha,
+                                  bottom = bottom,
                                   )[0])
             
             if self.label and self.label_matrix != None: 
@@ -1579,8 +1625,8 @@ class StackedBarPlot(BarPlot ):
 
         plts = []
 
-        xvals = np.arange( (1.0 - self.width) / 2., len(self.rows) )
-        sums = np.zeros( len(self.rows), np.float )
+        xvals = numpy.arange( (1.0 - self.width) / 2., len(self.rows) )
+        sums = numpy.zeros( len(self.rows), numpy.float )
 
         y, error = 0, None
         for column,header in enumerate(self.columns):
@@ -1591,10 +1637,10 @@ class StackedBarPlot(BarPlot ):
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
-            if np.isnan(vals[0]) or np.isinf( vals[0] ): 
+            if numpy.isnan(vals[0]) or numpy.isinf( vals[0] ): 
                 vals[0] = 0
 
-            hatch, color = self.getColour( y, column )                
+            hatch, color, alpha = self.getColour( y, column )                
 
             plts.append( plt.bar( xvals, 
                                   vals, 
@@ -1602,6 +1648,7 @@ class StackedBarPlot(BarPlot ):
                                   yerr = error,
                                   color = color,
                                   hatch = hatch,
+                                  alpha = alpha,
                                   ecolor = "black",
                                   bottom = sums )[0] )
 
@@ -1917,8 +1964,8 @@ class ScatterPlot(Renderer, Plotter):
                 legend.append( label )
                 
                 if self.regression:
-                    coeffs = np.polyfit(xvals, yvals, self.regression)
-                    p = np.poly1d(coeffs)
+                    coeffs = numpy.polyfit(xvals, yvals, self.regression)
+                    p = numpy.poly1d(coeffs)
                     svals = sorted( xvals )
                     plts.append( plt.plot( svals, 
                                            [ p(x) for x in svals ],
@@ -1994,7 +2041,7 @@ class ScatterPlotWithColor( ScatterPlot ):
 
         if self.zrange:
             vmin, vmax = self.zrange
-            zvals = np.array( zvals )
+            zvals = numpy.array( zvals )
             zvals[ zvals < vmin ] = vmin
             zvals[ zvals > vmax ] = vmax
         else:

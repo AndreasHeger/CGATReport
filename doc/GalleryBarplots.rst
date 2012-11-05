@@ -29,7 +29,13 @@ Options
    error
       string
 
-      field to use for error bars. See :term:`labeled values with errors`
+      field to use for error bars. See :term:`labeled values with
+      errors`
+
+   colour
+      string
+      
+      field to use for colours.
 
 ================
 stacked-bar-plot
