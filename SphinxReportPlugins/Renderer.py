@@ -173,14 +173,16 @@ class TableBase( Renderer ):
         lines.append("`%i x %i table <#$xls %s$#>`__" %\
                      (len(row_headers), len(col_headers),
                       title) )
-
+        lines.append( "" )
+        
         r = ResultBlock( "\n".join(lines), title = title)
 
         # create an html table
         wb = openpyxl.Workbook( optimized_write = True)
 
         ws = wb.create_sheet()
-        ws.title = title
+        # patch: maximum title length seems to be 31
+        ws.title = title[:31]
 
         ws.append( [""] + list(col_headers) )
         for x,row in enumerate( matrix ):

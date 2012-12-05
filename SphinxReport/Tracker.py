@@ -773,32 +773,56 @@ class SingleTableTrackerRows( TrackerSQL ):
     fields = ("track",)
     extra_columns = {}
     sort = None
+    loaded = False
 
+    # not called by default as Mixin class
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
+
+    def _load(self):
+        '''load data.
+
+        The data is pre-loaded in order to avoid multiple random access 
+        operations on the same table.
+        '''
+        if not self.loaded:
+            nfields = len(self.fields)
+            if self.sort: sort = "ORDER BY %s" % self.sort
+            else: sort = ""
+            self._tracks = self.get( "SELECT DISTINCT %s FROM %s %s" % \
+                                         (",".join(self.fields), self.table, sort ))
+            columns = self.getColumns( self.table ) 
+            self._slices = [ x for x in columns if x not in self.exclude_columns and x not in self.fields ] + self.extra_columns.keys()
+            # remove columns with special characters (:, +, -, )
+            self._slices = [ x for x in self._slices if not re.search( "[:+-]", x)]
+
+            data = self.get( "SELECT %s, %s FROM %s" %
+                             (",".join(self.fields), ",".join(self._slices), self.table))
+            self.data = odict()
+            for d in data:
+                tr = tuple(d[:nfields])
+                self.data[tr] = odict( zip( self._slices, tuple(d[nfields:])) )
+            self.loaded = True
 
     @property
     def tracks( self ):
         if not self.hasTable( self.table ): return []
-        if self.sort: sort = "ORDER BY %s" % self.sort
-        else: sort = ""
-        d = self.get( "SELECT DISTINCT %s FROM %s %s" % (",".join(self.fields), self.table, sort ))
+        if not self.loaded: self._load()
         if len(self.fields) == 1:
-            return tuple( [x[0] for x in d ] )
+            return tuple( [x[0] for x in self._tracks ] )
         else:
-            return tuple( [tuple(x) for x in d ] )
+            return tuple( [tuple(x) for x in self._tracks ] )
 
     @property
     def slices( self ):
-        columns = self.getColumns( self.table ) 
-        return [ x for x in columns if x not in self.exclude_columns and x not in self.fields ] + self.extra_columns.keys()
+        if not self.hasTable( self.table ): return []
+        if not self.loaded: self._load()
+        return self._slices
 
     def __call__(self, track, slice = None ):
+        if not self.loaded: self._load()
         if len(self.fields) == 1: track = (track,)
-        wheres = " AND ".join([ "%s = '%s'" % (x,quoteField(y)) for x,y in zip( self.fields, track ) ] )
-        if slice in self.extra_columns: 
-            slice = "%s AS %s" % (self.extra_columns[slice], slice)
-        return self.getValue( "SELECT %(slice)s FROM %(table)s WHERE %(wheres)s" ) 
+        return self.data[track][slice]
 
 ###########################################################################
 ###########################################################################

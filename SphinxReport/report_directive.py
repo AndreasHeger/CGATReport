@@ -46,16 +46,6 @@ def exception_to_str(s = None):
     return sh.getvalue()
 
 
-def buildPaths( reference ):
-    '''return paths.'''
-
-    basedir, fname = os.path.split(reference)
-    basename, ext = os.path.splitext(fname)
-    outdir = os.path.join('_static', 'report_directive', basedir)
-    codename = Utils.quote_filename(reference) + ".code"
-
-    return basedir, fname, basename, ext, outdir, codename
-
 def run(arguments, 
         options, 
         lineno, 
@@ -78,7 +68,7 @@ def run(arguments,
     # reference is used for time-stamping
     reference = directives.uri(arguments[0])
 
-    basedir, fname, basename, ext, outdir, codename = buildPaths( reference )
+    basedir, fname, basename, ext, outdir, codename = Utils.buildPaths( reference )
 
     # get the directory of the rst file
     rstdir, rstfile = os.path.split( document ) # state_machine.document.attributes['source'])
@@ -287,6 +277,9 @@ def run(arguments,
         code = None
         tracker_id = None
 
+
+    logging.debug( "report_directive.run: profile: started: collecting: %s" % tag )
+
     ########################################################
     ## write code output
     linked_codename = re.sub( "\\\\", "/", os.path.join( rst2srcdir, codename ))
@@ -346,6 +339,7 @@ def run(arguments,
         state_machine.insert_input(
             lines, state_machine.input_lines.source(0))
 
+    logging.debug( "report_directive.run: profile: finished: collecting: %s" % tag )
     logging.debug( "report_directive.run: profile: finished: rst: %s:%i" % (str(document), lineno) )
 
     return []

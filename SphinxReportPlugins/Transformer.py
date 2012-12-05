@@ -662,6 +662,7 @@ class TransformerHistogram( TransformerAggregate ):
 
         self.mBins = kwargs.get( "tf-bins", "100" )
         self.mRange = kwargs.get( "tf-range", None )
+        self.max_bins = int(kwargs.get( "max-bins", "1000"))
 
         f = []
         if self.normalize_total in self.mConverters: f.append( "relative" )
@@ -731,8 +732,10 @@ class TransformerHistogram( TransformerAggregate ):
                     raise ValueError("can not compute %i bins for %f-%f: %s" % \
                                          (nbins, mi, ma, msg ) )
             elif binsize != None:
+                # AH: why this sort statement? Removed
+                # data.sort()
+
                 # make sure that ma is part of bins
-                data.sort()
                 bins = numpy.arange(mi, ma + binsize, binsize )
             else:
                 try:
@@ -745,8 +748,13 @@ class TransformerHistogram( TransformerAggregate ):
             if hasattr( bins, "__iter__") and len(bins) == 0:
                 warn( "empty bins")
                 return None, None
+            
+            # truncate number of bins
+            if self.max_bins >= 0 and len(bins) > self.max_bins:
+                warn( "too many bins (%i) - truncated to (%i)" % (len(bins), self.max_bins))
+                bins = self.max_bins
 
-           # ignore histogram semantics warning
+            # ignore histogram semantics warning
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 hist, bin_edges = numpy.histogram( data, bins=bins, range=(mi,ma) )
@@ -754,7 +762,7 @@ class TransformerHistogram( TransformerAggregate ):
         return self.binToX(bin_edges), hist
 
     def transform(self, data, path):
-        debug( "%s: called" % str(self))
+        debug( "%s: called for path %s" % (str(self), str(path)))
 
         to_delete = set()
         for header, values in data.iteritems():
@@ -767,4 +775,6 @@ class TransformerHistogram( TransformerAggregate ):
 
         for header in to_delete:
             del data[header]
+
+        debug( "%s: completed for path %s" % (str(self), str(path)))
         return data

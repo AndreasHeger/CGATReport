@@ -1510,7 +1510,7 @@ class BarPlot( TableMatrix, Plotter):
 
             
             if self.bottom_value != None:
-                bottom = numpy.array( [float(self.bottom_value) * len(vals)] )
+                bottom = float(self.bottom_value)
             else:
                 bottom = None
 
@@ -1576,7 +1576,7 @@ class InterleavedBarPlot(BarPlot):
             hatch, color, alpha = self.getColour( row, column )
             
             if self.bottom_value != None:
-                bottom = numpy.array( [float(self.bottom_value) * len(vals)] )
+                bottom = float(self.bottom_value)
             else:
                 bottom = None
 

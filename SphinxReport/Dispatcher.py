@@ -12,6 +12,9 @@ MAX_PATH_NESTING=5
 
 from odict import OrderedDict as odict
 
+# heap memory debugging, search for 'heap' in this code
+# from guppy import hpy; HP=hpy()
+
 class Dispatcher(Component):
     """Dispatch the directives in the ``:report:`` directive
     to a :class:`Tracker`, class:`Transformer` and :class:`Renderer`.
@@ -460,7 +463,7 @@ class Dispatcher(Component):
         '''
         self.debug( "%s: rendering data started for %i items" % (self,
                                                                  len(self.data)))
-        
+
         results = ResultBlocks( title="main" )
 
         # get number of levels required by renderer
@@ -508,10 +511,14 @@ class Dispatcher(Component):
 
         self.debug( "%s: rendering data finished with %i blocks" % (self.tracker, len(results)))
 
+
+
         return results
 
     def __call__(self, *args, **kwargs ):
 
+        #self.debug( "%s: heap at start\n%s" % (self, str(HP.heap()) ))
+        
         try: self.parseArguments( *args, **kwargs )
         except: 
             self.error( "%s: exception in parsing" % self )
@@ -532,7 +539,9 @@ class Dispatcher(Component):
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after collection: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
-        
+
+        # self.debug( "%s: heap after collection\n%s" % (self, str(HP.heap()) ))        
+
         # transform data
         try: self.transform()
         except: 
@@ -542,6 +551,7 @@ class Dispatcher(Component):
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after transformation: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
+        # self.debug( "%s: heap after transformation\n%s" % (self, str(HP.heap()) ))        
         # restrict
         try: self.restrict()
         except:
@@ -582,11 +592,12 @@ class Dispatcher(Component):
         
         try: result = self.render()
         except: 
-            print "exception in rendering %s" % self
             self.error( "%s: exception in rendering" % self )
             return ResultBlocks(ResultBlocks( Utils.buildException( "rendering" ) ))
         finally:
             self.debug( "profile: finished: renderer: %s" % (self.renderer))
+
+        #self.debug( "%s: heap at end\n%s" % (self, str(HP.heap()) ))
 
         return result
         

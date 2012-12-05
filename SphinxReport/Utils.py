@@ -705,3 +705,14 @@ def layoutBlocks( blocks, layout = "column"):
 
     return lines
 
+
+def buildPaths( reference ):
+    '''return relevant paths from reference document.'''
+
+    basedir, fname = os.path.split(reference)
+    basename, ext = os.path.splitext(fname)
+    outdir = os.path.join('_static', 'report_directive', basedir)
+    codename = quote_filename(reference) + ".code"
+
+    return basedir, fname, basename, ext, outdir, codename
+
