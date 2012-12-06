@@ -1422,7 +1422,8 @@ class BarPlot( TableMatrix, Plotter):
         self.bar_patterns = list(itertools.product( self.mPatterns, self.mColors) )
 
     def addLabels( self, xvals, yvals, labels ):
-        '''add labels at x,y at current plot.'''
+        '''add labels at x,y at current plot.
+        '''
 
         def coord_offset(ax, fig, x, y):
             return matplotlib.transforms.offset_copy(ax.transData, fig, x=x, y=y, units='dots')
@@ -1435,6 +1436,7 @@ class BarPlot( TableMatrix, Plotter):
     def buildMatrices( self, work ):
         '''build matrices necessary for plotting.
         '''
+
         self.error_matrix = None
         self.label_matrix = None
         self.colour_matrix = None

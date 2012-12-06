@@ -755,15 +755,15 @@ class SingleTableTrackerRows( TrackerSQL ):
 
     Returns a dictionary of values.
 
-    The tracks are given by rows in table :attribute:`table`. The tracks are
-    specified by the :attribute:`fields`. 
+    The tracks are given by rows in table :py:attr:`table`. The tracks are
+    specified by the :py:attr:`fields`. 
 
-    :attribute:`fields` is a tuple of column names (default = ``(track,)``).
+    :py:attr:`fields` is a tuple of column names (default = ``(track,)``).
 
     If multiple columns are specified, they will all be used to define the 
     tracks in the table.
 
-    Rows in the table need to be unique for any combination :attribute:`fields`.
+    Rows in the table need to be unique for any combination :py:attr:`fields`.
 
     attribute:`extra_columns` can be used to add additional columns to the table.
     This attribute is a dictionary.
@@ -831,11 +831,11 @@ class SingleTableTrackerColumns( TrackerSQL ):
     '''Tracker representing a table with multiple tracks.
 
     Returns a dictionary of two sets of data, one given
-    by :attribute:`column` and one for a track.
+    by :py:attr:`column` and one for a track.
 
-    The tracks are derived from all columns in table :attribute:`table`. By default,
-    all columns are taken as tracks apart from :attribute:`column` and those
-    listed in :attribute:`exclude_columns`.
+    The tracks are derived from all columns in table :py:attr:`table`. By default,
+    all columns are taken as tracks apart from :py:attr:`column` and those
+    listed in :py:attr:`exclude_columns`.
 
     An example for a table using this tracker would be::
 
@@ -889,11 +889,11 @@ class SingleTableTrackerHistogram( TrackerSQL ):
     '''Tracker representing a table with multiple tracks.
 
     Returns a dictionary of two sets of data, one given
-    by :attribute:`column` and one for a track.
+    by :py:attr:`column` and one for a track.
 
-    The tracks are derived from all columns in table :attribute:`table`. By default,
-    all columns are taken as tracks apart from :attribute:`column` and those
-    listed in :attribute:`exclude_columns`.
+    The tracks are derived from all columns in table :py:attr:`table`. By default,
+    all columns are taken as tracks apart from :py:attr:`column` and those
+    listed in :py:attr:`exclude_columns`.
 
     An example for a table using this tracker would be::
 
@@ -937,15 +937,15 @@ class SingleTableTrackerEdgeList( TrackerSQL ):
 
     Returns a dictionary of values.
 
-    The tracks are given by entries in the :attribute:`row` column in a table :attribute:`table`. 
-    The slices are given by entries in the :attribute:`column` column in a table.
+    The tracks are given by entries in the :py:attr:`row` column in a table :py:attr:`table`. 
+    The slices are given by entries in the :py:attr:`column` column in a table.
 
-    The :attribute:`fields` is a third column specifying the value returned. If :attribute:`where`
+    The :py:attr:`fields` is a third column specifying the value returned. If :py:attr:`where`
     is set, it is added to the SQL statement to permit some filtering.
 
-    If :attribute:`transform` is set, it is applied to the value.
+    If :py:attr:`transform` is set, it is applied to the value.
 
-    This method is inefficient, particularly so if there are no indices on :attribute:`row` and :attribute:`column`.
+    This method is inefficient, particularly so if there are no indices on :py:attr:`row` and :py:attr:`column`.
 
     '''
     table = None

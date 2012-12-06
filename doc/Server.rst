@@ -2,8 +2,8 @@
 Server
 ******
 
-sphinxreport`server`
-=============
+server
+======
 
 .. automodule:: server
    :members:

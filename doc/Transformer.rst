@@ -5,13 +5,13 @@ Renderer
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReportPlugins.Transformer.Transformer
+.. inheritance-diagram:: SphinxReportPlugins.Transformer
    :parts: 1
 
-sphinxreport`Transformer`
-=======================
+Transformer
+===========
 
-.. automodule:: Transformer
+.. automodule:: SphinxReportPlugins.Transformer
    :members:
    :inherited-members:
    :show-inheritance:

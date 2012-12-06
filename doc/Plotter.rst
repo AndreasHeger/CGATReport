@@ -5,13 +5,13 @@ Plotter
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReportPlugins.Plotter.Plotter
+.. inheritance-diagram:: SphinxReportPlugins.Plotter
    :parts: 1
 
-sphinxreport`Plotter`
+Plotter
 =======================
 
-.. automodule:: Plotter
+.. automodule:: SphinxReportPlugins.Plotter
    :members:
 
 

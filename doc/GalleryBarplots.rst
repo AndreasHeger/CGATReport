@@ -13,7 +13,7 @@ as overlapping bars.
    A bar plot with overlapping bars.
 
 Options
--------
+=======
 
 :class:`SphinxReportPlugins.Plotter.BarPlot` understands the
 :ref:`common plot options` and the following options:
@@ -66,8 +66,8 @@ as interleaved bars. Both *interleaved-bars* and *bars* can be used.
    A bar plot with interleaved bars.
 
 
-Adding errors bars and labels
-===============================
+Adding error bars and labels
+============================
 
 The :class:`SphinxReportPlugins.Plotter.InterleavedBarPlot` class presents :term:`labeled values`
 as interleaved bars. Both *interleaved-bars* and *bars* can be used.

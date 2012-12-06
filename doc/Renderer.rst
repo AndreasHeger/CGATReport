@@ -52,8 +52,8 @@ The example below creates a simple renderer::
 In order to activate this renderer, it has to be entered to the :data:`MAP_RENDERER`
 dictionary in the file :file:`report_directive.py`.
 
-sphinxreport`Renderer`
-=======================
+Renderer
+========
 
 .. automodule:: SphinxReportPlugins.Renderer
    :members:

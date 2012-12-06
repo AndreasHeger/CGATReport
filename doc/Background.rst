@@ -103,7 +103,7 @@ Trackers
 Trackers are written by the user and return data.
 
 A :term:`tracker` can be either a python function or a function class (:term:`functor`).
-The former will simply return data (see Tutorial1_). More flexibility can be gained
+The former will simply return data (see :ref:`Tutorial1`). More flexibility can be gained
 from a functor that is derived from :class:`SphinxReport.Tracker.Tracker`.
 
 A :term:`tracker` needs to provide two things, a ``__call__`` method to obtain the data 
@@ -117,31 +117,31 @@ The data hierarchy can be defined in several ways:
 
 1. If the class contains a property ``tracks``, this is taken as the first level of the hierarchy. For example::
 
-   class MyTracker( Tracker ):
-       tracks = ("dataset1", "dataset2") 
+    class MyTracker( Tracker ):
+        tracks = ("dataset1", "dataset2") 
    
 2. If the class contains a property ``slices``, this is taken as the second level of the hierarchy. If ``slices`` exists,
    the class will also need to have a ``tracks`` property. For example::
 
-   class MyTracker( Tracker ):
-       tracks = ("experiment1", "experiment2") 
-       slices = ("condition1", "condition2") 
+    class MyTracker( Tracker ):
+        tracks = ("experiment1", "experiment2") 
+        slices = ("condition1", "condition2") 
 
 3. The property ``paths`` is the most generic way to describe the data hierarchy. It lists all the components of a :term:`data path`::
 
-   class MyTracker( Tracker ):
-       paths = ( ("experiment1", "experiment2"),
-                 ("condition1", "condition2") )
+    class MyTracker( Tracker ):
+        paths = ( ("experiment1", "experiment2"),
+                  ("condition1", "condition2") )
 
 Each property can be replaced by a ``get`` method to permit more flexibility. For example,
 if a method :meth:`getTracks` is present, this will be called instead of checking of the
 presence of the ``tracks`` attribute. The method approach accommodates cases in which a 
 one-line statement is not enough::
 
-   class MyTracker( Tracker ):
-      def getTracks( self ):
-         paths = ResultOfSomeSeriousComputation
-         return paths
+    class MyTracker( Tracker ):
+       def getTracks( self ):
+          paths = ResultOfSomeSeriousComputation
+          return paths
 
 The __call__ method
 -------------------
