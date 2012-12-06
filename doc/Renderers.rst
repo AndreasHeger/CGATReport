@@ -25,3 +25,4 @@ that are included in sphinxreport.
    GalleryRPlots.rst
    GalleryDebug.rst
    GalleryLegends.rst
+   GalleryOptions.rst

@@ -651,6 +651,7 @@ class TransformerHistogram( TransformerAggregate ):
     options = Transformer.options +\
         ( ('tf-bins', directives.unchanged), 
           ('tf-range', directives.unchanged), 
+          ('tf-max-bins', directives.unchanged),
           )
 
     def __init__(self, *args, **kwargs):
@@ -745,14 +746,14 @@ class TransformerHistogram( TransformerAggregate ):
                                            % (self.mBins, msg))
 
 
-            if hasattr( bins, "__iter__") and len(bins) == 0:
-                warn( "empty bins")
-                return None, None
-            
-            # truncate number of bins
-            if self.max_bins >= 0 and len(bins) > self.max_bins:
-                warn( "too many bins (%i) - truncated to (%i)" % (len(bins), self.max_bins))
-                bins = self.max_bins
+            if hasattr( bins, "__iter__"):
+                if len(bins) == 0:
+                    warn( "empty bins")
+                    return None, None
+                if self.max_bins > 0 and len(bins) > self.max_bins:
+                    # truncate number of bins
+                    warn( "too many bins (%i) - truncated to (%i)" % (len(bins), self.max_bins))
+                    bins = self.max_bins
 
             # ignore histogram semantics warning
             with warnings.catch_warnings():

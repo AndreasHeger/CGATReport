@@ -127,6 +127,18 @@ Superfluous options are ignored.
 	  :function: x**2    .. parabola, y=x**2
 	  :function: 3       .. horizontal line at y=3
           :function: 3,6     .. two horizontal lines y=3 and y=6
+	  :functien: math.sin(x)   .. sigmoid
+      
+
+   vline
+      string
+       
+      add one or more horizontal lines to the plot. Coordinates are
+      in graph coordinates. Multiple lines can be added as ','
+      separated values. Some examples::
+
+         :vline: 2             .. vertical line at x=2
+	 :vline: 2,3           .. vertical line at x=2 and x=3     
 
    reverse-palette  
       flag

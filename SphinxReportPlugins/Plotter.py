@@ -174,6 +174,9 @@ class Plotter(object):
 
        :term:`function`: add a function to the plot. Multiple
           functions can be supplied as a ,-separated list.
+          
+       :term:`vline`: add one or more vertical lines to the 
+          plot.
 
     With some plots default layout options will result in plots 
     that are misaligned (legends truncated, etc.). To fix this it might
@@ -215,6 +218,7 @@ class Plotter(object):
         ('yrange',  directives.unchanged),
         ('zrange', directives.unchanged),
         ('function', directives.unchanged),
+        ('vline', directives.unchanged),
         ('mpl-figure',  directives.unchanged),
         ('mpl-legend',  directives.unchanged),
         ('mpl-subplot',  directives.unchanged),
@@ -238,6 +242,7 @@ class Plotter(object):
         self.xlabel = kwargs.get("xtitle", None )
         self.ylabel = kwargs.get("ytitle", None )
         self.functions = kwargs.get("function", None )
+        self.vline = kwargs.get("vline", None )
 
         if self.functions:
             if "," in self.functions: self.functions = self.functions.split(",")
@@ -383,6 +388,11 @@ class Plotter(object):
                 xvals = numpy.arange( xstart, xend, increment)
                 yvals = [ f(x) for x in xvals ]
                 plt.plot( xvals, yvals )
+
+        if self.vline:
+            ystart, yend = ax.get_ylim()
+            lines = map(int, self.vline.split(",") )
+            ax.vlines( lines, ystart, yend )
 
         # add labels and titles
         if self.add_title: 
