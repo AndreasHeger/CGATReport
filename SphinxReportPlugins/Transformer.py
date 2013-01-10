@@ -185,7 +185,7 @@ class TransformerToDataFrame( Transformer ):
     experiment2 = df({ expression : [8,9,1], counts : [4,5,6] })
 
     '''
-    nlevels = 2
+    nlevels = 1
     
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
@@ -193,26 +193,19 @@ class TransformerToDataFrame( Transformer ):
     def transform(self, data, path ):
         debug( "%s: called" % str(self))
 
-        new_data = odict()
+        t = odict()
+        for minor_key, values in data.iteritems():
+            if not Utils.isArray(values): raise ValueError("expected a list for data frame creation, got %s", type(data))
+            if len(values) == 0: raise ValueError( "empty list for %s:%s" % (major_key, minor_key))
+            v = values[0]
+            if Utils.isInt( v ):
+                t[minor_key] = rpy2.robjects.IntVector( values )
+            elif Utils.isFloat(v):
+                t[minor_key] = rpy2.robjects.FloatVector( values )
+            else:
+                t[minor_key] = rpy2.robjects.StrVector( values )
 
-        for major_key, values in data.iteritems():
-            
-            t = odict()
-            for minor_key, values in values.iteritems():
-                if not Utils.isArray(values): raise ValueError("expected a list for data frame creation, got %s", type(data))
-                if len(values) == 0: raise ValueError( "empty list for %s:%s" % (major_key, minor_key))
-                v = values[0]
-                if Utils.isInt( v ):
-                    t[minor_key] = rpy2.robjects.IntVector( values )
-                elif Utils.isFloat(v):
-                    t[minor_key] = rpy2.robjects.FloatVector( values )
-                else:
-                    t[minor_key] = rpy2.robjects.StrVector( values )
-
-            new_data[major_key] = rpy2.robjects.DataFrame(t)
-
-
-        return new_data
+        return rpy2.robjects.DataFrame(t)
 
 ########################################################################
 ########################################################################

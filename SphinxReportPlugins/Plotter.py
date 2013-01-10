@@ -15,6 +15,7 @@ import numpy
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
+from SphinxReport.DataTree import path2str
 from SphinxReport.odict import OrderedDict as odict
 from SphinxReport import Utils, DataTree, Stats
 
@@ -231,6 +232,8 @@ class Plotter(object):
     mMarkers = "so^>dph8+x"
     mPatterns = [None, '/','\\','|','-','+','x','o','O','.','*']
 
+    use_rstyle = True
+
     def __init__(self, *args, **kwargs ):
         """parse option arguments."""
 
@@ -439,8 +442,9 @@ class Plotter(object):
                        'center left',
                        ncol = max(1,int(math.ceil( float( len(legends) / self.mLegendMaxRowsPerColumn ) ) )),
                        **self.mMPLLegendOptions )
-            
-        rstyle( ax )
+
+        if self.use_rstyle:
+            rstyle( ax )
 
         # smaller font size for large legends
         if legend and maxlen > self.mMaxLegendSize:
@@ -504,6 +508,9 @@ class PlotterMatrix(Plotter):
     # separators to use to split text
     mSeparators = " :_"
 
+    # Do not use R style for plotting.
+    use_rstyle = False
+
     options = Plotter.options +\
         ( ('palette', directives.unchanged),
           ('reverse-palette', directives.flag),
@@ -517,17 +524,10 @@ class PlotterMatrix(Plotter):
     def __init__(self, *args, **kwargs ):
         Plotter.__init__(self, *args, **kwargs)
 
-        try: self.mBarFormat = kwargs["colorbar-format"]
-        except KeyError: self.mBarFormat = "%1.1f"
-
-        try: self.mPalette = kwargs["palette"]
-        except KeyError: self.mPalette = "jet"
-
-        try: self.mMaxRows = kwargs["max-rows"]
-        except KeyError: self.mMaxRows = 20
-
-        try: self.mMaxCols = kwargs["max-cols"]
-        except KeyError: self.mMaxCols = 20
+        self.mBarFormat = kwargs.get( "colorbar-format", "%1.1f" )
+        self.mPalette = kwargs.get("palette", "jet" )
+        self.mMaxRows = int(kwargs.get("max-rows", 20))
+        self.mMaxCols = int(kwargs.get("max-cols", 20))
 
         self.mReversePalette = "reverse-palette" in kwargs
         self.label_rows = "nolabel-rows" not in kwargs
@@ -1382,6 +1382,8 @@ class BarPlot( TableMatrix, Plotter):
           ('colour', directives.unchanged),
           ('transparency', directives.unchanged),
           ('bottom-value', directives.unchanged),
+          ('orientation', directives.unchanged),
+          ('first-is-offset', directives.unchanged),
           )
         
     # column to use for error bars
@@ -1404,6 +1406,12 @@ class BarPlot( TableMatrix, Plotter):
     label_offset_x = 10
     label_offset_y = 5
 
+    # orientation of bars
+    orientation = 'vertical'
+
+    # first row is offset (not plotted)
+    first_is_offset = False
+
     def __init__(self, *args, **kwargs):
         TableMatrix.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
@@ -1413,12 +1421,19 @@ class BarPlot( TableMatrix, Plotter):
         self.colour = kwargs.get("colour", None )
         self.transparency = kwargs.get("transparency", None )
         if self.transparency: raise NotImplementedError( "transparency not implemented yet")
+        self.orientation = kwargs.get( 'orientation', 'vertical' )
+
+        if self.orientation == 'vertical':
+            self.plotf = plt.bar
+        else:
+            self.plotf = plt.barh
 
         if self.error or self.label:
             self.nlevels += 1
 
         self.bottom_value = kwargs.get("bottom-value", None )
- 
+        self.first_is_offset = 'first-is-offset' in kwargs
+
         self.bar_patterns = list(itertools.product( self.mPatterns, self.mColors) )
 
     def addLabels( self, xvals, yvals, labels ):
@@ -1428,10 +1443,15 @@ class BarPlot( TableMatrix, Plotter):
         def coord_offset(ax, fig, x, y):
             return matplotlib.transforms.offset_copy(ax.transData, fig, x=x, y=y, units='dots')
 
-            ax = plt.gca()
-            trans=coord_offset(ax, self.mCurrentFigure, self.label_offset_x, self.label_offset_y)
-            for xval, yval, label in zip(xvals,vals,labels):
-                ax.text(xval, yval, label, transform=trans)
+        if self.orientation == 'horizontal':
+            xvals,yvals=yvals,xvals
+
+        ax = plt.gca()
+        trans=coord_offset(ax, self.mCurrentFigure, 
+                           self.label_offset_x, 
+                           self.label_offset_y)
+        for xval, yval, label in zip(xvals,vals,labels):
+            ax.text(xval, yval, label, transform=trans)
 
     def buildMatrices( self, work ):
         '''build matrices necessary for plotting.
@@ -1525,16 +1545,17 @@ class BarPlot( TableMatrix, Plotter):
                 bottom = float(self.bottom_value)
             else:
                 bottom = None
-
-            plts.append( plt.bar( xvals, 
-                                  vals,
-                                  self.width, 
-                                  yerr = error,
-                                  ecolor = "black",
-                                  color = color,
-                                  hatch = hatch,
-                                  alpha = alpha,
-                                  )[0] )
+             
+            plts.append( self.plotf( xvals, 
+                                     vals,
+                                     self.width, 
+                                     yerr = error,
+                                     ecolor = "black",
+                                     color = color,
+                                     hatch = hatch,
+                                     alpha = alpha,
+                                     )[0] )
+                
 
             if self.label and self.label_matrix != None: 
                 self.addLabels( xvals, vals, self.label_matrix[:,column] )
@@ -1547,7 +1568,10 @@ class BarPlot( TableMatrix, Plotter):
         else: 
             rotation = "horizontal"
         
-        plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
+        if self.orientation == 'vertical':
+            plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
+        else:
+            plt.yticks( xvals + 0.5, self.rows, rotation = rotation )
 
         return self.endPlot( plts, self.columns, path )
 
@@ -1592,17 +1616,21 @@ class InterleavedBarPlot(BarPlot):
             else:
                 bottom = None
 
-            plts.append( plt.bar( xvals + offset, 
-                                  vals,
-                                  width,
-                                  yerr = error,
-                                  align = "edge",
-                                  ecolor = "black",
-                                  color = color,
-                                  hatch = hatch,
-                                  alpha = alpha,
-                                  bottom = bottom,
-                                  )[0])
+            kwargs = {}
+            if self.orientation == 'vertical': kwargs['bottom'] = bottom
+            else: kwargs['left'] = bottom
+
+            plts.append( self.plotf( xvals + offset, 
+                                     vals,
+                                     width,
+                                     yerr = error,
+                                     align = "edge",
+                                     ecolor = "black",
+                                     color = color,
+                                     hatch = hatch,
+                                     alpha = alpha,
+                                     **kwargs
+                                     )[0])
             
             if self.label and self.label_matrix != None: 
                 self.addLabels( xvals+offset, vals, self.label_matrix[:,column] )
@@ -1616,7 +1644,10 @@ class InterleavedBarPlot(BarPlot):
         else: 
             rotation = "horizontal"
         
-        plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
+        if self.orientation == 'vertical':
+            plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
+        else:
+            plt.yticks( xvals + 0.5, self.rows, rotation = rotation )
 
         return self.endPlot( plts, self.columns, path )
            
@@ -1639,13 +1670,14 @@ class StackedBarPlot(BarPlot ):
 
         xvals = numpy.arange( (1.0 - self.width) / 2., len(self.rows) )
         sums = numpy.zeros( len(self.rows), numpy.float )
-
-        y, error = 0, None
+        
+        y, error, is_first = 0, None, True
+        legend = []
         for column,header in enumerate(self.columns):
 
             vals = self.matrix[:,column]            
             if self.error: error = self.error_matrix[:,column]
-
+            
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
@@ -1654,19 +1686,35 @@ class StackedBarPlot(BarPlot ):
 
             hatch, color, alpha = self.getColour( y, column )                
 
-            plts.append( plt.bar( xvals, 
-                                  vals, 
-                                  self.width, 
-                                  yerr = error,
-                                  color = color,
-                                  hatch = hatch,
-                                  alpha = alpha,
-                                  ecolor = "black",
-                                  bottom = sums )[0] )
+            kwargs = {}
+            if self.orientation == 'vertical': kwargs['bottom'] = sums
+            else: kwargs['left'] = sums
+
+            # do not plot if first value
+            if self.first_is_offset and is_first:
+                is_first = False
+                sums += vals
+                y += 1
+                # ensure plot starts from 0 unless explicitely given.
+                if self.orientation == 'vertical':
+                    if self.yrange == None: self.yrange = (0,None)
+                else:
+                    if self.xrange == None: self.xrange = (0,None)
+                continue
+
+            plts.append( self.plotf( xvals, 
+                                     vals, 
+                                     self.width, 
+                                     yerr = error,
+                                     color = color,
+                                     hatch = hatch,
+                                     alpha = alpha,
+                                     ecolor = "black",
+                                     **kwargs ) [0] )
 
             if self.label and self.label_matrix != None: 
                 self.addLabels( xvals, vals, self.label_matrix[:,column] )
-
+            legend.append( header )
             sums += vals
             y += 1
 
@@ -1676,11 +1724,19 @@ class StackedBarPlot(BarPlot ):
         else: 
             rotation = "horizontal"
         
-        plt.xticks( xvals + self.width / 2., 
-                    self.rows,
-                    rotation = rotation )
 
-        return self.endPlot( plts, self.columns, path )
+        if self.orientation == 'vertical':
+            plt.xticks( xvals + self.width / 2., 
+                        self.rows,
+                        rotation = rotation )
+        else:
+            plt.yticks( xvals + self.width / 2., 
+                        self.rows,
+                        rotation = rotation )
+            
+
+
+        return self.endPlot( plts, legend, path )
 
 class PiePlot(Renderer, Plotter):
     """A pie chart.
@@ -1880,13 +1936,22 @@ class GalleryPlot(Renderer, Plotter):
 
 
         rst_text = '''.. figure:: %(fn)s
-
 '''
+
+        rst_link = '''* `%(title)s <%(absfn)s>`_ 
+'''
+        title = path2str( path )
         fn = work["filename"]
+        absfn = os.path.abspath( fn ) 
         # do not render svg images
         if fn.endswith(".svg" ):
             title = os.path.basename( fn )
             return ResultBlocks( ResultBlock( text = rst_text % locals(),
+                                              title = title ) )
+        # do not render pdf images
+        elif fn.endswith( ".pdf"):
+            title = os.path.basename( fn )
+            return ResultBlocks( ResultBlock( text = rst_link % locals(),
                                               title = title ) )
         
         self.startPlot()

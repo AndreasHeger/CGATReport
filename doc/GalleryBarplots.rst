@@ -37,6 +37,11 @@ Options
       
       field to use for colours.
 
+   orientation
+      string
+
+      orientation of bars. Can be either ``vertical`` (default) or ``horizontal``
+
 ================
 stacked-bar-plot
 ================
@@ -64,6 +69,48 @@ as interleaved bars. Both *interleaved-bars* and *bars* can be used.
    :width: 200
 
    A bar plot with interleaved bars.
+
+
+Changing plot orientation
+==========================
+
+Horizontal bar charts can be created with the option :term:`orientation`.
+
+.. report:: Trackers.LabeledDataExample
+   :render: bar-plot
+   :layout: row
+   :width: 200
+   :orientation: horizontal
+
+   A horizontal bar plot with interleaved bars.
+
+.. report:: Trackers.LabeledDataExample
+   :render: stacked-bar-plot
+   :layout: row
+   :width: 200
+   :orientation: horizontal
+
+   A horizontal bar plot with interleaved bars.
+
+.. report:: Trackers.LabeledDataExample
+   :render: interleaved-bar-plot
+   :layout: row
+   :width: 200
+   :orientation: horizontal
+
+   A horizontal bar plot with interleaved bars.
+
+The option :term:`first-is-offset` can be used to create Gantt-like charts:
+
+.. report:: Trackers.LabeledDataExample
+   :render: stacked-bar-plot
+   :layout: row
+   :width: 200
+   :orientation: horizontal
+   :first-is-offset:
+
+   A horizontal bar plot with stacked bars. The first value is used
+   as an offset.
 
 
 Adding error bars and labels

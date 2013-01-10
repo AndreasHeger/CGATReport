@@ -884,7 +884,6 @@ class SingleTableTrackerColumns( TrackerSQL ):
 ###########################################################################
 ###########################################################################
 ###########################################################################
-
 class SingleTableTrackerHistogram( TrackerSQL ): 
     '''Tracker representing a table with multiple tracks.
 
@@ -928,6 +927,59 @@ class SingleTableTrackerHistogram( TrackerSQL ):
         if self.column == None: raise NotImplementedError( "column not set - Tracker not fully implemented" )
         data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
         return data
+
+class MultipleTableTrackerHistogram( TrackerSQL ): 
+    '''Tracker representing multiple table with multiple slicel.
+
+    Returns a dictionary of two sets of data, one given
+    by :py:attr:`column` and one for a track.
+
+    The tracks are derived from all columns in table :py:attr:`table`. By default,
+    all columns are taken as tracks apart from :py:attr:`column` and those
+    listed in :py:attr:`exclude_columns`.
+
+    An example for a table using this tracker would be::
+
+       bin   mouse_counts    human_counts
+       100   10              10
+       200   20              15
+       300   10              4
+
+    In the example above, the tracks will be ``mouse_counts`` and ``human_counts``. The 
+    Tracker could be defined as::
+ 
+       class MyTracker( ManyTableTrackerHistogram ):
+          pattern = '(.*)_table'
+          column = 'bin'
+
+    '''
+    exclude_columns = ("track,")
+    as_tables = True
+    column = None
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    @property
+    def slices(self):
+        if self.column == None: raise NotImplementedError( "column not set - Tracker not fully implemented" )
+        columns = set()
+        for table in self.getTableNames( self.pattern ):
+            columns.update( self.getColumns( table ) )
+        return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
+
+    def __call__(self, track, slice ):
+        return self.getAll( """SELECT %(column)s, %(slice)s FROM %(track)s""" )
+
+    # def __call__(self, track ):
+        
+    #     if self.column == None: raise NotImplementedError( "column not set - Tracker not fully implemented" )
+    #     # get columns in the alphabetical order
+    #     columns = sorted( self.getColumns( track ) )
+    #     if self.column not in columns: raise ValueError("column '%s' missing from '%s'" % (self.column, track ))
+    #     columns = ",".join( [ x for x in columns if x not in self.exclude_columns and x != self.column ] )
+    #     return self.getAll( """SELECT %(column)s, %(columns)s FROM %(track)s""" )
+
 
 ###########################################################################
 ###########################################################################
@@ -976,3 +1028,38 @@ class SingleTableTrackerEdgeList( TrackerSQL ):
 
         if self.transform: return self.transform(val)
         return val
+
+class TrackerSQLMulti( TrackerSQL ):
+    '''An SQL tracker spanning multiple databases.
+
+    '''
+
+    databases = ()
+    tracks = ()
+    
+    def __init__(self, *args, **kwargs):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+        if len(self.tracks) == 0:
+            raise ValueError("no tracks specified in TrackerSQLMulti")
+        if (len(self.tracks) != len(self.databases)):
+            raise ValueError("TrackerSQLMulti requires an equal number of tracks (%i) and databases (%i)" \
+                                 % (len(self.tracks), len(self.databases)))
+        if not self.backend.startswith("sqlite"):
+            raise ValueError( "TrackerSQLMulti only works for sqlite database" )
+
+        if not self.db:
+            def _my_creator():
+                # issuing the ATTACH DATABASE into the sqlalchemy ORM (self.db.execute( ... ))
+                # does not work. The database is attached, but tables are not accessible in later
+                # SELECT statements.
+                import sqlite3
+                conn = sqlite3.connect(re.sub( "sqlite:///", "", self.backend) )
+                for track, name in zip( self.databases, self.tracks ):
+                    conn.execute( "ATTACH DATABASE '%s/csvdb' AS %s" % \
+                                      (os.path.abspath(track),
+                                       name))
+                return conn
+
+            self.connect( creator = _my_creator )
+

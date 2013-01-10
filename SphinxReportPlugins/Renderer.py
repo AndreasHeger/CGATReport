@@ -148,6 +148,7 @@ class TableBase( Renderer ):
                      (len(row_headers), len(col_headers),
                       title) )
 
+
         r = ResultBlock( "\n".join(lines) + "\n", title = title)
         # create an html table
         data = ["<table>"]
@@ -155,6 +156,11 @@ class TableBase( Renderer ):
         for h, row in zip( row_headers, matrix):
             data.append( "<tr><th>%s</th><td>%s</td></tr>" % (h, "</td><td>".join(map(str,row)) ))
         data.append( "</table>\n" )
+
+        # substitute links
+        data = [ re.sub("`(.*?(?:\".+\"|\'.+\')?.*?)\s<(.*?(?:\".+\"|\'.+\')?.*?)>`_", r'<a href="\2">\1</a>', x) \
+                     for x in data ]
+
         r.html = "\n".join( data )
 
         return r
@@ -328,7 +334,8 @@ class RstTable( Table ):
         # do not output large matrices as rst files
         if self.separate or (not self.force and 
                              (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols)):
-            return self.asFile( matrix, row_headers, col_headers, title )
+            return ResultBlocks( self.asFile( matrix, row_headers, col_headers, title ),
+                                 title = title )
 
         lines = []
         
@@ -694,10 +701,11 @@ class MatrixBase:
         # do not output large matrices as rst files
         # separate and force need to be mixed in.
         if self.separate or (not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols)):
-            return self.asFile( [ [ self.toString(x) for x in r ] for r in matrix ], 
-                                rows, 
-                                columns, 
-                                title )
+            return ResultBlocks( self.asFile( [ [ self.toString(x) for x in r ] for r in matrix ], 
+                                              rows, 
+                                              columns, 
+                                              title ),
+                                 title = path )
 
         lines = []
         lines.append( ".. csv-table:: %s" % title )
