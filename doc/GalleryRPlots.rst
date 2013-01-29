@@ -52,5 +52,54 @@ the :ref:`common plot options` plus:
       If one value is supplied, it is applied to both dimensions,
       otherwise it is x,y.
 
+==============
+r-heatmap-plot
+==============
 
+The :class:`SphinxReportPlugins.RPlotter.HeatmapPlot` class presents
+:term:`matrices` as box plots:
+
+.. report:: Trackers.MatrixTracker
+   :render: r-heatmap-plot
+   :width: 200
+   :layout: row
+
+   Heatmap plots
+
+Options
+=======
+
+:class:`SphinxReportPlugins.RPlotter.HeatmapPlot` has no additional
+options apart from :ref:`common plot options`. 
+
+=====================================
+r-ggplot
+=====================================
+
+The :class:`SphinxReportPlugins.GGPlot.` class permits plotting 
+:term:`data frames` using the ggplot2_ library:
+
+.. report:: Tutorial9.ExpressionLevels
+    :render: r-ggplot
+    :statement: aes(experiment1, experiment2, color=factor(gene_function)) + geom_point()
+
+    Correlation with expression values coloured by factor gene_function
+
+Options
+=======
+
+:class:`SphinxReportPlugins.RPlotter.GGPlot` has the following options
+in addition to :ref:`common plot options`. 
+
+.. glossary::
+   :sorted:
+
+   statement
+      string
+      
+      A ggplot2_ statement describing the plots construction. Names
+      within the statement should correspond to column names in the
+      data frame.
+
+.. _ggplot2: http://ggplot2.org/
 

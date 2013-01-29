@@ -745,11 +745,14 @@ class TableMatrix(TableBase, MatrixBase):
                      missing_value = 0, 
                      apply_transformations = True,
                      take = None,
+                     ignore = None,
                      dtype = numpy.float ):
         """build a matrix from work, a two-level nested dictionary.
 
         If *take* is given, then the matrix will be built from
         level 3, taking *take* from the deepest level only.
+        
+        If *ignore* is given, columns in ignore will be ignore.
 
         This method will also apply conversions if apply_transformations
         is set.
@@ -759,6 +762,8 @@ class TableMatrix(TableBase, MatrixBase):
         levels = len(labels)
 
         rows, columns = labels[:2]
+        if ignore != None: 
+            columns = [x for x in columns if x not in ignore ]
 
         if take:
             if levels == 3: 
@@ -773,7 +778,7 @@ class TableMatrix(TableBase, MatrixBase):
             if levels != 2: raise ValueError( "expected two levels" )
             take_f = lambda row,column: work[row][column]
 
-        self.debug("creating matrix")
+        self.debug("creating matrix: taking=%s, ignoring=%s" % (take,ignore))
         matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), dtype )
         matrix.shape = (len(rows), len(columns) )
         self.debug("constructing matrix")

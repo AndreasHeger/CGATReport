@@ -155,8 +155,9 @@ class Tracker(object):
     def members( self, locals = None ):
         '''function similar to locals() but returning member variables of this tracker.
 
-        Convenience function for string substitution. If locals is given (and a dictionary),
-        the dictionary is added to the returned dictionary.
+        Convenience function for string substitution. If *locals* is given (and a dictionary),
+        the dictionary is added to the returned dictionary. Entries in *local* take precedence
+        before member variables.
 
         Typical usage is::
 
@@ -969,6 +970,10 @@ class MultipleTableTrackerHistogram( TrackerSQL ):
         return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
 
     def __call__(self, track, slice ):
+        # check if column exists in particular table - if not, return no data
+        if slice not in self.getColumns( track ):
+            return None
+        
         return self.getAll( """SELECT %(column)s, %(slice)s FROM %(track)s""" )
 
     # def __call__(self, track ):

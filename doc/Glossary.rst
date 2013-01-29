@@ -1,4 +1,4 @@
-d*********
+*********
 Glossary
 *********
 
@@ -53,6 +53,19 @@ Glossary
          blue/car/pumpprices=(60,62,40,32,21)
          red/car/tankfillings=(30,30,35,30,20)
          red/car/pumpprices=(30,32,30,32,21)
+
+   matrices
+      matrices are represented as a dictionary with the three mandatory
+      entries: ``matrix``, ``rows``, ``columns``. The matrix field
+      contains a numpy_ matrix, ``rows`` is a list of row names and 
+      ``columns`` is a list of column names.  For example::
+
+         matrix=[[1,2,3],[2,4,2]]
+	 rows=["row1", "row2"]
+	 columns=["column1", "column2", "column3"]
+   
+   data frames
+       is a generic data container used in R. 
 
    labeled values with errors
       :term:`labeled values` can be extended with labels or errors.

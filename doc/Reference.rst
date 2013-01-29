@@ -171,6 +171,19 @@ Superfluous options are ignored.
 
       restrict plot to part of the z-axis
 
+   xformat      
+      format of x ticks.
+
+      In order to plot dates, prefix a date formatting string (see the
+      python datetime module) with the prefix ``date=``. Using
+      ``date`` on its own will use the default format, which should
+      work in most cases.
+
+   yformat
+      format of y ticks.
+
+      see :term:`xformat`
+
    mpl-figure
       ``;`` separated ``key=value`` pairs
 

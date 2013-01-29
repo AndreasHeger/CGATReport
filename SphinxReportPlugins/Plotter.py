@@ -179,6 +179,10 @@ class Plotter(object):
        :term:`vline`: add one or more vertical lines to the 
           plot.
 
+       :term:`xformat`: label for X axis
+       
+       :term:`yformat`: label for Y axis
+
     With some plots default layout options will result in plots 
     that are misaligned (legends truncated, etc.). To fix this it might
     be necessary to increase plot size, reduce font size, or others.
@@ -225,6 +229,8 @@ class Plotter(object):
         ('mpl-subplot',  directives.unchanged),
         ('mpl-rc',  directives.unchanged), 
         ('legend-location',  directives.unchanged),
+        ('xformat', directives.unchanged),
+        ('yformat', directives.unchanged),
         )
 
     mColors = "bgrcmk"
@@ -258,6 +264,9 @@ class Plotter(object):
         self.xrange = parseRanges(kwargs.get("xrange", None ))
         self.yrange = parseRanges(kwargs.get("yrange", None ))
         self.zrange = parseRanges(kwargs.get("zrange", None ))
+
+        self.xformat = kwargs.get("xformat", None )
+        self.yformat = kwargs.get("yformat", None )
 
         def setupMPLOption( key ):
             options = {}
@@ -403,6 +412,37 @@ class Plotter(object):
 
         if self.xlabel: plt.xlabel( self.xlabel )
         if self.ylabel: plt.ylabel( self.ylabel )
+
+        # change x/y axis formatter
+        if self.xformat:
+            if self.xformat.startswith('date'):
+                xlim = ax.get_xlim()
+                if xlim[0] < 1:
+                    raise ValueError( "date value out of range - needs to larger than 1")
+
+                ax.xaxis_date()
+                loc = matplotlib.dates.AutoDateLocator()
+                ax.xaxis.set_major_locator( loc )
+                fmt = self.xformat[5:].strip()
+                if not fmt: fmt = '%Y-%m-%d'
+                ax.xaxis.set_major_formatter(
+                    matplotlib.dates.AutoDateFormatter(loc,
+                                                       defaultfmt = fmt ))
+
+        if self.yformat:
+            if self.yformat.startswith('date'):
+                ylim = ax.get_ylim()
+                if ylim[0] < 1:
+                    raise ValueError( "date value out of range - needs to larger than 1")
+
+                ax.yaxis_date()
+                loc = matplotlib.dates.AutoDateLocator()
+                ax.yaxis.set_major_locator( loc )
+                fmt = self.yformat[5:].strip()
+                if not fmt: fmt = '%Y-%m-%d'
+                ax.yaxis.set_major_formatter(
+                    matplotlib.dates.AutoDateFormatter(loc,
+                                                       defaultfmt = fmt))
 
         blocks = ResultBlocks( ResultBlock( "\n".join( 
                     ("#$mpl %i$#" % (self.mFigure), "")), title = DataTree.path2str(path) ) )
@@ -1463,18 +1503,15 @@ class BarPlot( TableMatrix, Plotter):
         self.transparency_matrix = None
 
         if self.error or self.label or self.colour or self.transparency:
-            # select label to take
             labels = DataTree.getPaths( work )
-            label = list(set(labels[-1]).difference( set((self.error, self.label,self.colour)) ))[0]
-            self.matrix, self.rows, self.columns = self.buildMatrix( work, 
-                                                                     apply_transformations = True, 
-                                                                     take = label
-                                                                     )
+            ignore = set()
             if self.error and self.error in labels[-1]:
                 self.error_matrix, rows, colums = self.buildMatrix( work, 
                                                                     apply_transformations = False, 
                                                                     take = self.error
                                                                     )
+                ignore.add( self.error )
+
             if self.label and self.label in labels[-1]:
                 self.label_matrix, rows, colums = self.buildMatrix( work, 
                                                                     apply_transformations = False, 
@@ -1482,6 +1519,8 @@ class BarPlot( TableMatrix, Plotter):
                                                                     take = self.label,
                                                                     dtype = "S20",
                                                                     )
+                ignore.add( self.label )
+
             if self.colour and self.colour in labels[-1]:
                 self.colour_matrix, rows, colums = self.buildMatrix( work, 
                                                                      apply_transformations = False, 
@@ -1489,6 +1528,8 @@ class BarPlot( TableMatrix, Plotter):
                                                                      take = self.colour,
                                                                      dtype = "S20",
                                                                      )
+                ignore.add( self.colour)
+                
 
             if self.transparency and self.transparency in labels[-1]:
                 self.transparency_matrix, rows, colums = self.buildMatrix( work, 
@@ -1496,6 +1537,13 @@ class BarPlot( TableMatrix, Plotter):
                                                                            missing_value = 1.0,
                                                                            take = self.transparency,
                                                                            dtype = numpy.float,
+                                                                     )
+                ignore.add( self.transparency)
+
+            # select label to take, preserve order
+            self.matrix, self.rows, self.columns = self.buildMatrix( work, 
+                                                                     apply_transformations = True, 
+                                                                     ignore = ignore,
                                                                      )
                 
         else:
@@ -1673,7 +1721,9 @@ class StackedBarPlot(BarPlot ):
         
         y, error, is_first = 0, None, True
         legend = []
-        for column,header in enumerate(self.columns):
+        colour_offset = 0
+
+        for column, header in enumerate(self.columns):
 
             vals = self.matrix[:,column]            
             if self.error: error = self.error_matrix[:,column]
@@ -1683,8 +1733,6 @@ class StackedBarPlot(BarPlot ):
             # set to 0. Nan values elsewhere are fine.
             if numpy.isnan(vals[0]) or numpy.isinf( vals[0] ): 
                 vals[0] = 0
-
-            hatch, color, alpha = self.getColour( y, column )                
 
             kwargs = {}
             if self.orientation == 'vertical': kwargs['bottom'] = sums
@@ -1696,11 +1744,14 @@ class StackedBarPlot(BarPlot ):
                 sums += vals
                 y += 1
                 # ensure plot starts from 0 unless explicitely given.
-                if self.orientation == 'vertical':
-                    if self.yrange == None: self.yrange = (0,None)
-                else:
-                    if self.xrange == None: self.xrange = (0,None)
+                # if self.orientation == 'vertical':
+                #     if self.yrange == None: self.yrange = (0,None)
+                # else:
+                #     if self.xrange == None: self.xrange = (0,None)
+                colour_offset = 1
                 continue
+            
+            hatch, color, alpha = self.getColour( y, column - colour_offset )
 
             plts.append( self.plotf( xvals, 
                                      vals, 
@@ -1718,13 +1769,13 @@ class StackedBarPlot(BarPlot ):
             sums += vals
             y += 1
 
-        if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-            rotation = "vertical"
-            self.rescaleForVerticalLabels( self.rows )
-        else: 
-            rotation = "horizontal"
-        
+        rotation = "horizontal"
 
+        if self.orientation == "vertical":
+            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
+                rotation = "vertical"
+                self.rescaleForVerticalLabels( self.rows )
+                
         if self.orientation == 'vertical':
             plt.xticks( xvals + self.width / 2., 
                         self.rows,

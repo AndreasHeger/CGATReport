@@ -69,7 +69,6 @@ class RSTPlugin(Component):
                         relpath = os.path.relpath( filename.strip(), os.path.abspath(rstdir))
                         newpath = re.sub("\\\\", "/", relpath )
                         l = replace_and_pad(l, filename, newpath )
-                    
 
                     for x in self.rx_link.finditer( ll ):
                         directive, filename = x.groups()
