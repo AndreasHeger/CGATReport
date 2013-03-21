@@ -38,6 +38,8 @@ def main( argv = sys.argv ):
 
         outfile = open( fn, "w" )
         x = Utils.get_data( "SphinxReport", "templates/%s" % src)
+        if len(x) == 0:
+            raise ValueError( 'file %s is empty' % src )
         outfile.write( x )
         outfile.close()
 

@@ -143,6 +143,16 @@ one-line statement is not enough::
           paths = ResultOfSomeSeriousComputation
           return paths
 
+:term:`tracks` and :term:`slices` are sphinxreport
+terminology. An alternative labeling would be as ``track=dataset`` and
+``slice=measurement``. For example, :term:`tracks` or data sets could be ``mouse``,
+``human``, ``rabbit`` and :term:`slices` or measurements could be ``height`` and
+``weight``. This nomenclature explains why default
+grouping in plots is by :term:`slice` - the above :term:`tracks` and
+:term:`slices` would be displayed as two plots for ``height`` and
+``weight`` contrasting the various heights and weights for the three
+species. 
+
 The __call__ method
 -------------------
 

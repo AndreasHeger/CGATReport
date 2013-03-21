@@ -11,8 +11,16 @@ Glossary
    track
       A data set, for example species like "frog", "mouse", and "dog".
 
+   tracks
+      see :term:`track`      
+
    slice
-      A slice through a data set, for example gender like "male" and "female". 
+      A measurement of a data set, for example 'height', 'weight', but also
+      a slice of subset of data, for example gender like "male" and
+      "female" 
+
+   slices
+      see :term:`slice`      
 
    tracker
       A python function or functor returning data, see

@@ -45,10 +45,15 @@ For example, a different dataset can be plotted in the same way:
 Writing plugins
 ===============
 
-At some stage, a Renderer has been refined to such an extent
-that it has become generally useful.
+At some stage, a :term:`Renderer` has been refined to such an extent
+that it has become generally useful and you want to add it to
+sphinxreport so that it becomes available in all reports. Sphinxreport
+provides a plugin mechanism to do this.
 
-Let us say we want to create extensions for our CGAT project. We will
+Writing a transformer
+---------------------
+
+Let us say we want to create a new :term:`Transformer` for our CGAT project. We will
 group them into a python module called
 ``CGATSphinxReportPlugins``. Conceptually we need to do things. We
 need to provide the actual implemenation of the Transformer and we
@@ -90,8 +95,10 @@ The file ``__init__.py`` is empty and is simply required for our
 module to be complete (and the ``setuptools.find_packages()`` function to find
 our module).
 
-Sphinxreport uses the `setuptools
-<http://pypi.python.org/pypi/setuptools>`_
+Registering a plugin
+--------------------
+
+Sphinxreport uses the `setuptools <http://pypi.python.org/pypi/setuptools>`_
 plugin architecture. A copy of the file :file:`ez_setup.py` is part of the
 SphinxReport installation, but can also be obtained from `here <http://peak.telecommunity.com/dist/ez_setup.py>`_.
 
@@ -142,8 +149,98 @@ will now work::
 
 Additional plugins can be added as additional items in the list.
 
-See the :class:`SphinxReportPlugin.Transformer` documentation
+See the :class:`SphinxReportPlugins.Transformer` documentation
 for existing transformer.
 
-See the :class:`SphinxReportPlugin.Renderer` documentation
+Writing Renderers
+-----------------
+
+A plugin for a :term:`Renderer` can be written in the same way as a
+:term:`Transformer`. While the latter will receive data and return the
+transformed data, a :term:`Renderer` receives data and returns a
+representation of that data - a table, a plot, etc.
+
+A :term:`renderer` returns a collection of
+:class:`SphinxReport.ResultBlocks`. A :term:`ResultBlock` contains
+the restructured text that is inserted into the document at the point
+of the ``report`` directive. 
+
+At the same time, a :term:`Renderer` can create plots on a variety of
+devices. These plots will be collected by various agents of the
+Sphinxreport framework and inserted into the document. In order
+to associatde a plot with text, usually a place-holder is defined.
+
+The following collectors are defined:
+
+matplotlib plots
+   ``#$mpl %i$#`` with ``%i`` being the current matplotlib figure id 
+
+   Implemented in :class:`SphinxReportPlugins.MatplotlibPlugin``
+
+R plots
+   ``#$rpl %i$#`` with ``%i`` being the current R device number
+
+   Implemeted in :class:`SphinxReportPlugins.RPlotPlugin``
+
+HTML text
+   ``#$html %s$#`` with ``%s`` being the :attr:`title` of the 
+   :class:`SphinxReport.ResultBlock`.
+
+   Requires the :attr:`html` attribute to be defined in
+    :class:`SphinxReport.ResultBlock`. The contents
+   are saved and a link is inserted in the text.
+
+RST text
+    Requires the ``text`` attribute to be defined in
+    :class:`SphinxReport.ResultBlock`. The contents are
+    inserted into the document directly.
+
+A simple implementation of a :term:`Renderer` using matplotlib could be::
+
+    from SphinxReportPlugins.Renderer import Renderer
+    from SphinxReport import ResultBlock, ResultBlocks
+    import matplotlib
+
+    class ScatterPlot( Transformer ):
+	'''print a scatter plot of multiple datasets.
+	'''
+
+	nlevels = 1
+
+	def render(self, data, path):
+	    plts = []
+	    figid = plt.figure()
+
+	    for label, coords in data.iteritems():
+	        assert len(coords) >= 2
+		k = coords.keys()
+		xlabel = k[0]
+		for ylabel in k[1:]:
+		    xvals, yvals = coords[xlabel],coords[ylabel]
+		    plt.scatter( xvals, yvals )
+
+	    return ResultBlocks( ResultBlock( 
+	                    '''#$mpl %i$#\n''' % figid,
+			    title = 'ScatterPlot' ) )
+
+
+
+This particular example is derived from the class
+:class:`SphinxReport.Renderer`. The base class implements
+a ``__call__`` method that calls the ``render`` functions
+at appropriate levels in the data tree. However, there
+is no need for deriving from :class:`SphinxReport.Renderer`,
+the only requirement for your own :term:`Renderer` is to
+implement a ``__call__( self, data)`` method.
+
+Note that this simple example performs permits very little
+customization such as setting axis labels, tick marks, etc. 
+The various Rendereres that are implemented in SphinxReport
+a part of a class hierarchy that adds these customization
+options.
+
+See the :class:`SphinxReportPlugins.Renderer` documentation
 for existing matplotlib renderers.
+
+
+

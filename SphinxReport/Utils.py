@@ -12,6 +12,7 @@ from SphinxReport.odict import OrderedDict as odict
 import types, copy, numpy
 
 ContainerTypes = (types.TupleType, types.ListType, type(numpy.zeros(0)))
+DictionaryTypes = (types.DictType, odict)
 
 # set with keywords that will not be pruned
 # This is important for the User Tracker
@@ -42,9 +43,15 @@ except AttributeError, msg:
                  numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
                  numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64)
 
+
+
 def isArray( data ):
     '''return True if data is an array.'''
     return type(data) in ContainerTypes
+
+def isDict( data ):
+    '''return True if data is a dictionary'''
+    return type(data) in DictionaryTypes
     
 def isInt( obj ):
     return type(obj) in IntTypes

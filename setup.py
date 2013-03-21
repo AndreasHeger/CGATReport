@@ -2,7 +2,6 @@ import ez_setup
 ez_setup.use_setuptools()
 
 import glob, sys, os
-# from distutils.core import setup
 
 from setuptools import setup, find_packages
 
@@ -26,7 +25,7 @@ Operating System :: MacOS
 """
 
 setup(name='SphinxReport',
-      version='1.0',
+      version='2.0',
       description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',
@@ -42,7 +41,11 @@ setup(name='SphinxReport',
       keywords="report generator sphinx matplotlib sql",
       long_description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       classifiers = filter(None, classifiers.split("\n")),
-      install_requires = ['sphinx>=0.5-1', "matplotlib>=1.0", "sqlalchemy>=0.7.0", "xlwt>=0.7.4", "openpyxl>=1.5.7" ],
+      install_requires = ['sphinx>=1.0.5', 
+                          "matplotlib>=1.0", 
+                          "sqlalchemy>=0.7.0", 
+                          "xlwt>=0.7.4", 
+                          "openpyxl>=1.5.7" ],
       zip_safe = False,
       include_package_data = True,
       entry_points = \
@@ -104,6 +107,7 @@ setup(name='SphinxReport',
             'render-stacked-bar-plot=SphinxReportPlugins.Plotter:StackedBarPlot',
             'render-interleaved-bar-plot=SphinxReportPlugins.Plotter:InterleavedBarPlot',
             'render-box-plot=SphinxReportPlugins.Plotter:BoxPlot',
+            'render-venn-plot=SphinxReportPlugins.Plotter:VennPlot',
             'render-r-line-plot=SphinxReportPlugins.RPlotter:LinePlot',
             'render-r-box-plot=SphinxReportPlugins.RPlotter:BoxPlot',
             'render-r-smooth-scatter-plot=SphinxReportPlugins.RPlotter:SmoothScatterPlot',
@@ -117,9 +121,10 @@ setup(name='SphinxReport',
 # set to "group writeable" 
 # also updates the "sphinx" permissions
 import distutils.sysconfig, stat, glob
-print "updating file permissions for scripts"
-for x in glob.glob( os.path.join(distutils.sysconfig.project_base, "sphinx*")):
-    try:
-        os.chmod( x, os.stat(x).st_mode | stat.S_IWGRP ) 
-    except OSError:
-        pass
+if sys.args[0] == "install":
+    print "updating file permissions for scripts"
+    for x in glob.glob( os.path.join(distutils.sysconfig.project_base, "sphinx*")):
+        try:
+            os.chmod( x, os.stat(x).st_mode | stat.S_IWGRP ) 
+        except OSError:
+            pass

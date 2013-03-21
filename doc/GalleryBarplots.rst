@@ -42,6 +42,11 @@ Options
 
       orientation of bars. Can be either ``vertical`` (default) or ``horizontal``
 
+   switch
+      flag
+      
+      switch rows/columns in plot.
+
 ================
 stacked-bar-plot
 ================

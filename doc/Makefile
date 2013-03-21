@@ -43,7 +43,7 @@ csvdb:
 	python fill.py
 
 html: csvdb
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
+	xvfb-run -a $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 

@@ -11,6 +11,7 @@ matplotlib.use('Agg', warn = False)
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
+import matplotlib_venn
 import numpy 
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
@@ -1424,6 +1425,7 @@ class BarPlot( TableMatrix, Plotter):
           ('bottom-value', directives.unchanged),
           ('orientation', directives.unchanged),
           ('first-is-offset', directives.unchanged),
+          ('switch', directives.unchanged ),
           )
         
     # column to use for error bars
@@ -1452,6 +1454,9 @@ class BarPlot( TableMatrix, Plotter):
     # first row is offset (not plotted)
     first_is_offset = False
 
+    # switch rows/columns
+    switch_row_col = False
+
     def __init__(self, *args, **kwargs):
         TableMatrix.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
@@ -1459,6 +1464,7 @@ class BarPlot( TableMatrix, Plotter):
         self.error = kwargs.get("error", None )
         self.label = kwargs.get("label", None )
         self.colour = kwargs.get("colour", None )
+        self.switch_row_col = 'switch' in kwargs
         self.transparency = kwargs.get("transparency", None )
         if self.transparency: raise NotImplementedError( "transparency not implemented yet")
         self.orientation = kwargs.get( 'orientation', 'vertical' )
@@ -1549,6 +1555,14 @@ class BarPlot( TableMatrix, Plotter):
         else:
             self.matrix, self.rows, self.columns = self.buildMatrix( work )
 
+        if self.switch_row_col:
+            if self.matrix != None: self.matrix = self.matrix.transpose()
+            if self.error_matrix != None: self.error_matrix = self.error_matrix.transpose()
+            if self.label_matrix != None: self.label_matrix = self.label_matrix.transpose()
+            if self.colour_matrix != None: self.colour_matrix = self.colour_matrix.transpose()
+            if self.transparency_matrix != None: self.transparency_matrix = self.transparency_matrix.transpose()
+            self.rows, self.columns = self.columns, self.rows
+
     def getColour( self, idx, column ):
         '''return hatch and colour.'''
         
@@ -1610,11 +1624,13 @@ class BarPlot( TableMatrix, Plotter):
             
             y += 1
 
-        if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-            rotation = "vertical"
-            self.rescaleForVerticalLabels( self.rows )
-        else: 
-            rotation = "horizontal"
+            
+        rotation = "horizontal"
+        
+        if self.orientation == "vertical":
+            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
+                rotation = "vertical"
+                self.rescaleForVerticalLabels( self.rows )
         
         if self.orientation == 'vertical':
             plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
@@ -1686,12 +1702,15 @@ class InterleavedBarPlot(BarPlot):
             offset += width
             row += 1
 
-        if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-            rotation = "vertical"
-            self.rescaleForVerticalLabels( self.rows )
-        else: 
-            rotation = "horizontal"
-        
+        rotation = "horizontal"
+
+        if self.orientation == "vertical":
+            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
+                rotation = "vertical"
+                self.rescaleForVerticalLabels( self.rows )
+            else: 
+                rotation = "horizontal"
+                
         if self.orientation == 'vertical':
             plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
         else:
@@ -1954,6 +1973,10 @@ class BoxPlot(Renderer, Plotter):
                 all_data.append( d )
                 legend.append( "/".join( (str(path),str(label))))
 
+        if len(all_data) == 0: 
+            return self.endPlot( plts, None, path )
+            raise ValueError("no data" )
+            
         plts.append( plt.boxplot( all_data ) )
         
         if len( legend ) > 5 or max( [len(x) for x in legend] ) >= 8 : 
@@ -2194,3 +2217,62 @@ class ScatterPlotWithColor( ScatterPlot ):
 
         return self.endPlot( plts, None, path )
 
+
+class VennPlot( Renderer, Plotter ):
+    '''plot a two and three circle venn diagramm.
+
+    This :term:`renderer` plots a Venn diagramm.
+
+    This :class:`Renderer` requires two levels.
+
+    The data dictionary requires two entries, a
+    list of set labels and a dictionary of
+    set sizes.
+
+    The dictionary should contain the elements
+    * ('10', '01', and '11') for a two-circle Venn diagram.
+    * ('100', '010', '110', '001', '101', '011', '111') for a three-circle Venn diagram.
+
+    When plotting, the function looks for the first 3 or 7 element dictionary
+    and the first 3 or 7 element list.
+
+    data[dict]
+    '''
+
+    options = Renderer.options + Plotter.options
+
+    nlevels = 1
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def __call__(self, work, path):
+
+        self.startPlot()
+
+        plts = []
+
+        subsets = dict( work )
+        if "labels" in subsets:
+            setlabels = subsets["labels"]
+            del subsets["labels"]
+
+        if subsets == None:
+            self.warn( "no suitable data for Venn diagram at %s" % path)
+            return self.endPlot( plts, None, path )
+
+        if len(subsets) == 3:
+            if setlabels:
+                if len(setlabels) != 2: raise ValueError( "require two labels, got %i" % len(setlabels))
+            plts.append( matplotlib_venn.venn2( subsets,
+                                                set_labels = setlabels ) )
+        elif len(subsets) == 7:
+            if setlabels:
+                if len(setlabels) != 3: raise ValueError( "require three labels, got %i" % len(setlabels))
+            plts.append( matplotlib_venn.venn3( subsets,
+                                                set_labels = setlabels ) )
+        else:
+            raise ValueError( "require 3 or 7 values for a Venn diagramm, got %i" % len(subset))    
+
+        return self.endPlot( plts, None, path )

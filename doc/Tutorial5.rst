@@ -51,7 +51,12 @@ in the current directory::
 	e( "INSERT INTO %s VALUES ('gene%2i', '%s', %f)" % ("experiment2_data", x, "housekeeping", random.gauss( 50, 5)) )
 	e( "INSERT INTO %s VALUES ('gene%2i', '%s', %f)" % ("experiment2_data", x+1, "regulation", random.gauss( 20, 5)) )
 
-The script will create two tables called ``experiment1_data`` and
+
+Once executed::
+
+    python fill.py
+
+the script will create two tables called ``experiment1_data`` and
 ``experiment2_data`` and fill them with random data. The data is thought
 to have come from two experiments measuring expression level in genes
 that are either thought to encode housekeeping functions are regulatory

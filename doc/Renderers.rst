@@ -18,6 +18,7 @@ that are included in sphinxreport.
    GalleryHistograms.rst
    GalleryBoxPlots.rst
    GalleryScatterPlots.rst
+   GalleryVenn.rst
    GalleryConfig.rst
    GalleryStatus.rst
    GalleryGallery.rst

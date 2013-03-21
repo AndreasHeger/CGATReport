@@ -23,12 +23,12 @@ the following code::
     import os
 
     class WordCounter(Tracker):
-	"""Counting word size."""
+	"""Counting word length."""
 
 	tracks = ( "all", ".py", ".rst" )
 
 	def __call__(self, track, slice = None ):
-	    word_sizes = []
+	    word_lengths = []
 
 	    if track == "all" or track == None:
 		tracks = [ ".py", ".rst" ]
@@ -41,26 +41,26 @@ the following code::
 		    if ext not in tracks: continue
 		    infile = open(os.path.join( root, f),"r")
 		    words = re.split("\s+", "".join(infile.readlines()))
-		    word_sizes.extend( [ len(word) for word in words ] )
+		    word_lengths.extend( [ len(word) for word in words ] )
 		    infile.close()
 
-	    return { "word sizes" : word_sizes }
+	    return { "word lengths" : word_lengths }
 
-This Tracker counts word sizes in ``.py``, ``.rst`` files in the current directory.
+This Tracker counts word lengths in ``.py``, ``.rst`` files in the current directory.
 Note that the tracker again returns a dictionary. The dictionary contains one entry
-(``word sizes``) with a list of word sizes.
+(``word lengths``) with a list of word lengths.
 
 Testing this data source::
 
-   sphinxreport-test -t WordCounter -r table 
+   sphinxreport-test -t WordCounter -r debug
 
-The tabular output is not very informative in this case. sphinxreport contains methods (objects of the type :class:`Tranformer`) 
+This output is not very informative. Sphinxreport contains methods (objects of the type :class:`Tranformer`) 
 modify data before display. For example, the :class:`TransformerHistogram` computes a histogram (``-m histogram`` or
 ``--transformer=histogram``)::
 
    sphinxreport-test -t WordCounter -r table -m histogram
 
-The array of word size is replaced with two arrays for bins and values. Again, the tabular output is not very informative. 
+The array of word length is replaced with two arrays for bins and values. Again, the tabular output is not very informative. 
 However, the histogram is easily plotted choosing a different :class:`Renderer`::
 
    sphinxreport-test -t WordCounter -r line-plot -m histogram

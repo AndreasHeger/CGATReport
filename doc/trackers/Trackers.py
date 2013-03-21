@@ -263,3 +263,21 @@ class DataWithImagesExample( Tracker ):
         data["images"] = [".. image:: %s"  % x for x in images ]
         
         return data
+
+
+class VennTracker( Tracker ):
+    
+    tracks = ('two-circle', 'three-circle' )
+
+    def __call__( self, track ):
+
+        if track == 'two-circle':
+            return {'01' : 10, '10': 20, '11' : 5, 
+                    'labels' : ("SetA", "SetB") }
+
+        elif track == 'three-circle':
+            return {'001' : 10, '010': 20, '100' : 5,
+                    '011' : 10, '110': 20, '101' : 5,
+                    '111' : 10,
+                    'labels' : ("SetA", "SetB", "SetC") }
+

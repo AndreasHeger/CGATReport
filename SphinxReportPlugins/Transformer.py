@@ -20,6 +20,12 @@ import warnings
 ########################################################################
 ########################################################################
 class Transformer(Component):
+    '''Base class for transformers.
+
+    Implements the basic __call__ method that iterates over a :term:`data tree`
+    and calls self.transform method on the appropriate levels in the
+    hierarchy.
+    '''
 
     capabilities = ['transform']
 
@@ -57,44 +63,7 @@ class Transformer(Component):
         
 ########################################################################
 ########################################################################
-########################################################################
-class TransformerFilter( Transformer ):
-    '''select columns in the deepest dictionary.
-
-    filter removes all branches in a :term:`data tree`
-    on level :term:`tf-level` that do not match the 
-    :term:`tf-fields` option.
-
-    Level is counted from the deepest branch. By default,
-    leaves (level = 1) are removed.
-    '''
-    
-    nlevels = 1
-    default = 0
-
-    options = Transformer.options +\
-        ( ('tf-fields', directives.unchanged),
-          ('tf-level', directives.length_or_unitless) )
-
-    def __init__(self,*args,**kwargs):
-        Transformer.__init__( self, *args, **kwargs )
-
-        try: self.filter = set(kwargs["tf-fields"].split(","))
-        except KeyError: 
-            raise KeyError( "TransformerFilter requires the `tf-fields` option to be set." )
-
-        self.nlevels = int(kwargs.get("tf-level", self.nlevels) )
-                          
-    def transform(self, data, path):
-        debug( "%s: called" % str(self))
-
-        for v in data.keys():
-            if v not in self.filter:
-                del data[v]
-            
-        return data
-
-########################################################################
+## Conversion transformers
 ########################################################################
 ########################################################################
 class TransformerToLabels( Transformer ):
@@ -102,6 +71,15 @@ class TransformerToLabels( Transformer ):
 
     By default, the items are labeled numerically. If `tf-labels`
     is given it is used instead.
+
+    Example::
+
+       Input:                 Returns:
+       a/keys/['x','y','z']   a/x/1
+       a/values/[4,5,6]       a/y/2
+                              a/z/3
+
+
     '''
     nlevels = 1
 
@@ -145,6 +123,17 @@ class TransformerToLabels( Transformer ):
 ########################################################################
 class TransformerToList( Transformer ):
     '''transform categorized data into lists.
+
+    Example::
+
+       Input:            Returns:
+       a/x/1             x/[1,4]
+       a/y/2             y/[2,5]
+       a/z/3             z/[3,6]
+       b/x/4
+       b/y/5
+       b/z/6
+       
     '''
     nlevels = 2
     
@@ -165,7 +154,8 @@ class TransformerToList( Transformer ):
 
         sizes = [ len(x) for x in lists.values() ]
         if max(sizes) != min(sizes):
-            warn( "%s: list of unequal sizes: min=%i, max=%i" % (self, min(sizes), max(sizes)))
+            warn( "%s: list of unequal sizes: min=%i, max=%i" %\
+                      (self, min(sizes), max(sizes)))
         return lists
 
 ########################################################################
@@ -174,15 +164,13 @@ class TransformerToList( Transformer ):
 class TransformerToDataFrame( Transformer ):
     '''transform data into one or more data frames.
 
-    experiment1/expression = [1,2,3]
-    experiment1/counts = [3,4,5]
-    experiment2/expression = [8,9,1]
-    experiment2/counts = [4,5,6]
+    Example::
 
-    will be converted to two data frames:
-
-    experiment1 = df({ expression : [1,2,3], counts : [3,4,5] })
-    experiment2 = df({ expression : [8,9,1], counts : [4,5,6] })
+       Input:                                Output:
+       experiment1/expression = [1,2,3]      experiment1/df({ expression : [1,2,3], counts : [3,4,5] })
+       experiment1/counts = [3,4,5]          experiment2/df({ expression : [8,9,1], counts : [4,5,6] })
+       experiment2/expression = [8,9,1]
+       experiment2/counts = [4,5,6]
 
     '''
     nlevels = 1
@@ -241,9 +229,75 @@ class TransformerIndicator( Transformer ):
 
 ########################################################################
 ########################################################################
+## Filtering transformers
+########################################################################
+########################################################################
+
+########################################################################
+########################################################################
+########################################################################
+########################################################################
+class TransformerFilter( Transformer ):
+    '''select fields from the deepest level in the hierarchy.
+
+    This transformer removes all branches in a :term:`data tree`
+    on level :term:`tf-level` that do not match the 
+    :term:`tf-fields` option.
+
+    Level is counted from the deepest branch. By default,
+    leaves (level = 1) are removed.
+
+    The following operations are perform when :term:`tf-fields` is set
+    to ``x``::
+       Input:          Returns:
+       a/x=1            a/x=1
+       a/y=2            b/x=3
+       b/x=3
+       b/y=4
+
+    '''
+    
+    nlevels = 1
+    default = 0
+
+    options = Transformer.options +\
+        ( ('tf-fields', directives.unchanged),
+          ('tf-level', directives.length_or_unitless) )
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        try: self.filter = set(kwargs["tf-fields"].split(","))
+        except KeyError: 
+            raise KeyError( "TransformerFilter requires the `tf-fields` option to be set." )
+
+        self.nlevels = int(kwargs.get("tf-level", self.nlevels) )
+                          
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        for v in data.keys():
+            if v not in self.filter:
+                del data[v]
+            
+        return data
+
+########################################################################
+########################################################################
 ########################################################################
 class TransformerSelect( Transformer ):
     '''replace the lowest hierarchy with a single value.
+    This transformer removes all branches in a :term:`data tree`
+    on level :term:`tf-level` that do not match the 
+    :term:`tf-fields` option.
+
+    The following operations are perform when :term:`tf-fields` is set
+    to ``x``::
+       Input:          Returns:
+       a/x=1            a=1
+       a/y=2            b=3
+       b/x=3
+       b/y=4
     '''
     
     nlevels = 2
@@ -298,6 +352,16 @@ class TransformerGroup( Transformer ):
     gene_id1/tracks = [track1,track2]
 
     Note that other fields not in the group field will take the value of the first row.
+
+    For example::
+
+       Input:    Output:
+       a/x=1     x/y=1
+       a/y=1     x/tracks[a,b]
+       b/x=1     
+       b/y=2
+
+
     '''
     
     nlevels = 2
@@ -342,18 +406,18 @@ class TransformerGroup( Transformer ):
 class TransformerCombinations( Transformer ):
     '''build combinations of the second lowest level.
 
-    input:
-    a/1/x
-    a/2/x
-    a/3/x
-    b/1/x
-    b/2/x
+    For example::
+
+       Input:      Output:
+       a/x=1       a x b/a/x=1
+       b/x=2       a x b/b/x=2
+       c/x=3       a x c/a/x=1
+                   a x c/b/x=2
+                   b x c/a/x=2
+                   b x c/a/x=3
 
     Uses the ``tf-fields`` option to combine a certain field.
     Otherwise, it combines the first data found.
-
-    Output:
-    
 
     '''
     
@@ -415,9 +479,23 @@ class TransformerCombinations( Transformer ):
 ########################################################################
 ########################################################################
 class TransformerStats( Transformer ):
-    '''compute summary statistics.
+    '''Compute summary statistics
 
-    Empty paths will be removed.
+    For example::
+
+       Input:      
+       [1,2,3,4,5,6,7,8,9,10
+
+       Output:
+       counts=10
+       min=1
+       max=10
+       mean=5.5
+       median=5.5
+       samplestd=2.87
+       sum=55
+       q1=3
+       q3=8
     '''
     nlevels = 1
 
@@ -494,40 +572,134 @@ class TransformerPairwise( Transformer ):
                 continue
 
             new_data[x][y] = result
-            new_data[y][x] = result
 
         return new_data
 
 class TransformerCorrelation( TransformerPairwise ):
-    '''compute correlations.'''
+    '''compute correlation test
+
+    Example::
+
+       Input:
+       set1=[1,2,3,4,5,6,7,8,9,10]
+       set2=[3,4,5,6,7,8,9,10,11,12]
+       set3=[5,6,7,8,9,10,11,12,14,15]
+
+       Result:
+       set1/set2/pvalue=0.0
+       set1/set2/method=pearson
+       set1/set2/nobservations=10
+       set1/set2/coefficient=1.0
+       set1/set2/alternative=two-sided
+       set1/set2/logpvalue=0
+       set1/set2/significance=***
+    '''
+    
     paired = True
     def apply( self, xvals, yvals ):
+        r = Stats.doCorrelationTest( xvals, yvals, method = self.method )
         return Stats.doCorrelationTest( xvals, yvals, method = self.method )
 
 class TransformerCorrelationPearson( TransformerCorrelation ):
     '''for each pair of columns on the lowest level compute
-    the spearman correlation coefficient and other stats.
+    the pearson correlation coefficient and other stats.
+
+    Example::
+
+       Input:
+       set1=[1,2,3,4,5,6,7,8,9,10]
+       set2=[3,4,5,6,7,8,9,10,11,12]
+       set3=[5,6,7,8,9,10,11,12,14,15]
+
+       Output:
+       set1/set2/pvalue=0.0
+       set1/set2/method=pearson
+       set1/set2/nobservations=10
+       set1/set2/coefficient=1.0
+       set1/set2/alternative=9
+       set1/set2/logpvalue=0
+       set1/set2/significance=***
+       set1/set3/pvalue=
+       ...
+       set2/set3/pvalue=
+       ...
+
     '''
     method = "pearson"
 
 class TransformerCorrelationSpearman( TransformerCorrelation ):
     '''for each pair of columns on the lowest level compute
     the spearman correlation coefficient and other stats.
+
+    Example::
+
+       Input:
+       set1=[1,2,3,4,5,6,7,8,9,10]
+       set2=[3,4,5,6,7,8,9,10,11,12]
+       set3=[5,6,7,8,9,10,11,12,14,15]
+
+       Output:
+       set1/set2/pvalue=0.0
+       set1/set2/method=spearman
+       set1/set2/nobservations=10
+       set1/set2/coefficient=1.0
+       set1/set2/alternative=9
+       set1/set2/logpvalue=0
+       set1/set2/significance=***
+       set1/set3/pvalue=0.0
+       ...
+       set2/set1/pvalue=0.0
+       ...
+       set2/set3/pvalue=0.0
+       ...
+       set3/set1/pvalue=0.0
+       ...
+       set3/set2/pvalue=0.0
+
     '''
     method = "spearman"
 
 class TransformerMannWhitneyU( TransformerPairwise ):
     '''apply the Mann-Whitney U test to test for 
     the difference of medians.
+
+    Example::
+
+       Input:
+       set1=[1,2,3,4,5,6,7,8,9,10]
+       set2=[3,4,5,6,7,8,9,10,11,12]
+       set3=[5,6,7,8,9,10,11,12,14,15]
+
+       Output:
+       
+    
     '''
 
     def apply( self, xvals, yvals ):
         xx = numpy.array( [ x for x in xvals if x != None ] )
         yy = numpy.array( [ y for y in yvals if y != None ] )
+        r = Stats.doMannWhitneyUTest( xx, yy )
         return Stats.doMannWhitneyUTest( xx, yy )
 
 class TransformerContingency( TransformerPairwise ):
-    '''return number of identical entries'''
+    '''return number of identical entries
+
+    Example::
+
+       Input:
+       set1=[1,2,3,4,5,6,7,8,9,10]
+       set2=[3,4,5,6,7,8,9,10,11,12]
+       set3=[5,6,7,8,9,10,11,12,14,15]
+             
+       Output:
+       set1/set2=8
+       set1/set3=6
+       set2/set1=8
+       set2/set3=8
+       set3/set1=6
+       set3/set2=8
+    '''
+
     paired = False
     def apply( self, xvals, yvals ):
         return len( set(xvals).intersection( set(yvals)) )
@@ -536,7 +708,37 @@ class TransformerContingency( TransformerPairwise ):
 ########################################################################
 ########################################################################
 class TransformerAggregate( Transformer ):
-    '''aggregate histogram like data.'''
+    '''aggregate histogram like data.
+
+    Example::
+
+       Input:
+       x=[ 1,1,1,1,1,2,2,2,4,4,5 ]
+       frequency=[5,3,0,2,1]
+     
+       Output (with tf-aggregate=cumulative):
+       x=[ 1.,1.8,2.6,3.4,4.2 ]
+       frequency=[5,8,8,10,11]
+     
+    Possible aggregation options are:
+
+    normalized-max
+       normalize by maximum
+
+    normalized-total
+       normalize by total
+
+    cumulative
+       compute cumulative values
+
+    reverse-cumulative
+       compute reverse cumulative values
+
+    relevel-with-first:
+        add value of first bin to all other bins
+        and set first bin to 0.
+
+    '''
 
     nlevels = 1
 
@@ -637,7 +839,18 @@ class TransformerAggregate( Transformer ):
 ########################################################################
 ########################################################################
 class TransformerHistogram( TransformerAggregate ):
-    '''compute a histograms of :term:`numerical arrays`.'''
+    '''compute a histograms of :term:`numerical arrays`.
+
+    Example::
+
+       Input:
+       x=[ 1,1,1,1,1,2,2,2,4,4,5 ]
+     
+       Result (tf-bins=5]:
+       x=[ 1.   1.8  2.6  3.4  4.2]
+       frequency=[5,3,0,2,1]
+     
+    '''
 
     nlevels = 1
 
