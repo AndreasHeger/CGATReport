@@ -39,46 +39,49 @@ class LabeledDataWithErrorsExample( Tracker ):
     def __call__(self, track, slice = None):
         if slice == "slice1":
             return odict( ( 
-                    ("column1", dict( ( ('data', 20), 
-                                        ('error', 1), 
-                                        ) ) ),
-                    ("column2", dict( ( ('data', 10), 
-                                        ('error', 2),
-                                        ) ) ),
+                    ("column1", odict( ( ('data', 20), 
+                                         ('error', 1), 
+                                         ) ) ),
+                    ("column2", odict( ( ('data', 10), 
+                                         ('error', 2),
+                                         ) ) ),
                     )) 
         elif slice == "slice2":
             return odict( ( 
-                    ("column1", dict( ( ('data', 20), 
-                                        ('error', 3),
-                                        ) )),
-                    ("column2", dict( ( ('data', 10), 
-                                        ('error', 4))) ),
-                    ("column3", dict( ( ('data', 30), 
-                                        ('error', 5))) ),
+                    ("column1", odict( ( ('data', 20), 
+                                         ('error', 3),
+                                         ) )),
+                    ("column2", odict( ( ('data', 10), 
+                                         ('error', 4))) ),
+                    ("column3", odict( ( ('data', 30), 
+                                         ('error', 5))) ),
                     ) )
 
 class LabeledDataWithErrorsAndLabelsExample( Tracker ):
+    '''use of ordered dictionary important as first
+    element is treated as data.
+    '''
     slices = ("slice1", "slice2")
     tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
         if slice == "slice1":
             return odict( ( 
-                    ("column1", dict( ( ('data', 20), 
-                                        ('error',5), 
-                                        ('label','**' ) ) )),
-                    ("column2", dict( ( ('data', 10), 
-                                        ('error',2), 
-                                        ('label', '*' ) ) ) )
+                    ("column1", odict( ( ('data', 20), 
+                                         ('error',5), 
+                                         ('label','**' ) ) )),
+                    ("column2", odict( ( ('data', 10), 
+                                         ('error',2), 
+                                         ('label', '*' ) ) ) )
                     )) 
         elif slice == "slice2":
             return odict( ( 
-                    ("column1", dict( ( ('data', 20), 
-                                        ('error',5),
-                                        ('label','***' ) ) )),
-                    ("column2", dict( ( ('data', 10), 
-                                        ('error',1))) ),
-                    ("column3", dict( ( ('data', 30), 
-                                        ('error',4))) ),
+                    ("column1", odict( ( ('data', 20), 
+                                         ('error',5),
+                                         ('label','***' ) ) )),
+                    ("column2", odict( ( ('data', 10), 
+                                         ('error',1))) ),
+                    ("column3", odict( ( ('data', 30), 
+                                         ('error',4))) ),
                     ) )
 
 class SingleColumnDataExample( Tracker ):

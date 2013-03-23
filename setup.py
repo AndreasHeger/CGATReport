@@ -1,9 +1,10 @@
-import ez_setup
-ez_setup.use_setuptools()
+from distribute_setup import use_setuptools
+use_setuptools()
+
+from setuptools import Extension, setup, find_packages
+from setuptools import setup, find_packages
 
 import glob, sys, os
-
-from setuptools import setup, find_packages
 
 major, minor1, minor2, s, tmp = sys.version_info
 
@@ -24,6 +25,14 @@ Operating System :: Unix
 Operating System :: MacOS
 """
 
+# external dependencies
+# R
+# sqlite
+# R - ggplot2
+# R - RSqlite
+# R - gplots (for r-heatmap)
+# graphvis - for dependency graphs in documentation
+
 setup(name='SphinxReport',
       version='2.0',
       description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
@@ -41,10 +50,15 @@ setup(name='SphinxReport',
       keywords="report generator sphinx matplotlib sql",
       long_description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       classifiers = filter(None, classifiers.split("\n")),
-      install_requires = ['sphinx>=1.0.5', 
+      install_requires = ['web.py>=0.37',
+                          'sphinx>=1.0.5',
+                          'rpy2>=2.3.4',
+                          'numpy>=1.7',
+                          'scipy>=0.11',
                           "matplotlib>=1.0", 
                           "sqlalchemy>=0.7.0", 
                           "xlwt>=0.7.4", 
+                          "matplotlib-venn>=0.5",
                           "openpyxl>=1.5.7" ],
       zip_safe = False,
       include_package_data = True,
@@ -121,8 +135,8 @@ setup(name='SphinxReport',
 # set to "group writeable" 
 # also updates the "sphinx" permissions
 import distutils.sysconfig, stat, glob
-if sys.args[0] == "install":
-    print "updating file permissions for scripts"
+if sys.argv[0] == "install":
+    print ("updating file permissions for scripts")
     for x in glob.glob( os.path.join(distutils.sysconfig.project_base, "sphinx*")):
         try:
             os.chmod( x, os.stat(x).st_mode | stat.S_IWGRP ) 

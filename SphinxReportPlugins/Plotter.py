@@ -451,7 +451,14 @@ class Plotter(object):
         legend = None
         maxlen = 0
 
+        # In matplotlib version < 1.1, the output of plotting was 
+        # a single element. In later versions, the output is a tuple
+        # so take first element.
+        if type(plts[0]) in (tuple, list):
+            plts = [ x[0] for x in plts ]
+
         if self.legend_location != "none" and plts and legends:
+
 
             maxlen = max( [ len(x) for x in legends ] )
             # legends = self.wrapText( legends )
@@ -1496,7 +1503,7 @@ class BarPlot( TableMatrix, Plotter):
         trans=coord_offset(ax, self.mCurrentFigure, 
                            self.label_offset_x, 
                            self.label_offset_y)
-        for xval, yval, label in zip(xvals,vals,labels):
+        for xval, yval, label in zip(xvals,yvals,labels):
             ax.text(xval, yval, label, transform=trans)
 
     def buildMatrices( self, work ):

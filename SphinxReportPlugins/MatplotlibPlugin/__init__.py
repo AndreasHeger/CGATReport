@@ -70,7 +70,7 @@ class MatplotlibPlugin(Component):
                 try:
                     figman.canvas.figure.savefig( outpath, dpi=dpi )
                 except:
-                    s = exception_to_str("Exception running plot %s" % outpath)
+                    s = Utils.collectExceptionAsString("Exception running plot %s" % outpath)
                     warnings.warn(s)
                     return []
 

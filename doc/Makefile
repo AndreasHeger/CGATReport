@@ -1,10 +1,12 @@
 # Makefile for Sphinx documentation
 #
+BINDIR=/home/andreas/python2.7/bin/
+XVFB=  #xvfb-run -a
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = sphinxreport-build --num-jobs=4 sphinx-build
-SPHINXCLEAN   = sphinxreport-clean
+SPHINXBUILD   = $(BINDIR)sphinxreport-build --num-jobs=4 $(BINDIR)sphinx-build
+SPHINXCLEAN   = $(BINDIR)sphinxreport-clean
 PAPER         =
 
 DIR_PUBLISH       = ~/public_html/documentation/SphinxReport
@@ -43,7 +45,7 @@ csvdb:
 	python fill.py
 
 html: csvdb
-	xvfb-run -a $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
+	$(XVFB) $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 

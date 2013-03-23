@@ -484,6 +484,14 @@ def buildException( stage ):
     else:
         return None
 
+def collectExceptionAsString( msg ):
+    '''return exception as a string.'''
+    exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+    lines = traceback.format_tb( exceptionTraceback )
+    return 'exception: %s\nmsg=%s\n%s' % ( str(exceptionType), 
+                                           msg, 
+                                           "".join(lines) )
+
 def getTransformers( transformers, kwargs = {} ):
     '''find and instantiate all transformers.'''
 

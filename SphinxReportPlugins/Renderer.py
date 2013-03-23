@@ -752,19 +752,22 @@ class TableMatrix(TableBase, MatrixBase):
         If *take* is given, then the matrix will be built from
         level 3, taking *take* from the deepest level only.
         
-        If *ignore* is given, columns in ignore will be ignore.
+        If *ignore* is given, columns in ignore will be ignore. If the
+        matrix is built from level 3 and no *take* is specified, ignore 
+        will also applied to level 3 and the first remaining field is taken.
 
         This method will also apply conversions if apply_transformations
         is set.
         """
-
         labels = DataTree.getPaths( work )
         levels = len(labels)
 
         rows, columns = labels[:2]
+
         if ignore != None: 
             columns = [x for x in columns if x not in ignore ]
 
+        # if take is specified, this takes priority
         if take:
             if levels == 3: 
                 if take not in labels[-1]: raise ValueError( "no data on `%s`" % take )
@@ -775,8 +778,16 @@ class TableMatrix(TableBase, MatrixBase):
             else:
                 raise ValueError( "expected two or three levels, got %i: '%s'" % (levels, labels) )
         else:
-            if levels != 2: raise ValueError( "expected two levels" )
-            take_f = lambda row,column: work[row][column]
+            if levels == 3:
+                take = [ x for x in labels[-1] if x not in ignore ]
+                if len(take) != 1:
+                    self.warn( "received data with three level, but third level is ambiguous, taking first of: %s" % take)
+                take=take[0]
+                take_f = lambda row, column: work[row][column][take]
+            elif levels == 2: 
+                take_f = lambda row,column: work[row][column]
+            else:
+                raise ValueError( "expected two levels, got %i: %s" % (levels, str(labels) ))
 
         self.debug("creating matrix: taking=%s, ignoring=%s" % (take,ignore))
         matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), dtype )
@@ -799,11 +810,10 @@ class TableMatrix(TableBase, MatrixBase):
                 # convert
                 try:
                     matrix[x,y] = v
-                except ValueError:
-                    raise ValueError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
-                except TypeError:
-                    raise TypeError( "malformatted data: expected scalar, got '%s'" % str(work[row][column]) )
-        
+                except ValueError, msg:
+                    raise ValueError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]),msg) )
+                except TypeError, msg:
+                    raise TypeError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]), msg) )
         
         if self.mConverters and apply_transformations:
             for converter in self.mConverters: 

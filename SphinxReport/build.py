@@ -330,7 +330,7 @@ def main():
     
     (options, args) = parser.parse_args()
 
-    assert args[0] == "sphinx-build", "command line should contain sphinx-build"
+    assert args[0].endswith( "sphinx-build" ), "command line should contain sphinx-build"
 
     sphinx_parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE )
     sphinx_parser.add_option( "-b", type = "string" )
