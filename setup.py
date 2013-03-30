@@ -62,6 +62,7 @@ setup(name='SphinxReport',
                           "openpyxl>=1.5.7" ],
       zip_safe = False,
       include_package_data = True,
+      test_suite = "tests",
       entry_points = \
           {
               'console_scripts': [
