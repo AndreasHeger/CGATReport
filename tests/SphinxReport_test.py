@@ -12,8 +12,10 @@ import logging
 
 IS_PYTHON3 = sys.version_info[0] >= 3
 
-from SphinxReport import Utils
-from SphinxReport import Dispatcher
+import SphinxReport
+import SphinxReport.Utils
+import SphinxReport.Dispatcher
+
 class SphinxReportTest(unittest.TestCase):
     ''' '''
     renderer = "table"
@@ -21,12 +23,12 @@ class SphinxReportTest(unittest.TestCase):
     
     def testTracker( self ):
         
-        code, tracker = Utils.makeTracker( self.tracker, (), {} )
-        renderer = Utils.getRenderer( self.renderer, {} )
+        code, tracker = SphinxReport.Utils.makeTracker( self.tracker, (), {} )
+        renderer = SphinxReport.Utils.getRenderer( self.renderer, {} )
 
-        dispatcher = Dispatcher.Dispatcher( tracker,
-                                            renderer,
-                                            [] )
+        dispatcher = SphinxReport.Dispatcher.Dispatcher( tracker,
+                                                         renderer,
+                                                         [] )
         results = dispatcher( {} )
         print results
         return True

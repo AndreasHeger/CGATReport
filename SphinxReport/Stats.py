@@ -1,8 +1,13 @@
 import types
 import math
 import numpy
+
 import scipy
-import scipy.stats
+# See http://projects.scipy.org/scipy/ticket/1739
+# scipy 0.11 for python3 broken, should be fixed for scipy 0.12
+try: import scipy.stats
+except ValueError: pass
+
 import collections, itertools
 
 from rpy2.robjects import r as R
@@ -242,9 +247,9 @@ class Summary( Result ):
             self.counts = len(n)
             self.min = min(n)
             self.max = max(n)
-            self.mean = scipy.mean( n )
-            self.median = scipy.median( n )
-            self.samplestd = scipy.std( n )
+            self.mean = numpy.mean( n )
+            self.median = numpy.median( n )
+            self.samplestd = numpy.std( n )
             self.sum = reduce( lambda x, y: x+y, n )
 
     def getHeaders( self ):

@@ -8,6 +8,22 @@ import glob, sys, os
 
 major, minor1, minor2, s, tmp = sys.version_info
 
+if major==2:
+    extra_dependencies = [ 'web.py>=0.37',
+                           'xlwt>=0.7.4', 
+                           'matplotlib-venn>=0.5' ]
+elif major==3:
+    extra_dependencies = []
+
+shared_dependencies = [
+    'sphinx>=1.0.5',
+    'rpy2>=2.3.4',
+    'numpy>=1.7',
+    'scipy>=0.11',
+    'matplotlib>=1.0', 
+    'sqlalchemy>=0.7.0', 
+    'openpyxl>=1.5.7' ]
+
 if major==2 and minor1<5 or major<2:
     raise SystemExit("""SphinxReport requires Python 2.5 or later.""")
 
@@ -50,19 +66,13 @@ setup(name='SphinxReport',
       keywords="report generator sphinx matplotlib sql",
       long_description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       classifiers = filter(None, classifiers.split("\n")),
-      install_requires = ['web.py>=0.37',
-                          'sphinx>=1.0.5',
-                          'rpy2>=2.3.4',
-                          'numpy>=1.7',
-                          'scipy>=0.11',
-                          "matplotlib>=1.0", 
-                          "sqlalchemy>=0.7.0", 
-                          "xlwt>=0.7.4", 
-                          "matplotlib-venn>=0.5",
-                          "openpyxl>=1.5.7" ],
+      install_requires = shared_dependencies + extra_dependencies,
       zip_safe = False,
       include_package_data = True,
       test_suite = "tests",
+      # python 3 conversion, requires distribute
+      use_2to3 = True,
+
       entry_points = \
           {
               'console_scripts': [

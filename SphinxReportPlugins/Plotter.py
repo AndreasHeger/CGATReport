@@ -11,7 +11,11 @@ matplotlib.use('Agg', warn = False)
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
-import matplotlib_venn
+
+# Python 3 Compatibility
+try: import matplotlib_venn
+except ImportError: matplotlib_venn = None
+
 import numpy 
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
@@ -2255,6 +2259,9 @@ class VennPlot( Renderer, Plotter ):
         Plotter.__init__(self, *args, **kwargs )
 
     def __call__(self, work, path):
+
+        if matplotlib_venn == None:
+            raise ValueError("library matplotlib_venn not available")
 
         self.startPlot()
 
