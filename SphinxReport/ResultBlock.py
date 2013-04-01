@@ -1,4 +1,8 @@
-import types, re, string, itertools, operator
+import types, re, string, itertools, operator, sys
+
+# PYTHON 2/3 compatibility
+if sys.version_info[0] == 3:
+    basestring = str
 
 class ResultBlock(object):
     """Result of :class:``Renderer``
@@ -11,8 +15,8 @@ class ResultBlock(object):
     """
 
     def __init__( self, text, title ):
-        assert type(text) in types.StringTypes, "created ResultBlock without txt, but %s" % str(text)
-        assert type(title) in types.StringTypes, "created ResultBlock without txt, but %s" % str(title)
+        assert isinstance( text, basestring), "created ResultBlock without txt, but %s" % str(type(text))
+        assert isinstance(title, basestring), "created ResultBlock without title, but %s" % str(title)
         assert title != None
         assert text != None
         self.text = text
@@ -58,7 +62,10 @@ class ResultBlock(object):
         # normalize titel
         parts = self.title.split("/")
         # make unique
-        self.title = "/".join( itertools.imap(next, itertools.imap(operator.itemgetter(1), itertools.groupby(parts))) )
+        self.title = str(parts)
+        # self.title = "/".join( map(next, 
+        #                            map(operator.itemgetter(1), 
+        #                                itertools.groupby(parts))) )
 
     def __str__(self):
         return "\n\n".join( (self.title, self.text) )

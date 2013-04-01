@@ -152,11 +152,13 @@ def run(arguments,
     # check for missing files
     if renderer_name != None:
         
-        options_hash = hashlib.md5( str(renderer_options) +\
-                                        str(transformer_options) +\
-                                        str(dispatcher_options) +\
-                                        str(tracker_options) +\
-                                        str(transformer_names) ).hexdigest()
+        options_key = str(renderer_options) +\
+            str(transformer_options) +\
+            str(dispatcher_options) +\
+            str(tracker_options) +\
+            str(transformer_names)
+
+        options_hash = hashlib.md5( options_key.encode() ).hexdigest()
 
         template_name = Utils.quote_filename( \
             Config.SEPARATOR.join( (reference, renderer_name, options_hash ) ))
