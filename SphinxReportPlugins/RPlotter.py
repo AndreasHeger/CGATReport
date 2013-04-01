@@ -216,7 +216,7 @@ class LinePlot( Renderer, Plotter ):
         should return a single key for xvalues and 
         one or more keys for y-values.
         '''
-        keys = coords.keys()
+        keys = list(coords.keys())
         return keys[0], keys[1:]
 
     def render(self, work, path ):
@@ -227,12 +227,12 @@ class LinePlot( Renderer, Plotter ):
 
         nplotted = 0
 
-        for line, data in work.iteritems():
+        for line, data in work.items():
 
-            for label, coords in data.iteritems():
+            for label, coords in data.items():
                 
                 # sanity check on data
-                try: keys = coords.keys()
+                try: keys = list(coords.keys())
                 except AttributeError:
                     self.warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
                     continue
@@ -289,7 +289,7 @@ class BoxPlot( Renderer, Plotter ):
 
         #    assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
 
-        for label, values in work.iteritems():
+        for label, values in work.items():
             assert Utils.isArray( values ), "work is of type '%s'" % values
             d = [ x for x in values if x != None ]
             if len(d) > 0:
@@ -320,7 +320,7 @@ class SmoothScatterPlot(Renderer, Plotter):
 
         self.nbins = kwargs.get("nbins", "128" )
         if self.nbins:
-            if "," in self.nbins: self.nbins=map(int, self.nbins.split(","))
+            if "," in self.nbins: self.nbins=list(map(int, self.nbins.split(",")))
             else: self.nbins=int(self.nbins)
 
     def render(self, work, path ):
@@ -331,10 +331,10 @@ class SmoothScatterPlot(Renderer, Plotter):
         xlabels, ylabels = [], []
 
         if len(work) < 2:
-            raise ValueError( "requiring two coordinates, only got %s" % str(work.keys()))
+            raise ValueError( "requiring two coordinates, only got %s" % str(list(work.keys())))
 
-        xlabel, ylabel = work.keys()[:2]
-        xvals, yvals = Stats.filterNone( work.values()[:2])
+        xlabel, ylabel = list(work.keys())[:2]
+        xvals, yvals = Stats.filterNone( list(work.values())[:2])
 
         if len(xvals) == 0 or len(yvals) == 0:
             raise ValueError("no data" )
@@ -434,7 +434,7 @@ class GGPlot( Renderer, Plotter ):
 
         results = ResultBlocks()
 
-        for title, dataframe in work.iteritems():
+        for title, dataframe in work.items():
             
             self.startPlot()
 
@@ -455,7 +455,7 @@ class GGPlot( Renderer, Plotter ):
             # add aesthetics and geometries
             try:
                 pp = R('''gp + %s ''' % self.statement )
-            except ValueError, msg:
+            except ValueError as msg:
                 raise ValueError( "could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg ))
 
             # plot

@@ -96,7 +96,7 @@ class TransformerToLabels( Transformer ):
 
         if len(data) == 0: return data
         
-        keys = data.keys()
+        keys = list(data.keys())
 
         if self.labels: 
             labels = data[self.labels]
@@ -104,17 +104,17 @@ class TransformerToLabels( Transformer ):
             if len(keys) < 1: 
                 raise ValueError( "TransformerToLabels requires at least two arrays, got only 1, if tf-labels is set" )
         else: 
-            max_nkeys = max([len(x) for x in data.values() ])
-            labels = range(1, max_nkeys + 1)
+            max_nkeys = max([len(x) for x in list(data.values()) ])
+            labels = list(range(1, max_nkeys + 1))
 
-        labels = map(str, labels)
+        labels = list(map(str, labels))
 
         if len(data) == 2:
-            new_data = odict(zip(labels, data[keys[0]]))
+            new_data = odict(list(zip(labels, data[keys[0]])))
         else:
             new_data = odict()
             for key in keys:
-                new_data[key] = odict(zip(labels, data[key]))
+                new_data[key] = odict(list(zip(labels, data[key])))
                 
         return new_data
 
@@ -145,14 +145,14 @@ class TransformerToList( Transformer ):
 
         lists = odict()
 
-        for major_key, values in data.iteritems():
-            for minor_key, value in values.iteritems():
+        for major_key, values in data.items():
+            for minor_key, value in values.items():
                 if minor_key in lists:
                     lists[minor_key].append( value )
                 else:
                     lists[minor_key] = [value]
 
-        sizes = [ len(x) for x in lists.values() ]
+        sizes = [ len(x) for x in list(lists.values()) ]
         if max(sizes) != min(sizes):
             warn( "%s: list of unequal sizes: min=%i, max=%i" %\
                       (self, min(sizes), max(sizes)))
@@ -182,7 +182,7 @@ class TransformerToDataFrame( Transformer ):
         debug( "%s: called" % str(self))
 
         t = odict()
-        for minor_key, values in data.iteritems():
+        for minor_key, values in data.items():
             if not Utils.isArray(values): raise ValueError("expected a list for data frame creation, got %s", type(data))
             if len(values) == 0: raise ValueError( "empty list for %s:%s" % (major_key, minor_key))
             v = values[0]
@@ -225,7 +225,7 @@ class TransformerIndicator( Transformer ):
         debug( "%s: called" % str(self))
 
         vals = data[self.filter]
-        return odict(zip( vals, [1] * len(vals) ))
+        return odict(list(zip( vals, [1] * len(vals) )))
 
 ########################################################################
 ########################################################################
@@ -276,7 +276,7 @@ class TransformerFilter( Transformer ):
     def transform(self, data, path):
         debug( "%s: called" % str(self))
 
-        for v in data.keys():
+        for v in list(data.keys()):
             if v not in self.filter:
                 del data[v]
             
@@ -317,7 +317,7 @@ class TransformerSelect( Transformer ):
         debug( "%s: called" % str(self))
 
         nfound = 0
-        for v in data.keys():
+        for v in list(data.keys()):
             for field in self.fields:
                 try:
                     data[v] = data[v][field]
@@ -388,8 +388,8 @@ class TransformerGroup( Transformer ):
         nfound = 0
         new_data = odict()
 
-        for v in data.keys():
-            other_fields = [ x for x in data[v].keys() if x != self.field ]
+        for v in list(data.keys()):
+            other_fields = [ x for x in list(data[v].keys()) if x != self.field ]
             for pos, val in enumerate(data[v][self.field]):
                 if val not in new_data: new_data[val] = odict()
                 if "group" not in new_data[val]: 
@@ -437,7 +437,7 @@ class TransformerCombinations( Transformer ):
 
         debug( "%s: called" % str(self))
 
-        vals =  data.keys()
+        vals =  list(data.keys())
         new_data = odict()
 
         for x1 in range(len(vals)-1):
@@ -449,7 +449,7 @@ class TransformerCombinations( Transformer ):
                         d1 = data[n1][field]
                         break
                 else:
-                    raise KeyError("could not find any match from '%s' in '%s'" % (str(data[n1].keys()), str(self.fields )))
+                    raise KeyError("could not find any match from '%s' in '%s'" % (str(list(data[n1].keys())), str(self.fields )))
             else:
                 d1 = data[n1]
 
@@ -507,7 +507,7 @@ class TransformerStats( Transformer ):
         # do not use iteritems as loop motifies dictionary
 
         to_delete = []
-        for header, values in data.iteritems():
+        for header, values in data.items():
             if len(values) == 0: 
                 warn( "no data for %s -removing" % header)
                 to_delete.append( header )
@@ -518,7 +518,7 @@ class TransformerStats( Transformer ):
             except TypeError:
                 warn("%s: could not compute stats: expected an array of values, but got '%s'" % (str(self), str(values)) )
                 to_delete.append( header )
-            except ValueError, msg:
+            except ValueError as msg:
                 warn("%s: could not compute stats: '%s'" % (str(self), msg) )
                 to_delete.append( header )
 
@@ -545,14 +545,14 @@ class TransformerPairwise( Transformer ):
     def transform(self, data, path ):
         debug( "%s: called" % str(self))
 
-        if len(data.keys()) < 2:
-            raise ValueError( "expected at least two arrays, got only %s." % str(data.keys()) )
+        if len(list(data.keys())) < 2:
+            raise ValueError( "expected at least two arrays, got only %s." % str(list(data.keys())) )
 
-        pairs = itertools.combinations( data.keys(), 2)
+        pairs = itertools.combinations( list(data.keys()), 2)
 
         new_data = odict()
 
-        for x in data.keys(): new_data[x] = odict()
+        for x in list(data.keys()): new_data[x] = odict()
         
         for x,y in pairs:
             xvals, yvals = data[x], data[y]
@@ -561,13 +561,13 @@ class TransformerPairwise( Transformer ):
                     raise ValueError("expected to arrays of the same length, %i != %i" % (len(xvals),
                                                                                           len(yvals)))
                 take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None \
-                            and type(xvals[i]) in (float,int,long) and type(yvals[i]) in (float,int,long) ]
+                            and type(xvals[i]) in (float,int,int) and type(yvals[i]) in (float,int,int) ]
                 xvals = [xvals[i] for i in take ]
                 yvals = [yvals[i] for i in take ]
 
             try:
                 result = self.apply( xvals, yvals )
-            except ValueError, msg:
+            except ValueError as msg:
                 warn( "pairwise computation failed: %s" % msg)
                 continue
 
@@ -823,7 +823,7 @@ class TransformerAggregate( Transformer ):
 
         to_delete = set()
         first = True
-        for key, values in data.iteritems():
+        for key, values in data.items():
             # first pair is bins - do not transform
             if first:
                 first = False
@@ -935,7 +935,7 @@ class TransformerHistogram( TransformerAggregate ):
                 mi = numpy.log10( mi )
                 try:
                     bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
-                except ValueError, msg:
+                except ValueError as msg:
                     raise ValueError("can not compute %i bins for %f-%f: %s" % \
                                          (nbins, mi, ma, msg ) )
             elif binsize != None:
@@ -947,7 +947,7 @@ class TransformerHistogram( TransformerAggregate ):
             else:
                 try:
                     bins = eval(self.mBins)
-                except SyntaxError, msg:
+                except SyntaxError as msg:
                     raise SyntaxError( "could not evaluate bins from `%s`, error=`%s`" \
                                            % (self.mBins, msg))
 
@@ -972,7 +972,7 @@ class TransformerHistogram( TransformerAggregate ):
         debug( "%s: called for path %s" % (str(self), str(path)))
 
         to_delete = set()
-        for header, values in data.iteritems():
+        for header, values in data.items():
             bins, values = self.toHistogram(values)
             if bins != None:
                 for converter in self.mConverters: values = converter(values)

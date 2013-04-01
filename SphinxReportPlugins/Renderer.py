@@ -1,4 +1,4 @@
-import os, sys, re, shelve, traceback, cPickle, types, itertools, collections
+import os, sys, re, shelve, traceback, pickle, types, itertools, collections
 
 # so that arange is available in eval
 import numpy
@@ -87,8 +87,8 @@ class Renderer(Component):
             work = DataTree.getLeaf( data, p )
             if not work: continue
             if self.split_at:
-                k = work.keys()
-                for z, x in enumerate(xrange( 0, len(k), self.split_at)) :
+                k = list(work.keys())
+                for z, x in enumerate(range( 0, len(k), self.split_at)) :
                     w = dict( [ (xx, work[xx]) for xx in k[x:x+self.split_at] ] )
                     try:
                         result.extend( self.render( w, path + p + (str(z),) ) )
@@ -241,9 +241,9 @@ class Table( TableBase ):
         sorted_headers = []
 
         try:
-            for row, r in data.iteritems():
-                for column, c in r.iteritems():
-                     for header, value in c.iteritems():
+            for row, r in data.items():
+                for column, c in r.items():
+                     for header, value in c.items():
                         if header not in column_headers: 
                             column_headers[header] = len(column_headers)
                             sorted_headers.append(header)
@@ -348,7 +348,7 @@ class RstTable( Table ):
         format = "|" + "|".join( [" %%%is " % x for x in max_widths] ) + "|"
 
         lines.append( separator )
-        lines.append( format % tuple( [""] + map(str,col_headers) ))
+        lines.append( format % tuple( [""] + list(map(str,col_headers)) ))
         lines.append( separator )
 
         for h, row in zip(row_headers,matrix[1:]):
@@ -466,12 +466,12 @@ class MatrixBase:
 
     def transformFilterByRows( self, matrix, row_headers, col_headers ):
         """only take columns that are also present in rows"""
-        take = [ x for x in xrange( len(col_headers) ) if col_headers[x] in row_headers ]
+        take = [ x for x in range( len(col_headers) ) if col_headers[x] in row_headers ]
         return matrix.take( take, axis=1), row_headers, [col_headers[x] for x in take ]
 
     def transformFilterByColumns( self, matrix, row_headers, col_headers ):
         """only take rows that are also present in columns"""
-        take = [ x for x in xrange( len(row_headers) ) if row_headers[x] in col_headers ]
+        take = [ x for x in range( len(row_headers) ) if row_headers[x] in col_headers ]
         return matrix.take( take, axis=0), [row_headers[x] for x in take ], col_headers 
 
     def transformSquare( self, matrix, row_headers, col_headers ):
@@ -498,7 +498,7 @@ class MatrixBase:
 
         try:
             row_indices, col_indices =  CorrespondenceAnalysis.GetIndices( matrix )
-        except ValueError, msg:
+        except ValueError as msg:
             return matrix, row_headers, col_headers            
 
         map_row_new2old = numpy.argsort(row_indices)
@@ -538,8 +538,8 @@ class MatrixBase:
         if len(rows) != len(cols):
             raise ValueError( "matrix not square - can not be symmetrized" )
         
-        for x in xrange(len(rows)):
-            for y in xrange(x+1,len(cols)):
+        for x in range(len(rows)):
+            for y in range(x+1,len(cols)):
                 matrix[x,y] = matrix[y,x] = max(matrix[x,y], matrix[y,x])
 
         return matrix, rows, cols
@@ -552,8 +552,8 @@ class MatrixBase:
         if len(rows) != len(cols):
             raise ValueError( "matrix not square - can not be symmetrized" )
         
-        for x in xrange(len(rows)):
-            for y in xrange(x+1,len(cols)):
+        for x in range(len(rows)):
+            for y in range(x+1,len(cols)):
                 matrix[x,y] = matrix[y,x] = min(matrix[x,y], matrix[y,x])
 
         return matrix, rows, cols
@@ -566,8 +566,8 @@ class MatrixBase:
         if len(rows) != len(cols):
             raise ValueError( "matrix not square - can not be symmetrized" )
         
-        for x in xrange(len(rows)):
-            for y in xrange(x+1,len(cols)):
+        for x in range(len(rows)):
+            for y in range(x+1,len(cols)):
                 matrix[x,y] = matrix[y,x] = sum(matrix[x,y], matrix[y,x])
 
         return matrix, rows, cols
@@ -580,8 +580,8 @@ class MatrixBase:
         if len(rows) != len(cols):
             raise ValueError( "matrix not square - can not be symmetrized" )
         
-        for x in xrange(len(rows)):
-            for y in xrange(x+1,len(cols)):
+        for x in range(len(rows)):
+            for y in range(x+1,len(cols)):
                 matrix[x,y] = matrix[y,x] = sum(matrix[x,y], matrix[y,x]) / 2
 
         return matrix, rows, cols
@@ -810,9 +810,9 @@ class TableMatrix(TableBase, MatrixBase):
                 # convert
                 try:
                     matrix[x,y] = v
-                except ValueError, msg:
+                except ValueError as msg:
                     raise ValueError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]),msg) )
-                except TypeError, msg:
+                except TypeError as msg:
                     raise TypeError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]), msg) )
         
         if self.mConverters and apply_transformations:
@@ -882,15 +882,15 @@ class NumpyMatrix( TableBase, MatrixBase ):
         
         try: rows = work["rows"]
         except KeyError: raise KeyError( "expected rownames in field 'rows' - no 'rows' present: %s " % \
-                                             str(work.keys() ))
+                                             str(list(work.keys()) ))
 
         try: columns = work["columns"]
         except KeyError: raise KeyError( "expected column names in field 'columns' - no 'columns' present: %s " % \
-                                             str(work.keys()) )
+                                             str(list(work.keys())) )
 
         try: matrix = work["matrix"]
         except KeyError: raise KeyError( "expected matrix in field 'matrix' - no 'matrix' present: %s" % \
-                                             str(work.keys()) )
+                                             str(list(work.keys())) )
         
         nrows, ncolumns = matrix.shape
 
@@ -1006,8 +1006,8 @@ class Status( Renderer ):
         lines.append( '   :header: "Track", "Test", "", "Status", "Info" ' )
         lines.append( '' )
 
-        for testname, w in data.iteritems():
-            for track, work in w.iteritems():
+        for testname, w in data.items():
+            for track, work in w.items():
             
                 status = str(work['status']).strip()
                 descriptions[testname] = work.get('description', "")
@@ -1024,7 +1024,7 @@ class Status( Renderer ):
         lines.append( ".. glossary::" )
         lines.append( "" )
 
-        for test, description in descriptions.iteritems():
+        for test, description in descriptions.items():
             lines.append( '%s\n%s\n' % (Utils.indent(test,3), Utils.indent( description,6) ) )
         
         return ResultBlocks( ResultBlock( "\n".join(lines), title = "") )        

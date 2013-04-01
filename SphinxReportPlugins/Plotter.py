@@ -66,7 +66,7 @@ def rstyle(ax):
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
       
-    if ax.legend_ <> None:
+    if ax.legend_ != None:
         lg = ax.legend_
         lg.get_frame().set_linewidth(0)
         lg.get_frame().set_alpha(0.5)
@@ -84,7 +84,7 @@ def rhist(ax, data, **keywords):
                 'bins' : 100
                 }
    
-    for k, v in defaults.items():
+    for k, v in list(defaults.items()):
         if k not in keywords: keywords[k] = v
    
     return ax.hist(data, **keywords)
@@ -123,7 +123,7 @@ def rbox(ax, data, **keywords):
         for j in range(5):
           boxX.append(box.get_xdata()[j])
           boxY.append(box.get_ydata()[j])
-        boxCoords = zip(boxX,boxY)
+        boxCoords = list(zip(boxX,boxY))
        
         if hasColors:
             boxPolygon = Polygon(boxCoords, facecolor = colors[i % len(colors)])
@@ -408,7 +408,7 @@ class Plotter(object):
 
         if self.vline:
             ystart, yend = ax.get_ylim()
-            lines = map(int, self.vline.split(",") )
+            lines = list(map(int, self.vline.split(",") ))
             ax.vlines( lines, ystart, yend )
 
         # add labels and titles
@@ -905,8 +905,8 @@ class PlotterHinton(PlotterMatrix):
 
         plt.axis('equal')
 
-        for x in xrange(width):
-            for y in xrange(height):
+        for x in range(width):
+            for y in range(height):
                 _x = x+1
                 _y = y+1
                 weight = weight_matrix[y,x] - vmin
@@ -1045,8 +1045,8 @@ def hinton(W, maxWeight=None):
 
     plt.axis('off')
     plt.axis('equal')
-    for x in xrange(width):
-        for y in xrange(height):
+    for x in range(width):
+        for y in range(height):
             _x = x+1
             _y = y+1
             w = W[y,x]
@@ -1144,7 +1144,7 @@ class LinePlot( Renderer, Plotter ):
         should return a single key for xvalues and 
         one or more keys for y-values.
         '''
-        keys = coords.keys()
+        keys = list(coords.keys())
         return keys[0], keys[1:]
 
     def finishLine( self, line, data ):
@@ -1172,14 +1172,14 @@ class LinePlot( Renderer, Plotter ):
 
         nplotted = 0
 
-        for line, data in work.iteritems():
+        for line, data in work.items():
             
             self.initLine( line, data )
 
-            for label, coords in data.iteritems():
+            for label, coords in data.items():
 
                 # sanity check on data
-                try: keys = coords.keys()
+                try: keys = list(coords.keys())
                 except AttributeError:
                     self.warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
                     continue
@@ -1197,9 +1197,9 @@ class LinePlot( Renderer, Plotter ):
                     nplotted += 1
 
                     if len(ylabels) > 1:
-                        self.legend.append( "/".join((map(str, (line,label,ylabel)))))
+                        self.legend.append( "/".join((list(map(str, (line,label,ylabel))))))
                     else:
-                        self.legend.append( "/".join((map(str, (line,label)) )))
+                        self.legend.append( "/".join((list(map(str, (line,label))) )))
                                 
                 self.xlabels.append(xlabel)
 
@@ -1245,7 +1245,7 @@ class HistogramPlot(LinePlot):
         '''collect error coords and compute bar width.'''
 
         # get and transform x/y values
-        keys = coords.keys() 
+        keys = list(coords.keys()) 
 
         xlabel, ylabels = keys[0], keys[1:]
 
@@ -1338,11 +1338,11 @@ class HistogramGradientPlot(LinePlot):
         ymin, ymax = None, None
         nrows = 0
         self.xvals = None
-        for line, data in work.iteritems():
+        for line, data in work.items():
 
-            for label, coords in data.iteritems():
+            for label, coords in data.items():
 
-                try: keys = coords.keys()
+                try: keys = list(coords.keys())
                 except AttributeError: continue
                 if len(keys) <= 1: continue
                 
@@ -1410,8 +1410,8 @@ class HistogramGradientPlot(LinePlot):
         ax = plt.gca() 
         plt.setp(ax.get_xticklabels(), visible=True)
         increment = len(self.xvals ) // 5
-        ax.set_xticks( xrange( 0, len(self.xvals), increment ) ) 
-        ax.set_xticklabels( [self.xvals[x] for x in xrange( 0, len(self.xvals), increment ) ] )
+        ax.set_xticks( range( 0, len(self.xvals), increment ) ) 
+        ax.set_xticklabels( [self.xvals[x] for x in range( 0, len(self.xvals), increment ) ] )
 
         LinePlot.finishPlot(self, fig, work, path)
         self.legend = None
@@ -1851,13 +1851,13 @@ class PiePlot(Renderer, Plotter):
         
         self.startPlot()
 
-        for x in work.keys(): 
+        for x in list(work.keys()): 
             if x not in self.sorted_headers: 
                 self.sorted_headers[x] = len(self.sorted_headers)
 
         sorted_vals = [0] * len(self.sorted_headers)
 
-        for key, value in work.iteritems():
+        for key, value in work.items():
             if value < self.mPieMinimumPercentage:
                 sorted_vals[self.sorted_headers[key]] = 0
                 if "other" not in self.sorted_headers:
@@ -1867,7 +1867,7 @@ class PiePlot(Renderer, Plotter):
             else:
                 sorted_vals[self.sorted_headers[key]] = value
 
-        labels = self.sorted_headers.keys()
+        labels = list(self.sorted_headers.keys())
 
         if sum(sorted_vals) == 0:
             return self.endPlot( None, None, path )
@@ -1977,7 +1977,7 @@ class BoxPlot(Renderer, Plotter):
 
             # assert len(data) == 1, "multicolumn data not supported yet, got %i items" % len(data)
 
-        for label, values in work.iteritems():
+        for label, values in work.items():
             assert Utils.isArray( values ), "work is of type '%s'" % values
             d = [ x for x in values if x != None ]
             if len(d) > 0:
@@ -2100,10 +2100,10 @@ class ScatterPlot(Renderer, Plotter):
         plts, legend = [], []
         xlabels, ylabels = [], []
 
-        for label, coords in work.iteritems():
+        for label, coords in work.items():
             assert len(coords) >= 2, "expected at least two arrays, got %i" % len(coords)
             
-            k = coords.keys()
+            k = list(coords.keys())
             
             xlabel = k[0]
 
@@ -2193,10 +2193,10 @@ class ScatterPlotWithColor( ScatterPlot ):
         else:
             color_scheme = None
 
-        assert len(work) >= 3, "expected at least three arrays, got %i: %s" % (len(work), work.keys())
+        assert len(work) >= 3, "expected at least three arrays, got %i: %s" % (len(work), list(work.keys()))
         
-        xlabel, ylabel, zlabel = work.keys()[:3]
-        xvals, yvals, zvals = Stats.filterNone( work.values()[:3])
+        xlabel, ylabel, zlabel = list(work.keys())[:3]
+        xvals, yvals, zvals = Stats.filterNone( list(work.values())[:3])
 
         if len(xvals) == 0 or len(yvals) == 0 or len(zvals) == 0: 
             raise ValueError("no data" )
