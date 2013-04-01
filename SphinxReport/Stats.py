@@ -15,7 +15,7 @@ from rpy2.robjects import r as R
 import rpy2.robjects as ro
 import rpy2.robjects.numpy2ri
 
-from . import odict
+from collections import OrderedDict as odict
 
 def getSignificance( pvalue, thresholds=[0.05, 0.01, 0.001] ):
     """return cartoon of significance of a p-Value."""
@@ -29,7 +29,7 @@ class Result(object):
     '''allow both member and dictionary access.'''
     slots=("_data")
     def __init__(self):
-        object.__setattr__(self, "_data", odict.OrderedDict())
+        object.__setattr__(self, "_data", odict())
     def fromR( self, take, r_result ):
         '''convert from an *r_result* dictionary using map *take*.
 

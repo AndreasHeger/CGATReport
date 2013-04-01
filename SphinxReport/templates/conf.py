@@ -212,7 +212,7 @@ latex_documents = [
 #latex_use_parts = False
 
 # Additional stuff for the LaTeX preamble.
-latex_preamble = """
+latex_preamble = r"""
    \usepackage{amsmath}
    \usepackage{amsfonts}
    \usepackage{amssymb}

@@ -30,7 +30,7 @@ class SphinxReportTest(unittest.TestCase):
                                                          renderer,
                                                          [] )
         results = dispatcher( {} )
-        print results
+        print (results)
         return True
 
     

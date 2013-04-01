@@ -53,12 +53,16 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.pngmath', 
               'sphinx.ext.ifconfig', 
               'sphinx.ext.todo', 
-              'sphinx.ext.inheritance_diagram', 
               'SphinxReport.only_directives', 
               'SphinxReport.roles', 
               'SphinxReport.errors_directive', 
 	      'SphinxReport.warnings_directive',
               'SphinxReport.report_directive' ]
+
+# inheritance_diagram broken in python3
+if sys.version_info[0] == 2:
+    extensions.append( 'sphinx.ext.inheritance_diagram' )
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -213,8 +217,8 @@ htmlhelp_basename = 'Testdoc'
 latex_documents = [
   ('contents', 
    'Test.tex', 
-   ur'Test Documentation',
-   ur'Andreas Heger', 
+   r'Test Documentation',
+   r'Andreas Heger', 
    'manual'),
 ]
 

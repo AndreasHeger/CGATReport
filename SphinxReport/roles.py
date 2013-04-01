@@ -129,7 +129,12 @@ def value_role( role, rawtext, text, lineno, inliner,
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 
-    value = str( tracker() )
+    # Python 2/3
+    try:
+        value = str( tracker() )
+    except TypeError as msg:
+        print("python 3 problem: %s: tracker=%s" % (msg, str(tracker()) ))
+        
 
     linked_codename = writeCode( class_name, code, inliner )
 

@@ -1,9 +1,12 @@
 import os, sys, re, shelve, traceback, pickle, types, itertools
-import bsddb.db
 import sqlalchemy
 
 from SphinxReport.Component import *
 from SphinxReport import Utils
+
+# Python 3 - bsddb.db not available
+# import bsddb.db
+
 
 def tracker2key( tracker ):
     '''derive cache filename from a tracker.'''
@@ -53,7 +56,8 @@ class Cache( Component ):
                 self._cache = shelve.open(self.cache_filename,"c", writeback = False)
                 debug( "disp%s: using cache %s" % (id(self), self.cache_filename ))
                 debug( "disp%s: keys in cache: %s" % (id(self,), str(list(self._cache.keys()) ) ))                
-            except bsddb.db.DBFileExistsError as msg:    
+            # except bsddb.db.DBFileExistsError as msg:    
+            except OSError as msg:    
                 warn("disp%s: could not open cache %s - continuing without. Error = %s" %\
                      (id(self), self.cache_filename, msg))
                 self.cache_filename = None
@@ -95,7 +99,8 @@ class Cache( Component ):
                 self.debug( "key '%s' not found in cache" % key )
                 raise KeyError("cache does not contain %s" % str(key))
 
-        except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, pickle.UnpicklingError, ValueError, EOFError) as msg:
+        # except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, pickle.UnpicklingError, ValueError, EOFError) as msg:
+        except (pickle.UnpicklingError, ValueError, EOFError) as msg:
             self.warn( "could not get key '%s' or value for key in '%s': msg=%s" % (key,
                                                                                     self.cache_filename, 
                                                                                     msg) )
@@ -111,7 +116,8 @@ class Cache( Component ):
             try:
                 self._cache[key] = data
                 self.debug( "saved data for key '%s' in cache" % key )
-            except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as msg:
+            # except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as msg:
+            except (OSError) as msg:
                 self.warn( "could not save key '%s' from '%s': msg=%s" % (key,
                                                                           self.cache_filename,
                                                                           msg) )

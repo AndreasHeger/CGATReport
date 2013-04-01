@@ -10,7 +10,7 @@ VERBOSE=True
 # maximimum number of levels in data tree
 MAX_PATH_NESTING=5
 
-from .odict import OrderedDict as odict
+from collections import OrderedDict as odict
 
 # heap memory debugging, search for 'heap' in this code
 # from guppy import hpy; HP=hpy()

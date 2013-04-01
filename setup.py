@@ -71,7 +71,7 @@ setup(name='SphinxReport',
       include_package_data = True,
       test_suite = "tests",
       # python 3 conversion, requires distribute
-      use_2to3 = True,
+      # use_2to3 = True,
 
       entry_points = \
           {
