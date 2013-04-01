@@ -701,6 +701,7 @@ class TransformerContingency( TransformerPairwise ):
     '''
 
     paired = False
+
     def apply( self, xvals, yvals ):
         return len( set(xvals).intersection( set(yvals)) )
 

@@ -244,8 +244,8 @@ class MatrixTracker( Tracker ):
             
         matrix.shape = (2,5)
 
-        r = { 'rows' : map(str, xrange( 0, 2 ) ),
-              'columns' : map(str, xrange( 0, 5 ) ),
+        r = { 'rows' : map(str, range( 0, 2 ) ),
+              'columns' : map(str, range( 0, 5 ) ),
               'matrix' : matrix  }
 
         return r
