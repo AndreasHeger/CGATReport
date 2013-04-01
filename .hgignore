@@ -1,0 +1,4 @@
+regex:
+
+^build/
+^SphinxReport.egg-info/

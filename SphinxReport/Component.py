@@ -69,7 +69,7 @@ def init_plugins():
         warn("did not find any plugins")
     else:
         debug("found plugins: %i capabilites and %i plugins" % \
-                  (len(plugins), sum( [len(x) for x in plugins.values() ] ) ))
+                  (len(plugins), sum( [len(x) for x in list(plugins.values()) ] ) ))
 
     return plugins
 
@@ -79,7 +79,7 @@ def getPlugins(capability  = None):
     if capability == None:
         return plugins
         result = set()
-        for p in plugins.itervalues():
+        for p in plugins.values():
             for plugin in p:
                 result.add(plugin)
         return list(result)
@@ -92,9 +92,9 @@ def getOptionMap():
 
     if options == None:
         options = {}
-        for section, plugins in getPlugins().iteritems():
+        for section, plugins in getPlugins().items():
             options[section] = {}
-            for name, cls in plugins.iteritems():
+            for name, cls in plugins.items():
                 try:
                     options[section].update( dict( cls.options) )
                 except AttributeError:
@@ -137,7 +137,7 @@ def getOptionSpec():
     '''
     o = getOptionMap()
     r = {}
-    for x, xx in o.iteritems(): r.update( xx )
+    for x, xx in o.items(): r.update( xx )
         
     # add the primary actor options
     r["render"] = directives.unchanged

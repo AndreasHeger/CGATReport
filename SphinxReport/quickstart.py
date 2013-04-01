@@ -82,7 +82,7 @@ def main( argv = sys.argv ):
         copy( f, "trackers" )
 
 
-    print """
+    print("""
 Welcome to SphinxReport.
 
 All files have been successfully copied to `%(dest)s`. In order to build the
@@ -104,7 +104,7 @@ main directory. Add code to collect data to the module 'Trackers.py'
 in the  'trackers' directory. If you don't like the default file layout,
 it can be easily changed.
 
-""" % locals()
+""" % locals())
 
    
 if __name__ == "__main__":

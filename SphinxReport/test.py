@@ -87,7 +87,7 @@ their data sources.
 """
 
 
-import sys, os, imp, cStringIO, re, types, glob, optparse
+import sys, os, imp, io, re, types, glob, optparse
 
 USAGE = """python %s [OPTIONS] [tracker renderer]
 
@@ -118,7 +118,7 @@ except ImportError:
 # import conf.py
 if os.path.exists("conf.py"):
     try:
-        execfile( "conf.py" )
+        exec(compile(open( "conf.py" ).read(), "conf.py", 'exec'))
     except ValueError:
         pass
 
@@ -171,9 +171,9 @@ def getTrackers( fullpath ):
 
 def run( name, t, kwargs ):
     
-    print "%s: collecting data started" % name     
+    print("%s: collecting data started" % name)     
     t( **kwargs )
-    print "%s: collecting data finished" % name     
+    print("%s: collecting data finished" % name)     
 
 def main():
 
@@ -296,14 +296,14 @@ def main():
             if name == options.tracker: break
         else:
             available_trackers = set( [ x[0] for x in trackers if x[3] ] )
-            print "unknown tracker '%s': possible trackers are\n  %s" % (options.tracker, "\n  ".join( sorted(available_trackers)) ) 
-            print "(the list above does not contain functions)."
+            print("unknown tracker '%s': possible trackers are\n  %s" % (options.tracker, "\n  ".join( sorted(available_trackers)) )) 
+            print("(the list above does not contain functions).")
             sys.exit(1)
 
         ## remove everything related to that tracker for a clean slate
         if options.force:
             removed = SphinxReport.clean.removeTracker( name )
-            print "removed all data for tracker %s: %i files" % (name, len(removed))
+            print("removed all data for tracker %s: %i files" % (name, len(removed)))
 
         # instantiate functors
         if is_derived: t = tracker( **kwargs )
@@ -317,14 +317,14 @@ def main():
 
         if options.do_print:                        
             options_rst = []
-            for key,val in kwargs.items() + renderer_options.items() + transformer_options.items() + display_options.items():
+            for key,val in list(kwargs.items()) + list(renderer_options.items()) + list(transformer_options.items()) + list(display_options.items()):
                 if val == None:
                     options_rst.append(":%s:" % key )
                 else:
                     options_rst.append(":%s: %s" % (key,val) )
 
-            print "..Template start"
-            print
+            print("..Template start")
+            print()
             params = { "tracker" : "%s.%s" % (modulename,name),
                        "renderer" : options.renderer,
                        "label" : options.label,
@@ -334,14 +334,14 @@ def main():
                 params["options"] = ":transform: %s\n   %s" %\
                     (",".join(options.transformers), params["options"] )
 
-            print RST_TEMPLATE % params
-            print
-            print "..Template ends"
+            print(RST_TEMPLATE % params)
+            print()
+            print("..Template ends")
         if result: 
             for r in result:
-                print "title:", r.title
+                print("title:", r.title)
                 for s in r:
-                    print str(s)
+                    print(str(s))
                     
         if options.hardcopy:
             
@@ -355,14 +355,14 @@ def main():
 
         if options.do_show: 
             if options.renderer.startswith("r-"):
-                print "press Ctrl-c to stop"
+                print("press Ctrl-c to stop")
                 while 1: pass
             
             elif _pylab_helpers.Gcf.get_all_fig_managers() > 0:
                 plt.show()
 
     elif options.page:
-        import build
+        from . import build
         SphinxReport.report_directive.DEBUG = True
         SphinxReport.report_directive.FORCE = True
         
@@ -375,7 +375,7 @@ def main():
         
         if options.do_show: 
             if options.renderer.startswith("r-"):
-                print "press Ctrl-c to stop"
+                print("press Ctrl-c to stop")
                 while 1: pass
             
             elif _pylab_helpers.Gcf.get_all_fig_managers() > 0:

@@ -1,4 +1,4 @@
-import os, sys, re, shelve, traceback, cPickle, types, itertools
+import os, sys, re, shelve, traceback, pickle, types, itertools
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReport import DataTree
@@ -10,7 +10,7 @@ VERBOSE=True
 # maximimum number of levels in data tree
 MAX_PATH_NESTING=5
 
-from odict import OrderedDict as odict
+from .odict import OrderedDict as odict
 
 # heap memory debugging, search for 'heap' in this code
 # from guppy import hpy; HP=hpy()
@@ -109,7 +109,7 @@ class Dispatcher(Component):
                 fromcache = True
             except KeyError:
                 pass
-            except RuntimeError, msg:
+            except RuntimeError as msg:
                 raise RuntimeError( "error when accessing key %s from cache: %s - potential problem with unpickable object?" % (key, msg))
 
         kwargs = {}
@@ -119,7 +119,7 @@ class Dispatcher(Component):
         if result == None:
             try:
                 result = self.tracker( *path, **kwargs )
-            except Exception, msg:
+            except Exception as msg:
                 self.warn( "exception for tracker '%s', path '%s': msg=%s" % (str(self.tracker),
                                                                               DataTree.path2str(path), 
                                                                               msg) )
@@ -176,7 +176,7 @@ class Dispatcher(Component):
             if y == None or len(y) == 0: 
                 to_remove.append(x)
                 continue
-            if type(y) in types.StringTypes: data_paths[x]=[y,]
+            if isinstance( y, str): data_paths[x]=[y,]
             elif type(y) not in Utils.ContainerTypes: data_paths[x] = list(y)
             
         for x in to_remove[::-1]:
@@ -195,8 +195,8 @@ class Dispatcher(Component):
         def _filter( all_entries, input_list ):
             # need to preserve type of all_entries
             result = []
-            search_entries = map(str, all_entries )
-            m = dict( zip( search_entries, all_entries) )
+            search_entries = list(map(str, all_entries ))
+            m = dict( list(zip( search_entries, all_entries)) )
             for s in input_list:
                 if s in search_entries:
                     # collect exact matches

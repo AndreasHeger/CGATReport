@@ -1,6 +1,8 @@
-from __future__ import with_statement 
+import os, sys, re, types, copy, warnings, inspect, logging, glob
 
-import os, sys, re, types, copy, warnings, ConfigParser, inspect, logging, glob
+# Python 2/3 Compatibility
+try: import ConfigParser as configparser
+except: import configparser
 
 import numpy
 
@@ -14,7 +16,8 @@ from rpy2.robjects import r as R
 
 from SphinxReport import Utils
 
-from odict import OrderedDict as odict
+from collections import OrderedDict as odict
+import collections
 
 class SQLError( Exception ):
     pass
@@ -170,7 +173,7 @@ class Tracker(object):
         # 1. subtract property attributes, or
         # 2. subtract members of Tracker()
         l = dict( [(attr,getattr(self,attr)) for attr in dir(self) \
-                      if not callable(attr) and not attr.startswith("__") and attr != "tracks" and attr != "slices"] )
+                      if not isinstance(attr, collections.Callable) and not attr.startswith("__") and attr != "tracks" and attr != "slices"] )
             
         if locals: return dict( l, **locals)
         else: return l
@@ -216,7 +219,7 @@ class TrackerTSV( Tracker ):
             data = [ x.split() for x in inf.readlines() if not x.startswith("#")]
             inf.close()
 
-            self.data = dict( zip( data[0], zip( *data[1:] ) ) )
+            self.data = dict( list(zip( data[0], list(zip( *data[1:] )) )) )
 
     def __call__(self, track, **kwargs ):
         """return a data structure for track :param: track"""
@@ -411,7 +414,7 @@ class TrackerSQL( Tracker ):
         self.connect()
         try:
             r = self.db.execute(stmt)
-        except exc.SQLAlchemyError, msg:
+        except exc.SQLAlchemyError as msg:
             raise SQLError(msg)
         return r
 
@@ -419,7 +422,7 @@ class TrackerSQL( Tracker ):
         '''fill in placeholders in stmt.'''
         
         kwargs = self.members( getCallerLocals() )
-        statement = stmt % dict( kwargs.items() )
+        statement = stmt % dict( list(kwargs.items()) )
         return statement
 
     def getValue( self, stmt ):
@@ -460,7 +463,7 @@ class TrackerSQL( Tracker ):
         """
         e = self.execute( self.buildStatement( stmt )).fetchone()
         # assumes that values are sorted in ResultProxy.keys()
-        if e: return odict( [x,e[x]] for x in e.keys() )
+        if e: return odict( [x,e[x]] for x in list(e.keys()) )
         else: return None
 
     def getValues( self, stmt ):
@@ -488,9 +491,9 @@ class TrackerSQL( Tracker ):
         """
         # convert to tuples
         e = self.execute(self.buildStatement(stmt))
-        columns = e.keys()
+        columns = list(e.keys())
         d = e.fetchall()
-        return odict( zip( columns, zip( *d ) ) )
+        return odict( list(zip( columns, list(zip( *d )) )) )
 
     def get( self, stmt ):
         """return all results from an SQL statement as list of tuples.
@@ -512,10 +515,10 @@ class TrackerSQL( Tracker ):
         """
         # convert to tuples
         e = self.execute(self.buildStatement(stmt))
-        columns = e.keys()
+        columns = list(e.keys())
         result = odict()
         for row in e:
-            result[row[0]] = odict( zip( columns[1:], row[1:] ) )
+            result[row[0]] = odict( list(zip( columns[1:], row[1:] )) )
         return result
 
     def getIter( self, stmt ):
@@ -670,7 +673,7 @@ class Config( Tracker ):
     def __call__(self, track, *args ):
         """count number of entries in a table."""
 
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.readfp(open(track),"r")
 
         result = odict()
@@ -691,7 +694,7 @@ class Config( Tracker ):
         for section in config.sections():
             x = odict()
             for key,value in config.items( section ):
-                x[key] = odict( zip( ("value", "type" ), convert( value )) )
+                x[key] = odict( list(zip( ("value", "type" ), convert( value ))) )
             result[section] = x
         
         return result
@@ -793,7 +796,7 @@ class SingleTableTrackerRows( TrackerSQL ):
             self._tracks = self.get( "SELECT DISTINCT %s FROM %s %s" % \
                                          (",".join(self.fields), self.table, sort ))
             columns = self.getColumns( self.table ) 
-            self._slices = [ x for x in columns if x not in self.exclude_columns and x not in self.fields ] + self.extra_columns.keys()
+            self._slices = [ x for x in columns if x not in self.exclude_columns and x not in self.fields ] + list(self.extra_columns.keys())
             # remove columns with special characters (:, +, -, )
             self._slices = [ x for x in self._slices if not re.search( "[:+-]", x)]
 
@@ -802,7 +805,7 @@ class SingleTableTrackerRows( TrackerSQL ):
             self.data = odict()
             for d in data:
                 tr = tuple(d[:nfields])
-                self.data[tr] = odict( zip( self._slices, tuple(d[nfields:])) )
+                self.data[tr] = odict( list(zip( self._slices, tuple(d[nfields:]))) )
             self.loaded = True
 
     @property

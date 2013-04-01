@@ -30,7 +30,7 @@ class DataSimple(object):
         ## previously used deepcoy, but not necessary
         return { "_data" : self._data  }
     def __setstate__(self, dict ):
-        for key,val in dict.iteritems():
+        for key,val in dict.items():
             object.__setattr__( self, key, val )
     def __iter__(self):
         return self._data.__iter__()
@@ -63,7 +63,7 @@ class Data(object):
         ## previously used deepcoy, but not necessary
         return { "_data" : self._data  }
     def __setstate__(self, dict ):
-        for key,val in dict.iteritems():
+        for key,val in dict.items():
             object.__setattr__( self, key, val )
     def __iter__(self):
         return self._data.__iter__()
@@ -124,7 +124,7 @@ class MultipleColumns(Data):
             assert min( [len(c) for c in self._data[1]]) == max( [len(c) for c in self._data[1]]), \
                 "data columns have not the same length: %i != %i." %\
                 (min( [len(c) for c in self._data[1]]), max( [len(c) for c in self._data[1]]))
-        except ValueError, msg:
+        except ValueError as msg:
             # ignore errors due to empty sequences
             pass
         

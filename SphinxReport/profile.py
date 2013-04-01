@@ -25,7 +25,7 @@ on the command line. The options are:
 
 """
 
-import sys, os, imp, cStringIO, re, types, glob, optparse, shutil, datetime, logging
+import sys, os, imp, io, re, types, glob, optparse, shutil, datetime, logging
 import collections
 
 USAGE = """python %s [OPTIONS] target
@@ -68,7 +68,7 @@ class Counter(object):
     def getDuration( self ): 
         if self._durations:
             x = None
-            for source, durations in self._durations.iteritems():
+            for source, durations in self._durations.items():
                 if x == None: x = durations[0] 
                 for y in durations[1:]: x += y
             return x
@@ -80,7 +80,7 @@ class Counter(object):
 
     def getRunning( self ):
         '''get numbers of tasks unfinished or still running.'''
-        return len( [x for x,y in self._started.iteritems() if y != 0 ] )
+        return len( [x for x,y in self._started.items() if y != 0 ] )
 
     duration = property(getDuration)
     calls = property(getCalls)
@@ -142,8 +142,8 @@ def main():
             if point.startswith("<"): point = point[1:]
             point = re.sub( rootpath, "", point )
         except (IndexError, ValueError):
-            print data[5:]
-            print "malformatted line in logfile: %s" % line 
+            print(data[5:])
+            print("malformatted line in logfile: %s" % line) 
             continue
 
         if section.endswith( ":" ): section = section[:-1]
@@ -161,16 +161,16 @@ def main():
 
         try:
             counts[section][point].add( is_start, dt, source )
-        except ValueError, msg:
+        except ValueError as msg:
             # if there are errors, there is no finish, reset counter
             if is_start: counts[section][point].reset( source )
             try:
                 counts[section][point].add( is_start, dt, source )
-            except ValueError, msg:
+            except ValueError as msg:
                 logging.warn( "%s: line=%s" % (msg,line) )
-            except KeyError, msg:
-                print data
-                print "error in line: (is_start=%s), msg='%s', %s" % (is_start,msg,line)
+            except KeyError as msg:
+                print(data)
+                print("error in line: (is_start=%s), msg='%s', %s" % (is_start,msg,line))
 
     if options.time == "milliseconds":
         f = lambda d: d.seconds + d.microseconds / 1000
@@ -181,7 +181,7 @@ def main():
         sys.stdout.write( "\t".join( ("section", "object", "ncalls", "duration", "percall", "running") ) + "\n" )
 
         running = []
-        for objct, c in counts[section].iteritems():
+        for objct, c in counts[section].items():
             
             # apply filters
             if options.filter in ("unfinished", "running") and c.running == 0: 
@@ -195,18 +195,18 @@ def main():
 
 
             sys.stdout.write( "\t".join( \
-                    (map( str, \
+                    (list(map( str, \
                               (section, objct, 
                                c.calls,
                                d,
                                percall,
                                c.running,
-                               )))) + "\n" )
+                               ))))) + "\n" )
             
-            running.extend( [x for x,y in c._started.iteritems() if y != 0 ] )
+            running.extend( [x for x,y in c._started.items() if y != 0 ] )
 
-        print "running"
-        print "\n".join( map(str, running )) 
+        print("running")
+        print("\n".join( map(str, running ))) 
         sys.stdout.write( "\n" * 3 )
 
 if __name__ == "__main__":

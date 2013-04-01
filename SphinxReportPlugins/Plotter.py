@@ -21,7 +21,7 @@ import numpy
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
 from SphinxReport.DataTree import path2str
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 from SphinxReport import Utils, DataTree, Stats
 
 from docutils.parsers.rst import directives

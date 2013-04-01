@@ -1,18 +1,20 @@
-import re, os, sys, imp, cStringIO, types, traceback, logging, math
+import re, os, sys, imp, io, types, traceback, logging, math
 
-import ConfigParser
+# Python 2/3 Compatibility
+try: import ConfigParser as configparser
+except: import configparser
 
 import SphinxReport
 from SphinxReport.ResultBlock import ResultBlocks,ResultBlock
 from SphinxReport.Component import *
 import SphinxReport.Config
 
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 
 import types, copy, numpy
 
-ContainerTypes = (types.TupleType, types.ListType, type(numpy.zeros(0)))
-DictionaryTypes = (types.DictType, odict)
+ContainerTypes = (tuple, list, type(numpy.zeros(0)))
+DictionaryTypes = (dict, odict)
 
 # set with keywords that will not be pruned
 # This is important for the User Tracker
@@ -22,24 +24,24 @@ TrackerKeywords = set( ( "text", "rst", "xls", ) )
 # None is allowed to represent missing values. numpy.float128 is a recent
 # numpy addition.
 try:
-    NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
+    NumberTypes = (int, float, int, type(None),
                    numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
                    numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
                    numpy.float32, numpy.float64, numpy.float128 )
-    FloatTypes = (types.FloatType, 
+    FloatTypes = (float, 
                   numpy.float32, numpy.float64, numpy.float128 )
-    IntTypes = ( types.IntType, types.LongType, 
+    IntTypes = ( int, int, 
                  numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
                  numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64)
 
-except AttributeError, msg:
-    NumberTypes = (types.IntType, types.FloatType, types.LongType, types.NoneType,
+except AttributeError as msg:
+    NumberTypes = (int, float, int, type(None),
                numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
                numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, 
                numpy.float32, numpy.float64 )
-    FloatTypes = (types.FloatType, 
+    FloatTypes = (float, 
                   numpy.float32, numpy.float64 )
-    IntTypes = ( types.IntType, types.LongType, 
+    IntTypes = ( int, int, 
                  numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
                  numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64)
 
@@ -65,7 +67,7 @@ def is_numeric(obj):
 
 def asList( param ):
     '''return a param as a list'''
-    if type(param) not in (types.ListType, types.TupleType):
+    if type(param) not in (list, tuple):
         return [x.strip() for x in param.split(",")]
     else: return param
 
@@ -126,7 +128,7 @@ def configToDictionary( config ):
             if section == "general":
                 p["%s" % (key)] = v
                
-    for key, value in config.defaults().iteritems():
+    for key, value in config.defaults().items():
         p["%s" % (key)] =  convertValue( value )
         
     return p
@@ -156,7 +158,7 @@ def getParameters( filenames = ["sphinxreport.ini",] ):
 
     global CONFIG
 
-    CONFIG = ConfigParser.ConfigParser()
+    CONFIG = configparser.ConfigParser()
     CONFIG.read( filenames )
 
     p = configToDictionary( CONFIG )
@@ -172,7 +174,7 @@ def selectAndDeleteOptions( options, select ):
     returns dictionary of options found.
     '''
     new_options = {}
-    for k, v in options.items():
+    for k, v in list(options.items()):
         if k in select:
             new_options[k] = v
             del options[k]
@@ -204,7 +206,7 @@ def getImageFormats( display_options = None ):
     if "report_images" in PARAMS:
         data = asList( PARAMS["report_images"] )
         if len(data) % 3 != 0: raise ValueError( "need multiple of 3 number of arguments to report_images option" )
-        for x in xrange( 0, len(data), 3 ):
+        for x in range( 0, len(data), 3 ):
             additional_formats.append( (data[x], data[x+1], int(data[x+2]) ) )
     else:
             additional_formats.extend( SphinxReport.Config.ADDITIONAL_FORMATS )
@@ -224,7 +226,7 @@ def getImageOptions( display_options = None):
     '''return string with display_options for ``:image:`` directive.'''
     if display_options:
         return "\n".join( \
-            ['      :%s: %s' % (key, val) for key, val in display_options.iteritems() \
+            ['      :%s: %s' % (key, val) for key, val in display_options.items() \
                  if key not in ('format', 'extra-formats')] )
     else:
         return ''
@@ -274,7 +276,7 @@ def getModule( name ):
     elif len(parts) > 1:
         try:
             (file, pathname, description ) = imp.find_module( parts[0] )
-        except ImportError, msg:
+        except ImportError as msg:
             warn("could not find module %s: msg=%s" % (name,msg) )        
             raise ImportError("could not find module %s: msg=%s" % (name,msg) )
 
@@ -288,12 +290,12 @@ def getModule( name ):
     # find module
     try:
         (modulefile, pathname, description) = imp.find_module( name, path )
-    except ImportError, msg:
+    except ImportError as msg:
         warn("could not find module %s: msg=%s" % (name,msg) )        
         raise ImportError("could not find module %s: msg=%s" % (name,msg) )
 
     stdout = sys.stdout
-    sys.stdout = cStringIO.StringIO()
+    sys.stdout = io.StringIO()
     debug( "loading module: %s: %s, %s, %s" % (name, modulefile, pathname, description) )
     # imp.load_module modifies sys.path - save original and restore
     oldpath = sys.path
@@ -350,7 +352,7 @@ def isClass( obj ):
     # while the one in tracker is simply Tracker
     # issubclass(obj, Tracker) and \
     
-    if isinstance(obj, (type, types.ClassType)) and \
+    if isinstance(obj, type) and \
             hasattr(obj, "__call__"):
         return True
     elif isinstance(obj, (type, types.FunctionType)):
@@ -388,7 +390,7 @@ def makeObject( path, args = (), kwargs = {} ):
     if isClass( obj ):
         try:
             obj = obj( *args, **kwargs )
-        except AttributeError, msg:
+        except AttributeError as msg:
             critical( "instantiating class %s.%s failed: %s" % (module, cls, msg))
             raise
         
@@ -520,7 +522,7 @@ def updateOptions( kwargs ):
     returns the update dictionary.
     '''
 
-    for key, value in kwargs.items():
+    for key, value in list(kwargs.items()):
         try:
             v = value.strip()
         except AttributeError:

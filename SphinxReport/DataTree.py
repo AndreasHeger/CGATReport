@@ -1,7 +1,7 @@
 import collections, itertools
 from logging import warn, log, debug, info
 
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 from SphinxReport import Utils
 
 def unique( iterables ):
@@ -70,8 +70,8 @@ class DataTree( object ):
         while 1:
             l, next_level = [], []
             for x in [ x for x in this_level if hasattr( x, "keys")]:
-                l.extend( x.keys() )
-                next_level.extend( x.values() )
+                l.extend( list(x.keys()) )
+                next_level.extend( list(x.values()) )
             if not l: break
             labels.append( list(unique(l)) )
             this_level = next_level
@@ -192,8 +192,8 @@ def getPaths( work ):
     while 1:
         l, next_level = [], []
         for x in [ x for x in this_level if hasattr( x, "keys")]:
-            l.extend( x.keys() )
-            next_level.extend( x.values() )
+            l.extend( list(x.keys()) )
+            next_level.extend( list(x.values()) )
         if not l: break
         labels.append( list(unique(l)) )
         this_level = next_level
@@ -238,13 +238,13 @@ def removeLevel( work, level ):
         if leaf == None: continue
         
         # delete all in leaf
-        keys = leaf.keys()
+        keys = list(leaf.keys())
         for key in keys:
             # there might be a subkey the same as key
             d = leaf[key]
             del leaf[key]
             try:
-                for subkey, item in d.iteritems():
+                for subkey, item in d.items():
                     leaf[subkey] = item
             except AttributeError:
                 # for items that are not dict
@@ -335,7 +335,7 @@ def removeEmptyLeaves( work ):
 
     to_delete = []
     try:
-        for label, w in work.iteritems():
+        for label, w in work.items():
             keep = removeEmptyLeaves( w )
             if not keep: to_delete.append(label)
 
@@ -496,7 +496,7 @@ def tree2table( data, transpose = False ):
 
     if transpose:
         row_headers, col_headers = col_headers, row_headers
-        matrix = zip( *matrix )
+        matrix = list(zip( *matrix ))
 
     # convert headers to string (might be None)
     row_headers = [str(x) for x in row_headers]
@@ -511,7 +511,7 @@ def fromCache( cache,
     '''return a data tree from cache'''
 
     data = DataTree()
-    keys = [ x.split("/") for x in cache.keys()]
+    keys = [ x.split("/") for x in list(cache.keys())]
 
     if tracks == None: tracks = set([ x[0] for x in keys] )
     else: tracks = tracks.split(",")

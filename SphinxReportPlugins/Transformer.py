@@ -3,7 +3,7 @@ import itertools
 import numpy
 from numpy import arange
 
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 from SphinxReport.Component import *
 from SphinxReport import Stats, DataTree, Utils
 

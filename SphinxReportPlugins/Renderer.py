@@ -7,7 +7,7 @@ from numpy import *
 from math import *
 
 from SphinxReport.ResultBlock import ResultBlock, EmptyResultBlock, ResultBlocks
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 from SphinxReport.DataTree import path2str, tree2table
 from SphinxReport.Component import *
 from SphinxReport import Utils, DataTree

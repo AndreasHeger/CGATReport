@@ -6,7 +6,7 @@ import os, sys, re, math, tempfile
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 from SphinxReport import Utils
 from SphinxReport import Stats
 

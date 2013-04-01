@@ -36,7 +36,7 @@ from SphinxReport import report_directive, gallery, clean, Utils
 
 from SphinxReport.Component import *
 
-import Logger
+from . import Logger
 
 try:
     from multiprocessing import Process
@@ -48,7 +48,7 @@ except ImportError:
 if not os.path.exists("conf.py"):
     raise IOError( "could not find conf.py" )
 
-execfile( "conf.py" )
+exec(compile(open( "conf.py" ).read(), "conf.py", 'exec'))
 
 RST_TEMPLATE = """.. _%(label)s:
 
@@ -141,7 +141,7 @@ def getBlocksFromRstFile( rst_file ):
     try:
         infile = open( rst_file, "r" )
     except IOError:
-        print "could not open %s - skipped" % rst_file 
+        print("could not open %s - skipped" % rst_file) 
         return blocks
 
     for lineno, rst_block in rst_reader( infile ):
@@ -157,9 +157,9 @@ class timeit:
     def __call__(self, func):
         def wrapped( *args, **kwargs ):
             start = time.time()
-            print "SphinxReport: phase %s started" % (self.mStage) 
+            print("SphinxReport: phase %s started" % (self.mStage)) 
             result = func( *args, **kwargs)
-            print "SphinxReport: phase %s finished in %i seconds" % (self.mStage, time.time() - start)
+            print("SphinxReport: phase %s finished in %i seconds" % (self.mStage, time.time() - start))
             return result
         return wrapped
 
@@ -195,7 +195,7 @@ def buildPlots( rst_files, options, args, sourcedir ):
                                                     "." ) )
 
     work = []
-    for tracker,vals in work_per_tracker.iteritems():
+    for tracker,vals in work_per_tracker.items():
         work.append( vals )
 
     if len(work) == 0: return
@@ -229,22 +229,22 @@ def buildPlots( rst_files, options, args, sourcedir ):
     errors = [ e for e in errors if e ]
             
     if errors:
-        print "SphinxReport caught %i exceptions" % (len(errors))
-        print "## start of exceptions"
+        print("SphinxReport caught %i exceptions" % (len(errors)))
+        print("## start of exceptions")
         for exception_name, exception_value, exception_stack in errors:
-            print exception_stack,
-        print "## end of exceptions"
+            print(exception_stack)
+        print("## end of exceptions")
         sys.exit(1)
 
     if options.num_jobs > 1:
         counts = handler.getCounts()
 
-        print "SphinxReport: messages: %i critical, %i errors, %i warnings, %i info, %i debug" \
+        print("SphinxReport: messages: %i critical, %i errors, %i warnings, %i info, %i debug" \
             % (counts["CRITICAL"],
                counts["ERROR"],
                counts["WARNING"],
                counts["INFO"],
-               counts["DEBUG"] )
+               counts["DEBUG"] ))
     
     logging.shutdown()
 
@@ -277,16 +277,16 @@ def cleanTrackers( rst_files, options, args ):
         if new_codehash != old_codehash:
             removed = clean.removeTracker( reference )
             removed.extend( clean.removeText( reference ))
-            print "code has changed for %s: %i files removed" % (reference, len(removed))
+            print("code has changed for %s: %i files removed" % (reference, len(removed)))
             ncleaned += 1
-    print "SphinxReport: %i Trackers changed (%i tested, %i skipped)" % (ncleaned, ntested, nskipped)
+    print("SphinxReport: %i Trackers changed (%i tested, %i skipped)" % (ncleaned, ntested, nskipped))
                                    
 def runCommand( command ):
     try:
         retcode = subprocess.call( command, shell=True)
         if retcode < 0:
             warn( "child was terminated by signal %i" % -retcode )
-    except OSError, e:
+    except OSError as e:
         fail( "execution of %s failed" % cmd)
         raise
 
@@ -312,7 +312,7 @@ def buildLog( options, args ):
     
 def main():
 
-    print "SphinxReport: version %s started" % str("$Id$")
+    print("SphinxReport: version %s started" % str("$Id$"))
     t = time.time()
 
     parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE )
@@ -369,7 +369,7 @@ def main():
 
     buildDocument( options, args )
 
-    print "SphinxReport: finished in %i seconds" % (time.time() - t )
+    print("SphinxReport: finished in %i seconds" % (time.time() - t ))
 
     debug( "build.py: profile: finished: %i seconds" % (time.time() - t ))
 

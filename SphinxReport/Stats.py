@@ -3,6 +3,7 @@ import math
 import numpy
 
 import scipy
+from functools import reduce
 # See http://projects.scipy.org/scipy/ticket/1739
 # scipy 0.11 for python3 broken, should be fixed for scipy 0.12
 try: import scipy.stats
@@ -14,7 +15,7 @@ from rpy2.robjects import r as R
 import rpy2.robjects as ro
 import rpy2.robjects.numpy2ri
 
-import odict
+from . import odict
 
 def getSignificance( pvalue, thresholds=[0.05, 0.01, 0.001] ):
     """return cartoon of significance of a p-Value."""
@@ -48,8 +49,8 @@ class Result(object):
             try: return object.__getattribute__(self,"_data")[key]
             except KeyError: pass
         return getattr( self._data, key )
-    def keys(self): return self._data.keys()
-    def values(self): return self._data.values()
+    def keys(self): return list(self._data.keys())
+    def values(self): return list(self._data.values())
     def __iter__(self): return self._data.__iter__()
     def __str__(self):
         return str(self._data)
@@ -96,7 +97,7 @@ def doLogLikelihoodTest( complex_ll, complex_np,
     df = complex_np - simple_np
 
     if df <= 0:
-        raise ValueError, "difference of degrees of freedom not larger than 0"
+        raise ValueError("difference of degrees of freedom not larger than 0")
     
     p = scipy.stats.chisqprob( chi, df )
     
@@ -145,7 +146,7 @@ def doChiSquaredTest( matrix, significance_threshold = 0.05 ):
     """
     nrows, ncols = matrix.shape
     if nrows != 2 or ncols != 2:
-        raise "chi-square currently only implemented for 2x2 tables."
+        raise ValueError("chi-square currently only implemented for 2x2 tables.")
 
     df = (nrows - 1) * (ncols -1 )
 
@@ -226,7 +227,7 @@ class Summary( Result ):
 
             # convert
             self._nerrors = 0
-            if type(values[0]) not in (types.IntType, types.FloatType):
+            if type(values[0]) not in (int, float):
                 n = []
                 for x in values:
                     try:

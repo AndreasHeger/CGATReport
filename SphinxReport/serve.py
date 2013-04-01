@@ -40,7 +40,7 @@ The options are:
    actions are ``stop`` to stop and ``restart`` to restart the server.
 """
 
-import sys, os, imp, cStringIO, re, types, glob, optparse, shutil
+import sys, os, imp, io, re, types, glob, optparse, shutil
 
 USAGE = """python %s [OPTIONS] 
 
@@ -54,7 +54,7 @@ import web
 from SphinxReport import Utils
 from SphinxReport import Cache
 from SphinxReport import DataTree
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 
 
 urls = ( '/data/(.*)', 'DataTable',

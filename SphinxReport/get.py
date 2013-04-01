@@ -38,7 +38,7 @@ The options are:
    * ``csv``: comma-separated values
 
 """
-import sys, os, imp, cStringIO, re, types, glob, optparse, shutil
+import sys, os, imp, io, re, types, glob, optparse, shutil
 
 USAGE = """python %s [OPTIONS] 
 
@@ -50,7 +50,7 @@ query the SphinxReport cache.
 from SphinxReport import Utils
 from SphinxReport import Cache
 from SphinxReport import DataTree
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 
 def main():
 
@@ -92,7 +92,7 @@ def main():
     (options, args) = parser.parse_args()
 
     if len(args) != 1 and options.tracker == None : 
-        print USAGE
+        print(USAGE)
         raise ValueError("please supply a tracker.""")
 
     if options.tracker:
@@ -103,7 +103,7 @@ def main():
     cache = Cache.Cache( tracker, mode = "r" )
 
     if options.view:
-        keys = [ x.split("/") for x in cache.keys()]
+        keys = [ x.split("/") for x in list(cache.keys())]
         sys.stdout.write( "# available tracks\n" )
         sys.stdout.write( "track\n%s" % "\n".join( set([ x[0] for x in keys] ) ) )
         sys.stdout.write( "\n" )

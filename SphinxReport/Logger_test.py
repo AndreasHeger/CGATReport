@@ -1,5 +1,5 @@
-from Logger import warn, debug, info
-import Logger
+from .Logger import warn, debug, info
+from . import Logger
 import multiprocessing
 
 Logger.basicConfig(
@@ -27,5 +27,5 @@ if __name__ == "__main__":
         function_parameters.append(("message #%3d" % a,))
     pool.map(test_logging, function_parameters)
     
-    print Logger.getCounts()
+    print(Logger.getCounts())
 

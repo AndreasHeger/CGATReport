@@ -5,7 +5,7 @@ import sys, os, re, random, glob
 import numpy
 
 from SphinxReport.Tracker import Tracker, Status
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 
 def BarData(): return dict( [("bar1", 20), ("bar2", 10)] )
 

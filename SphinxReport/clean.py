@@ -51,7 +51,7 @@ documents containing trackers matching the word ``OldData``::
 
 """
 
-import sys, os, imp, cStringIO, re, types, glob, optparse, shutil
+import sys, os, imp, io, re, types, glob, optparse, shutil
 
 USAGE = """python %s [OPTIONS] target
 
@@ -69,7 +69,7 @@ SEPARATOR="@"
 source_suffix = ".rst"
 if os.path.exists("conf.py"):
     try:
-        execfile( "conf.py" )
+        exec(compile(open( "conf.py" ).read(), "conf.py", 'exec'))
     except ValueError:
         pass
 
@@ -89,7 +89,7 @@ def deleteFiles( test_f, dirs_to_check = (".",), dry_run = False ):
                         ff = os.path.join( root, f) 
                         if not dry_run: os.remove( ff )
                         removed.append( ff )
-                    except OSError, msg:
+                    except OSError as msg:
                         pass
 
     return removed
@@ -187,7 +187,7 @@ def main():
     (options, args) = parser.parse_args()
 
     if len(args) == 0: 
-        print USAGE
+        print(USAGE)
         raise ValueError("please supply at least one target.""")
 
     if len(args) == 1 and args[0] in ("clean", "distclean", "cache"):
@@ -203,8 +203,8 @@ def main():
             dirs.append( "_static/report_directive" )
 
         if options.dry_run:
-            print "the following directories will be deleted:"
-            print "\n".join( dirs )
+            print("the following directories will be deleted:")
+            print("\n".join( dirs ))
         else:
             for d in dirs:
                 if os.path.exists(d):
@@ -212,34 +212,34 @@ def main():
 
     else:
         if options.dry_run:
-            print "the following files will be deleted:"
+            print("the following files will be deleted:")
 
         for tracker in args:
-            print "cleaning up %s ..." % tracker
+            print("cleaning up %s ..." % tracker)
             removed = []
             if not options.sections or "tracker" in options.sections:
-                if options.loglevel >= 2: print "removing trackers"
+                if options.loglevel >= 2: print("removing trackers")
                 removed.extend( removeTracker( tracker, dry_run = options.dry_run ) )
             if not options.sections or "doctree" in options.sections:
-                if options.loglevel >= 2: print "removing doctrees"
+                if options.loglevel >= 2: print("removing doctrees")
                 removed.extend( removeText( tracker, 
                                             dry_run = options.dry_run,
                                             sourcedir = options.builddir,
                                             builddir = options.builddir,
                                             suffix = ".doctree") )
             if not options.sections or "text" in options.sections:
-                if options.loglevel >= 2: print "removing rst"
+                if options.loglevel >= 2: print("removing rst")
                 if options.loglevel >= 2:
-                    print "sourcedir=%s" % options.path
+                    print("sourcedir=%s" % options.path)
                 removed.extend( removeText( tracker, 
                                             dry_run = options.dry_run,
                                             sourcedir = options.path,
                                             builddir = options.builddir,
                                             suffix = source_suffix ) )
-            print "%i files (done)" % len(removed)
+            print("%i files (done)" % len(removed))
             if options.loglevel >= 3:
-                print "\n".join( removed )
+                print("\n".join( removed ))
             if options.dry_run:
-                print "\n".join( removed )
+                print("\n".join( removed ))
 if __name__ == "__main__":
     sys.exit(main())

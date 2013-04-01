@@ -11,7 +11,7 @@ except for `target` (since plot will add its own target).
 
 """
 
-import sys, os, glob, shutil, imp, warnings, cStringIO
+import sys, os, glob, shutil, imp, warnings, io
 import hashlib, re, logging, math, types, operator
 import traceback
 
@@ -37,14 +37,6 @@ def out_of_date(original, derived):
     """
     return (not os.path.exists(derived) \
         or os.stat(derived).st_mtime < os.stat(original).st_mtime)
-
-def exception_to_str(s = None):
-
-    sh = cStringIO.StringIO()
-    if s is not None: print >>sh, s
-    traceback.print_exc(file=sh)
-    return sh.getvalue()
-
 
 def run(arguments, 
         options, 
@@ -113,7 +105,7 @@ def run(arguments,
     # testing with `if` will not work.
     try:
         os.makedirs(outdir)
-    except OSError, msg:
+    except OSError as msg:
         pass
 
     if not os.path.exists(outdir): 
@@ -124,7 +116,7 @@ def run(arguments,
     # replace placedholders
     try:
         options = Utils.updateOptions( options )
-    except ValueError, msg:
+    except ValueError as msg:
         logging.warn( "failure while updating options: %s" % msg )
 
     logging.debug( "report_directive.run: options=%s" % (str(options),) )
@@ -148,11 +140,11 @@ def run(arguments,
     logging.debug( "report_directive.run: tracker options: %s" % str(tracker_options) )
     logging.debug( "report_directive.run: display options: %s" % str(display_options) )
 
-    if display_options.has_key("transform"): 
+    if "transform" in display_options: 
         transformer_names = display_options["transform"].split(",")
         del display_options["transform"]
 
-    if display_options.has_key("render"): 
+    if "render" in display_options: 
         renderer_name = display_options["render"]
         del display_options["render"]
 
@@ -215,7 +207,7 @@ def run(arguments,
     ##########################################################
     # Initialize collectors
     collectors = []
-    for collector in getPlugins( "collect" ).values():
+    for collector in list(getPlugins( "collect" ).values()):
         collectors.append( collector() )
 
     ##########################################################
@@ -333,7 +325,7 @@ def run(arguments,
         outfile.close()
 
     if SPHINXREPORT_DEBUG:
-        for x, l in enumerate( lines): print "%5i %s" % (x, l)
+        for x, l in enumerate( lines): print("%5i %s" % (x, l))
 
     if len(lines) and state_machine:
         state_machine.insert_input(

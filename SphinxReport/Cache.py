@@ -1,4 +1,4 @@
-import os, sys, re, shelve, traceback, cPickle, types, itertools
+import os, sys, re, shelve, traceback, pickle, types, itertools
 import bsddb.db
 import sqlalchemy
 
@@ -11,7 +11,7 @@ def tracker2key( tracker ):
     modulename = os.path.split(tracker.__class__.__module__)[1]
 
     if hasattr( tracker, "func_name" ):
-        name = tracker.func_name
+        name = tracker.__name__
     else:
         name = tracker.__class__.__name__
 
@@ -34,7 +34,7 @@ class Cache( Component ):
             
             try:
                 os.mkdir(self.cache_dir)
-            except OSError, msg:
+            except OSError as msg:
                 pass
         
             if not os.path.exists(self.cache_dir): 
@@ -52,8 +52,8 @@ class Cache( Component ):
             try:
                 self._cache = shelve.open(self.cache_filename,"c", writeback = False)
                 debug( "disp%s: using cache %s" % (id(self), self.cache_filename ))
-                debug( "disp%s: keys in cache: %s" % (id(self,), str(self._cache.keys() ) ))                
-            except bsddb.db.DBFileExistsError, msg:    
+                debug( "disp%s: keys in cache: %s" % (id(self,), str(list(self._cache.keys()) ) ))                
+            except bsddb.db.DBFileExistsError as msg:    
                 warn("disp%s: could not open cache %s - continuing without. Error = %s" %\
                      (id(self), self.cache_filename, msg))
                 self.cache_filename = None
@@ -66,14 +66,14 @@ class Cache( Component ):
         if self._cache != None: 
             return
         self.debug( "closing cache %s" % self.cache_filename )
-        self.debug( "keys in cache %s" % (str(self._cache.keys() ) ))
+        self.debug( "keys in cache %s" % (str(list(self._cache.keys()) ) ))
         self._cache.close()
         self._cache = None
 
     def keys( self):
         '''return keys in cache.'''
         if self._cache != None:
-            return self._cache.keys()
+            return list(self._cache.keys())
         else:
             return []
 
@@ -95,7 +95,7 @@ class Cache( Component ):
                 self.debug( "key '%s' not found in cache" % key )
                 raise KeyError("cache does not contain %s" % str(key))
 
-        except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, cPickle.UnpicklingError, ValueError, EOFError), msg:
+        except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, pickle.UnpicklingError, ValueError, EOFError) as msg:
             self.warn( "could not get key '%s' or value for key in '%s': msg=%s" % (key,
                                                                                     self.cache_filename, 
                                                                                     msg) )
@@ -111,7 +111,7 @@ class Cache( Component ):
             try:
                 self._cache[key] = data
                 self.debug( "saved data for key '%s' in cache" % key )
-            except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError), msg:
+            except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as msg:
                 self.warn( "could not save key '%s' from '%s': msg=%s" % (key,
                                                                           self.cache_filename,
                                                                           msg) )

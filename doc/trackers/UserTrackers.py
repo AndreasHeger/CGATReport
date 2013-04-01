@@ -1,7 +1,7 @@
 import sys, os, re, random, glob
 
 from SphinxReport.Tracker import Tracker
-from SphinxReport.odict import OrderedDict as odict
+from collections import OrderedDict as odict
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReport import Utils
 

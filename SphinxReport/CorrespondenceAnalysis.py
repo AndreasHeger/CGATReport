@@ -16,7 +16,7 @@ def GetIndices( matrix ):
     # check for empty rows/columns
     # return the original permutation
     if 0 in row_sums or 0 in col_sums:
-        return range(nrows), range(ncols)
+        return list(range(nrows)), list(range(ncols))
     
     a = numpy.zeros( (nrows, nrows), numpy.float)
     for x in range( 0, nrows):
@@ -33,7 +33,7 @@ def GetIndices( matrix ):
 
     try:
         row_eigenvector = numpy.linalg.eig(M)[1][:,1]
-    except numpy.linalg.linalg.LinAlgError, msg:
+    except numpy.linalg.linalg.LinAlgError as msg:
         raise ValueError( msg )
  
     M = numpy.dot( \
@@ -43,7 +43,7 @@ def GetIndices( matrix ):
 
     try:
         col_eigenvector = numpy.linalg.eig(M)[1][:,1]
-    except numpy.linalg.linalg.LinAlgError, msg:
+    except numpy.linalg.linalg.LinAlgError as msg:
         raise ValueError( msg )
          
     ## insert columns ignored at the computation and give them the lowest
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     matrix[5,2:5] = 1
 
 
-    print "matrix=", matrix
+    print("matrix=", matrix)
 
 
     row_indices, col_indices =  GetIndices( matrix )
@@ -113,10 +113,10 @@ if __name__ == "__main__":
     map_row_new2old = numpy.argsort(row_indices)
     map_col_new2old = numpy.argsort(col_indices)
 
-    print map_row_new2old
-    print map_col_new2old
+    print(map_row_new2old)
+    print(map_col_new2old)
 
-    print GetPermutatedMatrix( matrix, map_row_new2old, map_col_new2old)
+    print(GetPermutatedMatrix( matrix, map_row_new2old, map_col_new2old))
 
     
 
