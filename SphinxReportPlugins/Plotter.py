@@ -402,7 +402,6 @@ class Plotter(object):
             increment = (xend - xstart) / 100.0
             for function in self.functions:
                 f = eval("lambda x: %s" % function )
-                print(locals())
                 xvals = numpy.arange( xstart, xend, increment)
                 yvals = [ f(x) for x in xvals ]
                 plt.plot( xvals, yvals )

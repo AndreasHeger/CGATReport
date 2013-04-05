@@ -11,11 +11,12 @@ from SphinxReport import Utils
 def tracker2key( tracker ):
     '''derive cache filename from a tracker.'''
 
-    modulename = os.path.split(tracker.__class__.__module__)[1]
-
-    if hasattr( tracker, "func_name" ):
+    modulename = tracker.__module__
+    try:
+        # works for functions (def)
         name = tracker.__name__
-    else:
+    except AttributeError:
+        # works for functors (class)
         name = tracker.__class__.__name__
 
     return Utils.quote_filename( ".".join((modulename,name)))
