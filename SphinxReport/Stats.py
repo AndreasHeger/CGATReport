@@ -7,7 +7,7 @@ from functools import reduce
 # See http://projects.scipy.org/scipy/ticket/1739
 # scipy 0.11 for python3 broken, should be fixed for scipy 0.12
 try: import scipy.stats
-except ValueError: pass
+except ValueError: scipy.stats = None
 
 import collections, itertools
 
@@ -520,6 +520,9 @@ def doCorrelationTest( xvals, yvals, method = "pearson" ):
 
     Raises a value-error if there are not enough observations.
     """
+
+    if scipy.stats == None:
+        raise ImportError("scipy.stats not available")
 
     if len(xvals) <= 1 or len(yvals) <= 1:
         raise ValueError( "can not compute correlation with no data" )

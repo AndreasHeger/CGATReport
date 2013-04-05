@@ -36,7 +36,7 @@ from SphinxReport import report_directive, gallery, clean, Utils
 
 from SphinxReport.Component import *
 
-from . import Logger
+from SphinxReport import Logger
 
 try:
     from multiprocessing import Process

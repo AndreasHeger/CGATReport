@@ -39,6 +39,19 @@ optional pdf support
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
 
+=============
+Release Notes
+=============
+
+Version 2.0
+===========
+
+Things to fix for python3
+   * multiprocessing - error in multiprocessing.Pool
+   * eps rendering - segmentation fault
+   * scipy.stats - can't import
+   * web.py - non updated
+
 Version 1.2
 ===========
 

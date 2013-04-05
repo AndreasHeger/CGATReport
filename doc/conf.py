@@ -40,7 +40,7 @@ sphinxreport_show_warnings = True
 # static images to create for each plot
 # a tuple of (id, format, dpi).
 sphinxreport_images=( ( "hires", "hires.png", 200),
-                      ( "eps", "eps", 50 ),
+                      # ( "eps", "eps", 50 ),
                       ( "svg", "svg", 50 ) )
 
 # -- General configuration -----------------------------------------------------

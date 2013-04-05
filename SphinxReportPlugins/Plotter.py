@@ -401,7 +401,8 @@ class Plotter(object):
             xstart, xend = ax.get_xlim()
             increment = (xend - xstart) / 100.0
             for function in self.functions:
-                exec("f = lambda x: %s" % function )
+                f = eval("lambda x: %s" % function )
+                print(locals())
                 xvals = numpy.arange( xstart, xend, increment)
                 yvals = [ f(x) for x in xvals ]
                 plt.plot( xvals, yvals )

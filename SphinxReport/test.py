@@ -358,11 +358,11 @@ def main():
                 print("press Ctrl-c to stop")
                 while 1: pass
             
-            elif _pylab_helpers.Gcf.get_all_fig_managers() > 0:
+            elif len(_pylab_helpers.Gcf.get_all_fig_managers()) > 0:
                 plt.show()
 
     elif options.page:
-        from . import build
+        from SphinxReport import build
         SphinxReport.report_directive.DEBUG = True
         SphinxReport.report_directive.FORCE = True
         
