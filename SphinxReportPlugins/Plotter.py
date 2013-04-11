@@ -2259,7 +2259,7 @@ class VennPlot( Renderer, Plotter ):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def __call__(self, work, path):
+    def render(self, work, path):
 
         if matplotlib_venn == None:
             raise ValueError("library matplotlib_venn not available")
