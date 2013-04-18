@@ -1,7 +1,7 @@
 """Mixin classes for Renderers that plot.
 """
 
-import os, sys, re, math, itertools
+import os, sys, re, math, itertools, datetime
 
 import matplotlib
 matplotlib.use('Agg', warn = False)
@@ -89,7 +89,6 @@ def rhist(ax, data, **keywords):
    
     return ax.hist(data, **keywords)
 
-
 def rbox(ax, data, **keywords):
     """Creates a ggplot2 style boxplot, is eqivalent to calling ax.boxplot with the following additions:
    
@@ -133,7 +132,6 @@ def rbox(ax, data, **keywords):
         ax.add_patch(boxPoly)
 
     return bp
-
 
 def parseRanges(r):
     '''given a string in the format "x,y", 
@@ -265,7 +263,6 @@ class Plotter(object):
         # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
         self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
 
-        self.width = kwargs.get("width", 0.50 )
         self.xrange = parseRanges(kwargs.get("xrange", None ))
         self.yrange = parseRanges(kwargs.get("yrange", None ))
         self.zrange = parseRanges(kwargs.get("zrange", None ))
@@ -402,14 +399,18 @@ class Plotter(object):
             increment = (xend - xstart) / 100.0
             for function in self.functions:
                 f = eval("lambda x: %s" % function )
-                print(locals())
                 xvals = numpy.arange( xstart, xend, increment)
                 yvals = [ f(x) for x in xvals ]
                 plt.plot( xvals, yvals )
 
         if self.vline:
             ystart, yend = ax.get_ylim()
-            lines = list(map(int, self.vline.split(",") ))
+            lines = []
+            for l in self.vline.split(","):
+                l = l.strip()
+                if l == "today": l = datetime.datetime.now().toordinal()
+                else: l = int(l)
+                lines.append( l )
             ax.vlines( lines, ystart, yend )
 
         # add labels and titles
@@ -503,6 +504,13 @@ class Plotter(object):
         if legend and maxlen > self.mMaxLegendSize:
             ltext = legend.get_texts() # all the text.Text instance in the legend
             plt.setp(ltext, fontsize='small') 
+
+        if self.mMPLSubplotOptions:
+            # apply subplot options - useful even if there are no subplots in
+            # order to set figure margins.
+            plt.subplots_adjust( **self.mMPLSubplotOptions )
+
+        plt.tight_layout()
 
         return blocks
 
@@ -1438,6 +1446,7 @@ class BarPlot( TableMatrix, Plotter):
           ('orientation', directives.unchanged),
           ('first-is-offset', directives.unchanged),
           ('switch', directives.unchanged ),
+          ('bar-width', directives.unchanged ),
           )
         
     # column to use for error bars
@@ -1469,6 +1478,9 @@ class BarPlot( TableMatrix, Plotter):
     # switch rows/columns
     switch_row_col = False
 
+    # bar width (height for horizontal plots)
+    bar_width = 0.5
+
     def __init__(self, *args, **kwargs):
         TableMatrix.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
@@ -1480,6 +1492,8 @@ class BarPlot( TableMatrix, Plotter):
         self.transparency = kwargs.get("transparency", None )
         if self.transparency: raise NotImplementedError( "transparency not implemented yet")
         self.orientation = kwargs.get( 'orientation', 'vertical' )
+        if 'bar-width' in kwargs:
+            self.bar_width = float(kwargs.get( 'bar-width' ) )
 
         if self.orientation == 'vertical':
             self.plotf = plt.bar
@@ -1589,7 +1603,24 @@ class BarPlot( TableMatrix, Plotter):
         else:
             hatch, color = self.bar_patterns[ idx % len(self.bar_patterns) ]
         return hatch, color, alpha
-            
+
+    def addTicks( self, xvals ):
+        '''add tick marks to plots.'''
+        
+        rotation = "horizontal"
+        
+        if self.orientation == "vertical":
+            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
+                rotation = "vertical"
+                self.rescaleForVerticalLabels( self.rows )
+        
+        if self.orientation == 'vertical':
+            plt.xticks( xvals + self.bar_width / 2., self.rows, rotation = rotation )
+        else:
+            plt.yticks( xvals + self.bar_width / 2., self.rows, rotation = rotation )
+            locs, labels = plt.xticks()
+            plt.xticks( locs, labels, rotation = 'vertical' )
+
     def render( self, work, path ):
 
         self.buildMatrices( work )
@@ -1622,7 +1653,7 @@ class BarPlot( TableMatrix, Plotter):
              
             plts.append( self.plotf( xvals, 
                                      vals,
-                                     self.width, 
+                                     self.bar_width, 
                                      yerr = error,
                                      ecolor = "black",
                                      color = color,
@@ -1636,18 +1667,7 @@ class BarPlot( TableMatrix, Plotter):
             
             y += 1
 
-            
-        rotation = "horizontal"
-        
-        if self.orientation == "vertical":
-            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-                rotation = "vertical"
-                self.rescaleForVerticalLabels( self.rows )
-        
-        if self.orientation == 'vertical':
-            plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
-        else:
-            plt.yticks( xvals + 0.5, self.rows, rotation = rotation )
+        self.addTicks( xvals )
 
         return self.endPlot( plts, self.columns, path )
 
@@ -1714,19 +1734,7 @@ class InterleavedBarPlot(BarPlot):
             offset += width
             row += 1
 
-        rotation = "horizontal"
-
-        if self.orientation == "vertical":
-            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-                rotation = "vertical"
-                self.rescaleForVerticalLabels( self.rows )
-            else: 
-                rotation = "horizontal"
-                
-        if self.orientation == 'vertical':
-            plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
-        else:
-            plt.yticks( xvals + 0.5, self.rows, rotation = rotation )
+        self.addTicks( xvals )
 
         return self.endPlot( plts, self.columns, path )
            
@@ -1747,7 +1755,7 @@ class StackedBarPlot(BarPlot ):
 
         plts = []
 
-        xvals = numpy.arange( (1.0 - self.width) / 2., len(self.rows) )
+        xvals = numpy.arange( (1.0 - self.bar_width) / 2., len(self.rows) )
         sums = numpy.zeros( len(self.rows), numpy.float )
         
         y, error, is_first = 0, None, True
@@ -1786,7 +1794,7 @@ class StackedBarPlot(BarPlot ):
 
             plts.append( self.plotf( xvals, 
                                      vals, 
-                                     self.width, 
+                                     self.bar_width, 
                                      yerr = error,
                                      color = color,
                                      hatch = hatch,
@@ -1796,27 +1804,12 @@ class StackedBarPlot(BarPlot ):
 
             if self.label and self.label_matrix != None: 
                 self.addLabels( xvals, vals, self.label_matrix[:,column] )
+
             legend.append( header )
             sums += vals
             y += 1
 
-        rotation = "horizontal"
-
-        if self.orientation == "vertical":
-            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-                rotation = "vertical"
-                self.rescaleForVerticalLabels( self.rows )
-                
-        if self.orientation == 'vertical':
-            plt.xticks( xvals + self.width / 2., 
-                        self.rows,
-                        rotation = rotation )
-        else:
-            plt.yticks( xvals + self.width / 2., 
-                        self.rows,
-                        rotation = rotation )
-            
-
+        self.addTicks( xvals )
 
         return self.endPlot( plts, legend, path )
 

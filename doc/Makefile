@@ -1,6 +1,6 @@
 # Makefile for Sphinx documentation
 #
-BINDIR=/home/andreas/python2.7/bin/
+BINDIR=# /home/andreas/python2.7/bin/
 XVFB=  #xvfb-run -a
 
 # You can set these variables from the command line.

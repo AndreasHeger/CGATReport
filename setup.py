@@ -20,7 +20,7 @@ shared_dependencies = [
     'rpy2>=2.3.4',
     'numpy>=1.7',
     'scipy>=0.11',
-    'matplotlib>=1.0', 
+    'matplotlib>=1.2.1', 
     'sqlalchemy>=0.7.0', 
     'openpyxl>=1.5.7' ]
 
