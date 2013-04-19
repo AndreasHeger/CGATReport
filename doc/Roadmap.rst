@@ -19,9 +19,6 @@ add automatic history
     keep automatic track of releases/versions of
     the document.
 
-add :as-percent: option
-    display proportions optionally as percent
-
 examine memory usage
     large datasets require a large amount of memory,
     investigate if this can be optimized, for example
@@ -43,14 +40,25 @@ investigate netCDF/HFS5 support
 Release Notes
 =============
 
+Version 2.1
+============
+
+   * Added Ian's genelist tools
+   * Require matplotlib 1.2.1 for tight_layout() option.
+   * Call tight_layout() after each plot.
+   * added :add-percent: option to tables.
+
 Version 2.0
 ===========
 
-Things to fix for python3
-   * multiprocessing - error in multiprocessing.Pool
+Python 3 compatibility and many features. Python 2.6 is not
+supported any more as the rpy2 module is not available for
+2.6.
+
+Python3 support is incomplete, the following will not work:
    * eps rendering - segmentation fault
-   * scipy.stats - can't import
-   * web.py - non updated
+   * scipy.stats - can't be imported
+   * web.py - pip install fails
 
 Version 1.2
 ===========

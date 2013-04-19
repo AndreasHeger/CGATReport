@@ -4,9 +4,9 @@ Tutorial
 A simple example
 ----------------
 
-To find the overlap between two transcription factors we define a TrackerOverlappingSets tracker, plot the venns and calculate the p-values::
+To find the overlap between two transcription factors we define a TrackerMultipleLists tracker, plot the venns and calculate the p-values::
 
-    class SimpleOverlap( TrackerOverlappingSets ):
+    class SimpleOverlap( TrackerMultipleLists ):
 
        statements = {"AR": "SELECT gene_id FROM Promoters_with_ar",
                      "ERG": "SELECT gene_id FROM Promoters_with_erg",
@@ -20,7 +20,6 @@ As a venn:
    :render: venn-plot
    :transform: venn
 
-
    A venn diagram of the overlap
 
 As a table:
@@ -28,7 +27,6 @@ As a table:
 .. report:: Genelists.SimpleOverlap
    :render: table
    :transform: hypergeometric
-   
 
    Statistics on the overlap.
 
@@ -84,7 +82,7 @@ Defining a tracker
 
 The first thing we must do is define the tracker that will return our results. First import the tracker::
 
-    from SphinxReportGeneLists.Tracker import *
+    from SphinxReport.Tracker import *
 
 Now we must define the tracker that will return our results. There are
 lots of comparisons here and we must decide what are tracks and slices
@@ -94,7 +92,7 @@ the Up and down regulated genes. The `tracks` can be sepcified using a
 pattern on the database (the different tracks appear in the names of
 the tables). The `slices` will have to be specified manually::
 
-    from SphinxReportGeneLists.Tracker import *
+    from SphinxReport.Tracker import *
     class OverlapTracker( TrackerOverlappingLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
@@ -112,8 +110,8 @@ genes:
 
 The easiest way to do this is to specify the `ListA`, `ListB` and  `ListC` attributes to the tracker::
 
-    from SphinxReportGeneLists.Tracker import *
-    class OverlapTracker( TrackerOverlappingSets ):
+    from SphinxReport.Tracker import *
+    class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
        	
@@ -134,8 +132,8 @@ The easiest way to do this is to specify the `ListA`, `ListB` and  `ListC` attri
 
 Note how I've used the %(track) and %(slice) place holders in the SQL statements, these will be substuted when the querys are executed. Now because hypergeometric testing requires a background, we need to produce a background list. For example, the differential testing used here didn't test genes that arn't expressed in either sample, so there is no way they could be in the differential set. So our background set is all genes that appear in the differential table::
     
-    from SphinxReportGeneLists.Tracker import *
-    class OverlapTracker( TrackerOverlappingSets ):
+    from SphinxReport.Tracker import *
+    class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
        	
@@ -159,8 +157,8 @@ Note how I've used the %(track) and %(slice) place holders in the SQL statements
 
 Now we are almost finised. There is only one problem. Our background is all genes in the differential table. But there could be genes in the Bound genes lists that arn't in the background, so we need to limit these::
 
-    from SphinxReportGeneLists.Tracker import *
-    class OverlapTracker( TrackerOverlappingSets ):
+    from SphinxReport.Tracker import *
+    class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
        	

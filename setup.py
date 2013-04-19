@@ -15,6 +15,7 @@ if major==2:
 elif major==3:
     extra_dependencies = []
 
+# Dependencies shared between python 2 and 3
 shared_dependencies = [
     'sphinx>=1.0.5',
     'rpy2>=2.3.4',
@@ -50,7 +51,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='SphinxReport',
-      version='2.0',
+      version='2.1',
       description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',

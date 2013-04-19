@@ -39,14 +39,14 @@ Options
       tables are displayed in a separate page and only a link
       is inserted into the document.
 
-   max_rows
+   max-rows
       int
       
       Number of rows to display. If the table contains more rows,
       only a preview is created and the table is stored in an
       alternative format (see :attr:`large`),
 
-   max_cols
+   max-cols
       int
       
       Number of columns to display. If the table contains more columns,
@@ -59,6 +59,22 @@ Options
       Display large tables in alternate format. Possible formats are:
       ``html`` (defaul) for an html-formatted table and ``xls`` for
       an excel spreadsheet.
+
+   add-percent
+      string
+   
+      add a percentage column to a table. The format of this option is:
+      ```column[,total]``. ``column`` denotes the column (usually a
+      :term:`slice`) for which a percentage should be added. The
+      optional argument ``total`` specifies the total to use. The
+      total can be another column in the table or a value. If nothing
+      is specified, the ``sum`` of all values in the column is used 
+      to compute a total.
+
+      Multiple columns can be added using a ``;`` separator.	    
+
+      See :ref:`matrix` if you want to normalize across rows or
+      columns across a table.
       
 Grouping tables
 ---------------

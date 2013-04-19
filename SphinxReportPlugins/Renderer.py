@@ -118,8 +118,8 @@ class TableBase( Renderer ):
     options = Renderer.options +\
         ( ('force', directives.unchanged), 
           ('separate', directives.unchanged), 
-          ('max_rows', directives.length_or_unitless),
-          ('max_cols', directives.length_or_unitless),
+          ('max-rows', directives.length_or_unitless),
+          ('max-cols', directives.length_or_unitless),
           )
     
     max_rows = 50
@@ -130,8 +130,8 @@ class TableBase( Renderer ):
 
         self.force = "force" in kwargs            
         self.separate = "separate" in kwargs
-        self.max_rows = kwargs.get( "max_rows", 50 )
-        self.max_cols = kwargs.get( "max_cols", 20 )
+        self.max_rows = kwargs.get( "max-rows", 50 )
+        self.max_cols = kwargs.get( "max-cols", 20 )
 
     def asFile( self, matrix, row_headers, col_headers, title ):
         '''save the table as HTML file.
@@ -217,7 +217,8 @@ class Table( TableBase ):
     '''
     options = TableBase.options +\
         ( ('transpose', directives.unchanged),
-          ('add_rowindex', directives.unchanged),
+          ('add-rowindex', directives.unchanged),
+          ('add-percent', directives.unchanged),
           ('large', directives.unchanged),
           ('preview', directives.unchanged) )
 
@@ -229,9 +230,10 @@ class Table( TableBase ):
         TableBase.__init__(self, *args, **kwargs )
 
         self.transpose = "transpose" in kwargs
-        self.add_rowindex = "add_rowindex" in kwargs
+        self.add_rowindex = "add-rowindex" in kwargs
         self.large = kwargs.get( "large", "html")
         self.preview = "preview" in kwargs
+        self.add_percent = kwargs.get( 'add-percent', None )
 
     def getHeaders( self, data ):
         """return a list of headers and a mapping of header to column.
@@ -267,9 +269,50 @@ class Table( TableBase ):
         matrix, row_headers, col_headers = tree2table( data, self.transpose )
         return matrix, row_headers, col_headers
 
+    def modifyTable( self, matrix, row_headers, col_headers ):
+        '''modify table if required, for example adding percentages.'''
+        
+        if self.add_percent:
+            parts = self.add_percent.split(";")
+            for part in parts:
+                total, other_col = None, None
+                if "," in part: 
+                    column, method = part.split(",")
+                    if method in col_headers:
+                        other_col = col_headers.index( method )
+                    else:
+                        try: total = float( method )
+                        except ValueError:
+                            raise ValueError("can't compute total from expression `%s` - missing column?" % method )
+                else:
+                    column = part
+                
+                if column not in col_headers:
+                    raise ValueError("unknown column `%s` to add-percent" % (column))
+
+                col = col_headers.index( column )
+                values = [ float(x[col]) for x in matrix ]
+
+                if other_col:
+                    for row in matrix:
+                        row.append( 100.0 * float(row[col]) / float(row[other_col]) )
+                else:
+                    if total == None: total = sum(values)
+                    for row in matrix:
+                        row.append( 100.0 * float(row[col]) / total )
+
+                col_headers.append( "%s / %%" % column )
+
+        return matrix, row_headers, col_headers
+
     def __call__(self, data, path):
         
+        # build table from data. Note that these are not numpy matrixes but 
+        # list of lists to accomodate a mixture of data types.
         matrix, row_headers, col_headers = self.buildTable( data )
+
+        # modify table (adding/removing columns) according to user options
+        matrix, row_headers, col_headers = self.modifyTable( matrix, row_headers, col_headers )
 
         title = path2str(path)
 
