@@ -1,8 +1,8 @@
-.. _venn:
+.. _venn-plot:
 
-======
-venn
-======
+=========
+venn-plot
+=========
 
 :class:`SphinxReportPlugins.Renderer.Venn` plots a 2 or 3 circle
 Venn diagramm:
@@ -45,3 +45,4 @@ Options
 
 :class:`SphinxReportPlugins.Renderer.Venn` has no additional
 options.
+

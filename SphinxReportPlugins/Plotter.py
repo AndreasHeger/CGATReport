@@ -186,6 +186,8 @@ class Plotter(object):
        
        :term:`yformat`: label for Y axis
 
+       :term:`no-tight`: do not attempt a tight layout (see ``matplotlib.pyplot.tight_layout()``)
+
     With some plots default layout options will result in plots 
     that are misaligned (legends truncated, etc.). To fix this it might
     be necessary to increase plot size, reduce font size, or others.
@@ -234,6 +236,7 @@ class Plotter(object):
         ('legend-location',  directives.unchanged),
         ('xformat', directives.unchanged),
         ('yformat', directives.unchanged),
+        ('no-tight', directives.flag) 
         )
 
     mColors = "bgrcmk"
@@ -255,6 +258,7 @@ class Plotter(object):
         self.ylabel = kwargs.get("ytitle", None )
         self.functions = kwargs.get("function", None )
         self.vline = kwargs.get("vline", None )
+        self.no_tight = 'no-tight' in kwargs
 
         if self.functions:
             if "," in self.functions: self.functions = self.functions.split(",")
@@ -510,7 +514,8 @@ class Plotter(object):
             # order to set figure margins.
             plt.subplots_adjust( **self.mMPLSubplotOptions )
 
-        plt.tight_layout()
+        if not self.no_tight:
+            plt.tight_layout()
 
         return blocks
 

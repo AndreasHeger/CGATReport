@@ -128,3 +128,29 @@ A table with images
 Tables can display most data types and are the most versatile
 of all renderers.
 
+Adding percent
+--------------
+
+With the :term:`add-percent` option, percentage columns can be added
+to a table. The percentage is added after the column chosen.
+
+For example::
+
+   .. report:: Trackers.LabeledDataExample
+      :render: table
+      :add-percent: column1
+
+      Add a percent column
+
+.. report:: Trackers.LabeledDataExample
+   :render: table
+   :add-percent: column1
+
+   Add a percent column
+
+The default is to use the column sum to compute the percentages.
+Alternatives can be
+
+* another column such as ``:add-percent:column1,column2``, or
+* a value such as ``:add-percent:column1,20``.
+

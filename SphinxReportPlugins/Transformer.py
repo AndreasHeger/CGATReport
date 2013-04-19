@@ -992,12 +992,13 @@ class TransformerMelt( Transformer ):
 
     Example::
         Input:                                 Output
-        experiment1/Sample1 = [1]          Track = ["experiment1","experiment1","experiment2","experiment2"]
-        experiment1/Sample2 = [3]          Slice = ["Sample1","Sample2","Sample1","Sample2"]
-        experiment2/Sample1 = [1]          Data =  [1,3,1,3]
+        experiment1/Sample1 = [1]              Track = ["experiment1","experiment1","experiment2","experiment2"]
+        experiment1/Sample2 = [3]              Slice = ["Sample1","Sample2","Sample1","Sample2"]
+        experiment2/Sample1 = [1]              Data =  [1,3,1,3]
         experiment2/Sample2 = [3]
 
-    Will work with any number of levels, and with lists or single values as the data '''
+    Will work with any number of levels, and with lists or single values as the data 
+    '''
 
     def melt(self, data):
         ''' returns a list of lists, with each list of the same size (hopefully) '''

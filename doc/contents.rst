@@ -34,6 +34,7 @@ Contents:
    Tutorials.rst
    UseCase.rst
    ComplexDocuments.rst
+   TipsTricks.rst
    Reference.rst
    Running.rst
    Advanced.rst

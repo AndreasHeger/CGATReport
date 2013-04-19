@@ -36,6 +36,8 @@ optional pdf support
 investigate netCDF/HFS5 support
    as data sources or as ways to store the data instead of shelve?
 
+.. _Releases:
+
 =============
 Release Notes
 =============

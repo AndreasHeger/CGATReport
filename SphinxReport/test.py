@@ -324,7 +324,7 @@ def main():
                     options_rst.append(":%s: %s" % (key,val) )
 
             print("..Template start")
-            print()
+            print ("")
             params = { "tracker" : "%s.%s" % (modulename,name),
                        "renderer" : options.renderer,
                        "label" : options.label,
@@ -335,11 +335,13 @@ def main():
                     (",".join(options.transformers), params["options"] )
 
             print(RST_TEMPLATE % params)
-            print()
-            print("..Template ends")
+            print ("")
+            print ("..Template ends")
         if result: 
             for r in result:
-                print("title:", r.title)
+                print ("")
+                print ("title: %s" % r.title)
+                print ("")
                 for s in r:
                     print(str(s))
                     

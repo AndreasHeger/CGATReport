@@ -295,13 +295,13 @@ class Table( TableBase ):
 
                 if other_col:
                     for row in matrix:
-                        row.append( 100.0 * float(row[col]) / float(row[other_col]) )
+                        row.insert( col+1, 100.0 * float(row[col]) / float(row[other_col]) )
                 else:
                     if total == None: total = sum(values)
                     for row in matrix:
-                        row.append( 100.0 * float(row[col]) / total )
+                        row.insert( col+1, 100.0 * float(row[col]) / total )
 
-                col_headers.append( "%s / %%" % column )
+                col_headers.insert( col+1, "%s / %%" % column )
 
         return matrix, row_headers, col_headers
 

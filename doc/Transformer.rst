@@ -8,6 +8,9 @@ Inheritance diagram
 .. inheritance-diagram:: SphinxReportPlugins.Transformer
    :parts: 1
 
+.. inheritance-diagram:: SphinxReportPlugins.TransformersGeneLists
+   :parts: 1
+
 Transformer
 ===========
 
@@ -15,6 +18,11 @@ Transformer
    :members:
    :inherited-members:
    :show-inheritance:
+
+.. automodule:: SphinxReportPlugins.TransformersGeneLists
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Checks
 ======

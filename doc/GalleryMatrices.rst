@@ -111,6 +111,7 @@ will be lost.
    :render: matrix-plot
    :layout: column-2
    :width: 200
+   :no-tight:
 
    Rendering small/large matrices with long/short labels
 
@@ -129,6 +130,7 @@ A large matrix in both rows and columns:
 .. report:: TestCases.LargeMatrix
    :render: matrix-plot
    :layout: column-2
+   :no-tight:
 
    Rendering small/large matrices with long/short labels
 

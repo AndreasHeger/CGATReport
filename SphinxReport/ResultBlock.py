@@ -62,10 +62,7 @@ class ResultBlock(object):
         # normalize titel
         parts = self.title.split("/")
         # make unique
-        self.title = str(parts)
-        # self.title = "/".join( map(next, 
-        #                            map(operator.itemgetter(1), 
-        #                                itertools.groupby(parts))) )
+        self.title = "/".join( [ key for key,_ in itertools.groupby(parts)] )
 
     def __str__(self):
         return "\n\n".join( (self.title, self.text) )

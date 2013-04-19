@@ -31,13 +31,13 @@ general description.
 :class:`Tracker.TrackerSQL` is usually used by subclassing. It 
 provides tracks that correspond to tables in the database matching a
 certain pattern. For example, given the tables
+
 ``experiment1_results``, ``experiment1_data``,
 ``experiment2_results``, ``experiment2_data``,
 
 
 
- and overwriting
-some attributes. The attributes are:
+ and overwriting some attributes. The attributes are:
 
 * :attr:`Tracker.TrackerSQL.pattern` - a regular expression 
 

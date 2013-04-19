@@ -417,4 +417,92 @@ following options:
 
       level in the :term:`data tree` on which to act.
 
+.. _melt:
+
+melt
+====
+
+The :class:`SphinxReportPlugins.Transformer.TransformerMelt` creates a melted table. See
+`<http://scienceoss.com/restructure-or-reformat-dataframes-in-r-with-melt>
+here`_ for an example.
+
+For example::
+
+        Input:                                 Output
+        experiment1/Sample1 = [1]              Track = ["experiment1","experiment1","experiment2","experiment2"]
+        experiment1/Sample2 = [3]              Slice = ["Sample1","Sample2","Sample1","Sample2"]
+        experiment2/Sample1 = [1]              Data =  [1,3,1,3]
+        experiment2/Sample2 = [3]
+
+:class:`SphinxReportPlugins.Transformer.TransformerMelt` has no options.
+
+.. _venn:
+
+venn
+====
+
+The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerVenn`
+takes a dictionary of lists and transforms the data so that it is in
+the correct format for plotting a venn diagram of the overlaps between
+the lists. This :term:`Transformer` understand the following options:
+
+.. glossary::
+   
+   keep-background
+      flag
+      
+      keep background data
+
+
+.. _hypergeometric:
+
+hypergeometric
+==============
+
+The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerHypergeometric`
+takes a dictionary of lists and calculates the enrichements and
+p-values for the overlaps using the hypergeometric distribution. If
+there are more than two lists, all pairwise combinations will be
+computed. This :term:`Transformer` has no options.
+
+.. _p-adjust:
+
+p-adjust
+========
+
+The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerMultiTest`
+looks for a P-value column in a table and computes multiple testing
+corrected p-values and adds these as a new column to the table. 
+
+By default all p-values from all levels are corrected together. In
+order to change this behavoir use the adj-levels option.  The
+original data tree is returned with an added P-adjust entry. The
+default method for correction is BH, but other R style correction
+methods can be specified with the option `adj-method`.  
+
+This :term:`Transformer` has the following options:
+
+.. glossary::
+
+   adj-level
+      int
+      
+      Group tests from all levels below for adjustment.
+
+   adj-method
+      choice
+
+      Method to use to compute adjusted P-Values. See the R
+      documentation for p.adjust for available methods.
+
+    p-value
+      string
+
+      String to identify the field in the table containing
+      the p-values. The default is ``P-value``.
+
+
+   
+
+
 
