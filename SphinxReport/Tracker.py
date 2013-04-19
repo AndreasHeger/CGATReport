@@ -1071,3 +1071,90 @@ class TrackerSQLMulti( TrackerSQL ):
 
             self.connect( creator = _my_creator )
 
+class TrackerMultipleLists( TrackerSQL ):
+    ''' A class to retrieve multiple columns across one or more tables.
+    Returns a dictionary of lists. 
+
+    TrackerMultipleLists can be used in conjunction with venn and hypergeometric 
+    transformers and the venn render. 
+    
+    The items in each list are specified by an SQL statement. The statements can be specified
+    in 3 different ways:
+
+    :attr:`statements` dictionary
+        If the tracker contains a statements attribute then the statments
+        are taken from here as well as the list names e.g.::
+
+        class TrackerOverlapTest1( TrackerOverlappingSets ):
+            statements = {"listA": "SELECT gene_id FROM table_a",
+                          "listB": "SELECT gene_id FROM table_b"}
+
+    :attr:`listA`, :attr:`listB`,:attr:`listC` and :attr:`background` attributes
+
+        If the tracker does not contain a statements dictionary
+        then the statements can be specifed using these attributes. An optional list
+        of labels can be specified for the names of these lists. For example::
+        
+            class TrackerOverlapTest2( TrackerOverlappingSets ):
+               listA = "SELECT gene_id FROM table_a"
+               listB = "SELECT gene_id FROM table_b"
+
+               labels = ["FirstList","SecondList"]
+
+    :meth:`getStatements` method
+         The :meth:`getStatements` method can be overridden to allow full control over 
+         where the statements come from. It should return a dictionary of SQL statements.
+
+    Because TrackerMultipleLists is derived from :class:`TrackerSQL`, tracks and slices can be 
+    specified in the usual way.
+    '''
+
+    statements = None
+    ListA = None
+    ListB = None
+    ListC = None
+    background = None
+    labels = None
+
+    def getStatements(self):
+
+        statements = odict()
+
+        if self.statements: return self.statements
+
+        if self.ListA:
+            if self.labels:
+                label = self.labels[0]
+            else:
+                label = "ListA"
+            statements[label] = self.ListA
+
+        if self.ListB:
+            
+            if self.labels:
+                label = self.labels[1]
+            else:
+                label = "ListB"
+
+            statements[label] = self.ListB
+
+        if self.ListC:
+            
+            if self.labels:
+                label = self.labels[2]
+            else:
+                label = "ListC"
+
+            statements[label] = self.ListC
+
+        if self.background:
+            statements["background"] = self.background
+
+        return statements
+
+    def __call__(self, track, slice = None):
+        
+        statements = self.getStatements()
+        # track and slice will be substituted in the statements
+        return odict( [(x,self.getValues(statements[x])) for x in statements] )
+

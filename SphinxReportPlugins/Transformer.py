@@ -986,3 +986,51 @@ class TransformerHistogram( TransformerAggregate ):
 
         debug( "%s: completed for path %s" % (str(self), str(path)))
         return data
+
+class TransformerMelt( Transformer ):
+    ''' Create a melted table
+
+    Example::
+        Input:                                 Output
+        experiment1/Sample1 = [1]          Track = ["experiment1","experiment1","experiment2","experiment2"]
+        experiment1/Sample2 = [3]          Slice = ["Sample1","Sample2","Sample1","Sample2"]
+        experiment2/Sample1 = [1]          Data =  [1,3,1,3]
+        experiment2/Sample2 = [3]
+
+    Will work with any number of levels, and with lists or single values as the data '''
+
+    def melt(self, data):
+        ''' returns a list of lists, with each list of the same size (hopefully) '''
+
+        try:
+            keys = data.keys()
+        except AttributeError:
+            try:
+                if len(data) > 0:
+                    return [data]
+                else:
+                    return [data]
+            except TypeError:
+                return [[data]]
+
+        lols = []
+        for key in keys:
+            melted = self.melt(data[key])
+            new = [[key for x in range(len(melted[0]))]]
+            melted = new + melted
+            lols.append(melted)
+
+        final = lols[0]
+        for l in lols[1:]:
+            for i in range(len(final)):
+                final[i] += l[i]
+
+        return final
+
+    def __call__(self,data):
+
+        titles = ["Data","Slice","Track"]
+
+        lol = self.melt(data)
+
+        ntitles = len(lol)

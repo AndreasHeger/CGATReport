@@ -41,8 +41,13 @@ clean:
 distclean:
 	$(SPHINXCLEAN) distclean
 
-csvdb:
-	python fill.py
+# Dump database contents
+csvdb_data.txt.gz:
+	sqlite3 csvdb .dump | gzip > csvdb_data.txt.gz
+
+# Load database contents
+csvdb: csvdb_data.txt.gz
+	rm -f $@; gunzip < $< | sqlite3 $@
 
 html: csvdb
 	$(XVFB) $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
@@ -118,3 +123,4 @@ publish:
 	chmod -R a+r $(DIR_PUBLISH)
 	@echo "fixing URLs"
 	find $(DIR_PUBLISH)/ -name "*.html" -exec perl -p -i -e $(URL_SUB) {} \;
+

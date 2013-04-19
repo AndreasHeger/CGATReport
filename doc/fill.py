@@ -1,3 +1,5 @@
+'''Script to fill csvdb database with example data.'''
+
 import random, os
 from subprocess import Popen
 
