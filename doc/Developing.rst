@@ -34,6 +34,14 @@ Modules documentation
    DataTypes.rst
    Component.rst
 
+Contributions
+=============
+
+The following people contributed to SphinxReport:
+
+Andreas Heger 
+Ian Sudbery
+
 Indices and tables
 ==================
 
