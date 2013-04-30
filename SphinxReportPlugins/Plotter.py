@@ -240,7 +240,7 @@ class Plotter(object):
         )
 
     mColors = "bgrcmk"
-    mSymbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
+    symbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
     mMarkers = "so^>dph8+x"
     mPatterns = [None, '/','\\','|','-','+','x','o','O','.','*']
 
@@ -265,8 +265,8 @@ class Plotter(object):
             else: self.functions = [self.functions]
             
         # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
-        self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
-
+        self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "best" ))
+        # ("outer-top"))
         self.xrange = parseRanges(kwargs.get("xrange", None ))
         self.yrange = parseRanges(kwargs.get("yrange", None ))
         self.zrange = parseRanges(kwargs.get("zrange", None ))
@@ -514,7 +514,7 @@ class Plotter(object):
             # order to set figure margins.
             plt.subplots_adjust( **self.mMPLSubplotOptions )
 
-        if not self.no_tight:
+        if not self.no_tight and self.legend_location.startswith( "outer" ):
             plt.tight_layout()
 
         return blocks
@@ -1100,6 +1100,8 @@ class LinePlot( Renderer, Plotter ):
     This plotter accepts the following options:
 
        :term:`as-lines`: do not plot symbols
+       :term:`yerror`: every second data track is a y error
+
     '''
     nlevels = 2
 
@@ -1108,19 +1110,23 @@ class LinePlot( Renderer, Plotter ):
 
     options = Plotter.options +\
         ( ('as-lines', directives.flag),
+          ('yerror', directives.flag),
           )
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-        self.mAsLines = "as-lines" in kwargs
+        self.as_lines = "as-lines" in kwargs
 
-        if self.mAsLines:
-            self.mSymbols = []
+        if self.as_lines:
+            self.symbols = []
             for y in ("-",":","--"):
                 for x in "gbrcmyk":
-                    self.mSymbols.append( y+x )
+                    self.symbols.append( y+x )
+
+        # data to use for Y error bars
+        self.yerror = "yerror" in kwargs
 
     def initPlot(self, fig, work, path ): 
 
@@ -1135,16 +1141,24 @@ class LinePlot( Renderer, Plotter ):
                  line, label,
                  xlabel, ylabel,
                  xvals, yvals, 
-                 nplotted ):
+                 nplotted,
+                 yerrors = None):
 
-        s = self.mSymbols[nplotted % len(self.mSymbols)]
+        s = self.symbols[nplotted % len(self.symbols)]
         
         xxvals, yyvals = Stats.filterNone( (xvals, yvals) )
-        
-        self.plots.append( plt.plot( xxvals,
-                                     yyvals,
-                                     s ) )
-        
+
+        if yerrors:
+            self.plots.append( plt.errorbar(xxvals,
+                                            yyvals,
+                                            yerr = yerrors,
+                                            fmt = s) )
+        else:
+            self.plots.append( plt.plot( xxvals,
+                                         yyvals,
+                                         s ) )
+
+            
         self.ylabels.append(ylabel)
         self.xlabels.append(xlabel)
 
@@ -1205,9 +1219,18 @@ class LinePlot( Renderer, Plotter ):
                 xlabel, ylabels = self.initCoords( label, coords)
                 xvals = coords[xlabel]
 
-                for ylabel in ylabels:
+                if self.yerror:
+                    yerrors = [ ylabels[x] for x in range(1, len(ylabels), 2) ]
+                    ylabels = [ ylabels[x] for x in range(0, len(ylabels), 2) ]
+                else:
+                    yerrors = [ None ] * len( ylabels ) 
+                    
+                for ylabel, yerror in zip(ylabels, yerrors):
                     yvals = coords[ylabel]
-                    self.addData( line, label, xlabel, ylabel, xvals, yvals, nplotted )
+                    if yerror: yerror = coords[yerror]
+                    self.addData( line, label, xlabel, ylabel, xvals, yvals, 
+                                  nplotted,
+                                  yerrors = yerror )
                     nplotted += 1
 
                     if len(ylabels) > 1:
@@ -2272,15 +2295,23 @@ class VennPlot( Renderer, Plotter ):
             del subsets["labels"]
 
         if subsets == None:
-            self.warn( "no suitable data for Venn diagram at %s" % path)
+            self.warn( "no suitable data for Venn diagram at %s" % str(path))
             return self.endPlot( plts, None, path )
 
         if len(subsets) == 3:
+            if 0 in (subsets['10'], subsets['01']): 
+                self.warn("empty sets for Venn diagram at %s" % str(path ))
+                return self.endPlot( plts, None, path )
+
             if setlabels:
                 if len(setlabels) != 2: raise ValueError( "require two labels, got %i" % len(setlabels))
             plts.append( matplotlib_venn.venn2( subsets,
                                                 set_labels = setlabels ) )
         elif len(subsets) == 7:
+            if 0 in (subsets['100'], subsets['010'], subsets['001']): 
+                self.warn("empty sets for Venn diagram at %s" % str(path ))
+                return self.endPlot( plts, None, path )
+
             if setlabels:
                 if len(setlabels) != 3: raise ValueError( "require three labels, got %i" % len(setlabels))
             plts.append( matplotlib_venn.venn3( subsets,

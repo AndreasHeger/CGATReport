@@ -502,7 +502,25 @@ This :term:`Transformer` has the following options:
       the p-values. The default is ``P-value``.
 
 
-   
+.. _count:
+
+count
+=====
+
+The :class:`SphinxReportPlugins.Transformer.TransformerCount` computes
+the numbers of values in a data tree. Displaying a table of counts can often be useful to
+summarize the number of entries in a list prior to plotting.
+
+This :term:`Transformer` has the following options:
+
+.. glossary::
+
+   level
+      int
+      
+      Level in the :term:`datatree` hierarchy at which to count.
+
+
 
 
 
