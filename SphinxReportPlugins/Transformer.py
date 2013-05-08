@@ -1035,3 +1035,18 @@ class TransformerMelt( Transformer ):
         lol = self.melt(data)
 
         ntitles = len(lol)
+
+        
+
+        if ntitles-len(titles) < 0:
+            titles = titles[:ntitles-1]
+        else:
+            titles += ["Variable%i" % x for x in range((ntitles-len(titles)),0,-1)]
+            
+        titles.reverse()
+  
+
+        dol = {titles[i]: lol[i] for i in range(len(lol))}
+        
+        
+        return dol
