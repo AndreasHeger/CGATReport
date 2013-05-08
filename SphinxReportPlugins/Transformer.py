@@ -229,6 +229,45 @@ class TransformerIndicator( Transformer ):
 
 ########################################################################
 ########################################################################
+########################################################################
+class TransformerCount( Transformer ):
+    '''compute counts of values in the hierarchy.
+
+    Displaying a table of counts can often be useful to
+    summarize the number of entries in a list prior to
+    plotting.
+
+    The following operations are perform when :term:`tf-level` is set
+    to ``1``::
+       Input:          Returns:
+       a/x=[1,2,3]            a/x=3
+       a/y=[1,3,5]            a/y=3
+       b/x=[34,3]             b/x=2
+       b/y=[2,4]              b/y=2
+    '''
+    
+    nlevels = 1
+    default = 0
+
+    options = Transformer.options +\
+        ( ('tf-level', directives.length_or_unitless), )
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        try: self.nlevels = int(kwargs["tf-level"])
+        except KeyError: pass
+                          
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        for v in list(data.keys()):
+            data[v] = len(data[v])
+                
+        return data
+
+########################################################################
+########################################################################
 ## Filtering transformers
 ########################################################################
 ########################################################################
@@ -404,9 +443,9 @@ class TransformerGroup( Transformer ):
 ########################################################################
 ########################################################################
 class TransformerCombinations( Transformer ):
-    '''build combinations of the second lowest level.
+    '''build combinations.
 
-    For example::
+    Level=2 can be used for labeled data::
 
        Input:      Output:
        a/x=1       a x b/a/x=1
@@ -419,12 +458,23 @@ class TransformerCombinations( Transformer ):
     Uses the ``tf-fields`` option to combine a certain field.
     Otherwise, it combines the first data found.
 
+    level=1 is useful to combine lists ::
+
+       Input:            Output:
+       a/data=[1,2,3]    a x b/a=[1,2,3]
+       b/data=[2,4,5]    a x b/b=[2,4,5]
+       c/data=[4,2,1]    a x c/a=[1,2,3]
+                         a x c/a=[4,2,1]
+                         b x c/a=[2,4,5]
+                         b x c/a=[4,2,1]
+
     '''
     
     nlevels = 2
 
     options = Transformer.options +\
-        ( ('tf-fields', directives.unchanged), )
+        ( ('tf-level', directives.length_or_unitless),
+          ('tf-fields', directives.unchanged), )
 
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
@@ -433,8 +483,9 @@ class TransformerCombinations( Transformer ):
         except KeyError: 
             self.fields = None
 
-    def transform(self, data, path):
+        self.nlevels = int(kwargs.get("tf-level", self.nlevels) )
 
+    def transform(self, data, path):
         debug( "%s: called" % str(self))
 
         vals =  list(data.keys())
@@ -464,8 +515,8 @@ class TransformerCombinations( Transformer ):
                     d2 = data[n2]
 
                 ## check if array?
-                if len(d1) != len(d2):
-                    raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
+                #if len(d1) != len(d2):
+                #    raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
                 
                 DataTree.setLeaf( new_data, ( ("%s x %s" % (n1, n2) ), n1),
                                   d1 )
@@ -864,7 +915,6 @@ class TransformerHistogram( TransformerAggregate ):
     def __init__(self, *args, **kwargs):
         TransformerAggregate.__init__(self, *args, **kwargs)
 
-        self.mConverters = []
         self.mFormat = "%i"
         self.mBinMarker = "left"
 
