@@ -106,6 +106,14 @@ class RPlotPlugin(Component):
                                    file = outpath,
                                    onefile = True )
                     R["dev.off"]()
+                elif format.endswith( "pdf" ):
+                    R["dev.copy"]( device = R.pdf,
+                                   paper = 'special',
+                                   width = 6,
+                                   height = 6,
+                                   file = outpath,
+                                   onefile = True )
+                    R["dev.off"]()
                 else:
                     raise ValueError( "format '%s' not supported" % format )
 
