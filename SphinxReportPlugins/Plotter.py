@@ -27,7 +27,7 @@ from SphinxReport import Utils, DataTree, Stats
 from docutils.parsers.rst import directives
 
 # see http://messymind.net/2012/07/making-matplotlib-look-like-ggplot/    
-def rstyle(ax):
+def rstyle(ax, legend_location = None):
     """Styles an axes to appear like ggplot2
     Must be called after all plot and axis manipulation operations have been carried out (needs to know final tick spacing)
     """
@@ -66,7 +66,7 @@ def rstyle(ax):
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
       
-    if ax.legend_ != None:
+    if ax.legend_ != None and (legend_location != "extra" or legend_location.startswith("outer")):
         lg = ax.legend_
         lg.get_frame().set_linewidth(0)
         lg.get_frame().set_alpha(0.5)
@@ -469,7 +469,6 @@ class Plotter(object):
 
         if self.legend_location != "none" and plts and legends:
 
-
             maxlen = max( [ len(x) for x in legends ] )
             # legends = self.wrapText( legends )
 
@@ -502,7 +501,7 @@ class Plotter(object):
                        **self.mMPLLegendOptions )
 
         if self.use_rstyle:
-            rstyle( ax )
+            rstyle( ax, legend_location = self.legend_location )
 
         # smaller font size for large legends
         if legend and maxlen > self.mMaxLegendSize:
@@ -1555,6 +1554,9 @@ class BarPlot( TableMatrix, Plotter):
 
     def buildMatrices( self, work ):
         '''build matrices necessary for plotting.
+
+        If a matrix only contains a single row, the matrix
+        is transposed.
         '''
 
         self.error_matrix = None
@@ -1609,7 +1611,7 @@ class BarPlot( TableMatrix, Plotter):
         else:
             self.matrix, self.rows, self.columns = self.buildMatrix( work )
 
-        if self.switch_row_col:
+        if self.switch_row_col or self.matrix.shape[0] == 1:
             if self.matrix != None: self.matrix = self.matrix.transpose()
             if self.error_matrix != None: self.error_matrix = self.error_matrix.transpose()
             if self.label_matrix != None: self.label_matrix = self.label_matrix.transpose()
@@ -1660,7 +1662,7 @@ class BarPlot( TableMatrix, Plotter):
 
         # plot by row
         y, error = 0, None
-        for column,header in enumerate(self.columns):
+        for column, header in enumerate(self.columns):
             
             vals = self.matrix[:,column]
             if self.error: error = self.error_matrix[:,column]
@@ -1722,7 +1724,6 @@ class InterleavedBarPlot(BarPlot):
 
         # plot by row
         row = 0
-
         for column,header in enumerate(self.columns):
             
             vals = self.matrix[:,column]
