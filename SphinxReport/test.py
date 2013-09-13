@@ -45,6 +45,9 @@ The options are:
    Path with trackers. By default, :term:`trackers` are searched in the directory :file`trackers` 
    within the current directory.
 
+**-i/--interactive** 
+   Start python interpreter.
+
 If no command line arguments are given all :term:`trackers` are build in parallel. 
 
 Usage
@@ -87,17 +90,7 @@ their data sources.
 """
 
 
-import sys, os, imp, io, re, types, glob, optparse
-
-USAGE = """python %s [OPTIONS] [tracker renderer]
-
-evaluate all Trackers in the python directory.
-
-The script collects all Trackers in the 'python' directory
-and evaluates them. The Trackers are evaluated in parallel
-and thus allow a much faster data collection than through
-sphinx.
-"""
+import sys, os, imp, io, re, types, glob, optparse, code
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -136,6 +129,15 @@ RST_TEMPLATE = """.. _%(label)s:
    %(caption)s
 """
 
+NOTEBOOK_TEMPLATE = """import os
+os.chdir('%(curdir)s')
+import SphinxReport.test
+args = "-r none -t %(tracker)s %(options)s".split(" ")
+result = SphinxReport.test.main( args )
+%%load_ext rmagic
+"""
+
+
 def getTrackers( fullpath ):
     """retrieve a tracker and its associated code.
     
@@ -169,15 +171,75 @@ def getTrackers( fullpath ):
         
     return trackers
 
+def writeRST( outfile, options, kwargs, 
+              renderer_options, transformer_options, display_options,
+              modulename, name):
+    '''write RST snippet to outfile to be include in a sphinxreport document
+    '''
+
+    options_rst = []
+    
+    for key, val in list(kwargs.items()) +\
+        list(renderer_options.items()) +\
+        list(transformer_options.items()) +\
+        list(display_options.items()):
+        
+        if val == None:
+            options_rst.append(":%s:" % key )
+        else:
+            options_rst.append(":%s: %s" % (key,val) )
+
+    params = { "tracker" : "%s.%s" % (modulename, name),
+               "renderer" : options.renderer,
+               "label" : options.label,
+               "options": ("\n   ").join(options_rst),
+               "caption" : options.caption }
+    if options.transformers:                                                                  
+        params["options"] = ":transform: %s\n   %s" %\
+            (",".join(options.transformers), params["options"] )
+        
+    outfile.write(RST_TEMPLATE % params)
+
+def writeNotebook( outfile, options, kwargs, 
+                   renderer_options, transformer_options, display_options,
+                   modulename, name):
+    '''write a snippet to paste with the ipython notebook.
+    '''
+
+    cmd_options = []
+    
+    for key, val in list(kwargs.items()) +\
+        list(renderer_options.items()) +\
+        list(transformer_options.items()):
+        if val == None:
+            cmd_options.append( "-o %s" % key )
+        else:
+            cmd_options.append( "-o %s=%s" % (key,val) )
+        
+    if options.transformers:
+        for t in options.transformers:
+            cmd_options.append( "-m %s" % t )
+        
+    # no module name in tracker
+    params = { "tracker" : "%s" % (name),
+               "options" : " ".join(cmd_options),
+               "curdir" : os.getcwd() }
+    
+    outfile.write( NOTEBOOK_TEMPLATE % params )
+
+
 def run( name, t, kwargs ):
     
     print("%s: collecting data started" % name)     
     t( **kwargs )
     print("%s: collecting data finished" % name)     
 
-def main():
+def main( argv = None ):
 
-    parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE )
+    if argv == None: argv = sys.argv
+
+    parser = optparse.OptionParser( version = "%prog version: $Id$", 
+                                    usage = globals()["__doc__"] )
 
     parser.add_option( "-t", "--tracker", dest="tracker", type="string",
                           help="tracker to use [default=%default]" )
@@ -195,7 +257,7 @@ def main():
                           help="slices to use [default=%default]" )
 
     parser.add_option( "-r", "--renderer", dest="renderer", type="string",
-                          help="renderer to use [default=%default]" )
+                       help="renderer to use [default=%default]" )
 
     parser.add_option( "-w", "--path", dest="dir_trackers", type="string",
                           help="path to trackers [default=%default]" )
@@ -206,16 +268,28 @@ def main():
     parser.add_option( "-o", "--option", dest="options", type="string", action="append",
                        help="renderer options - supply as key=value pairs (without spaces). [default=%default]" )
 
+    parser.add_option( "-l", "--language", dest="language", type="choice",
+                       choices = ("rst", "notebook"),
+                       help="output language for snippet. Use ``rst`` to create a snippet to paste "
+                       "into a sphinxreport document. Use ``notebook`` to create a snippet to paste "
+                       "into an ipython notebook [default=%default]" )
+
     parser.add_option( "--no-print", dest="do_print", action="store_false",
                        help = "do not print an rst text element to create the displayed plots [default=%default]." )
 
     parser.add_option( "--no-show", dest="do_show", action="store_false",
                        help = "do not show a plot [default=%default]." )
 
+    parser.add_option( "-i", "--start-interpreter", dest="start_interpreter", action="store_true",
+                       help = "do not render, but start python interpreter [default=%default]." )
+
+    parser.add_option( "-I", "--ii", "--start-ipython", dest="start_ipython", action="store_true",
+                       help = "do not render, start ipython interpreter [default=%default]." )
+
     parser.add_option( "--hardcopy", dest="hardcopy", type="string",
                        help = "output images of plots. The parameter should contain one or more %s "
-                              " The suffix determines the type of plot. "
-                              " [default=%default]." )
+                       " The suffix determines the type of plot. "
+                       " [default=%default]." )
 
     parser.set_defaults(
         loglevel = 1,
@@ -224,16 +298,19 @@ def main():
         tracks=None,
         slices=None,
         options = [],
-        renderer = None,
+        renderer = "table",
         do_show = True,
         do_print = True,
         force = False,
         dir_trackers = TRACKERDIR,
         label = "GenericLabel",
         caption = "add caption here",
+        start_interpreter = False,
+        start_ipython = False,
+        language = "rst",
         dpi = 100 )
     
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args( argv )
 
     if len(args) == 2:
         options.tracker, options.renderer = args
@@ -257,8 +334,6 @@ def main():
     
     if options.tracks: kwargs["tracks"] = options.tracks
     if options.slices: kwargs["slices"] = options.slices
-    
-    if options.renderer == None: options.renderer = "table"
 
     kwargs = Utils.updateOptions( kwargs )
 
@@ -267,7 +342,12 @@ def main():
     transformer_options = Utils.selectAndDeleteOptions( kwargs, option_map["transform"])
     display_options = Utils.selectAndDeleteOptions( kwargs, option_map["display"])
 
-    renderer = Utils.getRenderer( options.renderer, renderer_options )
+    # decide whether to render or not
+    if options.renderer == "none" or options.start_interpreter or \
+            options.start_ipython or options.language == "notebook":
+        renderer = None
+    else:
+        renderer = Utils.getRenderer( options.renderer, renderer_options )
 
     transformers = Utils.getTransformers( options.transformers, transformer_options )
 
@@ -312,32 +392,41 @@ def main():
 
         dispatcher = Dispatcher( t, renderer, transformers ) 
 
-        ## needs to be resolved between renderer and dispatcher options
-        result = dispatcher( **kwargs )
+        if renderer == None:
+            dispatcher.parseArguments( **kwargs )
+            result = dispatcher.collect()
+            result = dispatcher.transform()
+            options.do_print = options.language == "notebook"
+            options.do_show = False
+            options.hardcopy = False
+        else:
+            # needs to be resolved between renderer and dispatcher options
+            result = dispatcher( **kwargs )
 
         if options.do_print:                        
-            options_rst = []
-            for key,val in list(kwargs.items()) + list(renderer_options.items()) + list(transformer_options.items()) + list(display_options.items()):
-                if val == None:
-                    options_rst.append(":%s:" % key )
-                else:
-                    options_rst.append(":%s: %s" % (key,val) )
 
-            print("..Template start")
-            print ("")
-            params = { "tracker" : "%s.%s" % (modulename,name),
-                       "renderer" : options.renderer,
-                       "label" : options.label,
-                       "options": ("\n   ").join(options_rst),
-                       "caption" : options.caption }
-            if options.transformers:                                                                  
-                params["options"] = ":transform: %s\n   %s" %\
-                    (",".join(options.transformers), params["options"] )
+            sys.stdout.write("..Template start\n\n")
 
-            print(RST_TEMPLATE % params)
-            print ("")
-            print ("..Template ends")
-        if result: 
+            if options.language == "rst":
+                writeRST( sys.stdout, 
+                          options, 
+                          kwargs, 
+                          renderer_options, 
+                          transformer_options,
+                          display_options,
+                          modulename, name)
+            elif options.language == "notebook":
+                writeNotebook( sys.stdout, 
+                          options, 
+                          kwargs, 
+                          renderer_options, 
+                          transformer_options,
+                          display_options,
+                          modulename, name)
+
+            sys.stdout.write ("\n..Template ends\n")
+    
+        if result and renderer != None: 
             for r in result:
                 print ("")
                 print ("title: %s" % r.title)
@@ -385,7 +474,33 @@ def main():
 
     else:
         raise ValueError("please specify either a tracker (-t/--tracker) or a page (-p/--page) to test")
-            
+
+    if renderer == None:
+
+        print ("----------------------------------------")
+        print ("data is available in the 'result' object")
+        print ("----------------------------------------")
+        
+        # trying to push R objects
+        from rpy2.robjects import r as R
+        for k, v in result.items():
+            try:
+                R.assign( k, v )
+                print ("pushed '%s' to R" % k)
+            except ValueError:
+                pass
+        print ("----------------------------------------")
+
+        if options.start_interpreter:
+            interpreter = code.InteractiveConsole( dict( globals().items() + locals().items()) )
+            interpreter.interact()
+
+        elif options.start_ipython:
+            import IPython
+            IPython.embed()
+
+        return result
+    
 if __name__ == "__main__":
     sys.exit(main())
 

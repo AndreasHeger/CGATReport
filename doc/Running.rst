@@ -27,6 +27,7 @@ Command line utilities
 This page explains the various utilities that come with sphinxreport. See :ref:`Utilities`
 for the complete documentation.
 
+.. _sphinxeport-quickstart:
 
 sphinxreport-quickstart
 -----------------------
@@ -46,12 +47,14 @@ controlling the build process. Type::
 
 for a list of all commands available.
 
+.. _sphinxeport-build:
+
 sphinxreport-build
 ------------------
 
 At its simplest, sphinxreport is a :mod:`Sphinx` extension
 and all images are simply built using the usual sphinxreport`Sphinx` build.
-See the `Sphinx documentation <http://sphinx.pocoo.org/intro.html#running-a-build>`
+ See the `Sphinx documentation <http://sphinx.pocoo.org/intro.html#running-a-build>`
 on how to running sphinx.
 
 However, rendering many images and extracting data takes time. The :ref:`sphinxreport-build`
@@ -64,6 +67,8 @@ command, for example::
 
 will use 4 processors in parallel to create all images before calling
 ``sphinx-build`` to build the document.
+
+.. _sphinxeport-clean:
 
 sphinxreport-clean
 ------------------
@@ -84,6 +89,8 @@ Where *target* can be one of
    The name of a :class:`Tracker`. All images, cached data and text elements based
    on this tracker are removed so that they will be re-build during the 
    next build. Multiple trackers can be named on the command line.
+
+.. _sphinxeport-test:
 
 sphinxreport-test
 -----------------
@@ -120,6 +127,84 @@ However, we prefer a cumulative histogram and rendering without bullets::
 
    sphinxreport-test -t SingleColumnDataExample -r line-plot -m histogram -o tf-aggregate=cumulative -o as-lines
 
+Interactive data exploration
+++++++++++++++++++++++++++++
+
+In interactive data exploration, data is only collected but not
+rendered. Using the ``--start-interpreter`` or ``-start-iptyhon`` option, 
+:ref:`sphinxreport-test` will exit and automatically start up the
+interpreter. For example::
+
+   sphinxreport-test -t SingleColumnDataExample -r line-plot -m histogram -i
+
+will bring up the python interpreter. The data is available in the
+``result`` object::
+    
+   >>>> print result
+   OrderedDict([('track1', OrderedDict([('slice1', OrderedDict([('data',
+   OrderedDict([('data', array([  0. ,   0.2,   0.4,   0.6,   0.8,   1. ,
+   1.2,   1.4,   1.6,
+   1.8,   2. ,   2.2,   2.4,   2.6,   2.8,   3. ,   3.2,   3.4,
+   3.6,   3.8,   4. ,   4.2,   4.4,   4.6,   4.8,   5. ,   5.2,
+   ...
+
+:ref:`sphinxreport-test` will also load any dataframes into the R
+environment, load rpy2 and provide a short-cut to the R
+interpreter. For example::
+
+   sphinxreport-test -r line-plot -t ExpressionLevels --ii
+
+will provide the ``all`` object inside R within an ipython_ shell. For
+example, to plot the data with ggplot, type::
+
+   R('''x=ggplot( all, aes(x=experiment1, y=experiment2, color=factor(gene_function))) + geom_point()''')
+   R('''plot(x)''')
+
+After optimizing the plot, the resultant ggplot command can be used
+with the :ref:`r-ggplot` renderer.
+
+To do the same using the `rmagic
+<http://ipython.org/ipython-doc/dev/config/extensions/rmagic.html>`_,
+extension to ipython, type::
+
+   %load_ext rmagic
+   %R y=ggplot( all, aes(x=experiment1, y=experiment2, color=factor(gene_function))) + geom_point()
+   R('''plot(y)''')
+
+Please note that the last command to plot the graph should use the rpy2 interface
+directly, as the notebook plots with to a png device by default and
+thus the plot will not be visible.
+
+:ref:`sphinxreport-test` will also interact within an ipython_
+notebook. To use this feature, use the ``--language`` option::
+
+   sphinxreport-test -r line-plot -t ExpressionLevels --language=notebook
+
+The command will provide the following snippet to paste into an ipython
+notebook::
+
+   import os
+   os.chdir('/ifs/devel/sphinx-report/doc')
+   import SphinxReport.test
+   args = "-r none -t ExpressionLevels ".split(" ")
+   result = SphinxReport.test.main( args )
+   %load_ext rmagic
+
+The data are now available in the python variable ``result`` or in the
+R variable ``all``. For example, to plot with ggplot, type the
+following into the next workbook cell::
+
+   %R y=ggplot( all, aes(x=experiment1, y=experiment2, color=factor(gene_function))) + geom_point()
+   %R plot(y)
+
+The benefit of this approach is that the data source is available
+as a tracker for automated report generation, while a plot can
+be developed interactively and later incorporated with the
+:ref:`r-ggplot` renderer.
+
+Note that this requires that the notebook is running on the same
+server on which :ref:`sphinxreport-test` was executed.
+
 .. _Debugging:
 
 Debugging
@@ -154,7 +239,7 @@ Enabling caching will speed up the build process considerably, in particular as
 :ref:`sphinxreport-build` can make use of parallel data gathering and plotting.
 Unfortunately currently there is no :ref:`Dependency` checking for cached data.
 Thus, changes in the code of a :term:`Tracker` or changes in the data will not
-result in an automatic update of the cache. The best solution is to manually 
+result in an automatic update of the cache. The best solution is to manually
 delete the cached data using the command :ref:`sphinxreport-clean`.
 
 .. _Dependency:
@@ -163,7 +248,7 @@ Dependency checking
 ===================
 
 sphinxreport`Sphinx` implements dependency checking such that existing documents are only rebuilt
-if the underlying sources have changed. The same dependency checking is still available in 
+if the underlying sources have changed. The same dependency checking is still available in
 sphinxreport, however currently there is no dependency checking between the data
 source and an existing image. As long as an image or table is present on the file system, it
 will not be re-rendered even if the document or the underlying data has changed. To force
@@ -176,30 +261,34 @@ Using a build directory
 
 It is good practice to keep the development of the report from the actual
 report itself. Sphinxreport and Sphinx do support building using a build
-directory. 
+directory.
 
-For example, assume your code is in directory :file:`./code` and you want to build 
-in the directory :file:`./build`. In the :file:`build` directory create a :term:`conf.py` 
+For example, assume your code is in directory :file:`./code` and you want to build
+in the directory :file:`./build`. In the :file:`build` directory create a :file:`conf.py`
 and :ref:`Makefile`.
 
 Apply the following modifications to point them to the source directory:
 
 1. Update the relative path to the Trackers to *sys.path*. For example, add::
 
-   sys.path.append( "../code" ) 
+   sys.path.append( "../code" )
 
 2. Point the *templates_path* variable in the html section to the :file:`code` directory::
-   
+
    templates_path = ['../code/_templates']
 
-3. Update :file:`Makefile` and add ``-c . ../source`` to the 
+3. Update :file:`Makefile` and add ``-c . ../source`` to the
 
 .. _Gallery:
+.. _sphinxreport-gallery:
 
 Gallery
 =======
 
-sphinxreport builds a gallery of all plots created similar to the 
+sphinxreport builds a gallery of all plots created similar to the
 `matplotlib gallery <matplotlib.sourceforge.net/gallery.html>`_. The gallery
 can be built manually with :ref:`sphinxreport-gallery`, but is also built
 automatically by :ref:`sphinxreport-build`.
+
+
+.. _ipython: http://ipython.org/ 

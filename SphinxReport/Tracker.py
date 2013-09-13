@@ -888,6 +888,54 @@ class SingleTableTrackerColumns( TrackerSQL ):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+class SingleTableTrackerEdgeList( TrackerSQL ):
+    '''Tracker representing a table with matrix type data.
+
+    Returns a dictionary of values.
+
+    The tracks are given by entries in the :py:attr:`row` column in a table :py:attr:`table`. 
+    The slices are given by entries in the :py:attr:`column` column in a table.
+
+    The :py:attr:`fields` is a third column specifying the value returned. If :py:attr:`where`
+    is set, it is added to the SQL statement to permit some filtering.
+
+    If :py:attr:`transform` is set, it is applied to the value.
+
+    This method is inefficient, particularly so if there are no indices on :py:attr:`row` and :py:attr:`column`.
+
+    '''
+    table = None
+    row = None
+    column = None
+    value = None
+    transform = None
+    where = "1"
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    @property
+    def tracks( self ):
+        if not self.hasTable( self.table ): return []
+        return [ x[0] for x in self.get( "SELECT DISTINCT %s FROM %s" % (self.row, self.table )) ]
+
+    @property
+    def slices( self ):
+        if not self.hasTable( self.table ): return []
+        return [ x[0] for x in self.get( "SELECT DISTINCT %s FROM %s" % (self.row, self.table )) ]
+
+    def __call__(self, track, slice = None ):
+        try:
+            val = self.getValue( "SELECT %(value)s FROM %(table)s WHERE %(row)s = '%(track)s' AND %(column)s = '%(slice)s' AND %(where)s" )
+        except exc.SQLAlchemyError:
+            return None
+
+        if self.transform: return self.transform(val)
+        return val
+
+###########################################################################
+###########################################################################
+###########################################################################
 class SingleTableTrackerHistogram( TrackerSQL ): 
     '''Tracker representing a table with multiple tracks.
 
@@ -933,7 +981,7 @@ class SingleTableTrackerHistogram( TrackerSQL ):
         return data
 
 class MultipleTableTrackerHistogram( TrackerSQL ): 
-    '''Tracker representing multiple table with multiple slicel.
+    '''Tracker representing multiple table with multiple slices.
 
     Returns a dictionary of two sets of data, one given
     by :py:attr:`column` and one for a track.
@@ -987,55 +1035,6 @@ class MultipleTableTrackerHistogram( TrackerSQL ):
     #     if self.column not in columns: raise ValueError("column '%s' missing from '%s'" % (self.column, track ))
     #     columns = ",".join( [ x for x in columns if x not in self.exclude_columns and x != self.column ] )
     #     return self.getAll( """SELECT %(column)s, %(columns)s FROM %(track)s""" )
-
-
-###########################################################################
-###########################################################################
-###########################################################################
-class SingleTableTrackerEdgeList( TrackerSQL ):
-    '''Tracker representing a table with matrix type data.
-
-    Returns a dictionary of values.
-
-    The tracks are given by entries in the :py:attr:`row` column in a table :py:attr:`table`. 
-    The slices are given by entries in the :py:attr:`column` column in a table.
-
-    The :py:attr:`fields` is a third column specifying the value returned. If :py:attr:`where`
-    is set, it is added to the SQL statement to permit some filtering.
-
-    If :py:attr:`transform` is set, it is applied to the value.
-
-    This method is inefficient, particularly so if there are no indices on :py:attr:`row` and :py:attr:`column`.
-
-    '''
-    table = None
-    row = None
-    column = None
-    value = None
-    transform = None
-    where = "1"
-
-    def __init__(self, *args, **kwargs ):
-        TrackerSQL.__init__(self, *args, **kwargs )
-
-    @property
-    def tracks( self ):
-        if not self.hasTable( self.table ): return []
-        return [ x[0] for x in self.get( "SELECT DISTINCT %s FROM %s" % (self.row, self.table )) ]
-
-    @property
-    def slices( self ):
-        if not self.hasTable( self.table ): return []
-        return [ x[0] for x in self.get( "SELECT DISTINCT %s FROM %s" % (self.row, self.table )) ]
-
-    def __call__(self, track, slice = None ):
-        try:
-            val = self.getValue( "SELECT %(value)s FROM %(table)s WHERE %(row)s = '%(track)s' AND %(column)s = '%(slice)s' AND %(where)s" )
-        except exc.SQLAlchemyError:
-            return None
-
-        if self.transform: return self.transform(val)
-        return val
 
 class TrackerSQLMulti( TrackerSQL ):
     '''An SQL tracker spanning multiple databases.
@@ -1158,3 +1157,76 @@ class TrackerMultipleLists( TrackerSQL ):
         # track and slice will be substituted in the statements
         return odict( [(x,self.getValues(statements[x])) for x in statements] )
 
+class MeltedTableTracker( TrackerSQL ): 
+    '''Tracker representing multiple tables with the same columns.
+
+    The tables are melted - a column called ``track`` is added
+    that contains the table name.
+    '''
+    tracks = "all"
+    pattern = None
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    def __call__(self, track ):
+        assert( self.pattern != None )
+        tables = self.getTables( self.pattern )
+        
+        ref_columns = self.getColumns( tables[0] )
+        fields = ",".join( ref_columns )
+        results = []
+        for table in tables:
+            columns = self.getColumns( table )
+            if columns != ref_columns:
+                E.warn( "incompatible column names in table %s - skipped" % table )
+                continue
+            
+            track = re.search( self.pattern, table ).groups()[0]
+
+            results.extend( self.get( "SELECT '%(track)s', %(fields)s FROM %(table)s ORDER by gene_id" ) )
+
+        ref_columns.insert( 0, "track")
+
+        return odict( zip( ref_columns, zip(*results) ))
+
+class MeltedTableTrackerDataframe( TrackerSQL ): 
+    '''Tracker representing multiple tables with the same columns.
+
+    The tables are melted - a column called ``track`` is added
+    that contains the table name. 
+
+    This tracker returns a dataframe diretly.
+    '''
+    tracks = "all"
+    pattern = None
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+
+    def __call__(self, track ):
+        assert( self.pattern != None )
+        tables = self.getTables( self.pattern )
+
+        self.rconnect()        
+        ref_columns = self.getColumns( tables[0] )
+        fields = ",".join( ref_columns )
+        results = []
+
+        stmt = "SELECT '%(track)s' as track, %(fields)s FROM %(table)s" 
+
+        for table in tables:
+            columns = self.getColumns( table )
+            if columns != ref_columns:
+                E.warn( "incompatible column names in table %s - skipped" % table )
+                continue
+            
+            track = re.search( self.pattern, table ).groups()[0]
+            results.append( R.dbGetQuery(self.rdb, stmt % locals() ))
+
+        # merge data frames
+        result = results[0]
+        for r in results[1:]:
+            result = R.rbind( results[0], r )
+
+        return result

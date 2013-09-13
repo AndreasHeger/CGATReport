@@ -279,6 +279,7 @@ class Dispatcher(Component):
 
         self.debug( "%s: collecting data finished for %i data paths" % (self.tracker, 
                                                                        len( all_paths) ) )
+        return self.data
 
     def restrict( self ):
         '''restrict data paths.
@@ -352,6 +353,8 @@ class Dispatcher(Component):
             finally:
                 self.debug( "profile: finished: transformer: %s" % (transformer))
 
+        return self.data
+
     def group( self ):
         '''rearrange data tree for grouping.
 
@@ -396,6 +399,8 @@ class Dispatcher(Component):
         else:
             # neither group by slice or track ("ungrouped")
             self.group_level = -1
+
+        return self.data
 
     def prune( self ):
         '''prune data tree.

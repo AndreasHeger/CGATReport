@@ -69,17 +69,17 @@ type::
    sphinxreport-quickstart -d report
 
 This will create a skeleton report in the directory :file:`report`. The main page is
-:term:`contents.rst` and it has two sections, :term:`pipeline.rst`
-and :term:`analysis.rst`. 
+:file:`contents.rst` and it has two sections, :file:`pipeline.rst`
+and :file:`analysis.rst`. 
 
-Let us enter the :term:`report` directory and see if the report builds::
+Let us enter the :file:`report` directory and see if the report builds::
 
    cd report
    make html; firefox _build/html/contents.html
 
 SphinxReport lets you write your report as you perform the analysis.
 Before we start, let us tell SphinxReport where to find our database.
-To do this, open the file :term:`sphinxreport.ini` and change the line::
+To do this, open the file :file:`sphinxreport.ini` and change the line::
 
    sql_backend=sqlite:///./csvdb
 

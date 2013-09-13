@@ -72,6 +72,8 @@ Options
 :class:`SphinxReportPlugins.RPlotter.HeatmapPlot` has no additional
 options apart from :ref:`common plot options`. 
 
+.. _r-ggplot:
+
 =====================================
 r-ggplot
 =====================================

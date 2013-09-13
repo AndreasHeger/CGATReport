@@ -457,7 +457,7 @@ class GGPlot( Renderer, Plotter ):
                 pp = R('''gp + %s ''' % self.statement )
             except ValueError as msg:
                 raise ValueError( "could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg ))
-
+            
             # plot
             R.plot( pp )
 

@@ -1,8 +1,17 @@
-from distribute_setup import use_setuptools
-use_setuptools()
-
-from setuptools import Extension, setup, find_packages
-from setuptools import setup, find_packages
+########################################################################
+########################################################################
+## Import setuptools
+## Use existing setuptools
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    ## try to get via ez_setup
+    ## ez_setup did not work on all machines tested as
+    ## it uses curl with https protocol, which is not
+    ## enabled in ScientificLinux
+    import ez_setup
+    ez_setup.use_setuptools()
+    from setuptools import setup, find_packages
 
 import glob, sys, os
 
@@ -51,7 +60,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='SphinxReport',
-      version='2.1',
+      version='2.2',
       description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',

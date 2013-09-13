@@ -219,6 +219,7 @@ class Table( TableBase ):
         ( ('transpose', directives.unchanged),
           ('add-rowindex', directives.unchanged),
           ('add-percent', directives.unchanged),
+          ('head', directives.length_or_unitless),
           ('large', directives.unchanged),
           ('preview', directives.unchanged) )
 
@@ -234,6 +235,7 @@ class Table( TableBase ):
         self.large = kwargs.get( "large", "html")
         self.preview = "preview" in kwargs
         self.add_percent = kwargs.get( 'add-percent', None )
+        self.head = int( kwargs.get( 'head', 0 ) )
 
     def getHeaders( self, data ):
         """return a list of headers and a mapping of header to column.
@@ -266,7 +268,8 @@ class Table( TableBase ):
 
         returns matrix, row_headers, col_headers
         """
-        matrix, row_headers, col_headers = tree2table( data, self.transpose )
+        matrix, row_headers, col_headers = tree2table( data, self.transpose, 
+                                                       head = self.head )
         return matrix, row_headers, col_headers
 
     def modifyTable( self, matrix, row_headers, col_headers ):

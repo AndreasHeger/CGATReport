@@ -42,6 +42,15 @@ investigate netCDF/HFS5 support
 Release Notes
 =============
 
+Version 2.2
+============
+
+   * Moved to setuptools 
+   * MeltedTableTracker and MeltedTableTrackerDataframe
+   * Added interactive plotting support via python/ipython console or
+     ipython notebook   
+
+
 Version 2.1
 ============
 
