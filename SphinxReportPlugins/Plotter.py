@@ -28,8 +28,10 @@ from docutils.parsers.rst import directives
 
 # see http://messymind.net/2012/07/making-matplotlib-look-like-ggplot/    
 def rstyle(ax, legend_location = None):
-    """Styles an axes to appear like ggplot2
-    Must be called after all plot and axis manipulation operations have been carried out (needs to know final tick spacing)
+    """Styles an axes to appear like ggplot2 
+
+    Must be called after all plot and axis manipulation operations
+    have been carried out (needs to know final tick spacing)
     """
     #set the style of the major and minor grid lines, filled blocks
     ax.grid(True, 'major', color='w', linestyle='-', linewidth=1.4)
@@ -236,7 +238,10 @@ class Plotter(object):
         ('legend-location',  directives.unchanged),
         ('xformat', directives.unchanged),
         ('yformat', directives.unchanged),
-        ('no-tight', directives.flag) 
+        ('no-tight', directives.flag), # currently ignored
+        ('tight', directives.flag),
+        ('rstyle', directives.flag), # currently the default
+        ('no-rstyle', directives.flag),
         )
 
     mColors = "bgrcmk"
@@ -258,14 +263,16 @@ class Plotter(object):
         self.ylabel = kwargs.get("ytitle", None )
         self.functions = kwargs.get("function", None )
         self.vline = kwargs.get("vline", None )
-        self.no_tight = 'no-tight' in kwargs
+        self.tight_layout = 'tight' in kwargs
+        if 'rstyle' in kwargs: self.use_rstyle = True
+        elif 'no-rstyle' in kwargs: self.use_rstyle = False
 
         if self.functions:
             if "," in self.functions: self.functions = self.functions.split(",")
             else: self.functions = [self.functions]
             
         # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
-        self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "best" ))
+        self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "upper right" ))
         # ("outer-top"))
         self.xrange = parseRanges(kwargs.get("xrange", None ))
         self.yrange = parseRanges(kwargs.get("yrange", None ))
@@ -474,11 +481,16 @@ class Plotter(object):
 
             assert len(plts) == len(legends)
             if self.legend_location.startswith( "outer" ):
-                legend = outer_legend( plts, legends, loc = self.legend_location )
+                legend = outer_legend( plts, 
+                                       legends, 
+                                       loc = self.legend_location,
+                                       ncol = 1,
+                                       )
             else:
                 legend = plt.figlegend( plts, 
                                         legends,
                                         loc = self.legend_location,
+                                        ncol = 1,
                                         **self.mMPLLegendOptions )
 
         if self.legend_location == "extra" and legends:
@@ -500,7 +512,8 @@ class Plotter(object):
                        ncol = max(1,int(math.ceil( float( len(legends) / self.mLegendMaxRowsPerColumn ) ) )),
                        **self.mMPLLegendOptions )
 
-        if self.use_rstyle:
+        if self.use_rstyle and not self.legend_location.startswith( "outer" ) \
+                and not self.legend_location.startswith("extra"):
             rstyle( ax, legend_location = self.legend_location )
 
         # smaller font size for large legends
@@ -513,8 +526,15 @@ class Plotter(object):
             # order to set figure margins.
             plt.subplots_adjust( **self.mMPLSubplotOptions )
 
-        if not self.no_tight and self.legend_location.startswith( "outer" ):
-            plt.tight_layout()
+        # disabled: tight_layout not working well sometimes
+        # causing plots to display compressed
+        if self.tight_layout:
+            try:
+                plt.tight_layout()
+            except ValueError:
+                # some plots (with large legends) receive 
+                # ValueError( "bottom cannot be >= top")
+                pass
 
         return blocks
 
@@ -1016,9 +1036,9 @@ def outer_legend(*args, **kwargs):
     else: loc == "outer-top"
 
     if loc.endswith( "right" ):
-        leg = plt.legend(loc=(1.05,0), *args, **kwargs)
+        leg = plt.legend(bbox_to_anchor=(1.05,1), loc=2, borderaxespad=0., mode="expand", *args, **kwargs)
     elif loc.endswith( "top" ):
-        leg = plt.legend(loc=(0,1.05), *args, **kwargs)
+        leg = plt.legend(bbox_to_anchor=(0,1.02, 1., 1.02), loc=3, mode="expand", *args, **kwargs)
     else:
         raise ValueError("unknown legend location %s" % loc )
 
@@ -1217,7 +1237,7 @@ class LinePlot( Renderer, Plotter ):
 
                 xlabel, ylabels = self.initCoords( label, coords)
                 xvals = coords[xlabel]
-
+                
                 if self.yerror:
                     yerrors = [ ylabels[x] for x in range(1, len(ylabels), 2) ]
                     ylabels = [ ylabels[x] for x in range(0, len(ylabels), 2) ]
@@ -1314,7 +1334,8 @@ class HistogramPlot(LinePlot):
                  ylabel,
                  xvals, 
                  yvals, 
-                 nplotted ):
+                 nplotted,
+                 yerrors = None ):
         
         self.plots.append( plt.bar( xvals,
                                     yvals,
@@ -1411,7 +1432,8 @@ class HistogramGradientPlot(LinePlot):
             self.ymin, self.ymax = self.zrange
 
     def addData( self, line, label, xlabel, ylabel,
-                 xvals, yvals, nplotted ):
+                 xvals, yvals, nplotted,
+                 yerrors = None ):
 
         if self.zrange:
             vmin, vmax = self.zrange

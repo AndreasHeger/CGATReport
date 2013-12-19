@@ -98,6 +98,8 @@ from matplotlib import _pylab_helpers
 
 from SphinxReport.Component import *
 from SphinxReport.Tracker import Tracker
+from SphinxReport.ResultBlock import flat_iterator
+
 from SphinxReport import Utils
 
 import SphinxReport.clean
@@ -483,11 +485,12 @@ def main( argv = None ):
         
         # trying to push R objects
         from rpy2.robjects import r as R
-        for k, v in result.items():
+        for k, v in flat_iterator( result ):
             try:
                 R.assign( k, v )
                 print ("pushed '%s' to R" % k)
-            except ValueError:
+            except ValueError, msg:
+                print ( "could not push %s: %s" % (k,msg))
                 pass
         print ("----------------------------------------")
 

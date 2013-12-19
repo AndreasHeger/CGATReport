@@ -19,8 +19,7 @@ Parameterizing sphinxreport documents
 
 Sphinxreport documents can access configuration parameters in the
 :file:`sphinxreport.ini` file. For example, if
-:file:`sphinxreport.ini`
-contains the following section::
+:file:`sphinxreport.ini` contains the following section::
 
    [geneset]
    # genesets to report in the summary pages
@@ -33,6 +32,12 @@ the variable ``geneset_summary`` can be used inside a :term:`report` directive::
       :tracks: @geneset_summary@
 
       Summary of gene sets
+
+Conditional content
+===================
+
+The ifconfig_ extension allows to include content depending on configuration
+values. To use this extension you will need to modify :file:`conf.py`.
 
 Referring to other sphinxreport documents
 =========================================
@@ -149,4 +154,5 @@ The mixing of RnaseqTracker and :class:`SingleTableTrackerRows` illustrates how 
 can be parameterized. Note that the order is important, RnaseqTracker needs to appear first to make sure that
 its constructor is called first.
 
-.. _intersphinx: http://sphinx.pocoo.org/latest/ext/intersphinx.html
+.. _intersphinx: http://sphinx-doc.org/ext/intersphinx.html
+.. _ifconfig: http://sphinx-doc.org/ext/ifconfig.html

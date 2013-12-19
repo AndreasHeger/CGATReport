@@ -366,15 +366,21 @@ class TrackerSQL( Tracker ):
 
             logging.debug( "connected to %s" % self.backend )
 
-    def rconnect( self ):
+    def rconnect( self, creator = None ):
         '''open connection within R to database.'''
 
         if not self.rdb:
-            if self.backend.startswith( 'sqlite' ):
-                R.library( 'RSQLite' )
-                self.rdb = R.dbConnect(R.SQLite(), dbname=re.sub( "sqlite:///./", "", self.backend ) )
+
+            R.library( 'RSQLite' )
+
+            if creator:
+                self.rdb = creator()
+
             else:
-                raise NotImplementedError("can not connect to %s in R" % self.backend )
+                if self.backend.startswith( 'sqlite' ):
+                    self.rdb = R.dbConnect(R.SQLite(), dbname=re.sub( "sqlite:///./", "", self.backend ) )
+                else:
+                    raise NotImplementedError("can not connect to %s in R" % self.backend )
 
 
     def getTables(self, pattern = None ):
@@ -511,7 +517,10 @@ class TrackerSQL( Tracker ):
         Example: SELECT column1, column2 FROM table
         Result: { 1: 2, 2: 4, 3: 2}
 
-        The first column is taken as the dictionary key
+        The first column is taken as the dictionary key.
+
+        This method is useful to return a data structure
+        that can be used for matrix visualization.
         """
         # convert to tuples
         e = self.execute(self.buildStatement(stmt))
@@ -893,45 +902,73 @@ class SingleTableTrackerEdgeList( TrackerSQL ):
 
     Returns a dictionary of values.
 
-    The tracks are given by entries in the :py:attr:`row` column in a table :py:attr:`table`. 
-    The slices are given by entries in the :py:attr:`column` column in a table.
+    The tracks are given by entries in the :py:attr:`row` column in a
+    table :py:attr:`table`.  The slices are given by entries in the
+    :py:attr:`column` column in a table.
 
-    The :py:attr:`fields` is a third column specifying the value returned. If :py:attr:`where`
-    is set, it is added to the SQL statement to permit some filtering.
+    The :py:attr:`value` is a third column specifying the value
+    returned. If :py:attr:`where` is set, it is added to the SQL
+    statement to permit some filtering.
 
     If :py:attr:`transform` is set, it is applied to the value.
 
-    This method is inefficient, particularly so if there are no indices on :py:attr:`row` and :py:attr:`column`.
+    if :py:attr:`value2` is set, the matrix is assumed to be stored in
+    the format ``(row, column, value, value1)``, where ``value`` is
+    the value for ``row,col`` and value2 is the value for ``col,row``.
+
+    This method is inefficient, particularly so if there are no
+    indices on :py:attr:`row` and :py:attr:`column`.
 
     '''
     table = None
     row = None
     column = None
     value = None
+    value2 = None
     transform = None
     where = "1"
-
+    
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
 
     @property
     def tracks( self ):
-        if not self.hasTable( self.table ): return []
-        return [ x[0] for x in self.get( "SELECT DISTINCT %s FROM %s" % (self.row, self.table )) ]
+        if self.table == None: raise NotImplementedError("table not defined" )
+        if not self.hasTable( self.table ): raise ValueError("unknown table %s" % self.table)
+        
+        if self.value2 != None:
+            return sorted( set( self.getValues( "SELECT DISTINCT %(row)s FROM %(table)s") +\
+                                    self.getValues( "SELECT DISTINCT %(column)s FROM %(table)s") ) )
+        else:
+            return self.getValues( "SELECT DISTINCT %(row)s FROM %(table)s" ) 
 
     @property
     def slices( self ):
-        if not self.hasTable( self.table ): return []
-        return [ x[0] for x in self.get( "SELECT DISTINCT %s FROM %s" % (self.row, self.table )) ]
+        if self.value2 != None:
+            return self.tracks
+        else:
+            return self.getValues( "SELECT DISTINCT %(column)s FROM %(table)s" ) 
 
     def __call__(self, track, slice = None ):
+
         try:
-            val = self.getValue( "SELECT %(value)s FROM %(table)s WHERE %(row)s = '%(track)s' AND %(column)s = '%(slice)s' AND %(where)s" )
+            val = self.getValue( """SELECT %(value)s FROM %(table)s 
+                               WHERE %(row)s = '%(track)s' AND %(column)s = '%(slice)s' AND %(where)s""" )
         except exc.SQLAlchemyError:
-            return None
+            val = None
+
+        if val == None and self.value2:
+            try:
+                val = self.getValue( """SELECT %(value2)s FROM %(table)s 
+                                WHERE %(row)s = '%(slice)s' AND %(column)s = '%(track)s' AND %(where)s""" )
+            except exc.SQLAlchemyError:
+                val = None
+                
+        if val == None: return val
 
         if self.transform: return self.transform(val)
         return val
+
 
 ###########################################################################
 ###########################################################################

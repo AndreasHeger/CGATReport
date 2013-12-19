@@ -326,17 +326,20 @@ class TransformerFilter( Transformer ):
 ########################################################################
 class TransformerSelect( Transformer ):
     '''replace the lowest hierarchy with a single value.
+
     This transformer removes all branches in a :term:`data tree`
     on level :term:`tf-level` that do not match the 
     :term:`tf-fields` option.
 
     The following operations are perform when :term:`tf-fields` is set
     to ``x``::
+
        Input:          Returns:
        a/x=1            a=1
        a/y=2            b=3
        b/x=3
        b/y=4
+
     '''
     
     nlevels = 2
@@ -352,6 +355,7 @@ class TransformerSelect( Transformer ):
         except KeyError: 
             raise KeyError( "TransformerSelect requires the `tf-fields` option to be set." )
                           
+
     def transform(self, data, path):
         debug( "%s: called" % str(self))
 

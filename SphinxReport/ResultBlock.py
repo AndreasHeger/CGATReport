@@ -109,4 +109,14 @@ class ResultBlocks(object):
     def __setattr__(self, name, value):
         setattr(self._data, name, value) 
 
+def flat_iterator(blocks):
+     stack = [("", blocks)]
+     while stack:
+         path, e = stack[-1]
+         for k, v in e.items():
+             if isinstance(v, dict):
+                 stack.append( (path+k,v) )
+             else:
+                 yield path + k, v
+         stack.remove( (path,e) )
         
