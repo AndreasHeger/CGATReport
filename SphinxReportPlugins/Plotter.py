@@ -17,6 +17,8 @@ try: import matplotlib_venn
 except ImportError: matplotlib_venn = None
 
 import numpy 
+try: import scipy.stats
+except ImportError: scipy.stats = None
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
@@ -2041,6 +2043,78 @@ class BoxPlot(Renderer, Plotter):
             rotation = "horizontal"
 
         plt.xticks( [ x + 1 for x in range(0,len(legend)) ],
+                    legend,
+                    rotation = rotation )
+
+        return self.endPlot( plts, None, path )
+
+class ViolinPlot(Renderer, Plotter):        
+    """Write a set of box plots.
+    
+    This :class:`Renderer` requires two levels.
+
+    labels[dict] / data[array]
+    """
+    options = Renderer.options + Plotter.options
+
+    nlevels = 1
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def render(self, work, path ):
+
+        self.startPlot()
+
+        plts, legend = [], []
+        all_data = []
+
+        # for line, data in work.iteritems():
+
+            # assert len(data) == 1, "multicolumn data not supported yet, got %i items" % len(data)
+
+        for label, values in work.items():
+            assert Utils.isArray( values ), "work is of type '%s'" % values
+            d = [ x for x in values if x != None ]
+            if len(d) > 0:
+                all_data.append( d )
+                legend.append( "/".join( (str(path),str(label))))
+
+        if len(all_data) == 0: 
+            return self.endPlot( plts, None, path )
+            raise ValueError("no data" )
+
+        # from http://pyinsci.blogspot.co.uk/2009/09/violin-plot-with-matplotlib.html
+        pos = range(len(legend))
+        ax = plt.gca()
+        
+        dist = max(pos)-min(pos)
+        w = min(0.15*max(dist,1.0),0.5)
+
+        if scipy.stats == None:
+            raise ImportError("scipy.stats not available - can't do violin plot")
+
+        for d,p in zip(all_data, pos):
+            k = scipy.stats.gaussian_kde(d) #calculates the kernel density
+            m = k.dataset.min() #lower bound of violin
+            M = k.dataset.max() #upper bound of violin
+            x = numpy.arange(m,M,(M-m)/100.) # support for violin
+            v = k.evaluate(x) #violin profile (density curve)
+            v = v/v.max()*w #scaling the violin to the available space
+            ax.fill_betweenx(x,p,v+p,facecolor='y',alpha=0.3)
+            ax.fill_betweenx(x,p,-v+p,facecolor='y',alpha=0.3)
+
+        ax.boxplot(all_data,notch=1,positions=pos,vert=1)
+
+        plts.append( ax )
+        
+        if len( legend ) > 5 or max( [len(x) for x in legend] ) >= 8 : 
+            rotation = "vertical"
+        else: 
+            rotation = "horizontal"
+
+        plt.xticks( pos,
                     legend,
                     rotation = rotation )
 

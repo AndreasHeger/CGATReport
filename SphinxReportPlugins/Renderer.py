@@ -38,7 +38,8 @@ class Renderer(Component):
     capabilities = ["render"]
 
     options = ( ('format', directives.unchanged), 
-                ('split-at', directives.nonnegative_int), )
+                ('split-at', directives.nonnegative_int),
+                ('split-always', directives.unchanged), )
 
     # required levels in DataTree
     nlevels = None
@@ -48,6 +49,10 @@ class Renderer(Component):
 
     # split number of tracks
     split_at = 0
+
+    # tracks always to include if plot is split into
+    # several plots.
+    split_always = []
 
     def __init__(self, *args, **kwargs ):
         """create an Renderer object using an instance of 
@@ -60,7 +65,12 @@ class Renderer(Component):
         except KeyError: pass
 
         self.split_at = int(kwargs.get( "split-at", 0))
-        
+
+        if "split-always" in kwargs:
+            self.split_always = kwargs["split-always"].split(',')
+        else:
+            self.split_always = None
+
     def __call__(self):
         return None
 
@@ -89,7 +99,15 @@ class Renderer(Component):
             if self.split_at:
                 k = list(work.keys())
                 for z, x in enumerate(range( 0, len(k), self.split_at)) :
-                    w = dict( [ (xx, work[xx]) for xx in k[x:x+self.split_at] ] )
+                    if self.split_always:
+                        try:
+                            w = odict( [ (xx, work[xx]) for xx in self.split_always ] )
+                        except KeyError:
+                            raise ValueError("unknown track in always clause: %s" % self.split_always)
+                    else:
+                        w = odict()
+
+                    w.update( odict( [ (xx, work[xx]) for xx in k[x:x+self.split_at] ] ) )
                     try:
                         result.extend( self.render( w, path + p + (str(z),) ) )
                     except:
