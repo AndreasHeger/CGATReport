@@ -1,3 +1,5 @@
+.. _bar-plot:
+
 ========
 bar-plot
 ========
@@ -47,6 +49,8 @@ Options
       
       switch rows/columns in plot.
 
+.. _stacked-bar-plot:
+
 ================
 stacked-bar-plot
 ================
@@ -60,6 +64,8 @@ as stacked bars.
    :width: 200
 
    A bar plot with stacked bars.
+
+.. _interleaved-bar-plot:
 
 ====================
 interleaved-bar-plot

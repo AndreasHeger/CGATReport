@@ -75,6 +75,8 @@ directive.
       define and optional keyword argument options. Note that 
       using this option will bypass caching.
 
+
+
 .. _Common plot options:
 
 Common plot options
@@ -220,11 +222,16 @@ Superfluous options are ignored.
 
             :extra-formats: png,hires,200;svg,svg,100
       
-
    split-at
       non-negative int
        
       Split a figure after # graphical elements in order to avoid over-plotting.
       Different renderers have different defaults.       
 
-      
+   split-always
+      list separated by comma
+
+      Related to :term:`split-at`. If a plot is split into separate plots,
+      the tracks given as argument will be added to each plot to facilitate
+      comparisons.
+

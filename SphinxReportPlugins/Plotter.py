@@ -1,7 +1,7 @@
 """Mixin classes for Renderers that plot.
 """
 
-import os, sys, re, math, itertools
+import os, sys, re, math, itertools, datetime
 
 import matplotlib
 matplotlib.use('Agg', warn = False)
@@ -17,6 +17,8 @@ try: import matplotlib_venn
 except ImportError: matplotlib_venn = None
 
 import numpy 
+try: import scipy.stats
+except ImportError: scipy.stats = None
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
@@ -27,9 +29,11 @@ from SphinxReport import Utils, DataTree, Stats
 from docutils.parsers.rst import directives
 
 # see http://messymind.net/2012/07/making-matplotlib-look-like-ggplot/    
-def rstyle(ax):
-    """Styles an axes to appear like ggplot2
-    Must be called after all plot and axis manipulation operations have been carried out (needs to know final tick spacing)
+def rstyle(ax, legend_location = None):
+    """Styles an axes to appear like ggplot2 
+
+    Must be called after all plot and axis manipulation operations
+    have been carried out (needs to know final tick spacing)
     """
     #set the style of the major and minor grid lines, filled blocks
     ax.grid(True, 'major', color='w', linestyle='-', linewidth=1.4)
@@ -66,7 +70,7 @@ def rstyle(ax):
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
       
-    if ax.legend_ != None:
+    if ax.legend_ != None and (legend_location != "extra" or legend_location.startswith("outer")):
         lg = ax.legend_
         lg.get_frame().set_linewidth(0)
         lg.get_frame().set_alpha(0.5)
@@ -88,7 +92,6 @@ def rhist(ax, data, **keywords):
         if k not in keywords: keywords[k] = v
    
     return ax.hist(data, **keywords)
-
 
 def rbox(ax, data, **keywords):
     """Creates a ggplot2 style boxplot, is eqivalent to calling ax.boxplot with the following additions:
@@ -133,7 +136,6 @@ def rbox(ax, data, **keywords):
         ax.add_patch(boxPoly)
 
     return bp
-
 
 def parseRanges(r):
     '''given a string in the format "x,y", 
@@ -188,6 +190,8 @@ class Plotter(object):
        
        :term:`yformat`: label for Y axis
 
+       :term:`no-tight`: do not attempt a tight layout (see ``matplotlib.pyplot.tight_layout()``)
+
     With some plots default layout options will result in plots 
     that are misaligned (legends truncated, etc.). To fix this it might
     be necessary to increase plot size, reduce font size, or others.
@@ -236,10 +240,14 @@ class Plotter(object):
         ('legend-location',  directives.unchanged),
         ('xformat', directives.unchanged),
         ('yformat', directives.unchanged),
+        ('no-tight', directives.flag), # currently ignored
+        ('tight', directives.flag),
+        ('rstyle', directives.flag), # currently the default
+        ('no-rstyle', directives.flag),
         )
 
     mColors = "bgrcmk"
-    mSymbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
+    symbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
     mMarkers = "so^>dph8+x"
     mPatterns = [None, '/','\\','|','-','+','x','o','O','.','*']
 
@@ -257,15 +265,17 @@ class Plotter(object):
         self.ylabel = kwargs.get("ytitle", None )
         self.functions = kwargs.get("function", None )
         self.vline = kwargs.get("vline", None )
+        self.tight_layout = 'tight' in kwargs
+        if 'rstyle' in kwargs: self.use_rstyle = True
+        elif 'no-rstyle' in kwargs: self.use_rstyle = False
 
         if self.functions:
             if "," in self.functions: self.functions = self.functions.split(",")
             else: self.functions = [self.functions]
             
         # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
-        self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
-
-        self.width = kwargs.get("width", 0.50 )
+        self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "upper right" ))
+        # ("outer-top"))
         self.xrange = parseRanges(kwargs.get("xrange", None ))
         self.yrange = parseRanges(kwargs.get("yrange", None ))
         self.zrange = parseRanges(kwargs.get("zrange", None ))
@@ -408,7 +418,12 @@ class Plotter(object):
 
         if self.vline:
             ystart, yend = ax.get_ylim()
-            lines = list(map(int, self.vline.split(",") ))
+            lines = []
+            for l in self.vline.split(","):
+                l = l.strip()
+                if l == "today": l = datetime.datetime.now().toordinal()
+                else: l = int(l)
+                lines.append( l )
             ax.vlines( lines, ystart, yend )
 
         # add labels and titles
@@ -463,17 +478,21 @@ class Plotter(object):
 
         if self.legend_location != "none" and plts and legends:
 
-
             maxlen = max( [ len(x) for x in legends ] )
             # legends = self.wrapText( legends )
 
             assert len(plts) == len(legends)
             if self.legend_location.startswith( "outer" ):
-                legend = outer_legend( plts, legends, loc = self.legend_location )
+                legend = outer_legend( plts, 
+                                       legends, 
+                                       loc = self.legend_location,
+                                       ncol = 1,
+                                       )
             else:
                 legend = plt.figlegend( plts, 
                                         legends,
                                         loc = self.legend_location,
+                                        ncol = 1,
                                         **self.mMPLLegendOptions )
 
         if self.legend_location == "extra" and legends:
@@ -495,13 +514,29 @@ class Plotter(object):
                        ncol = max(1,int(math.ceil( float( len(legends) / self.mLegendMaxRowsPerColumn ) ) )),
                        **self.mMPLLegendOptions )
 
-        if self.use_rstyle:
-            rstyle( ax )
+        if self.use_rstyle and not self.legend_location.startswith( "outer" ) \
+                and not self.legend_location.startswith("extra"):
+            rstyle( ax, legend_location = self.legend_location )
 
         # smaller font size for large legends
         if legend and maxlen > self.mMaxLegendSize:
             ltext = legend.get_texts() # all the text.Text instance in the legend
             plt.setp(ltext, fontsize='small') 
+
+        if self.mMPLSubplotOptions:
+            # apply subplot options - useful even if there are no subplots in
+            # order to set figure margins.
+            plt.subplots_adjust( **self.mMPLSubplotOptions )
+
+        # disabled: tight_layout not working well sometimes
+        # causing plots to display compressed
+        if self.tight_layout:
+            try:
+                plt.tight_layout()
+            except ValueError:
+                # some plots (with large legends) receive 
+                # ValueError( "bottom cannot be >= top")
+                pass
 
         return blocks
 
@@ -1003,9 +1038,9 @@ def outer_legend(*args, **kwargs):
     else: loc == "outer-top"
 
     if loc.endswith( "right" ):
-        leg = plt.legend(loc=(1.05,0), *args, **kwargs)
+        leg = plt.legend(bbox_to_anchor=(1.05,1), loc=2, borderaxespad=0., mode="expand", *args, **kwargs)
     elif loc.endswith( "top" ):
-        leg = plt.legend(loc=(0,1.05), *args, **kwargs)
+        leg = plt.legend(bbox_to_anchor=(0,1.02, 1., 1.02), loc=3, mode="expand", *args, **kwargs)
     else:
         raise ValueError("unknown legend location %s" % loc )
 
@@ -1086,6 +1121,8 @@ class LinePlot( Renderer, Plotter ):
     This plotter accepts the following options:
 
        :term:`as-lines`: do not plot symbols
+       :term:`yerror`: every second data track is a y error
+
     '''
     nlevels = 2
 
@@ -1094,19 +1131,23 @@ class LinePlot( Renderer, Plotter ):
 
     options = Plotter.options +\
         ( ('as-lines', directives.flag),
+          ('yerror', directives.flag),
           )
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-        self.mAsLines = "as-lines" in kwargs
+        self.as_lines = "as-lines" in kwargs
 
-        if self.mAsLines:
-            self.mSymbols = []
+        if self.as_lines:
+            self.symbols = []
             for y in ("-",":","--"):
                 for x in "gbrcmyk":
-                    self.mSymbols.append( y+x )
+                    self.symbols.append( y+x )
+
+        # data to use for Y error bars
+        self.yerror = "yerror" in kwargs
 
     def initPlot(self, fig, work, path ): 
 
@@ -1121,16 +1162,24 @@ class LinePlot( Renderer, Plotter ):
                  line, label,
                  xlabel, ylabel,
                  xvals, yvals, 
-                 nplotted ):
+                 nplotted,
+                 yerrors = None):
 
-        s = self.mSymbols[nplotted % len(self.mSymbols)]
+        s = self.symbols[nplotted % len(self.symbols)]
         
         xxvals, yyvals = Stats.filterNone( (xvals, yvals) )
-        
-        self.plots.append( plt.plot( xxvals,
-                                     yyvals,
-                                     s ) )
-        
+
+        if yerrors:
+            self.plots.append( plt.errorbar(xxvals,
+                                            yyvals,
+                                            yerr = yerrors,
+                                            fmt = s) )
+        else:
+            self.plots.append( plt.plot( xxvals,
+                                         yyvals,
+                                         s ) )
+
+            
         self.ylabels.append(ylabel)
         self.xlabels.append(xlabel)
 
@@ -1190,10 +1239,19 @@ class LinePlot( Renderer, Plotter ):
 
                 xlabel, ylabels = self.initCoords( label, coords)
                 xvals = coords[xlabel]
-
-                for ylabel in ylabels:
+                
+                if self.yerror:
+                    yerrors = [ ylabels[x] for x in range(1, len(ylabels), 2) ]
+                    ylabels = [ ylabels[x] for x in range(0, len(ylabels), 2) ]
+                else:
+                    yerrors = [ None ] * len( ylabels ) 
+                    
+                for ylabel, yerror in zip(ylabels, yerrors):
                     yvals = coords[ylabel]
-                    self.addData( line, label, xlabel, ylabel, xvals, yvals, nplotted )
+                    if yerror: yerror = coords[yerror]
+                    self.addData( line, label, xlabel, ylabel, xvals, yvals, 
+                                  nplotted,
+                                  yerrors = yerror )
                     nplotted += 1
 
                     if len(ylabels) > 1:
@@ -1278,7 +1336,8 @@ class HistogramPlot(LinePlot):
                  ylabel,
                  xvals, 
                  yvals, 
-                 nplotted ):
+                 nplotted,
+                 yerrors = None ):
         
         self.plots.append( plt.bar( xvals,
                                     yvals,
@@ -1375,7 +1434,8 @@ class HistogramGradientPlot(LinePlot):
             self.ymin, self.ymax = self.zrange
 
     def addData( self, line, label, xlabel, ylabel,
-                 xvals, yvals, nplotted ):
+                 xvals, yvals, nplotted,
+                 yerrors = None ):
 
         if self.zrange:
             vmin, vmax = self.zrange
@@ -1437,6 +1497,7 @@ class BarPlot( TableMatrix, Plotter):
           ('orientation', directives.unchanged),
           ('first-is-offset', directives.unchanged),
           ('switch', directives.unchanged ),
+          ('bar-width', directives.unchanged ),
           )
         
     # column to use for error bars
@@ -1468,6 +1529,9 @@ class BarPlot( TableMatrix, Plotter):
     # switch rows/columns
     switch_row_col = False
 
+    # bar width (height for horizontal plots)
+    bar_width = 0.5
+
     def __init__(self, *args, **kwargs):
         TableMatrix.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
@@ -1479,6 +1543,8 @@ class BarPlot( TableMatrix, Plotter):
         self.transparency = kwargs.get("transparency", None )
         if self.transparency: raise NotImplementedError( "transparency not implemented yet")
         self.orientation = kwargs.get( 'orientation', 'vertical' )
+        if 'bar-width' in kwargs:
+            self.bar_width = float(kwargs.get( 'bar-width' ) )
 
         if self.orientation == 'vertical':
             self.plotf = plt.bar
@@ -1512,6 +1578,9 @@ class BarPlot( TableMatrix, Plotter):
 
     def buildMatrices( self, work ):
         '''build matrices necessary for plotting.
+
+        If a matrix only contains a single row, the matrix
+        is transposed.
         '''
 
         self.error_matrix = None
@@ -1566,7 +1635,7 @@ class BarPlot( TableMatrix, Plotter):
         else:
             self.matrix, self.rows, self.columns = self.buildMatrix( work )
 
-        if self.switch_row_col:
+        if self.switch_row_col or self.matrix.shape[0] == 1:
             if self.matrix != None: self.matrix = self.matrix.transpose()
             if self.error_matrix != None: self.error_matrix = self.error_matrix.transpose()
             if self.label_matrix != None: self.label_matrix = self.label_matrix.transpose()
@@ -1588,7 +1657,24 @@ class BarPlot( TableMatrix, Plotter):
         else:
             hatch, color = self.bar_patterns[ idx % len(self.bar_patterns) ]
         return hatch, color, alpha
-            
+
+    def addTicks( self, xvals ):
+        '''add tick marks to plots.'''
+        
+        rotation = "horizontal"
+        
+        if self.orientation == "vertical":
+            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
+                rotation = "vertical"
+                self.rescaleForVerticalLabels( self.rows )
+        
+        if self.orientation == 'vertical':
+            plt.xticks( xvals + self.bar_width / 2., self.rows, rotation = rotation )
+        else:
+            plt.yticks( xvals + self.bar_width / 2., self.rows, rotation = rotation )
+            locs, labels = plt.xticks()
+            plt.xticks( locs, labels, rotation = 'vertical' )
+
     def render( self, work, path ):
 
         self.buildMatrices( work )
@@ -1600,7 +1686,7 @@ class BarPlot( TableMatrix, Plotter):
 
         # plot by row
         y, error = 0, None
-        for column,header in enumerate(self.columns):
+        for column, header in enumerate(self.columns):
             
             vals = self.matrix[:,column]
             if self.error: error = self.error_matrix[:,column]
@@ -1621,7 +1707,7 @@ class BarPlot( TableMatrix, Plotter):
              
             plts.append( self.plotf( xvals, 
                                      vals,
-                                     self.width, 
+                                     self.bar_width, 
                                      yerr = error,
                                      ecolor = "black",
                                      color = color,
@@ -1635,18 +1721,7 @@ class BarPlot( TableMatrix, Plotter):
             
             y += 1
 
-            
-        rotation = "horizontal"
-        
-        if self.orientation == "vertical":
-            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-                rotation = "vertical"
-                self.rescaleForVerticalLabels( self.rows )
-        
-        if self.orientation == 'vertical':
-            plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
-        else:
-            plt.yticks( xvals + 0.5, self.rows, rotation = rotation )
+        self.addTicks( xvals )
 
         return self.endPlot( plts, self.columns, path )
 
@@ -1673,7 +1748,6 @@ class InterleavedBarPlot(BarPlot):
 
         # plot by row
         row = 0
-
         for column,header in enumerate(self.columns):
             
             vals = self.matrix[:,column]
@@ -1713,19 +1787,7 @@ class InterleavedBarPlot(BarPlot):
             offset += width
             row += 1
 
-        rotation = "horizontal"
-
-        if self.orientation == "vertical":
-            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-                rotation = "vertical"
-                self.rescaleForVerticalLabels( self.rows )
-            else: 
-                rotation = "horizontal"
-                
-        if self.orientation == 'vertical':
-            plt.xticks( xvals + 0.5, self.rows, rotation = rotation )
-        else:
-            plt.yticks( xvals + 0.5, self.rows, rotation = rotation )
+        self.addTicks( xvals )
 
         return self.endPlot( plts, self.columns, path )
            
@@ -1746,7 +1808,7 @@ class StackedBarPlot(BarPlot ):
 
         plts = []
 
-        xvals = numpy.arange( (1.0 - self.width) / 2., len(self.rows) )
+        xvals = numpy.arange( (1.0 - self.bar_width) / 2., len(self.rows) )
         sums = numpy.zeros( len(self.rows), numpy.float )
         
         y, error, is_first = 0, None, True
@@ -1785,7 +1847,7 @@ class StackedBarPlot(BarPlot ):
 
             plts.append( self.plotf( xvals, 
                                      vals, 
-                                     self.width, 
+                                     self.bar_width, 
                                      yerr = error,
                                      color = color,
                                      hatch = hatch,
@@ -1795,27 +1857,12 @@ class StackedBarPlot(BarPlot ):
 
             if self.label and self.label_matrix != None: 
                 self.addLabels( xvals, vals, self.label_matrix[:,column] )
+
             legend.append( header )
             sums += vals
             y += 1
 
-        rotation = "horizontal"
-
-        if self.orientation == "vertical":
-            if len( self.rows ) > 5 or max( [len(x) for x in self.rows] ) >= 8 : 
-                rotation = "vertical"
-                self.rescaleForVerticalLabels( self.rows )
-                
-        if self.orientation == 'vertical':
-            plt.xticks( xvals + self.width / 2., 
-                        self.rows,
-                        rotation = rotation )
-        else:
-            plt.yticks( xvals + self.width / 2., 
-                        self.rows,
-                        rotation = rotation )
-            
-
+        self.addTicks( xvals )
 
         return self.endPlot( plts, legend, path )
 
@@ -1875,7 +1922,9 @@ class PiePlot(Renderer, Plotter):
         # subtract others from total - rest
         if self.mFirstIsTotal:
             sorted_vals[0] -= sum(sorted_vals[1:])
-            if sorted_vals[0] < 0: raise ValueError( "option first-is-total used, but first < rest" )
+            if sorted_vals[0] < 0: 
+                raise ValueError( "option first-is-total used, but first (%i) < rest (%i)" % \
+                                      (sorted_vals[0]+ sum(sorted_vals[1:]), sum(sorted_vals[1:]) ) )
             labels[0] = self.mFirstIsTotal
 
         return self.endPlot( plt.pie( sorted_vals, labels = labels ), None, path )
@@ -1996,6 +2045,78 @@ class BoxPlot(Renderer, Plotter):
             rotation = "horizontal"
 
         plt.xticks( [ x + 1 for x in range(0,len(legend)) ],
+                    legend,
+                    rotation = rotation )
+
+        return self.endPlot( plts, None, path )
+
+class ViolinPlot(Renderer, Plotter):        
+    """Write a set of box plots.
+    
+    This :class:`Renderer` requires two levels.
+
+    labels[dict] / data[array]
+    """
+    options = Renderer.options + Plotter.options
+
+    nlevels = 1
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs )
+        Plotter.__init__(self, *args, **kwargs )
+
+    def render(self, work, path ):
+
+        self.startPlot()
+
+        plts, legend = [], []
+        all_data = []
+
+        # for line, data in work.iteritems():
+
+            # assert len(data) == 1, "multicolumn data not supported yet, got %i items" % len(data)
+
+        for label, values in work.items():
+            assert Utils.isArray( values ), "work is of type '%s'" % values
+            d = [ x for x in values if x != None ]
+            if len(d) > 0:
+                all_data.append( d )
+                legend.append( "/".join( (str(path),str(label))))
+
+        if len(all_data) == 0: 
+            return self.endPlot( plts, None, path )
+            raise ValueError("no data" )
+
+        # from http://pyinsci.blogspot.co.uk/2009/09/violin-plot-with-matplotlib.html
+        pos = range(len(legend))
+        ax = plt.gca()
+        
+        dist = max(pos)-min(pos)
+        w = min(0.15*max(dist,1.0),0.5)
+
+        if scipy.stats == None:
+            raise ImportError("scipy.stats not available - can't do violin plot")
+
+        for d,p in zip(all_data, pos):
+            k = scipy.stats.gaussian_kde(d) #calculates the kernel density
+            m = k.dataset.min() #lower bound of violin
+            M = k.dataset.max() #upper bound of violin
+            x = numpy.arange(m,M,(M-m)/100.) # support for violin
+            v = k.evaluate(x) #violin profile (density curve)
+            v = v/v.max()*w #scaling the violin to the available space
+            ax.fill_betweenx(x,p,v+p,facecolor='y',alpha=0.3)
+            ax.fill_betweenx(x,p,-v+p,facecolor='y',alpha=0.3)
+
+        ax.boxplot(all_data,notch=1,positions=pos,vert=1)
+
+        plts.append( ax )
+        
+        if len( legend ) > 5 or max( [len(x) for x in legend] ) >= 8 : 
+            rotation = "vertical"
+        else: 
+            rotation = "horizontal"
+
+        plt.xticks( pos,
                     legend,
                     rotation = rotation )
 
@@ -2258,7 +2379,7 @@ class VennPlot( Renderer, Plotter ):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def __call__(self, work, path):
+    def render(self, work, path):
 
         if matplotlib_venn == None:
             raise ValueError("library matplotlib_venn not available")
@@ -2273,15 +2394,23 @@ class VennPlot( Renderer, Plotter ):
             del subsets["labels"]
 
         if subsets == None:
-            self.warn( "no suitable data for Venn diagram at %s" % path)
+            self.warn( "no suitable data for Venn diagram at %s" % str(path))
             return self.endPlot( plts, None, path )
 
         if len(subsets) == 3:
+            if 0 in (subsets['10'], subsets['01']): 
+                self.warn("empty sets for Venn diagram at %s" % str(path ))
+                return self.endPlot( plts, None, path )
+
             if setlabels:
                 if len(setlabels) != 2: raise ValueError( "require two labels, got %i" % len(setlabels))
             plts.append( matplotlib_venn.venn2( subsets,
                                                 set_labels = setlabels ) )
         elif len(subsets) == 7:
+            if 0 in (subsets['100'], subsets['010'], subsets['001']): 
+                self.warn("empty sets for Venn diagram at %s" % str(path ))
+                return self.endPlot( plts, None, path )
+
             if setlabels:
                 if len(setlabels) != 3: raise ValueError( "require three labels, got %i" % len(setlabels))
             plts.append( matplotlib_venn.venn3( subsets,

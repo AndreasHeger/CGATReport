@@ -14,3 +14,7 @@ class ExpressionLevels(TrackerSQL):
 
         return self.getDataFrame( statement )
 
+
+class MeltedExpressionLevels(MeltedTableTrackerDataframe):
+    pattern = "(.*)_data"
+    

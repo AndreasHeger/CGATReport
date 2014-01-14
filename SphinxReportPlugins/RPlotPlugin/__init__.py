@@ -82,6 +82,7 @@ class RPlotPlugin(Component):
                         try: 
                             R["dev.copy"]( device = R.png,
                                            filename = outpath,
+                                           res = dpi,
                                            width = width, 
                                            height = height )
                             R["dev.off"]()
@@ -99,6 +100,17 @@ class RPlotPlugin(Component):
 
                 elif format.endswith( "eps" ):
                     R["dev.copy"]( device = R.postscript,
+                                   paper = 'special',
+                                   width = 6,
+                                   height = 6,
+                                   file = outpath,
+                                   onefile = True )
+                    R["dev.off"]()
+                elif format.endswith( "pdf" ):
+                    R["dev.copy"]( device = R.pdf,
+                                   paper = 'special',
+                                   width = 6,
+                                   height = 6,
                                    file = outpath,
                                    onefile = True )
                     R["dev.off"]()

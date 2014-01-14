@@ -23,6 +23,7 @@ Tutorials
    Tutorial8.rst
    Tutorial9.rst
    Tutorial10.rst
+   Tutorial11.rst
 
 Tutorial results
 ================

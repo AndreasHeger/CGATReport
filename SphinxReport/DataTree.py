@@ -390,7 +390,7 @@ def count_levels( labels ):
             counts.append( 1 )
     return counts
 
-def tree2table( data, transpose = False ):
+def tree2table( data, transpose = False, head = None ):
     """build table from data.
 
     The table will be multi-level (main-rows and sub-rows), if:
@@ -400,6 +400,8 @@ def tree2table( data, transpose = False ):
 
     If any of the paths contain tuples/lists, these are
     expanded to extra columns as well.
+
+    If head is given, only first head rows are output.
 
     returns matrix, row_headers, col_headers
     """
@@ -493,6 +495,9 @@ def tree2table( data, transpose = False ):
                         pass
 
             matrix.append( row_data )
+
+            if head and len(matrix) >= head:
+                break
 
     if transpose:
         row_headers, col_headers = col_headers, row_headers

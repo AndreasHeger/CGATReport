@@ -229,6 +229,45 @@ class TransformerIndicator( Transformer ):
 
 ########################################################################
 ########################################################################
+########################################################################
+class TransformerCount( Transformer ):
+    '''compute counts of values in the hierarchy.
+
+    Displaying a table of counts can often be useful to
+    summarize the number of entries in a list prior to
+    plotting.
+
+    The following operations are perform when :term:`tf-level` is set
+    to ``1``::
+       Input:          Returns:
+       a/x=[1,2,3]            a/x=3
+       a/y=[1,3,5]            a/y=3
+       b/x=[34,3]             b/x=2
+       b/y=[2,4]              b/y=2
+    '''
+    
+    nlevels = 1
+    default = 0
+
+    options = Transformer.options +\
+        ( ('tf-level', directives.length_or_unitless), )
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+
+        try: self.nlevels = int(kwargs["tf-level"])
+        except KeyError: pass
+                          
+    def transform(self, data, path):
+        debug( "%s: called" % str(self))
+
+        for v in list(data.keys()):
+            data[v] = len(data[v])
+                
+        return data
+
+########################################################################
+########################################################################
 ## Filtering transformers
 ########################################################################
 ########################################################################
@@ -287,17 +326,20 @@ class TransformerFilter( Transformer ):
 ########################################################################
 class TransformerSelect( Transformer ):
     '''replace the lowest hierarchy with a single value.
+
     This transformer removes all branches in a :term:`data tree`
     on level :term:`tf-level` that do not match the 
     :term:`tf-fields` option.
 
     The following operations are perform when :term:`tf-fields` is set
     to ``x``::
+
        Input:          Returns:
        a/x=1            a=1
        a/y=2            b=3
        b/x=3
        b/y=4
+
     '''
     
     nlevels = 2
@@ -313,6 +355,7 @@ class TransformerSelect( Transformer ):
         except KeyError: 
             raise KeyError( "TransformerSelect requires the `tf-fields` option to be set." )
                           
+
     def transform(self, data, path):
         debug( "%s: called" % str(self))
 
@@ -404,9 +447,9 @@ class TransformerGroup( Transformer ):
 ########################################################################
 ########################################################################
 class TransformerCombinations( Transformer ):
-    '''build combinations of the second lowest level.
+    '''build combinations.
 
-    For example::
+    Level=2 can be used for labeled data::
 
        Input:      Output:
        a/x=1       a x b/a/x=1
@@ -419,12 +462,23 @@ class TransformerCombinations( Transformer ):
     Uses the ``tf-fields`` option to combine a certain field.
     Otherwise, it combines the first data found.
 
+    level=1 is useful to combine lists ::
+
+       Input:            Output:
+       a/data=[1,2,3]    a x b/a=[1,2,3]
+       b/data=[2,4,5]    a x b/b=[2,4,5]
+       c/data=[4,2,1]    a x c/a=[1,2,3]
+                         a x c/a=[4,2,1]
+                         b x c/a=[2,4,5]
+                         b x c/a=[4,2,1]
+
     '''
     
     nlevels = 2
 
     options = Transformer.options +\
-        ( ('tf-fields', directives.unchanged), )
+        ( ('tf-level', directives.length_or_unitless),
+          ('tf-fields', directives.unchanged), )
 
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
@@ -433,8 +487,9 @@ class TransformerCombinations( Transformer ):
         except KeyError: 
             self.fields = None
 
-    def transform(self, data, path):
+        self.nlevels = int(kwargs.get("tf-level", self.nlevels) )
 
+    def transform(self, data, path):
         debug( "%s: called" % str(self))
 
         vals =  list(data.keys())
@@ -464,8 +519,8 @@ class TransformerCombinations( Transformer ):
                     d2 = data[n2]
 
                 ## check if array?
-                if len(d1) != len(d2):
-                    raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
+                #if len(d1) != len(d2):
+                #    raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
                 
                 DataTree.setLeaf( new_data, ( ("%s x %s" % (n1, n2) ), n1),
                                   d1 )
@@ -864,7 +919,6 @@ class TransformerHistogram( TransformerAggregate ):
     def __init__(self, *args, **kwargs):
         TransformerAggregate.__init__(self, *args, **kwargs)
 
-        self.mConverters = []
         self.mFormat = "%i"
         self.mBinMarker = "left"
 
@@ -986,3 +1040,67 @@ class TransformerHistogram( TransformerAggregate ):
 
         debug( "%s: completed for path %s" % (str(self), str(path)))
         return data
+
+class TransformerMelt( Transformer ):
+    ''' Create a melted table
+
+    Example::
+        Input:                                 Output
+        experiment1/Sample1 = [1]              Track = ["experiment1","experiment1","experiment2","experiment2"]
+        experiment1/Sample2 = [3]              Slice = ["Sample1","Sample2","Sample1","Sample2"]
+        experiment2/Sample1 = [1]              Data =  [1,3,1,3]
+        experiment2/Sample2 = [3]
+
+    Will work with any number of levels, and with lists or single values as the data 
+    '''
+
+    def melt(self, data):
+        ''' returns a list of lists, with each list of the same size (hopefully) '''
+
+        try:
+            keys = data.keys()
+        except AttributeError:
+            try:
+                if len(data) > 0:
+                    return [data]
+                else:
+                    return [data]
+            except TypeError:
+                return [[data]]
+
+        lols = []
+        for key in keys:
+            melted = self.melt(data[key])
+            new = [[key for x in range(len(melted[0]))]]
+            melted = new + melted
+            lols.append(melted)
+
+        final = lols[0]
+        for l in lols[1:]:
+            for i in range(len(final)):
+                final[i] += l[i]
+
+        return final
+
+    def __call__(self,data):
+
+        titles = ["Data","Slice","Track"]
+
+        lol = self.melt(data)
+
+        ntitles = len(lol)
+
+        
+
+        if ntitles-len(titles) < 0:
+            titles = titles[:ntitles-1]
+        else:
+            titles += ["Variable%i" % x for x in range((ntitles-len(titles)),0,-1)]
+            
+        titles.reverse()
+  
+
+        dol = {titles[i]: lol[i] for i in range(len(lol))}
+        
+        
+        return dol

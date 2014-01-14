@@ -1,8 +1,17 @@
-from distribute_setup import use_setuptools
-use_setuptools()
-
-from setuptools import Extension, setup, find_packages
-from setuptools import setup, find_packages
+########################################################################
+########################################################################
+## Import setuptools
+## Use existing setuptools
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    ## try to get via ez_setup
+    ## ez_setup did not work on all machines tested as
+    ## it uses curl with https protocol, which is not
+    ## enabled in ScientificLinux
+    import ez_setup
+    ez_setup.use_setuptools()
+    from setuptools import setup, find_packages
 
 import glob, sys, os
 
@@ -15,12 +24,13 @@ if major==2:
 elif major==3:
     extra_dependencies = []
 
+# Dependencies shared between python 2 and 3
 shared_dependencies = [
     'sphinx>=1.0.5',
     'rpy2>=2.3.4',
     'numpy>=1.7',
     'scipy>=0.11',
-    'matplotlib>=1.0', 
+    'matplotlib>=1.3.0', 
     'sqlalchemy>=0.7.0', 
     'openpyxl>=1.5.7' ]
 
@@ -50,7 +60,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='SphinxReport',
-      version='2.0',
+      version='2.2',
       description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',
@@ -110,6 +120,13 @@ setup(name='SphinxReport',
             'transform-combine=SphinxReportPlugins.Transformer:TransformerCombinations',
             'transform-tolist=SphinxReportPlugins.Transformer:TransformerToList',
             'transform-toframe=SphinxReportPlugins.Transformer:TransformerToDataFrame',
+            'transform-melt=SphinxReportPlugins.Transformer:TransformerMelt',
+            'transform-count=SphinxReportPlugins.Transformer:TransformerCount',
+            'transform-hypergeometric=SphinxReportPlugins.TransformersGeneLists:TransformerHypergeometric',
+            # 'transform-label-paths=SphinxReportPlugins.TransformersGeneLists:TransformerPathToLabel',
+            'transform-venn=SphinxReportPlugins.TransformersGeneLists:TransformerVenn',
+            'transform-p-adjust=SphinxReportPlugins.TransformersGeneLists:TransformerMultiTest',
+            'transform-odds-ratio=SphinxReportPlugins.TransformersGeneLists:TransformerOddsRatio',
             'render-user=SphinxReportPlugins.Renderer:User',
             'render-debug=SphinxReportPlugins.Renderer:Debug',
             'render-table=SphinxReportPlugins.Renderer:Table',
@@ -132,6 +149,7 @@ setup(name='SphinxReport',
             'render-stacked-bar-plot=SphinxReportPlugins.Plotter:StackedBarPlot',
             'render-interleaved-bar-plot=SphinxReportPlugins.Plotter:InterleavedBarPlot',
             'render-box-plot=SphinxReportPlugins.Plotter:BoxPlot',
+            'render-violin-plot=SphinxReportPlugins.Plotter:ViolinPlot',
             'render-venn-plot=SphinxReportPlugins.Plotter:VennPlot',
             'render-r-line-plot=SphinxReportPlugins.RPlotter:LinePlot',
             'render-r-box-plot=SphinxReportPlugins.RPlotter:BoxPlot',

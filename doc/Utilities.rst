@@ -27,7 +27,7 @@ in detail.
 
 .. automodule:: SphinxReport.get
 
-.. _sphinxreport-sevre:
+.. _sphinxreport-serve:
 
 .. automodule:: SphinxReport.serve
 

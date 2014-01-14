@@ -11,9 +11,11 @@ to use R for plotting:
 * :ref:`Via Plugins` extending the in-built plotting capabilities of SphinxReport,
 * :ref:`Via Tracker` involving writing a :term:`Tracker` that both
   collects data and plots
-* :ref:`Via ggplot2` involving a dataframe and the R ggplot library.
+* :ref:`Via ggplot2` involving a data frame and the R ggplot library.
    
 Note that plotting with R makes use of rpy2, the python interface to R.
+
+.. _Via Plugins:
 
 Via Plugins
 ===========
@@ -22,6 +24,8 @@ Sphinxreport contains a few renderers that make use of the standard R plotting
 library, for example :ref:`r-box-plot` or
 :ref:`r-smooth-scatter-plot` (see :ref:`Renderers` for a complete list).
 
+.. _Via Tracker:
+
 Via Tracker
 ===========
 
@@ -29,15 +33,17 @@ Any plot, including those using R, can be created by combining the
 :ref:`user` renderer with a :term:`Tracker` that does the plotting.
 The section about :ref:`UserCreatedPlots` contains a few examples.
 
+.. _Via ggplot2:
+
 Via ggplot2
 ===========
 
 ggplot2_ is a plotting system for R, based on the grammar of
-graphics. Plots are built from a :term:`dataframe` by adding aesthetics
+graphics. Plots are built from a :term:`data frame` by adding aesthetics
 and geometries.
 
 In order to plot with ggplot2_, the results of a :term:`Tracker`
-need first be converted to a :term:`dataframe` with the 
+need first be converted to a :term:`data frame` with the 
 :ref:`toframe` transformer::
 
     .. report:: Tutorial5.ExpressionLevel
@@ -93,10 +99,10 @@ More interesting might be to plot a histogram::
 
    A histogram plot
 
-Creating a dataframe from an SQL statement is a common use case. Say
+Creating a data frame from an SQL statement is a common use case. Say
 we want to create a plot with the correlation of expression values
 between two experiments. We implement the following :term:`tracker`
-that returns a :term:`dataframe` ::
+that returns a :term:`data frame` ::
 
     from SphinxReport.Tracker import *
 
@@ -141,13 +147,39 @@ More interesting is to colour the different expression values by gene_function::
 
    Correlation with expression values coloured by factor gene_function
 
+The MeltedDataFrameTracker provides a shortcut::
+
+    class MeltedExpressionLevels(MeltedTableTrackerDataframe):
+        pattern = "(.*)_data"
+
+The data is now in a single melted data frame with a column called
+``track`` denoting the different tracks:
+
+    .. report:: Tutorial9.MeltedExpressionLevels
+       :render: r-ggplot
+       :statement: aes(expression, color=track) + geom_density()
+
+       Plot of gene expression densities
+
+.. report:: Tutorial9.MeltedExpressionLevels
+    :render: r-ggplot
+    :statement: aes(expression, color=track) + geom_density()
+
+    Plot of gene expression densities
+
+
+See options in :ref:`sphinxreport-test` for ways to do interactive 
+refinement of such plots.
+
 .. note:: 
    Plotting from a mixture of SQL, R and python is powerful,
    but can sometimes be tricky when mapping SQL column names
-   to dataframe column names for use in ggplot descriptions. 
+   to data frame column names for use in ggplot descriptions. 
    Make sure to use long and unambiguous names that will not 
    give rise to name conflicts with built-in names in R,
    python and SQL.
+
+
 
 .. _ggplot2: http://ggplot2.org/
 .. _rpy2: http://rpy.sourceforge.net/rpy2.html

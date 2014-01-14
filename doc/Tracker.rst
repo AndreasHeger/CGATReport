@@ -5,7 +5,7 @@ Tracker
 *******
 
 The base class of all :term:`trackers` is the class 
-:class:`SphinxReport.Tracker.Tracker`. 
+:class:`~.Tracker`. 
 
 Inheritance diagram
 ===================

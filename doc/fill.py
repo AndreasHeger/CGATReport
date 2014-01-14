@@ -1,3 +1,5 @@
+'''Script to fill csvdb database with example data.'''
+
 import random, os
 from subprocess import Popen
 
@@ -18,3 +20,5 @@ e("CREATE TABLE experiment2_data (gene_id TEXT, function TEXT, expression INT)")
 for x in range(0,200,2):
     e( "INSERT INTO %s VALUES ('gene%2i', '%s', %f)" % ("experiment2_data", x, "housekeeping", random.gauss( 40, 5)) )
     e( "INSERT INTO %s VALUES ('gene%2i', '%s', %f)" % ("experiment2_data", x+1, "regulation", random.gauss( 10, 5)) )
+
+
