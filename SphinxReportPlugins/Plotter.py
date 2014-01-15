@@ -3,6 +3,14 @@
 
 import os, sys, re, math, itertools, datetime
 
+from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
+from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
+from SphinxReport.DataTree import path2str
+from collections import OrderedDict as odict
+from SphinxReport import Utils, DataTree, Stats
+
+from docutils.parsers.rst import directives
+
 import matplotlib
 matplotlib.use('Agg', warn = False)
 # This does not work:
@@ -11,6 +19,7 @@ matplotlib.use('Agg', warn = False)
 
 import matplotlib.colors
 import matplotlib.pyplot as plt
+import seaborn
 
 # Python 3 Compatibility
 try: import matplotlib_venn
@@ -20,122 +29,9 @@ import numpy
 try: import scipy.stats
 except ImportError: scipy.stats = None
 
-from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
-from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
-from SphinxReport.DataTree import path2str
-from collections import OrderedDict as odict
-from SphinxReport import Utils, DataTree, Stats
-
-from docutils.parsers.rst import directives
-
+# For Rstyle plotting, previously used the snippets from:
 # see http://messymind.net/2012/07/making-matplotlib-look-like-ggplot/    
-def rstyle(ax, legend_location = None):
-    """Styles an axes to appear like ggplot2 
-
-    Must be called after all plot and axis manipulation operations
-    have been carried out (needs to know final tick spacing)
-    """
-    #set the style of the major and minor grid lines, filled blocks
-    ax.grid(True, 'major', color='w', linestyle='-', linewidth=1.4)
-    ax.grid(True, 'minor', color='0.92', linestyle='-', linewidth=0.7)
-    ax.patch.set_facecolor('0.85')
-    ax.set_axisbelow(True)
-   
-    xticks = plt.xticks()
-    yticks = plt.yticks()
-    #set minor tick spacing to 1/2 of the major ticks
-    if len(xticks) > 2:
-        ax.xaxis.set_minor_locator(matplotlib.ticker.MultipleLocator( (xticks[0][1]-xticks[0][0]) / 2.0 ))
-    if len(yticks) > 2:
-        ax.yaxis.set_minor_locator(matplotlib.ticker.MultipleLocator( (yticks[0][1]-yticks[0][0]) / 2.0 ))
-   
-    #remove axis border
-    for child in ax.get_children():
-        if isinstance(child, matplotlib.spines.Spine):
-            child.set_alpha(0)
-       
-    #restyle the tick lines
-    for line in ax.get_xticklines() + ax.get_yticklines():
-        line.set_markersize(5)
-        line.set_color("gray")
-        line.set_markeredgewidth(1.4)
-   
-    #remove the minor tick lines    
-    for line in ax.xaxis.get_ticklines(minor=True) + ax.yaxis.get_ticklines(minor=True):
-        line.set_markersize(0)
-   
-    #only show bottom left ticks, pointing out of axis
-    matplotlib.rcParams['xtick.direction'] = 'out'
-    matplotlib.rcParams['ytick.direction'] = 'out'
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
-      
-    if ax.legend_ != None and (legend_location != "extra" or legend_location.startswith("outer")):
-        lg = ax.legend_
-        lg.get_frame().set_linewidth(0)
-        lg.get_frame().set_alpha(0.5)
-       
-def rhist(ax, data, **keywords):
-    """Creates a histogram with default style parameters to look like ggplot2
-    Is equivalent to calling ax.hist and accepts the same keyword parameters.
-    If style parameters are explicitly defined, they will not be overwritten
-    """
-   
-    defaults = {
-                'facecolor' : '0.3',
-                'edgecolor' : '0.28',
-                'linewidth' : '1',
-                'bins' : 100
-                }
-   
-    for k, v in list(defaults.items()):
-        if k not in keywords: keywords[k] = v
-   
-    return ax.hist(data, **keywords)
-
-def rbox(ax, data, **keywords):
-    """Creates a ggplot2 style boxplot, is eqivalent to calling ax.boxplot with the following additions:
-   
-    Keyword arguments:
-    colors -- array-like collection of colours for box fills
-    names -- array-like collection of box names which are passed on as tick labels
-
-    """
-
-    hasColors = 'colors' in keywords
-
-    if hasColors:
-        colors = keywords['colors']
-        keywords.pop('colors')
-       
-    if 'names' in keywords:
-        ax.tickNames = plt.setp(ax, xticklabels=keywords['names'] )
-        keywords.pop('names')
-   
-    bp = ax.boxplot(data, **keywords)
-    pylab.setp(bp['boxes'], color='black')
-    pylab.setp(bp['whiskers'], color='black', linestyle = 'solid')
-    pylab.setp(bp['fliers'], color='black', alpha = 0.9, marker= 'o', markersize = 3)
-    pylab.setp(bp['medians'], color='black')
-   
-    numBoxes = len(data)
-    for i in range(numBoxes):
-        box = bp['boxes'][i]
-        boxX = []
-        boxY = []
-        for j in range(5):
-          boxX.append(box.get_xdata()[j])
-          boxY.append(box.get_ydata()[j])
-        boxCoords = list(zip(boxX,boxY))
-       
-        if hasColors:
-            boxPolygon = Polygon(boxCoords, facecolor = colors[i % len(colors)])
-        else:
-            boxPolygon = Polygon(boxCoords, facecolor = '0.95')
-           
-        ax.add_patch(boxPoly)
-
-    return bp
+# now using seaborn
 
 def parseRanges(r):
     '''given a string in the format "x,y", 
@@ -242,16 +138,12 @@ class Plotter(object):
         ('yformat', directives.unchanged),
         ('no-tight', directives.flag), # currently ignored
         ('tight', directives.flag),
-        ('rstyle', directives.flag), # currently the default
-        ('no-rstyle', directives.flag),
         )
 
-    mColors = "bgrcmk"
-    symbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
-    mMarkers = "so^>dph8+x"
+    format_colors = seaborn.color_palette() #"bgrcmk"
+    format_markers = "so^>dph8+x"
+    format_lines = ('-', ':', '--')
     mPatterns = [None, '/','\\','|','-','+','x','o','O','.','*']
-
-    use_rstyle = True
 
     def __init__(self, *args, **kwargs ):
         """parse option arguments."""
@@ -266,8 +158,6 @@ class Plotter(object):
         self.functions = kwargs.get("function", None )
         self.vline = kwargs.get("vline", None )
         self.tight_layout = 'tight' in kwargs
-        if 'rstyle' in kwargs: self.use_rstyle = True
-        elif 'no-rstyle' in kwargs: self.use_rstyle = False
 
         if self.functions:
             if "," in self.functions: self.functions = self.functions.split(",")
@@ -310,15 +200,18 @@ class Plotter(object):
 
         self.mFigure +=1 
 
-        # go to defaults
-        matplotlib.rcdefaults()
+        # setting rc parameters disabled in order not interfere with seaborn
+        # aesthetics
+        # # go to defaults
+        # matplotlib.rcdefaults()
 
-        # set parameters
-        if self.mMPLRC:
-            self.debug( "extra plot options: %s" % str(self.mMPLRC) )
-            matplotlib.rcParams.update(self.mMPLRC )
+        # # set parameters
+        # if self.mMPLRC:
+        #     self.debug( "extra plot options: %s" % str(self.mMPLRC) )
+        #     matplotlib.rcParams.update(self.mMPLRC )
         
-        self.mCurrentFigure = plt.figure( num = self.mFigure, **self.mMPLFigureOptions )
+        self.mCurrentFigure = plt.figure( num = self.mFigure )
+        # , **self.mMPLFigureOptions )
 
         if self.title:  plt.title( self.title )
 
@@ -514,10 +407,6 @@ class Plotter(object):
                        ncol = max(1,int(math.ceil( float( len(legends) / self.mLegendMaxRowsPerColumn ) ) )),
                        **self.mMPLLegendOptions )
 
-        if self.use_rstyle and not self.legend_location.startswith( "outer" ) \
-                and not self.legend_location.startswith("extra"):
-            rstyle( ax, legend_location = self.legend_location )
-
         # smaller font size for large legends
         if legend and maxlen > self.mMaxLegendSize:
             ltext = legend.get_texts() # all the text.Text instance in the legend
@@ -594,9 +483,6 @@ class PlotterMatrix(Plotter):
 
     # separators to use to split text
     mSeparators = " :_"
-
-    # Do not use R style for plotting.
-    use_rstyle = False
 
     options = Plotter.options +\
         ( ('palette', directives.unchanged),
@@ -1140,12 +1026,6 @@ class LinePlot( Renderer, Plotter ):
 
         self.as_lines = "as-lines" in kwargs
 
-        if self.as_lines:
-            self.symbols = []
-            for y in ("-",":","--"):
-                for x in "gbrcmyk":
-                    self.symbols.append( y+x )
-
         # data to use for Y error bars
         self.yerror = "yerror" in kwargs
 
@@ -1158,27 +1038,46 @@ class LinePlot( Renderer, Plotter ):
         self.xlabels = []
         self.ylabels = []
 
+    def getFormat( self, nplotted ):
+        '''return tuple with color, linestyle and marker for 
+        data series *n* within a plot.'''
+        
+        color = self.format_colors[ nplotted % len(self.format_colors) ]
+        nplotted /= len(self.format_colors)
+        linestyle = self.format_lines[ nplotted % len(self.format_lines)]
+        if self.as_lines:
+            marker = None
+        else:
+            nplotted /= len(self.format_lines)
+            marker = self.format_markers[ nplotted % len(self.format_markers)]
+
+        return color, linestyle, marker
+        
     def addData( self, 
                  line, label,
                  xlabel, ylabel,
                  xvals, yvals, 
                  nplotted,
                  yerrors = None):
-
-        s = self.symbols[nplotted % len(self.symbols)]
         
         xxvals, yyvals = Stats.filterNone( (xvals, yvals) )
+
+        color, linestyle, marker = self.getFormat( nplotted )
 
         if yerrors:
             self.plots.append( plt.errorbar(xxvals,
                                             yyvals,
                                             yerr = yerrors,
-                                            fmt = s) )
+                                            color = color,
+                                            linestyle = linestyle,
+                                            marker = marker ) )
+
         else:
             self.plots.append( plt.plot( xxvals,
                                          yyvals,
-                                         s ) )
-
+                                         color = color,
+                                         linestyle = linestyle,
+                                         marker = marker ) )
             
         self.ylabels.append(ylabel)
         self.xlabels.append(xlabel)
@@ -1344,7 +1243,7 @@ class HistogramPlot(LinePlot):
                                     width = self.widths,
                                     alpha = self.alpha,
                                     yerr = self.yerr,
-                                    color = self.mColors[ nplotted % len(self.mColors) ], ) )
+                                    color = self.format_colors[ nplotted % len(self.format_colors) ], ) )
 
     def finishPlot( self, fig, work, path ):
 
@@ -1557,7 +1456,7 @@ class BarPlot( TableMatrix, Plotter):
         self.bottom_value = kwargs.get("bottom-value", None )
         self.first_is_offset = 'first-is-offset' in kwargs
 
-        self.bar_patterns = list(itertools.product( self.mPatterns, self.mColors) )
+        self.bar_patterns = list(itertools.product( self.mPatterns, self.format_colors) )
 
     def addLabels( self, xvals, yvals, labels ):
         '''add labels at x,y at current plot.
@@ -1698,7 +1597,6 @@ class BarPlot( TableMatrix, Plotter):
                 vals[0] = 0
                 
             hatch, color, alpha = self.getColour( y, column )
-
             
             if self.bottom_value != None:
                 bottom = float(self.bottom_value)
@@ -1883,6 +1781,7 @@ class PiePlot(Renderer, Plotter):
     nlevels = 1
 
     def __init__(self, *args, **kwargs):
+        print "starting pie plot"
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
@@ -2000,8 +1899,8 @@ class HintonPlot(TableMatrix, PlotterHinton):
 
         return self.plot( matrix, rows, columns, path )
 
-class BoxPlot(Renderer, Plotter):        
-    """Write a set of box plots.
+class DataSeriesPlot(Renderer, Plotter):        
+    """Plot one or more data series.
     
     This :class:`Renderer` requires two levels.
 
@@ -2022,23 +1921,41 @@ class BoxPlot(Renderer, Plotter):
         plts, legend = [], []
         all_data = []
 
-        # for line, data in work.iteritems():
-
-            # assert len(data) == 1, "multicolumn data not supported yet, got %i items" % len(data)
-
         for label, values in work.items():
             assert Utils.isArray( values ), "work is of type '%s'" % values
             d = [ x for x in values if x != None ]
             if len(d) > 0:
-                all_data.append( d )
+                # convert to float, required for seaborn.kdeplot
+                all_data.append( numpy.array( d, dtype=numpy.float) )
                 legend.append( "/".join( (str(path),str(label))))
 
         if len(all_data) == 0: 
             return self.endPlot( plts, None, path )
             raise ValueError("no data" )
             
-        plts.append( plt.boxplot( all_data ) )
+        plts.extend( self.plotData( all_data, legend ) )
         
+        self.updatePlot(legend)
+        return self.endPlot( plts, None, path )
+
+    def updatePlot( self, legend ):
+        return
+    
+class BoxPlot(DataSeriesPlot):        
+    """Write a set of box plots.
+    
+    This :class:`Renderer` requires two levels.
+
+    labels[dict] / data[array]
+    """
+    def __init__(self, *args, **kwargs):
+        DataSeriesPlot.__init__(self,*args, **kwargs)
+
+    def plotData( self, data, legend ):
+        return [ seaborn.boxplot( data ) ]
+
+    def updatePlot( self, legend ):
+
         if len( legend ) > 5 or max( [len(x) for x in legend] ) >= 8 : 
             rotation = "vertical"
         else: 
@@ -2048,79 +1965,37 @@ class BoxPlot(Renderer, Plotter):
                     legend,
                     rotation = rotation )
 
-        return self.endPlot( plts, None, path )
-
-class ViolinPlot(Renderer, Plotter):        
-    """Write a set of box plots.
+class ViolinPlot(BoxPlot):        
+    """Write a set of violin plots.
     
     This :class:`Renderer` requires two levels.
 
     labels[dict] / data[array]
     """
-    options = Renderer.options + Plotter.options
-
-    nlevels = 1
-
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        BoxPlot.__init__(self,*args, **kwargs)
 
-    def render(self, work, path ):
+    def plotData( self, data, legend ):
+        return [ seaborn.violinplot( data ) ]
 
-        self.startPlot()
+class DensityPlot(DataSeriesPlot):        
+    """Write a set of density plots.
 
-        plts, legend = [], []
-        all_data = []
+    The data series is converted to a kernel density
+    estimate.
+    
+    This :class:`Renderer` requires two levels.
 
-        # for line, data in work.iteritems():
+    labels[dict] / data[array]
+    """
+    def __init__(self, *args, **kwargs):
+        DataSeriesPlot.__init__(self,*args, **kwargs)
 
-            # assert len(data) == 1, "multicolumn data not supported yet, got %i items" % len(data)
-
-        for label, values in work.items():
-            assert Utils.isArray( values ), "work is of type '%s'" % values
-            d = [ x for x in values if x != None ]
-            if len(d) > 0:
-                all_data.append( d )
-                legend.append( "/".join( (str(path),str(label))))
-
-        if len(all_data) == 0: 
-            return self.endPlot( plts, None, path )
-            raise ValueError("no data" )
-
-        # from http://pyinsci.blogspot.co.uk/2009/09/violin-plot-with-matplotlib.html
-        pos = range(len(legend))
-        ax = plt.gca()
-        
-        dist = max(pos)-min(pos)
-        w = min(0.15*max(dist,1.0),0.5)
-
-        if scipy.stats == None:
-            raise ImportError("scipy.stats not available - can't do violin plot")
-
-        for d,p in zip(all_data, pos):
-            k = scipy.stats.gaussian_kde(d) #calculates the kernel density
-            m = k.dataset.min() #lower bound of violin
-            M = k.dataset.max() #upper bound of violin
-            x = numpy.arange(m,M,(M-m)/100.) # support for violin
-            v = k.evaluate(x) #violin profile (density curve)
-            v = v/v.max()*w #scaling the violin to the available space
-            ax.fill_betweenx(x,p,v+p,facecolor='y',alpha=0.3)
-            ax.fill_betweenx(x,p,-v+p,facecolor='y',alpha=0.3)
-
-        ax.boxplot(all_data,notch=1,positions=pos,vert=1)
-
-        plts.append( ax )
-        
-        if len( legend ) > 5 or max( [len(x) for x in legend] ) >= 8 : 
-            rotation = "vertical"
-        else: 
-            rotation = "horizontal"
-
-        plt.xticks( pos,
-                    legend,
-                    rotation = rotation )
-
-        return self.endPlot( plts, None, path )
+    def plotData( self, data, legend ):
+        plts = []
+        for d,l in zip(data,legend):
+            plts.append( seaborn.kdeplot( d, label=l) )
+        return plts
 
 class GalleryPlot(Renderer, Plotter):
     '''Plot an image.
@@ -2232,8 +2107,8 @@ class ScatterPlot(Renderer, Plotter):
                 xvals, yvals = Stats.filterNone( (coords[xlabel],
                                                   coords[ylabel]) )
 
-                marker = self.mMarkers[nplotted % len(self.mMarkers)]
-                color = self.mColors[nplotted % len(self.mColors)]
+                marker = self.format_markers[nplotted % len(self.format_markers)]
+                color = self.format_colors[nplotted % len(self.format_colors)]
                 if len(xvals) == 0 or len(yvals) == 0: continue
 
                 # plt.scatter does not permitting setting

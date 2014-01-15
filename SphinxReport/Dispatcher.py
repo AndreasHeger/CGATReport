@@ -272,7 +272,11 @@ class Dispatcher(Component):
             d = self.getData( path )
 
             # ignore empty data sets
-            if d == None: continue
+            try:
+                if d == None: continue
+            except TypeError:
+                # pandas dataframes can not be compared with None
+                pass
 
             # save in data tree as leaf
             DataTree.setLeaf( self.data, path, d )

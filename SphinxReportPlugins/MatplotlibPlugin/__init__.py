@@ -1,14 +1,16 @@
-from SphinxReport.Component import *
-from SphinxReport import Config, Utils
-
-import os, re
+import os
+import re
+import warnings
 
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 from matplotlib import _pylab_helpers
 from matplotlib.cbook import exception_to_str
-import warnings
+import seaborn
+
+from SphinxReport.Component import *
+from SphinxReport import Config, Utils
 
 class MatplotlibPlugin(Component):
 

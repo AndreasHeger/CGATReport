@@ -10,12 +10,14 @@ from collections import OrderedDict as odict
 from SphinxReport import Utils
 from SphinxReport import Stats
 
-from rpy2.robjects import r as R
-import rpy2.robjects as ro
-import rpy2.robjects.numpy2ri
-rpy2.robjects.numpy2ri.activate()
-import rpy2.robjects.lib.ggplot2 as ggplot2
-
+try:
+    from rpy2.robjects import r as R
+    import rpy2.robjects as ro
+    import rpy2.robjects.numpy2ri
+    rpy2.robjects.numpy2ri.activate()
+    import rpy2.robjects.lib.ggplot2 as ggplot2
+except ImportError:
+    R = None
 
 from docutils.parsers.rst import directives
 

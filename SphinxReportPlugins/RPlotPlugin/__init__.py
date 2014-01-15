@@ -3,10 +3,13 @@ from SphinxReport import Config, Utils
 
 import os, re
 
-from rpy2.robjects import r as R
-import rpy2.robjects as ro
-import rpy2.robjects.numpy2ri
-import rpy2.rinterface
+try:
+    from rpy2.robjects import r as R
+    import rpy2.robjects as ro
+    import rpy2.robjects.numpy2ri
+    import rpy2.rinterface
+except ImportError:
+    R = None
 
 import matplotlib.image as image
 
@@ -39,6 +42,9 @@ class RPlotPlugin(Component):
 
         returns a map of place holder to placeholder text.
         '''
+        
+        # disable plotting if no rpy installed
+        if R == None: return {}
 
         # path to build directory from rst directory
         rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )

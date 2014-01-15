@@ -1,23 +1,26 @@
 import os, sys, re, types, copy, warnings, inspect, logging, glob, gzip
 
+from collections import OrderedDict as odict
+import collections
+
 # Python 2/3 Compatibility
 try: import ConfigParser as configparser
 except: import configparser
 
 import numpy
-
+import pandas
 import sqlalchemy
 import sqlalchemy.exc as exc
 import sqlalchemy.engine
 
 # for rpy2 for data frames
-import rpy2
-from rpy2.robjects import r as R
+try:
+    import rpy2
+    from rpy2.robjects import r as R
+except ImportError:
+    R = None
 
 from SphinxReport import Utils
-
-from collections import OrderedDict as odict
-import collections
 
 class SQLError( Exception ):
     pass
@@ -557,6 +560,11 @@ class TrackerSQL( Tracker ):
         self.rconnect()
         return R.dbGetQuery(self.rdb, self.buildStatement(stmt) )
     
+    def getPandasDF( self, stmt ):
+        '''return results of SQL statement as an pandas dataframe.
+        '''
+        return pandas.DataFrame( self.get( stmt ) )
+
     def getPaths( self ):
          """return all paths this tracker provides.
 

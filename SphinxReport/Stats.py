@@ -11,9 +11,12 @@ except ValueError: scipy.stats = None
 
 import collections, itertools
 
-from rpy2.robjects import r as R
-import rpy2.robjects as ro
-import rpy2.robjects.numpy2ri
+try:
+    from rpy2.robjects import r as R
+    import rpy2.robjects as ro
+    import rpy2.robjects.numpy2ri
+except ImportError:
+    R = None
 
 from collections import OrderedDict as odict
 

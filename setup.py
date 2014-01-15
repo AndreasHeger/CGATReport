@@ -20,17 +20,18 @@ major, minor1, minor2, s, tmp = sys.version_info
 if major==2:
     extra_dependencies = [ 'web.py>=0.37',
                            'xlwt>=0.7.4', 
-                           'matplotlib-venn>=0.5' ]
+                           #'matplotlib-venn>=0.5' 
+			]
 elif major==3:
     extra_dependencies = []
 
 # Dependencies shared between python 2 and 3
 shared_dependencies = [
     'sphinx>=1.0.5',
-    'rpy2>=2.3.4',
+    #'rpy2>=2.3.4',
     'numpy>=1.7',
     'scipy>=0.11',
-    'matplotlib>=1.3.0', 
+    #'matplotlib>=1.3.0', 
     'sqlalchemy>=0.7.0', 
     'openpyxl>=1.5.7' ]
 
@@ -136,6 +137,7 @@ setup(name='SphinxReport',
             'render-glossary=SphinxReportPlugins.Renderer:Glossary',
             'render-status=SphinxReportPlugins.Renderer:Status',
             'render-line-plot=SphinxReportPlugins.Plotter:LinePlot',
+            'render-density-plot=SphinxReportPlugins.Plotter:DensityPlot',
             'render-histogram-plot=SphinxReportPlugins.Plotter:HistogramPlot',
             'render-histogram-gradient-plot=SphinxReportPlugins.Plotter:HistogramGradientPlot',
             'render-pie-plot=SphinxReportPlugins.Plotter:PiePlot',

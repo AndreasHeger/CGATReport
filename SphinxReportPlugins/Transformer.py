@@ -10,8 +10,11 @@ from SphinxReport import Stats, DataTree, Utils
 from docutils.parsers.rst import directives
 
 # for rpy2 for data frames
-import rpy2
-from rpy2.robjects import r as R
+try:
+    import rpy2
+    from rpy2.robjects import r as R
+except ImportError:
+    R = None
 
 # ignore numpy histogram warnings in versions 1.3
 import warnings

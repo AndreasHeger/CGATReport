@@ -51,7 +51,7 @@ def init_plugins():
         pkg_env = pkg_resources.Environment(sphinxreport_plugins)
     except NameError:
         pkg_env = pkg_resources.Environment()
-        
+
     plugins = collections.defaultdict( dict )
     for name in pkg_env:
         egg = pkg_env[name][0]
@@ -61,10 +61,11 @@ def init_plugins():
             entry_point = egg.get_entry_info(ENTRYPOINT, name)
             cls = entry_point.load()
             if not hasattr(cls, 'capabilities'):
-                cls.capabilities = []
-                
+               cls.capabilities = []
+               
             for c in cls.capabilities:
-                plugins[c][name] = cls
+               plugins[c][name] = cls
+
     if len(plugins) == 0:
         warn("did not find any plugins")
     else:
