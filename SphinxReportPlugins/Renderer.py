@@ -98,12 +98,13 @@ class Renderer(Component):
             if not work: continue
             if self.split_at:
                 k = list(work.keys())
+                # select tracks to always add to split 
+                if self.split_always:
+                    always = [ x for x, y in itertools.product( k, self.split_always) if re.search( y, x ) ]
+                    
                 for z, x in enumerate(range( 0, len(k), self.split_at)) :
                     if self.split_always:
-                        try:
-                            w = odict( [ (xx, work[xx]) for xx in self.split_always ] )
-                        except KeyError:
-                            raise ValueError("unknown track in always clause: %s" % self.split_always)
+                        w = odict( [ (xx, work[xx]) for xx in always ] )
                     else:
                         w = odict()
 

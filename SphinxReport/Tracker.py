@@ -1,4 +1,4 @@
-import os, sys, re, types, copy, warnings, inspect, logging, glob
+import os, sys, re, types, copy, warnings, inspect, logging, glob, gzip
 
 # Python 2/3 Compatibility
 try: import ConfigParser as configparser
@@ -969,6 +969,45 @@ class SingleTableTrackerEdgeList( TrackerSQL ):
         if self.transform: return self.transform(val)
         return val
 
+###########################################################################
+###########################################################################
+###########################################################################
+class MultipleTableTrackerEdgeList( TrackerSQL ):
+    '''Tracker representing multiple tables with matrix type data.
+
+    Returns a dictionary of values.
+
+    The tracks are given by table names mathing :py:attr:`pattern`.
+    '''
+    row = None
+    column = None
+    value = None
+    as_tables = True
+
+    def __init__(self, *args, **kwargs ):
+        TrackerSQL.__init__(self, *args, **kwargs )
+        
+    def __call__(self, track, slice = None ):
+        
+        if self.column == None:
+            raise ValueError('MultipleTrackerEdgeList requires a column field')
+        if self.row == None:
+            raise ValueError('MultipleTrackerEdgeList requires a row field')
+        if self.value == None:
+            raise ValueError('MultipleTrackerEdgeList requires a value field')
+
+        data = self.get( """SELECT %(row)s, %(column)s, %(value)s
+                            FROM %(track)s
+                            ORDER BY fdr,power""" )
+        result = odict()
+        for row, col, value in data:
+            try:
+                result[row][col] = value
+            except KeyError:
+                result[row] = odict()
+                result[row][col] = value
+
+        return result
 
 ###########################################################################
 ###########################################################################

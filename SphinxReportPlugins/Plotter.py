@@ -1922,7 +1922,9 @@ class PiePlot(Renderer, Plotter):
         # subtract others from total - rest
         if self.mFirstIsTotal:
             sorted_vals[0] -= sum(sorted_vals[1:])
-            if sorted_vals[0] < 0: raise ValueError( "option first-is-total used, but first < rest" )
+            if sorted_vals[0] < 0: 
+                raise ValueError( "option first-is-total used, but first (%i) < rest (%i)" % \
+                                      (sorted_vals[0]+ sum(sorted_vals[1:]), sum(sorted_vals[1:]) ) )
             labels[0] = self.mFirstIsTotal
 
         return self.endPlot( plt.pie( sorted_vals, labels = labels ), None, path )
