@@ -86,7 +86,9 @@ class Counter(object):
     calls = property(getCalls)
     running = property(getRunning)
 
-def main():
+def main( argv = None ):
+
+    if argv == None: argv = sys.argv
 
     parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE )
 

@@ -28,10 +28,10 @@ elif major==3:
 # Dependencies shared between python 2 and 3
 shared_dependencies = [
     'sphinx>=1.0.5',
-    #'rpy2>=2.3.4',
+    'rpy2>=2.3.4',
     'numpy>=1.7',
     'scipy>=0.11',
-    #'matplotlib>=1.3.0', 
+    'matplotlib>=1.3.0', 
     'sqlalchemy>=0.7.0', 
     'openpyxl>=1.5.7' ]
 

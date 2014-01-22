@@ -7,7 +7,6 @@ from SphinxReport import Utils
 # Python 3 - bsddb.db not available
 # import bsddb.db
 
-
 def tracker2key( tracker ):
     '''derive cache filename from a tracker.'''
 
@@ -92,7 +91,7 @@ class Cache( Component ):
         try:
             if key in self._cache: 
                 result = self._cache[key]
-                if result != None:
+                if result is not None:
                     self.debug( "retrieved data for key '%s' from cache" % (key) )
                 else:
                     self.warn( "retrieved None data for key '%s' from cache" % (key ))
@@ -113,7 +112,9 @@ class Cache( Component ):
         '''save data in cache.
         '''
 
-        if self._cache != None:
+        if self._cache is not None:
+            # do not store data frames in cache until
+            # best method is clear
             try:
                 self._cache[key] = data
                 self.debug( "saved data for key '%s' in cache" % key )

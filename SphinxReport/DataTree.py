@@ -3,6 +3,7 @@ from logging import warn, log, debug, info
 
 from collections import OrderedDict as odict
 from SphinxReport import Utils
+import pandas
 
 def unique( iterables ):
     s = set()
@@ -178,6 +179,54 @@ class DataTree( object ):
     def __setattr__(self, name, value):
         setattr(self._data, name, value) 
 
+def asDataSeries( data ):
+    '''return data tree as a pandas series.
+    
+    The series is multi-indexed.
+    '''
+
+    # build multi-index
+    labels = getPaths( data )
+    
+    leaves = list(getNodes( data, len(labels) -1 ))
+
+    index_tuples = []
+    
+    leaf = leaves[0][1]
+
+    if Utils.isArray( leaf ):
+        # build dataframe from array
+        df_data = []
+        for path, leaf in leaves:
+            index_tuples.extend( [path] * len(leaf))
+            df_data.extend( leaf )
+        index = pandas.MultiIndex.from_tuples( index_tuples )
+        df = pandas.Series( df_data, index = index )
+
+    elif Utils.isDataFrame( leaf ):
+        # build dataframe from list of dataframes
+        # dataframes are not stacked
+        dataframes = []
+        for path, dataframe in leaves:
+            dataframes.append( dataframe )
+            index_tuples.append( [path] )
+        df = pandas.concat( dataframes, keys = index_tuples)
+
+    else:
+        branches = list(getNodes( data, max(0, len(labels)-3 )) )
+        dataframes = []
+        for path, dct in branches:
+            # transpose to invert columns and rows
+            # in sphinxreport convention, the most nested
+            # level in a dictionary are columns, while
+            # in pandas they are rows.
+            df = pandas.DataFrame( dct ).transpose()
+            df = df.stack()
+            dataframes.append( df )
+            index_tuples.extend( [path] )
+        df = pandas.concat( dataframes, keys = index_tuples)
+
+    return df
 
 def getPaths( work ):
     '''extract labels from data.
@@ -192,6 +241,8 @@ def getPaths( work ):
     while 1:
         l, next_level = [], []
         for x in [ x for x in this_level if hasattr( x, "keys")]:
+            # ignore data frame for path calculation
+            if isinstance( x, pandas.DataFrame ): break
             l.extend( list(x.keys()) )
             next_level.extend( list(x.values()) )
         if not l: break
@@ -200,6 +251,24 @@ def getPaths( work ):
 
     return labels
 
+def getNodes( work, level = 0):
+    '''iterate over all nodes at a certain depth.
+    in nested dictionary work.
+
+    yields path, value items
+    '''
+
+    stack = collections.deque( [ ( (), 0, x) for x in work.items()] )
+
+    # BFS
+    while stack:
+        p, l, kv = stack.popleft()
+        k, v = kv
+        n = p + (k,)
+        if l == level: yield (n,v)
+        if isinstance(v, dict):
+            stack.extend([ (n, l + 1, x) for x in v.iteritems()] )
+            
 def getLeaf( work, path ):
     '''get leaf/branch at *path*.'''
     for x in path:
@@ -352,6 +421,9 @@ def removeEmptyLeaves( work ):
     # return True if not empty
     # numpy arrays do not test True if they contain
     # elements.
+    if isinstance( work, pandas.DataFrame ):
+        return len(work) > 0
+
     try:
         return work != "" or work != None
     except ValueError:
@@ -438,7 +510,10 @@ def tree2table( data, transpose = False, head = None ):
 
             # get data - skip if there is None
             work = getLeaf( data, (row,) + path )
-            if not work: continue
+            if isinstance( work, pandas.DataFrame ):
+                if work.empty: continue
+            else:
+                if not work: continue
 
             row_data = [""] * ncols
 

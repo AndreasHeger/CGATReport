@@ -13,7 +13,12 @@ from SphinxReport.Component import *
 from SphinxReport import Utils, DataTree
 from SphinxReport import CorrespondenceAnalysis
 
+import StringIO
+
 from docutils.parsers.rst import directives
+
+import pandas
+import pandas.core.reshape
 
 # for output of work books
 # import xlwt
@@ -71,10 +76,7 @@ class Renderer(Component):
         else:
             self.split_always = None
 
-    def __call__(self):
-        return None
-
-    def __call__(self, data, path ):
+    def __call__(self, dataseries, path ):
         '''iterate over leaves/branches in data structure.
 
         This method will call the :meth:`render` method for 
@@ -82,44 +84,50 @@ class Renderer(Component):
         '''
         if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
-        result = ResultBlocks( title = path2str(path) )
+        try:
+            labels = dataseries.index.levels
+            paths = dataseries.index.unique()
+        except AttributeError:
+            labels = ['dummy1'] 
+            paths = ['dummy1']
 
-        labels = DataTree.getPaths( data )
+        result = ResultBlocks()
+
         if len(labels) < self.nlevels:
             self.warn( "at %s: expected at least %i levels - got %i: %s" %\
                            (str(path), self.nlevels, len(labels), str(labels)) )
             result.append( EmptyResultBlock( title = path2str(path) ) )
             return result
 
-        paths = list(itertools.product( *labels[:-self.nlevels] ))
+        result.extend( self.render( dataseries, path ) )
 
-        for p in paths:
-            work = DataTree.getLeaf( data, p )
-            if not work: continue
-            if self.split_at:
-                k = list(work.keys())
-                # select tracks to always add to split 
-                if self.split_always:
-                    always = [ x for x, y in itertools.product( k, self.split_always) if re.search( y, x ) ]
+        # for p in paths:
+        #     work = DataTree.getLeaf( data, p )
+        #     if not work: continue
+        #     if self.split_at:
+        #         k = list(work.keys())
+        #         # select tracks to always add to split 
+        #         if self.split_always:
+        #             always = [ x for x, y in itertools.product( k, self.split_always) if re.search( y, x ) ]
                     
-                for z, x in enumerate(range( 0, len(k), self.split_at)) :
-                    if self.split_always:
-                        w = odict( [ (xx, work[xx]) for xx in always ] )
-                    else:
-                        w = odict()
+        #         for z, x in enumerate(range( 0, len(k), self.split_at)) :
+        #             if self.split_always:
+        #                 w = odict( [ (xx, work[xx]) for xx in always ] )
+        #             else:
+        #                 w = odict()
 
-                    w.update( odict( [ (xx, work[xx]) for xx in k[x:x+self.split_at] ] ) )
-                    try:
-                        result.extend( self.render( w, path + p + (str(z),) ) )
-                    except:
-                        self.warn("exeception raised in rendering for path: %s" % str(path+p+str((z,))))
-                        raise 
-            else:
-                try:
-                    result.extend( self.render( work, path + p ) )
-                except:
-                    self.warn("exeception raised in rendering for path: %s" % str(path+p))
-                    raise 
+        #             w.update( odict( [ (xx, work[xx]) for xx in k[x:x+self.split_at] ] ) )
+        #             try:
+        #                 result.extend( self.render( w, path + p + (str(z),) ) )
+        #             except:
+        #                 self.warn("exeception raised in rendering for path: %s" % str(path+p+str((z,))))
+        #                 raise 
+        #     else:
+        #         try:
+        #             result.extend( self.render( work, path + p ) )
+        #         except:
+        #             self.warn("exeception raised in rendering for path: %s" % str(path+p))
+        #             raise 
             
         return result
 
@@ -152,7 +160,7 @@ class TableBase( Renderer ):
         self.max_rows = kwargs.get( "max-rows", 50 )
         self.max_cols = kwargs.get( "max-cols", 20 )
 
-    def asFile( self, matrix, row_headers, col_headers, title ):
+    def asFile( self, dataframe, row_headers, col_headers, title ):
         '''save the table as HTML file.
 
         Multiple files of the same Renderer/Tracker combination are distinguished 
@@ -167,13 +175,17 @@ class TableBase( Renderer ):
                      (len(row_headers), len(col_headers),
                       title) )
 
+        out = StringIO.StringIO()
+        dataframe.to_csv( out )
+        lines = out.getvalue().split("\n")            
 
         r = ResultBlock( "\n".join(lines) + "\n", title = title)
+
         # create an html table
         data = ["<table>"]
-        data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( map(str,col_headers)) )
-        for h, row in zip( row_headers, matrix):
-            data.append( "<tr><th>%s</th><td>%s</td></tr>" % (h, "</td><td>".join(map(str,row)) ))
+        data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( map(str,lines[0])) )
+        data.extend( ["<tr><td>%s</td></tr>" % \
+                          ("</td><td>".join(x.split(","))) for x in lines[1:]] )
         data.append( "</table>\n" )
 
         # substitute links
@@ -242,7 +254,7 @@ class Table( TableBase ):
           ('large', directives.unchanged),
           ('preview', directives.unchanged) )
 
-    nlevels = 2
+    nlevels = -1
 
     transpose = False
 
@@ -255,41 +267,6 @@ class Table( TableBase ):
         self.preview = "preview" in kwargs
         self.add_percent = kwargs.get( 'add-percent', None )
         self.head = int( kwargs.get( 'head', 0 ) )
-
-    def getHeaders( self, data ):
-        """return a list of headers and a mapping of header to column.
-        """
-        # preserve the order of columns
-        column_headers = {}
-        sorted_headers = []
-
-        try:
-            for row, r in data.items():
-                for column, c in r.items():
-                     for header, value in c.items():
-                        if header not in column_headers: 
-                            column_headers[header] = len(column_headers)
-                            sorted_headers.append(header)
-        except AttributeError:
-            raise ValueError("mal-formatted data - Table expected three level dictionary, got %s." % str(data) )
-
-        return sorted_headers, column_headers
-
-
-    def buildTable( self, data ):
-        """build table from data.
-
-        If there is more than one column, additional subrows
-        are added for each.
-
-        If each cell within a row is a list or tuple, multiple
-        subrows will be created as well.
-
-        returns matrix, row_headers, col_headers
-        """
-        matrix, row_headers, col_headers = tree2table( data, self.transpose, 
-                                                       head = self.head )
-        return matrix, row_headers, col_headers
 
     def modifyTable( self, matrix, row_headers, col_headers ):
         '''modify table if required, for example adding percentages.'''
@@ -327,29 +304,30 @@ class Table( TableBase ):
 
         return matrix, row_headers, col_headers
 
-    def __call__(self, data, path):
+    def __call__(self, dataseries, path):
         
-        # build table from data. Note that these are not numpy matrixes but 
-        # list of lists to accomodate a mixture of data types.
-        matrix, row_headers, col_headers = self.buildTable( data )
-
         # modify table (adding/removing columns) according to user options
-        matrix, row_headers, col_headers = self.modifyTable( matrix, row_headers, col_headers )
+        # matrix, row_headers, col_headers = self.modifyTable( matrix, row_headers, col_headers )
 
         title = path2str(path)
 
-        if matrix == None: 
-            return ResultBlocks( ResultBlock( "\n".join(lines), title = title) )
-
         results = ResultBlocks()
+        try:
+            dataframe = dataseries.unstack()
+        except pandas.core.reshape.ReshapeError:
+            dataframe = pandas.DataFrame(dataseries)
+
+        row_headers = dataframe.index
+        col_headers = dataframe.columns
 
         # do not output large matrices as rst files
         if self.separate or (not self.force and 
-                             (len(row_headers) > self.max_rows or len(col_headers) > self.max_cols)):
+                             (len(row_headers) > self.max_rows or 
+                              len(col_headers) > self.max_cols)):
             if self.large == "xls":
-                results.append( self.asSpreadSheet( matrix, row_headers, col_headers, title ) )
+                results.append( self.asSpreadSheet( dataframe, row_headers, col_headers, title ) )
             else:
-                results.append( self.asFile( matrix, row_headers, col_headers, title ) )
+                results.append( self.asFile( dataframe, row_headers, col_headers, title ) )
 
             if self.preview:
                 row_headers = row_headers[:self.max_rows]
@@ -357,11 +335,13 @@ class Table( TableBase ):
                 matrix = [ x[:self.max_cols] for x in matrix[:self.max_rows] ]
             else:
                 return results
-            
+
+        out = StringIO.StringIO()
+        dataframe.to_csv( out )
         lines = []
         lines.append( ".. csv-table:: %s" % title )
         lines.append( "   :class: sortable" )
-
+        
         if self.add_rowindex:
             lines.append( '   :header: "row", "", "%s" ' % '","'.join( map(str, col_headers) ) )
             lines.append( '' )
@@ -372,11 +352,10 @@ class Table( TableBase ):
                 lines.append( '   %i,"%s","%s"' % (x, str(header), '","'.join( map(str, line) ) ) )
 
         else:
-            lines.append( '   :header: "", "%s" ' % '","'.join( map(str, col_headers) ) )
+            l = out.getvalue().split("\n")            
+            lines.append( '   :header: %s' % l[0] )
             lines.append( '' )
-
-            for header, line in zip( row_headers, matrix ):
-                lines.append( '   "%s","%s"' % (str(header), '","'.join( map(str, line) ) ) )
+            lines.extend( ['   %s' % x for x in l[1:] ] )
 
         lines.append( "") 
         
@@ -506,12 +485,12 @@ class MatrixBase:
             "sort" : self.transformSort,
         }
         
-        self.mConverters = []        
+        self.converters = []        
         if "transform-matrix" in kwargs:
             for kw in [x.strip() for x in kwargs["transform-matrix"].split(",")]:
                 if kw.startswith( "normalized" ): self.format = "%6.4f"
                 try:
-                    self.mConverters.append( self.mMapKeywordToTransform[ kw ] )
+                    self.converters.append( self.mMapKeywordToTransform[ kw ] )
                 except KeyError:
                     raise ValueError("unknown matrix transformation %s, possible values are: %s" \
                                          % (kw, ",".join( sorted(self.mMapKeywordToTransform.keys()) ) ) )
@@ -758,6 +737,7 @@ class MatrixBase:
         results = ResultBlocks( title = path )
 
         matrix, rows, columns = self.buildMatrix( work )
+        
         title = path2str(path)
 
         if len(rows) == 0:
@@ -806,7 +786,7 @@ class TableMatrix(TableBase, MatrixBase):
         MatrixBase.__init__(self, *args, **kwargs )
 
     def buildMatrix( self, 
-                     work, 
+                     dataseries, 
                      missing_value = 0, 
                      apply_transformations = True,
                      take = None,
@@ -824,72 +804,80 @@ class TableMatrix(TableBase, MatrixBase):
         This method will also apply conversions if apply_transformations
         is set.
         """
-        labels = DataTree.getPaths( work )
-        levels = len(labels)
 
-        rows, columns = labels[:2]
+        dataframe = dataseries.unstack()
+        rows = list(dataframe.index)
+        columns = list(dataframe.columns)
 
-        if ignore != None: 
-            columns = [x for x in columns if x not in ignore ]
+        matrix = dataframe.as_matrix() 
 
-        # if take is specified, this takes priority
-        if take:
-            if levels == 3: 
-                if take not in labels[-1]: raise ValueError( "no data on `%s`" % take )
-                take_f = lambda row,column: work[row][column][take]
-            elif levels == 2:
-                take_f = lambda row,column: work[row][take]
-                columns = [take]
-            else:
-                raise ValueError( "expected two or three levels, got %i: '%s'" % (levels, labels) )
-        else:
-            if levels == 3:
-                take = [ x for x in labels[-1] if x not in ignore ]
-                if len(take) != 1:
-                    self.warn( "received data with three level, but third level is ambiguous, taking first of: %s" % take)
-                take=take[0]
-                take_f = lambda row, column: work[row][column][take]
-            elif levels == 2: 
-                take_f = lambda row,column: work[row][column]
-            else:
-                raise ValueError( "expected two levels, got %i: %s" % (levels, str(labels) ))
-
-        self.debug("creating matrix: taking=%s, ignoring=%s" % (take,ignore))
-        matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), dtype )
-        matrix.shape = (len(rows), len(columns) )
-        self.debug("constructing matrix")
-        for x,row in enumerate(rows):
-            for y, column in enumerate(columns):
-                # missing values from DataTree
-                try:
-                    v = take_f( row, column )
-                except KeyError:
-                    continue
-
-                # empty values from DataTree
-                try:
-                    if len(v) == 0: continue
-                except TypeError:
-                    pass
-
-                # convert
-                try:
-                    matrix[x,y] = v
-                except ValueError as msg:
-                    raise ValueError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]),msg) )
-                except TypeError as msg:
-                    raise TypeError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]), msg) )
-        
-        if self.mConverters and apply_transformations:
-            for converter in self.mConverters: 
+        if self.converters and apply_transformations:
+            for converter in self.converters: 
                 self.debug("applying converter %s" % converter)
                 matrix, rows, columns = converter(matrix, rows, columns)
 
         # convert rows/columns to str (might be None)
         rows = [ str(x) for x in rows ]
         columns = [ str(x) for x in columns ]
-
+        
         return matrix, rows, columns
+
+        # labels = DataTree.getPaths( work )
+        # levels = len(labels)
+
+        # rows, columns = labels[:2]
+
+        # if ignore != None: 
+        #     columns = [x for x in columns if x not in ignore ]
+
+        # # if take is specified, this takes priority
+        # if take:
+        #     if levels == 3: 
+        #         if take not in labels[-1]: raise ValueError( "no data on `%s`" % take )
+        #         take_f = lambda row,column: work[row][column][take]
+        #     elif levels == 2:
+        #         take_f = lambda row,column: work[row][take]
+        #         columns = [take]
+        #     else:
+        #         raise ValueError( "expected two or three levels, got %i: '%s'" % (levels, labels) )
+        # else:
+        #     if levels == 3:
+        #         take = [ x for x in labels[-1] if x not in ignore ]
+        #         if len(take) != 1:
+        #             self.warn( "received data with three level, but third level is ambiguous, taking first of: %s" % take)
+        #         take=take[0]
+        #         take_f = lambda row, column: work[row][column][take]
+        #     elif levels == 2: 
+        #         take_f = lambda row,column: work[row][column]
+        #     else:
+        #         raise ValueError( "expected two levels, got %i: %s" % (levels, str(labels) ))
+
+        # self.debug("creating matrix: taking=%s, ignoring=%s" % (take,ignore))
+        # matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), dtype )
+        # matrix.shape = (len(rows), len(columns) )
+        # self.debug("constructing matrix")
+        # for x,row in enumerate(rows):
+        #     for y, column in enumerate(columns):
+        #         # missing values from DataTree
+        #         try:
+        #             v = take_f( row, column )
+        #         except KeyError:
+        #             continue
+
+        #         # empty values from DataTree
+        #         try:
+        #             if len(v) == 0: continue
+        #         except TypeError:
+        #             pass
+
+        #         # convert
+        #         try:
+        #             matrix[x,y] = v
+        #         except ValueError as msg:
+        #             raise ValueError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]),msg) )
+        #         except TypeError as msg:
+        #             raise TypeError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]), msg) )
+        
 
 # for compatibility
 Matrix = TableMatrix
@@ -948,7 +936,7 @@ class NumpyMatrix( TableBase, MatrixBase ):
         try: rows = work["rows"]
         except KeyError: raise KeyError( "expected rownames in field 'rows' - no 'rows' present: %s " % \
                                              str(list(work.keys()) ))
-
+        
         try: columns = work["columns"]
         except KeyError: raise KeyError( "expected column names in field 'columns' - no 'columns' present: %s " % \
                                              str(list(work.keys())) )
@@ -969,8 +957,8 @@ class NumpyMatrix( TableBase, MatrixBase ):
         rows = [ str(x) for x in rows ]
         columns = [ str(x) for x in columns ]
 
-        if self.mConverters and apply_transformations:
-            for converter in self.mConverters: 
+        if self.converters and apply_transformations:
+            for converter in self.converters: 
                 self.debug("applying converter %s" % converter)
                 matrix, rows, columns = converter(matrix, rows, columns)
         
@@ -982,29 +970,16 @@ class Debug( Renderer ):
     # only look at leaves
     nlevels = 1
 
-    def render( self, work, path ):
+    def render( self, dataseries, path ):
         
         # initiate output structure
         results = ResultBlocks( title = path )
 
         # iterate over all items at leaf
-        for key in work:
-            t = type(work[key])
-
-            try:
-                l = "%i" % len(work[key])
-            except AttributeError:
-                l = "na"
-            except TypeError:
-                l = "na"
-                
-            # add a result block.
-            data = str(work[key])
-            if len(data) > 30: data=data[:30] + "..."
-            results.append( ResultBlock( "path= %s, type= %s, len= %s, data= %s" % \
-                                             ( path2str(path + (key,)),
-                                               t, l, data), 
-                                         title = "") )
+        results.append( ResultBlock( "path= %s, data= %s" % \
+                                         ( path2str(path),
+                                           dataseries), 
+                                     title = "") )
 
         return results
         

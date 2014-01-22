@@ -9,7 +9,9 @@ USAGE="""%s [OPTIONS]
 set up an new sphinxreport in the current directory.
 """ % sys.argv[0]
 
-def main( argv = sys.argv ):
+def main( argv = None ):
+
+    if argv == None: argv = sys.argv
 
     parser = optparse.OptionParser( version = "%prog version: $Id$", usage = USAGE)
 

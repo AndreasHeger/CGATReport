@@ -6,6 +6,8 @@ from SphinxReport.Component import *
 from SphinxReport import Utils
 from SphinxReport import Cache
 
+import numpy
+
 VERBOSE=True
 # maximimum number of levels in data tree
 MAX_PATH_NESTING=5
@@ -116,7 +118,7 @@ class Dispatcher(Component):
         if self.tracker_options:
             kwargs['options'] = self.tracker_options
         
-        if result == None:
+        if result is None:
             try:
                 result = self.tracker( *path, **kwargs )
             except Exception as msg:
@@ -126,7 +128,10 @@ class Dispatcher(Component):
                 if VERBOSE: self.warn( traceback.format_exc() )
                 raise
         
+        # store in cache 
         if not self.nocache and not fromcache:
+            # exception - do not store data frames
+            # test with None fails for some reason
             self.cache[key] = result
 
         return result
@@ -156,7 +161,7 @@ class Dispatcher(Component):
             
             # if tracks specified and no tracks found - return
             # no data paths.
-            if tracks == None or len(tracks) == 0:
+            if tracks is None or len(tracks) == 0:
                 return False, []
 
             data_paths = [ tracks ]
@@ -173,7 +178,7 @@ class Dispatcher(Component):
         # 3. Replace sets and other non-containers with lists
         to_remove = []
         for x,y in enumerate(data_paths):
-            if y == None or len(y) == 0: 
+            if y is None or len(y) == 0: 
                 to_remove.append(x)
                 continue
             if isinstance( y, str): data_paths[x]=[y,]
@@ -272,11 +277,7 @@ class Dispatcher(Component):
             d = self.getData( path )
 
             # ignore empty data sets
-            try:
-                if d == None: continue
-            except TypeError:
-                # pandas dataframes can not be compared with None
-                pass
+            if d is None: continue
 
             # save in data tree as leaf
             DataTree.setLeaf( self.data, path, d )
@@ -433,9 +434,10 @@ class Dispatcher(Component):
             renderer_nlevels = self.renderer.nlevels
         except AttributeError:
             renderer_nlevels = 0
-        
+
+        # With data frames: Prune always
         # do not prune for renderers that want all data
-        if renderer_nlevels < 0: return
+        # if renderer_nlevels < 0: return
 
         levels_to_prune = []
 
@@ -449,7 +451,7 @@ class Dispatcher(Component):
                 keep = False
                 for prefix in prefixes:
                     leaves = DataTree.getLeaf( self.data, prefix )
-                    if leaves == None: continue
+                    if leaves is None: continue
                     if len(leaves) > 1 or label not in leaves:
                         keep = True
                         break
@@ -481,17 +483,25 @@ class Dispatcher(Component):
         except AttributeError:
             renderer_nlevels = 0
 
-        data_paths = DataTree.getPaths( self.data )
-        nlevels = len(data_paths)
+        # convert to data series
+        # The data is melted, i.e,
+        # BMW    price    10000
+        # BMW    speed    100
+        # Golf   price    5000
+        # Golf   speed    50    
+        dataseries = DataTree.asDataSeries( self.data )
 
+        index = dataseries.index
+        nlevels = len(index.levels)
+        
         group_level = self.group_level
 
         self.debug( "%s: rendering data started. levels=%i, required levels>=%i, group_level=%i, data_paths=%s" %\
                         (self, nlevels, 
                          renderer_nlevels,
-                         group_level,
-                         str(data_paths)[:100]))
-
+                         group_level, 
+                         str(index)) )
+        
         if nlevels < renderer_nlevels:
             # add some dummy levels if levels is not enough
             d = self.data
@@ -501,26 +511,24 @@ class Dispatcher(Component):
 
         elif group_level < 0 or renderer_nlevels < 0:
             # no grouping
-            results.append( self.renderer( self.data, path = () ) )
+            results.append( self.renderer( dataseries, path = () ) )
         else:
-            # group at level group_level
-            paths = list(itertools.product( *data_paths[:group_level+1] ))
+            # used to be: group_level + 1
+            # levels[:-renderer_nlevels] ) )
+            paths = numpy.unique( [ x[:-renderer_nlevels] for x in dataseries.index.unique() ] )
             for path in paths:
-                work = DataTree.getLeaf( self.data, path )
-                if not work: continue
                 try:
-                    results.append( self.renderer( work, path = path ))
+                    results.append( self.renderer( dataseries.ix[path], 
+                                                   path = path ))
                 except:
                     self.error( "%s: exception in rendering" % self )
                     results.append( ResultBlocks( Utils.buildException( "rendering" ) ) )
 
         if len(results) == 0:
-            self.warn("tracker returned no data.")
-            raise ValueError( "tracker returned no data." )
+            self.warn("renderer returned no data.")
+            raise ValueError( "renderer returned no data." )
 
         self.debug( "%s: rendering data finished with %i blocks" % (self.tracker, len(results)))
-
-
 
         return results
 

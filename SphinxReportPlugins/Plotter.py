@@ -1029,7 +1029,7 @@ class LinePlot( Renderer, Plotter ):
         # data to use for Y error bars
         self.yerror = "yerror" in kwargs
 
-    def initPlot(self, fig, work, path ): 
+    def initPlot(self, fig, dataseries, path ): 
 
         '''initialize plot.'''
  
@@ -1054,9 +1054,8 @@ class LinePlot( Renderer, Plotter ):
         return color, linestyle, marker
         
     def addData( self, 
-                 line, label,
-                 xlabel, ylabel,
                  xvals, yvals, 
+                 xlabel, ylabel,
                  nplotted,
                  yerrors = None):
         
@@ -1079,8 +1078,8 @@ class LinePlot( Renderer, Plotter ):
                                          linestyle = linestyle,
                                          marker = marker ) )
             
-        self.ylabels.append(ylabel)
-        self.xlabels.append(xlabel)
+        self.ylabels.append(path2str(ylabel))
+        self.xlabels.append(path2str(xlabel))
 
     def initLine( self, line, data ):
         '''hook for code working on a line.'''
@@ -1095,10 +1094,6 @@ class LinePlot( Renderer, Plotter ):
         keys = list(coords.keys())
         return keys[0], keys[1:]
 
-    def finishLine( self, line, data ):
-        '''hook called after all lines have been processed.'''
-        pass
-
     def finishCoords( self, label, coords ):
         '''hook called after all coords have been processed.'''
         pass
@@ -1108,63 +1103,40 @@ class LinePlot( Renderer, Plotter ):
         plt.xlabel( "-".join( set(self.xlabels) ) )
         plt.ylabel( "-".join( set(self.ylabels) ) )
         
-    def render(self, work, path ):
-        
+    def render(self, dataseries, path ):
+
         fig = self.startPlot()
+        
+        paths = dataseries.index.unique()
 
-        # add a default line if there are no lines
-        labels = DataTree.getPaths( work )
-        if len(labels) == 2: work = odict( (("", work),) )
-
-        self.initPlot( fig, work, path )
+        self.initPlot( fig, dataseries, path )
 
         nplotted = 0
 
-        for line, data in work.items():
+        for idx in range( 0, len(paths), 2):
+
+            self.initLine( path, dataseries )
+
+            xpath = paths[idx]
+            ypath = paths[idx+1]
+
+            xvalues, yvalues = dataseries.ix[xpath], dataseries.ix[ypath]
+
+            if len(xvalues) != len(yvalues): 
+                raise ValueError( "length of x,y tuples not consistent: (%s) %i != (%s) %i" % \
+                                      (xpath,
+                                       len(xvalues), 
+                                       ypath,
+                                       len(yvalues)))
+
+            self.initCoords( xvalues, yvalues )
+
+            self.addData( xvalues, yvalues,
+                          xpath, ypath,
+                          nplotted )
+            nplotted += 1
             
-            self.initLine( line, data )
-
-            for label, coords in data.items():
-
-                # sanity check on data
-                try: keys = list(coords.keys())
-                except AttributeError:
-                    self.warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
-                    continue
-                
-                if len(keys) <= 1:
-                    self.warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
-                    continue
-
-                xlabel, ylabels = self.initCoords( label, coords)
-                xvals = coords[xlabel]
-                
-                if self.yerror:
-                    yerrors = [ ylabels[x] for x in range(1, len(ylabels), 2) ]
-                    ylabels = [ ylabels[x] for x in range(0, len(ylabels), 2) ]
-                else:
-                    yerrors = [ None ] * len( ylabels ) 
-                    
-                for ylabel, yerror in zip(ylabels, yerrors):
-                    yvals = coords[ylabel]
-                    if yerror: yerror = coords[yerror]
-                    self.addData( line, label, xlabel, ylabel, xvals, yvals, 
-                                  nplotted,
-                                  yerrors = yerror )
-                    nplotted += 1
-
-                    if len(ylabels) > 1:
-                        self.legend.append( "/".join((list(map(str, (line,label,ylabel))))))
-                    else:
-                        self.legend.append( "/".join((list(map(str, (line,label))) )))
-                                
-                self.xlabels.append(xlabel)
-
-                self.finishCoords( label, coords)
-
-            self.finishLine( line, data )
-            
-        self.finishPlot( fig, work, path )
+        self.finishPlot( fig, dataseries, path )
 
         return self.endPlot( self.plots, self.legend, path )
         
@@ -1194,52 +1166,43 @@ class HistogramPlot(LinePlot):
         try: self.error = kwargs["error"]
         except KeyError: pass
 
-    def initPlot( self, fig, work, path ):
-        LinePlot.initPlot( self, fig, work, path )
-        self.alpha = 1.0 / len(work)        
+    def initPlot( self, fig, dataseries, path ):
+        LinePlot.initPlot( self, fig, dataseries, path )
         
-    def initCoords( self, label, coords ):
+        self.alpha = 1.0 / len(dataseries.index)
+
+    def initCoords( self, xvalues, yvalues ):
         '''collect error coords and compute bar width.'''
 
-        # get and transform x/y values
-        keys = list(coords.keys()) 
-
-        xlabel, ylabels = keys[0], keys[1:]
-
-        # locate error bars
-        if self.error and self.error in coords:
-            self.yerr = coords[self.error]
-            ylabels = [ x for x in ylabels if x == self.error ]
-        else:
-            self.yerr = None
+        self.yerr = None
+        # # locate error bars
+        # if self.error and self.error in coords:
+        #     self.yerr = coords[self.error]
+        #     ylabels = [ x for x in ylabels if x == self.error ]
+        # else:
+        #     self.yerr = None
         
-        xvals = coords[xlabel]  
-
         # compute bar widths
         widths = []
-        w = xvals[0]
-        for x in xvals[1:]:
+        w = xvalues[0]
+        for x in xvalues[1:]:
             widths.append( x-w )
             w=x
         widths.append( widths[-1] )
+
         self.widths = widths
-
-        self.xvals = xvals
-
-        return xlabel, ylabels
+        self.xvals = xvalues
 
     def addData( self, 
-                 line, 
-                 label,
-                 xlabel, 
-                 ylabel,
                  xvals, 
                  yvals, 
+                 xlabel, 
+                 ylabel,
                  nplotted,
                  yerrors = None ):
         
-        self.plots.append( plt.bar( xvals,
-                                    yvals,
+        self.plots.append( plt.bar( list(xvals),
+                                    list(yvals),
                                     width = self.widths,
                                     alpha = self.alpha,
                                     yerr = self.yerr,
@@ -1296,6 +1259,7 @@ class HistogramGradientPlot(LinePlot):
         ymin, ymax = None, None
         nrows = 0
         self.xvals = None
+
         for line, data in work.items():
 
             for label, coords in data.items():
@@ -1475,67 +1439,48 @@ class BarPlot( TableMatrix, Plotter):
         for xval, yval, label in zip(xvals,yvals,labels):
             ax.text(xval, yval, label, transform=trans)
 
-    def buildMatrices( self, work ):
+    def buildMatrices( self, dataseries ):
         '''build matrices necessary for plotting.
 
         If a matrix only contains a single row, the matrix
         is transposed.
         '''
 
+        dataframe = dataseries.unstack()
+
         self.error_matrix = None
         self.label_matrix = None
         self.colour_matrix = None
         self.transparency_matrix = None
 
+        if self.error:
+            self.error_matrix = dataframe[self.error].unstack().as_matrix()
+        elif self.label:
+            self.label_matrix = dataframe[self.label].unstack().as_matrix()
+        elif self.colour:
+            self.colour_matrix = dataframe[self.label].unstack().as_matrix()
+        elif self.transparency:
+            self.transparency_matrix = dataframe[transparancy].unstack().as_matrix()
+            
         if self.error or self.label or self.colour or self.transparency:
-            labels = DataTree.getPaths( work )
-            ignore = set()
-            if self.error and self.error in labels[-1]:
-                self.error_matrix, rows, colums = self.buildMatrix( work, 
-                                                                    apply_transformations = False, 
-                                                                    take = self.error
-                                                                    )
-                ignore.add( self.error )
+            # remove the special columns
+            dataframe = dataframe[ [ x for x in dataframe.columns \
+                                         if x not in (self.error, self.label,
+                                                      self.colour, self.transparency) ] ]
+        
+        # take first of the remaining columns ignoring the rest
+        try:
+            df = dataframe[dataframe.columns[0]].unstack()
+        except AttributeError:
+            # is not a multi-index object, no need to unstack
+            df = dataframe
 
-            if self.label and self.label in labels[-1]:
-                self.label_matrix, rows, colums = self.buildMatrix( work, 
-                                                                    apply_transformations = False, 
-                                                                    missing_value = "",
-                                                                    take = self.label,
-                                                                    dtype = "S20",
-                                                                    )
-                ignore.add( self.label )
+        self.rows = list(df.index)
+        self.columns = list(df.columns)
+        self.data_matrix = df.as_matrix()
 
-            if self.colour and self.colour in labels[-1]:
-                self.colour_matrix, rows, colums = self.buildMatrix( work, 
-                                                                     apply_transformations = False, 
-                                                                     missing_value = "",
-                                                                     take = self.colour,
-                                                                     dtype = "S20",
-                                                                     )
-                ignore.add( self.colour)
-                
-
-            if self.transparency and self.transparency in labels[-1]:
-                self.transparency_matrix, rows, colums = self.buildMatrix( work, 
-                                                                           apply_transformations = False, 
-                                                                           missing_value = 1.0,
-                                                                           take = self.transparency,
-                                                                           dtype = numpy.float,
-                                                                     )
-                ignore.add( self.transparency)
-
-            # select label to take, preserve order
-            self.matrix, self.rows, self.columns = self.buildMatrix( work, 
-                                                                     apply_transformations = True, 
-                                                                     ignore = ignore,
-                                                                     )
-                
-        else:
-            self.matrix, self.rows, self.columns = self.buildMatrix( work )
-
-        if self.switch_row_col or self.matrix.shape[0] == 1:
-            if self.matrix != None: self.matrix = self.matrix.transpose()
+        if self.switch_row_col or self.data_matrix.shape[0] == 1:
+            if self.data_matrix != None: self.data_matrix = self.data_matrix.transpose()
             if self.error_matrix != None: self.error_matrix = self.error_matrix.transpose()
             if self.label_matrix != None: self.label_matrix = self.label_matrix.transpose()
             if self.colour_matrix != None: self.colour_matrix = self.colour_matrix.transpose()
@@ -1574,12 +1519,12 @@ class BarPlot( TableMatrix, Plotter):
             locs, labels = plt.xticks()
             plt.xticks( locs, labels, rotation = 'vertical' )
 
-    def render( self, work, path ):
+    def render( self, dataseries, path ):
 
-        self.buildMatrices( work )
-        plts = []
+        self.buildMatrices( dataseries )
 
         self.startPlot()
+        plts = []
 
         xvals = numpy.arange( 0, len(self.rows) )
 
@@ -1587,7 +1532,7 @@ class BarPlot( TableMatrix, Plotter):
         y, error = 0, None
         for column, header in enumerate(self.columns):
             
-            vals = self.matrix[:,column]
+            vals = self.data_matrix[:,column]
             if self.error: error = self.error_matrix[:,column]
 
             # patch for wrong ylim. matplotlib will set the yrange
@@ -1597,6 +1542,7 @@ class BarPlot( TableMatrix, Plotter):
                 vals[0] = 0
                 
             hatch, color, alpha = self.getColour( y, column )
+
             
             if self.bottom_value != None:
                 bottom = float(self.bottom_value)
@@ -1633,9 +1579,9 @@ class InterleavedBarPlot(BarPlot):
     def __init__(self, *args, **kwargs):
         BarPlot.__init__(self, *args, **kwargs )
 
-    def render( self, work, path ):
+    def render( self, dataseries, path ):
 
-        self.buildMatrices( work )
+        self.buildMatrices( dataseries )
 
         self.startPlot()
 
@@ -1648,7 +1594,7 @@ class InterleavedBarPlot(BarPlot):
         row = 0
         for column,header in enumerate(self.columns):
             
-            vals = self.matrix[:,column]
+            vals = self.data_matrix[:,column]
             if self.error: error = self.error_matrix[:,column]
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
@@ -1688,7 +1634,7 @@ class InterleavedBarPlot(BarPlot):
         self.addTicks( xvals )
 
         return self.endPlot( plts, self.columns, path )
-           
+
 class StackedBarPlot(BarPlot ):
     """A plot with stacked bars.
 
@@ -1698,9 +1644,9 @@ class StackedBarPlot(BarPlot ):
     def __init__(self, *args, **kwargs):
         BarPlot.__init__(self, *args, **kwargs )
 
-    def render( self, work, path ):
+    def render( self, dataseries, path ):
 
-        self.buildMatrices( work)
+        self.buildMatrices( dataseries )
         
         self.startPlot( )
 
@@ -1715,7 +1661,7 @@ class StackedBarPlot(BarPlot ):
 
         for column, header in enumerate(self.columns):
 
-            vals = self.matrix[:,column]            
+            vals = self.data_matrix[:,column]            
             if self.error: error = self.error_matrix[:,column]
             
             # patch for wrong ylim. matplotlib will set the yrange
@@ -1781,7 +1727,6 @@ class PiePlot(Renderer, Plotter):
     nlevels = 1
 
     def __init__(self, *args, **kwargs):
-        print "starting pie plot"
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
@@ -1793,17 +1738,21 @@ class PiePlot(Renderer, Plotter):
         # in all plots.
         self.sorted_headers = odict()
 
-    def render( self, work, path ):
+    def render( self, dataseries, path ):
         
         self.startPlot()
 
-        for x in list(work.keys()): 
+        # convert data series back to dictionary
+        values = dataseries.tolist()
+        headers = list( dataseries.index)
+
+        for x in headers:
             if x not in self.sorted_headers: 
                 self.sorted_headers[x] = len(self.sorted_headers)
 
         sorted_vals = [0] * len(self.sorted_headers)
 
-        for key, value in work.items():
+        for key, value in zip( headers, values):
             if value < self.mPieMinimumPercentage:
                 sorted_vals[self.sorted_headers[key]] = 0
                 if "other" not in self.sorted_headers:
@@ -1826,7 +1775,9 @@ class PiePlot(Renderer, Plotter):
                                       (sorted_vals[0]+ sum(sorted_vals[1:]), sum(sorted_vals[1:]) ) )
             labels[0] = self.mFirstIsTotal
 
-        return self.endPlot( plt.pie( sorted_vals, labels = labels ), None, path )
+        return self.endPlot( plt.pie( sorted_vals, labels = labels ), 
+                             None, 
+                             path )
 
 class TableMatrixPlot(TableMatrix, PlotterMatrix):
     """Render a matrix as a matrix plot.
@@ -1920,14 +1871,14 @@ class DataSeriesPlot(Renderer, Plotter):
 
         plts, legend = [], []
         all_data = []
-
-        for label, values in work.items():
-            assert Utils.isArray( values ), "work is of type '%s'" % values
-            d = [ x for x in values if x != None ]
-            if len(d) > 0:
-                # convert to float, required for seaborn.kdeplot
-                all_data.append( numpy.array( d, dtype=numpy.float) )
-                legend.append( "/".join( (str(path),str(label))))
+        
+        tracks = work.index.unique()
+        
+        for track in tracks:
+            d = work.ix[track]
+            # convert to float, required for seaborn.kdeplot
+            all_data.append( numpy.array( d, dtype=numpy.float) )
+            legend.append( "/".join( (str(path),str(track))))
 
         if len(all_data) == 0: 
             return self.endPlot( plts, None, path )
@@ -2009,9 +1960,12 @@ class GalleryPlot(Renderer, Plotter):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def render(self, work, path ):
+    def render(self, dataseries, path ):
 
-        if "filename" not in work: 
+        gallery = dataseries.unstack()
+        
+        columns = gallery.columns
+        if "filename" not in columns:
             self.warn( "no 'filename' key in path %s" % path )
             return
 
@@ -2021,34 +1975,46 @@ class GalleryPlot(Renderer, Plotter):
 
         rst_link = '''* `%(title)s <%(absfn)s>`_ 
 '''
-        title = path2str( path )
-        fn = work["filename"]
-        absfn = os.path.abspath( fn ) 
-        # do not render svg images
-        if fn.endswith(".svg" ):
-            title = os.path.basename( fn )
-            return ResultBlocks( ResultBlock( text = rst_text % locals(),
-                                              title = title ) )
-        # do not render pdf images
-        elif fn.endswith( ".pdf"):
-            title = os.path.basename( fn )
-            return ResultBlocks( ResultBlock( text = rst_link % locals(),
-                                              title = title ) )
         
-        self.startPlot()
-        
+        blocks = ResultBlocks()
         plts = []
-        try:
-            data = plt.imread( fn )
-        except IOError:
-            raise ValueError( "file format for file '%s' not recognized" % fn )
-    
-        ax = plt.gca()
-        ax.axison = False
-        plts.append( plt.imshow( data ) )
-        
-        return self.endPlot( plts, None, path )
-                                     
+
+        for rowname, row in gallery.iterrows():
+            
+            work = dict( zip( columns, row ) )
+
+            fn = work["filename"]
+            
+            absfn = os.path.abspath( fn ) 
+
+            title = path2str( path + (rowname,) )
+            
+            # do not render svg images
+            if fn.endswith(".svg" ):
+                title = os.path.basename( fn )
+                blocks.append( ResultBlock( text = rst_text % locals(),
+                                            title = title ) ) 
+                continue
+
+            # do not render pdf images
+            elif fn.endswith( ".pdf"):
+                title = os.path.basename( fn )
+                blocks.append( ResultBlock( text = rst_link % locals(),
+                                            title = title ) )
+            else:
+                self.startPlot()
+                try:
+                    data = plt.imread( fn )
+                except IOError:
+                    raise ValueError( "file format for file '%s' not recognized" % fn )
+
+                ax = plt.gca()
+                ax.axison = False
+                plts.append( plt.imshow( data ) )
+                blocks.extend( self.endPlot( plts, None, path ) )
+
+        return blocks
+
 class ScatterPlot(Renderer, Plotter):
     """Scatter plot.
 
@@ -2087,55 +2053,58 @@ class ScatterPlot(Renderer, Plotter):
         
         self.regression = int(kwargs.get( "regression", 0 ))
         
-    def render(self, work, path ):
+    def render(self, dataseries, path ):
         
         self.startPlot()
         
         nplotted = 0
 
+        paths = dataseries.index.unique()
+
+        nplotted = 0
+
         plts, legend = [], []
         xlabels, ylabels = [], []
 
-        for label, coords in work.items():
-            assert len(coords) >= 2, "expected at least two arrays, got %i" % len(coords)
-            
-            k = list(coords.keys())
-            
-            xlabel = k[0]
+        for idx in range( 0, len(paths), 2):
 
-            for ylabel in k[1:]:
-                xvals, yvals = Stats.filterNone( (coords[xlabel],
-                                                  coords[ylabel]) )
+            xpath = paths[idx]
+            ypath = paths[idx+1]
 
-                marker = self.format_markers[nplotted % len(self.format_markers)]
-                color = self.format_colors[nplotted % len(self.format_colors)]
-                if len(xvals) == 0 or len(yvals) == 0: continue
+            xvalues, yvalues = dataseries.ix[xpath], dataseries.ix[ypath]
 
-                # plt.scatter does not permitting setting
-                # options in rcParams, so all is explict
-                plts.append(plt.scatter( xvals,
-                                         yvals,
-                                         marker = marker,
-                                         c = color,
-                                         linewidths = self.markeredgewidth,
-                                         s = self.markersize) )
-                legend.append( label )
+            #xvalues, yvalues = Stats.filterNone( (coords[xlabel],
+            #                                  coords[ylabel]) )
+
+            marker = self.format_markers[nplotted % len(self.format_markers)]
+            color = self.format_colors[nplotted % len(self.format_colors)]
+            if len(xvalues) == 0 or len(yvalues) == 0: continue
+
+            # plt.scatter does not permitting setting
+            # options in rcParams, so all is explict
+            plts.append(plt.scatter( xvalues,
+                                     yvalues,
+                                     marker = marker,
+                                     c = color,
+                                     linewidths = self.markeredgewidth,
+                                     s = self.markersize) )
+            legend.append( ypath )
                 
-                if self.regression:
-                    coeffs = numpy.polyfit(xvals, yvals, self.regression)
-                    p = numpy.poly1d(coeffs)
-                    svals = sorted( xvals )
-                    plts.append( plt.plot( svals, 
-                                           [ p(x) for x in svals ],
-                                           c = color,
-                                           marker = 'None') )
-                    
-                    legend.append( "regression %s" % label )
+            if self.regression:
+                coeffs = numpy.polyfit(xvalues, yvalues, self.regression)
+                p = numpy.poly1d(coeffs)
+                svals = sorted( xvalues )
+                plts.append( plt.plot( svals, 
+                                       [ p(x) for x in svals ],
+                                       c = color,
+                                       marker = 'None') )
+                
+                legend.append( "regression %s" % label )
 
-                nplotted += 1
+            nplotted += 1
 
-                xlabels.append( xlabel )
-                ylabels.append( ylabel )
+            xlabels.append( path2str(xpath) )
+            ylabels.append( path2str(ypath) )
             
         plt.xlabel( ":".join( set(xlabels) ) )
         plt.ylabel( ":".join( set(ylabels) ) )
@@ -2162,7 +2131,7 @@ class ScatterPlotWithColor( ScatterPlot ):
           ('reverse-palette', directives.flag),
           ('colorbar-format', directives.unchanged) )
 
-    nlevels = 1
+    nlevels = 2
 
     def __init__(self, *args, **kwargs):
         ScatterPlot.__init__(self, *args, **kwargs )
@@ -2175,7 +2144,7 @@ class ScatterPlotWithColor( ScatterPlot ):
 
         self.mReversePalette = "reverse-palette" in kwargs
 
-    def render(self, work, path):
+    def render(self, dataseries, path):
 
         self.startPlot()
         
@@ -2189,38 +2158,59 @@ class ScatterPlotWithColor( ScatterPlot ):
         else:
             color_scheme = None
 
-        assert len(work) >= 3, "expected at least three arrays, got %i: %s" % (len(work), list(work.keys()))
+        # assert len(work) >= 3, "expected at least three arrays, got %i: %s" % (len(work), list(work.keys()))
+        paths = dataseries.index.unique()
         
-        xlabel, ylabel, zlabel = list(work.keys())[:3]
-        xvals, yvals, zvals = Stats.filterNone( list(work.values())[:3])
+        nplotted = 0
 
-        if len(xvals) == 0 or len(yvals) == 0 or len(zvals) == 0: 
-            raise ValueError("no data" )
+        plts, legend = [], []
+        xlabels, ylabels = [], []
 
-        if self.zrange:
-            vmin, vmax = self.zrange
-            zvals = numpy.array( zvals )
-            zvals[ zvals < vmin ] = vmin
-            zvals[ zvals > vmax ] = vmax
-        else:
-            vmin, vmax = None, None
+        for idx in range( 0, len(paths), 3):
 
-        # plt.scatter does not permitting setting
-        # options in rcParams, so all is explict
-        plts.append(plt.scatter( xvals,
-                                 yvals,
-                                 s = self.markersize,
-                                 c = zvals,
-                                 linewidths = self.markeredgewidth,
-                                 cmap = color_scheme,
-                                 vmax = vmax,
-                                 vmin = vmin ) )
-            
-        plt.xlabel( xlabel )
-        plt.ylabel( ylabel )
+            xpath = paths[idx]
+            ypath = paths[idx+1]
+            zpath = paths[idx+2]
 
-        cb = plt.colorbar( format = self.mBarFormat)        
-        cb.ax.set_xlabel( zlabel )
+            xvalues, yvalues, zvalues = dataseries.ix[xpath], dataseries.ix[ypath], \
+                dataseries.ix[zpath]
+
+            # xvals, yvals, zvals = Stats.filterNone( list(work.values())[:3])
+
+            if len(xvalues) == 0 or len(yvalues) == 0 or len(zvalues) == 0: 
+                raise ValueError("no data" )
+
+            if self.zrange:
+                vmin, vmax = self.zrange
+                zvals = numpy.array( zvals )
+                zvals[ zvals < vmin ] = vmin
+                zvals[ zvals > vmax ] = vmax
+            else:
+                vmin, vmax = None, None
+
+            marker = self.format_markers[nplotted % len(self.format_markers)]
+
+            # plt.scatter does not permitting setting
+            # options in rcParams, so all is explict
+            plts.append(plt.scatter( xvalues,
+                                     yvalues,
+                                     marker = marker,
+                                     s = self.markersize,
+                                     c = zvalues,
+                                     linewidths = self.markeredgewidth,
+                                     cmap = color_scheme,
+                                     vmax = vmax,
+                                     vmin = vmin ) )
+
+            nplotted += 1
+
+            xlabels.append( path2str(xpath) )
+            ylabels.append( path2str(ypath) )
+            cb = plt.colorbar( format = self.mBarFormat)        
+            cb.ax.set_xlabel( path2str(zpath) )
+
+        plt.xlabel( ":".join( set(xlabels) ) )
+        plt.ylabel( ":".join( set(ylabels) ) )
 
         return self.endPlot( plts, None, path )
 
@@ -2254,16 +2244,26 @@ class VennPlot( Renderer, Plotter ):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def render(self, work, path):
+    def render(self, dataseries, path):
 
         if matplotlib_venn == None:
             raise ValueError("library matplotlib_venn not available")
 
+        return self.endPlot( [], None, path )
+
+        print '---------------------------'
+        print 'work=', dataseries
+        print '---------------------------'
+
         self.startPlot()
+
+        dataframe = dataseries.unstack()
+        print dataframe
 
         plts = []
 
-        subsets = dict( work )
+        subsets = dict( dataframe )
+
         if "labels" in subsets:
             setlabels = subsets["labels"]
             del subsets["labels"]

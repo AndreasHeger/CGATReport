@@ -187,7 +187,7 @@ class TransformerToDataFrame( Transformer ):
         t = odict()
         for minor_key, values in data.items():
             if not Utils.isArray(values): raise ValueError("expected a list for data frame creation, got %s", type(data))
-            if len(values) == 0: raise ValueError( "empty list for %s:%s" % (major_key, minor_key))
+            if len(values) == 0: raise ValueError( "empty list for %s" % (minor_key))
             v = values[0]
             if Utils.isInt( v ):
                 t[minor_key] = rpy2.robjects.IntVector( values )

@@ -4,14 +4,17 @@ import re, os, sys, imp, io, types, traceback, logging, math
 try: import ConfigParser as configparser
 except: import configparser
 
+import types
+import copy 
+import numpy
+import pandas
+
 import SphinxReport
 from SphinxReport.ResultBlock import ResultBlocks,ResultBlock
 from SphinxReport.Component import *
 import SphinxReport.Config
 
 from collections import OrderedDict as odict
-
-import types, copy, numpy
 
 ContainerTypes = (tuple, list, type(numpy.zeros(0)))
 DictionaryTypes = (dict, odict)
@@ -45,7 +48,9 @@ except AttributeError as msg:
                  numpy.int8, numpy.int16, numpy.int32, numpy.int64, 
                  numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64)
 
-
+def isDataFrame( data ):
+    '''return True if data is likely to be a dataframe.'''
+    return type(data) == pandas.DataFrame
 
 def isArray( data ):
     '''return True if data is an array.'''
@@ -657,6 +662,10 @@ def layoutBlocks( blocks, layout = "column"):
     else:
         raise ValueError( "unknown layout %s " % layout )
 
+    if ncols == 0: 
+        logging.warn("no columns" )
+        return lines
+
     # compute column widths
     widths = [ x.getWidth() for x in blocks ]
     text_heights = [ x.getTextHeight() for x in blocks ]
@@ -667,6 +676,9 @@ def layoutBlocks( blocks, layout = "column"):
         columnwidths.append( max( [widths[y] for y in range( x, len(blocks), ncols ) ] ) )
 
     separator = "+%s+" % "+".join( ["-" * x for x in columnwidths ] )
+
+
+
 
     ## add empty blocks
     if len(blocks) % ncols:

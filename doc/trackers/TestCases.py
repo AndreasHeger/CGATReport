@@ -8,17 +8,24 @@ class LongLabelsSmall( Tracker ):
     numwords = 5
     slices = ( "small", "large", "gigantic" )
     tracks = ( "track1", "track2", "track3" )
+    tracks = ( "track1", )
 
     def __call__(self, track, slice = None):
         if slice == "small": ncolumns = 10
         elif slice == "large": ncolumns = 40
         elif slice == "gigantic": ncolumns = 100
 
+        if slice == "small": ncolumns = 2
+        elif slice == "large": ncolumns = 2
+        elif slice == "gigantic": ncolumns = 4
+
         data = []
         for x in range( 0, ncolumns):
-            label = "%s:%i %s" % ( slice, x, " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
+            # label = "%s:%i %s" % ( slice, x, " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
+            label = "%s" % ( " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
             data.append( (label, random.randint( 0,100 )) )
-        return dict( data )
+
+        return odict( sorted(data ))
 
 class LargeMatrix( Tracker ):
     """example of a large matrix with long labels."""
@@ -34,9 +41,10 @@ class LargeMatrix( Tracker ):
 
         data = []
         for x in range( 0, ncolumns):
-            label = "%s:%i %s" % ( slice, x, " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
+            # label = "%s:%i %s" % ( slice, x, " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
+            label = "%s" % ( " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
             data.append( (label, random.randint( 0,100 )) )
-        return dict( data )
+        return odict( data )
 
 class LayoutTest( Tracker ):
     """Layout testing."""
@@ -47,7 +55,7 @@ class LayoutTest( Tracker ):
     tracks = ["track%i" % i for i in range(5)]
 
     def __call__(self, track, slice = None):
-        return dict( ( ("data", [ random.gauss( 0,1 ) for x in range(self.nsamples) ]),))
+        return odict( ( ("data", [ random.gauss( 0,1 ) for x in range(self.nsamples) ]),))
 
 class MultipleHistogramTest( Tracker ):
     """Layout testing."""
@@ -58,11 +66,11 @@ class MultipleHistogramTest( Tracker ):
     tracks = ["track%i" % i for i in range(5)]
 
     def __call__(self, track, slice = None):
-        return dict( ( ("bin", "value-set1", "value-set2"),
-                       (range(0,self.nsamples),
-                        [ random.gauss( 0,1 ) for x in range(self.nsamples) ],
-                        [ random.gauss( 0,1 ) for x in range(self.nsamples) ] )))
-
+        return odict( ( ("bin", "value-set1", "value-set2"),
+                        (range(0,self.nsamples),
+                         [ random.gauss( 0,1 ) for x in range(self.nsamples) ],
+                         [ random.gauss( 0,1 ) for x in range(self.nsamples) ] )))
+    
 
 class MultiLevelTable( Tracker ):
 
@@ -106,4 +114,4 @@ class VeryLargeMatrix( Tracker ):
         for x in range( 0, self.ncols):
             data.append( ("col%i%s" % (x,"f"*193),x ))
 
-        return dict( data )
+        return odict( data )

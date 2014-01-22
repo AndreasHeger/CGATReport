@@ -52,6 +52,9 @@ class Result(object):
             try: return object.__getattribute__(self,"_data")[key]
             except KeyError: pass
         return getattr( self._data, key )
+    def asDict(self):
+        return self._data
+
     def keys(self): return list(self._data.keys())
     def values(self): return list(self._data.values())
     def __iter__(self): return self._data.__iter__()
@@ -551,7 +554,7 @@ def doCorrelationTest( xvals, yvals, method = "pearson" ):
                               method = method,
                               nobservations = len(x))
 
-    return result
+    return result.asDict()
 
 
 ###################################################################
@@ -655,7 +658,7 @@ def getSensitivityRecall( values ):
     if l:
         result.append( (l, npositives / npredicted, npredicted/total ) )
 
-    return result
+    return result.asDict()
 
 ###################################################################
 ###################################################################
@@ -674,5 +677,5 @@ def doMannWhitneyUTest( xvals, yvals ):
           ('method', None ) ), 
         r_result )
 
-    return result
+    return result.asDict()
 

@@ -554,17 +554,19 @@ class TrackerSQL( Tracker ):
         else:
             return [ "all" ] 
 
-    def getDataFrame( self, stmt ):
-        '''return an R data frame as rpy2 object.
-        '''
-        self.rconnect()
-        return R.dbGetQuery(self.rdb, self.buildStatement(stmt) )
+    # def getDataFrame( self, stmt ):
+    #     '''return an R data frame as rpy2 object.
+    #     '''
+    #     self.rconnect()
+    #     return R.dbGetQuery(self.rdb, self.buildStatement(stmt) )
     
-    def getPandasDF( self, stmt ):
+    def getDataFrame( self, stmt ):
         '''return results of SQL statement as an pandas dataframe.
         '''
-        return pandas.DataFrame( self.get( stmt ) )
-
+        data = self.getAll( stmt )
+        df = pandas.DataFrame.from_dict( data )
+        return df
+        
     def getPaths( self ):
          """return all paths this tracker provides.
 

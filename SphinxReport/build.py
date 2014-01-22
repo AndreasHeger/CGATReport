@@ -310,7 +310,9 @@ def buildLog( options, args ):
     """
     runCommand( "%s" % " ".join(args) )
     
-def main():
+def main( argv = None ):
+
+    if argv == None: argv = sys.argv
 
     print("SphinxReport: version %s started" % str("$Id$"))
     t = time.time()

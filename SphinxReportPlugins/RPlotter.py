@@ -2,13 +2,17 @@
 """
 
 import os, sys, re, math, tempfile
-
+import itertools
+import numpy
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix
+from SphinxReport.DataTree import path2str
 from collections import OrderedDict as odict
 from SphinxReport import Utils
 from SphinxReport import Stats
+
+import pandas.rpy.common
 
 try:
     from rpy2.robjects import r as R
@@ -221,43 +225,37 @@ class LinePlot( Renderer, Plotter ):
         keys = list(coords.keys())
         return keys[0], keys[1:]
 
-    def render(self, work, path ):
+    def render(self, dataseries, path ):
+
+        fig = self.startPlot()
         
-        # R.graphics_off()
-        self.legend = []
-        self.xlabels = []
+        labels = dataseries.index.levels
+
+        paths = list(itertools.product( *labels ) )
+        
+        self.initPlot( fig, dataseries, path )
 
         nplotted = 0
 
-        for line, data in work.items():
+        for idx in range( 0, len(paths), 2):
 
-            for label, coords in data.items():
-                
-                # sanity check on data
-                try: keys = list(coords.keys())
-                except AttributeError:
-                    self.warn("could not plot %s - coords is not a dict: %s" % (label, str(coords) ))
-                    continue
-                
-                if len(keys) <= 1:
-                    self.warn("could not plot %s: not enough columns: %s" % (label, str(coords) ))
-                    continue
+            self.initLine( path, dataseries )
 
-                xlabel, ylabels = self.initCoords( label, coords)
-                
-                xvals = coords[xlabel]
-                for ylabel in ylabels:
-                    yvals = coords[ylabel]
-                    R.plot( xvals, yvals )
-                    # self.addData( line, label, xlabel, ylabel, xvals, yvals, nplotted )
-                    nplotted += 1
+            xpath = paths[idx]
+            ypath = paths[idx+1]
 
-                    if len(ylabels) > 1:
-                        self.legend.append( "/".join((line,label,ylabel) ))
-                    else:
-                        self.legend.append( "/".join((line,label) ))
-                                
-                self.xlabels.append(xlabel)
+            xvalues, yvalues = dataseries.ix[xpath], dataseries.ix[ypath]
+
+            if len(xvalues) != len(yvalues): 
+                raise ValueError( "length of x,y tuples not consistent: %i != %i" % \
+                                      len(xvalues), len(yvalues))
+
+            R.plot( xvalues, yvalues )
+            self.initCoords( xvalues, yvalues )
+
+            nplotted += 1
+            
+        self.finishPlot( fig, dataseries, path )
 
         figid = getCurrentRDevice()
         blocks = ResultBlocks( ResultBlock( "\n".join( ("#$rpl %i$#" % (figid), "")), 
@@ -280,27 +278,28 @@ class BoxPlot( Renderer, Plotter ):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def render(self, work, path ):
+    def render(self, dataseries, path ):
 
         self.startPlot()
 
         plts, legend = [], []
         all_data = []
+        
+        tracks = itertools.product( *dataseries.index.levels )
+        
+        for track in tracks:
+            d = dataseries.ix[track]
+            # convert to float, required for seaborn.kdeplot
+            all_data.append( ro.FloatVector( d ) )
+            legend.append( "/".join( (str(path),str(track))))
 
-        #for line, data in work.iteritems():
-
-        #    assert len(data) == 1, "multicolumn data not supported yet: %s" % str(data)
-
-        for label, values in work.items():
-            assert Utils.isArray( values ), "work is of type '%s'" % values
-            d = [ x for x in values if x != None ]
-            if len(d) > 0:
-                all_data.append( ro.FloatVector( d ) )
-                legend.append( "/".join((str(path),str(label))))
-
+        if len(all_data) == 0: 
+            return self.endPlot( plts, None, path )
+            raise ValueError("no data" )
+            
         R.boxplot( all_data )
 
-        return self.endPlot( work, path )
+        return self.endPlot( dataseries, path )
 
 class SmoothScatterPlot(Renderer, Plotter):
     """A smoothed scatter plot.
@@ -314,7 +313,7 @@ class SmoothScatterPlot(Renderer, Plotter):
     options = Renderer.options + Plotter.options +\
         ( ('bins', directives.unchanged), )
     
-    nlevels = 1
+    nlevels = 2
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
@@ -325,34 +324,44 @@ class SmoothScatterPlot(Renderer, Plotter):
             if "," in self.nbins: self.nbins=list(map(int, self.nbins.split(",")))
             else: self.nbins=int(self.nbins)
 
-    def render(self, work, path ):
+    def render(self, dataseries, path ):
         
-        self.startPlot()
-        nplotted = 0
+        labels = dataseries.index.levels
+        paths = list(itertools.product( *labels ) )
 
+        if len(paths) < 2:
+            raise ValueError( "requiring two coordinates, only got %s" % str(list(paths)))
+
+        plts, legend = [], []
         xlabels, ylabels = [], []
 
-        if len(work) < 2:
-            raise ValueError( "requiring two coordinates, only got %s" % str(list(work.keys())))
+        blocks = ResultBlocks()
+        for idx in range( 0, len(paths), 2):
 
-        xlabel, ylabel = list(work.keys())[:2]
-        xvals, yvals = Stats.filterNone( list(work.values())[:2])
+            xpath = paths[idx]
+            ypath = paths[idx+1]
+        
+            xvalues, yvalues = dataseries.ix[xpath], dataseries.ix[ypath]
 
-        if len(xvals) == 0 or len(yvals) == 0:
-            raise ValueError("no data" )
+            if len(xvalues) == 0 or len(yvalues) == 0:
+                raise ValueError("no data" )
 
-        # apply log transformation on data not on plot
-        if self.logscale:
-            if "x" in self.logscale:
-                xvals = R.log10(xvals)
-            if "y" in self.logscale:
-                yvals = R.log10(yvals)
-                
-        R.smoothScatter( xvals, yvals, 
-                         xlab=xlabel, ylab=ylabel,
-                         nbin = self.nbins )
+            # apply log transformation on data not on plot
+            if self.logscale:
+                if "x" in self.logscale:
+                    xvalues = R.log10(xvalues)
+                if "y" in self.logscale:
+                    yvalues = R.log10(yvalues)
 
-        return self.endPlot( work, path )
+            self.startPlot()
+            R.smoothScatter( xvalues, 
+                             yvalues, 
+                             xlab=path2str(xpath), 
+                             ylab=path2str(ypath),
+                             nbin = self.nbins )
+            blocks.extend( self.endPlot( dataseries, path ) )
+
+        return blocks
 
 class HeatmapPlot(NumpyMatrix, Plotter):
     """A heatmap plot
@@ -400,10 +409,10 @@ class HeatmapPlot(NumpyMatrix, Plotter):
 
         return self.endPlot( None, path )
 
-    def render(self, work, path ):
+    def render(self, dataseries, path ):
         
         self.debug("building matrix started")
-        matrix, rows, columns = self.buildMatrix( work )
+        matrix, rows, columns = self.buildMatrix( dataseries )
         self.debug("building matrix finished")
 
         return self.plot( matrix, rows, columns, path )
@@ -430,40 +439,26 @@ class GGPlot( Renderer, Plotter ):
 
         self.statement = kwargs.get( 'statement' )
 
-    def render(self, work, path ):
+    def render(self, dataframe, path ):
 
         R.library( 'ggplot2' )
 
-        results = ResultBlocks()
+        self.startPlot()
 
-        for title, dataframe in work.items():
+        rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
+        R.assign( "rframe", rframe )
+        
+        # start plot
+        R('''gp = ggplot( rframe )''')
+
+        # add aesthetics and geometries
+        try:
+            pp = R('''gp + %s ''' % self.statement )
+        except ValueError as msg:
+            raise ValueError( "could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg ))
             
-            self.startPlot()
+        # plot
+        R.plot( pp )
 
-            # force conversion to dataframe. This is necessary for objects that
-            # have been retrieved from the cache. Their type has changed from
-            # dataframe to SexpVector.
-            if type(dataframe) != type(ro.DataFrame({})):
-                try:
-                    dataframe = ro.DataFrame( dataframe )
-                except ValueError:
-                    raise ValueError( "expected a data frame, got %s" % type(dataframe) )
-            
-            R.assign( "df", dataframe )
-            
-            # start plot
-            R('''gp = ggplot( df )''')
-
-            # add aesthetics and geometries
-            try:
-                pp = R('''gp + %s ''' % self.statement )
-            except ValueError as msg:
-                raise ValueError( "could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg ))
-            
-            # plot
-            R.plot( pp )
-
-            results.extend( self.endPlot( work, path ) )
-
-        return results
+        return self.endPlot( dataframe, path )
 
