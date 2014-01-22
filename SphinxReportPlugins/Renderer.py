@@ -972,6 +972,8 @@ class Debug( Renderer ):
 
     def render( self, dataseries, path ):
         
+        print dataseries
+        print path
         # initiate output structure
         results = ResultBlocks( title = path )
 
