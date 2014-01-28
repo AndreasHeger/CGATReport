@@ -131,12 +131,6 @@ RST_TEMPLATE = """.. _%(label)s:
    %(caption)s
 """
 
-NOTEBOOK_TEMPLATE = """%%matplotlib inline
-import SphinxReport.test
-result = SphinxReport.test.main( %(options)s )
-%%load_ext rmagic
-"""
-
 
 def getTrackers( fullpath ):
     """retrieve a tracker and its associated code.
@@ -221,14 +215,14 @@ def writeNotebook( outfile, options, kwargs,
             cmd_options.append( "%s=%s" % (key,val) )
             
     if options.transformers:
-        cmd_options.extend( "transformer=['%s']" % "','".join( options.transformers))
+        cmd_options.append( "transformer=['%s']" % "','".join( options.transformers))
 
     # no module name in tracker
     params = { "tracker" : "%s" % (name),
                "options" : ",".join( cmd_options ),
                "curdir" : os.getcwd() }
     
-    outfile.write( NOTEBOOK_TEMPLATE % params )
+    outfile.write( Utils.NOTEBOOK_TEMPLATE % params )
 
 
 def run( name, t, kwargs ):
@@ -401,12 +395,26 @@ def main( argv = None, **kwargs ):
     if options.tracker:
 
         trackers = []
+
         for filename in glob.glob( os.path.join( options.dir_trackers, "*.py" )):
             modulename = os.path.basename( filename )
             trackers.extend( [ x for x in getTrackers( modulename ) if x[0] not in exclude ] )
         
+        if "." in options.tracker:
+            parts = options.tracker.split(".")
+            tracker_modulename = ".".join( parts[:-1] )
+            tracker_name = parts[-1]
+        else:
+            tracker_modulename = None
+            tracker_name = None
+
         for name, tracker, modulename, is_derived  in trackers:
-            if name == options.tracker: break
+            if name == tracker_name:
+                if tracker_modulename is not None:
+                    if modulename == tracker_modulename:
+                        break
+                else:
+                    break
         else:
             available_trackers = set( [ x[0] for x in trackers if x[3] ] )
             print("unknown tracker '%s': possible trackers are\n  %s" % (options.tracker, "\n  ".join( sorted(available_trackers)) )) 

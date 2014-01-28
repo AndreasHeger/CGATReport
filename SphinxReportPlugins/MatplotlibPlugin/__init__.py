@@ -33,8 +33,8 @@ class MatplotlibPlugin(Component):
                  srcdir,
                  content,
                  display_options,
-                 linked_codename,
-                 tracker_id):
+                 tracker_id,
+                 links = {} ):
         '''collect one or more matplotlib figures and 
         
         1. save as png, hires-png and pdf
@@ -50,14 +50,6 @@ class MatplotlibPlugin(Component):
         # determine the image formats to create
         default_format, additional_formats = Utils.getImageFormats( display_options )
         all_formats = [default_format,] + additional_formats
-        urls = Utils.asList( Utils.PARAMS["report_urls"] )
-        image_options = Utils.getImageOptions( display_options )
-
-        # path to build directory from rst directory
-        rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
-        
-        # path to src directory from rst directory
-        rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
 
         # create all the images
         for figman in fig_managers:
@@ -95,59 +87,15 @@ class MatplotlibPlugin(Component):
                     outfile.close()
 
             # create the text element
-            rst_output = ""
-            # for image directive - image path is relative from rst file to external build dir
-            imagepath = re.sub( "\\\\", "/", os.path.join( rst2builddir, outname ) )
-
-            # for links - path is from rst file to internal root dir
-            # one rst file for all
-            relative_imagepath_rst = re.sub( "\\\\", "/", os.path.join( rst2srcdir, template_name ) )
-            relative_imagepath_img = re.sub( "\\\\", "/", os.path.join( rst2srcdir, outname ) )
-
-            linked_text = relative_imagepath_rst + ".txt"
-
-            if Config.HTML_IMAGE_FORMAT:
-                id, format, dpi = Config.HTML_IMAGE_FORMAT
-                template = '''
-.. htmlonly::
-
-   .. image:: %(linked_image)s
-%(image_options)s
-
-   [%(code_url)s %(rst_url)s %(data_url)s %(extra_images)s]
-'''
-                linked_image = imagepath + ".%s" % format
-
-                extra_images=[]
-                for id, format, dpi in additional_formats:
-                    extra_images.append( "`%(id)s <%(relative_imagepath_img)s.%(format)s>`__" % locals())
-                if extra_images: extra_images = " " + " ".join( extra_images)
-                else: extra_images = ""
-
-                # construct additional urls
-                code_url, data_url, rst_url, table_url = "", "", "", ""
-                if "code" in urls:
-                    code_url = "`code <%(linked_codename)s>`__" % locals()
-
-                if "data" in urls:
-                    data_url = "`data </data/%(tracker_id)s>`__" % locals()
-
-                if "rst" in urls:
-                    rst_url = "`rst <%(linked_text)s>`__" % locals()
-
-                rst_output += template % locals()
-
-            # treat latex separately
-            if Config.LATEX_IMAGE_FORMAT:
-                id, format, dpi = Config.LATEX_IMAGE_FORMAT
-                template = '''
-.. latexonly::
-
-   .. image:: %(linked_image)s
-%(image_options)s
-'''
-                linked_image = imagepath + ".%s" % format
-                rst_output += template % locals()
+            rst_output = Utils.buildRstWithImage( outname, 
+                                                  outdir,
+                                                  rstdir,
+                                                  builddir,
+                                                  srcdir,
+                                                  additional_formats,
+                                                  tracker_id, 
+                                                  links,
+                                                  display_options )
 
             map_figure2text[ "#$mpl %i$#" % figid] = rst_output
 

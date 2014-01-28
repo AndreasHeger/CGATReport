@@ -36,8 +36,8 @@ class RSTPlugin(Component):
                  srcdir,
                  content,
                  display_options,
-                 linked_codename,
-                 tracker_id):
+                 tracker_id,
+                 links = {}):
         '''collect rst output from result blocks.
         
         '''

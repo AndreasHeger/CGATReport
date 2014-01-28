@@ -58,9 +58,9 @@ def run(arguments,
 
     # sort out the paths
     # reference is used for time-stamping
-    reference = directives.uri(arguments[0])
+    tracker_name = directives.uri(arguments[0])
 
-    basedir, fname, basename, ext, outdir, codename = Utils.buildPaths( reference )
+    basedir, fname, basename, ext, outdir, codename, notebookname = Utils.buildPaths( tracker_name )
 
     # get the directory of the rst file
     rstdir, rstfile = os.path.split( document ) # state_machine.document.attributes['source'])
@@ -96,9 +96,9 @@ def run(arguments,
                                                                                                            str(document)))
 
     logging.debug( "report_directive.run: plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, srcdir=%s, builddir=%s" %\
-                       (reference, basename, ext, fname, rstdir, srcdir, builddir ) )
-    logging.debug( "report_directive.run: reference=%s, basedir=%s, rst2src=%s, root2build=%s, outdir=%s, codename=%s" %\
-                   (reference, basedir, rst2srcdir, rst2builddir, outdir, codename))
+                       (tracker_name, basename, ext, fname, rstdir, srcdir, builddir ) )
+    logging.debug( "report_directive.run: tracker_name=%s, basedir=%s, rst2src=%s, root2build=%s, outdir=%s, codename=%s" %\
+                   (tracker_name, basedir, rst2srcdir, rst2builddir, outdir, codename))
 
     # try to create. If several processes try to create it,
     # testing with `if` will not work.
@@ -160,7 +160,7 @@ def run(arguments,
         options_hash = hashlib.md5( options_key.encode() ).hexdigest()
 
         template_name = Utils.quote_filename( \
-            Config.SEPARATOR.join( (reference, renderer_name, options_hash ) ))
+            Config.SEPARATOR.join( (tracker_name, renderer_name, options_hash ) ))
         filename_text = os.path.join( outdir, "%s.txt" % (template_name))
 
         logging.debug( "report_directive.run: options_hash=%s" %  options_hash)
@@ -218,13 +218,13 @@ def run(arguments,
     try:
         ########################################################
         # find the tracker
-        logging.debug( "report_directive.run: collecting tracker %s with options %s " % (reference, tracker_options) )
-        code, tracker = Utils.makeTracker( reference, (), tracker_options )
+        logging.debug( "report_directive.run: collecting tracker %s with options %s " % (tracker_name, tracker_options) )
+        code, tracker = Utils.makeTracker( tracker_name, (), tracker_options )
         if not tracker: 
             logging.error( "report_directive.run: no tracker - no output from %s " % str(document) )
-            raise ValueError( "tracker `%s` not found" % reference )
+            raise ValueError( "tracker `%s` not found" % tracker_name )
 
-        logging.debug( "report_directive.run: collected tracker %s" % reference )
+        logging.debug( "report_directive.run: collected tracker %s" % tracker_name )
 
         tracker_id = Cache.tracker2key( tracker )
 
@@ -277,9 +277,21 @@ def run(arguments,
     ## write code output
     linked_codename = re.sub( "\\\\", "/", os.path.join( rst2srcdir, codename ))
     if code and basedir != outdir:
-        outfile = open( os.path.join(outdir, codename ), "w" )
-        for line in code: outfile.write( line )
-        outfile.close()
+        with open( os.path.join(outdir, codename ), "w" ) as outfile:
+            for line in code: outfile.write( line )
+
+    ########################################################
+    ## write notebook snippet
+    linked_notebookname = re.sub( "\\\\", "/", os.path.join( rst2srcdir, notebookname ))
+    if basedir != outdir:
+        with open( os.path.join(outdir, notebookname ), "w" ) as outfile:
+            Utils.writeNoteBookEntry( outfile, 
+                                      renderer = renderer_name,
+                                      tracker = tracker_name,
+                                      transformers = transformer_names,
+                                      options = renderer_options.items() +\
+                                          tracker_options.items() +\
+                                          transformer_options.items() )
 
     ###########################################################
     # collect images
@@ -294,8 +306,9 @@ def run(arguments,
                                                    srcdir,
                                                    content, 
                                                    display_options,
-                                                   linked_codename,
-                                                   tracker_id ) )
+                                                   tracker_id,
+                                                   links = { 'code_url' : linked_codename,
+                                                             'notebook_url' : linked_notebookname} ) )
         
     ###########################################################
     # replace place holders or add text

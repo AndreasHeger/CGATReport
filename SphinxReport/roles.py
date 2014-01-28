@@ -29,7 +29,7 @@ def writeCode( class_name, code, inliner ):
     # get the directory of the rst file
     rstdir, rstfile = os.path.split( document )
 
-    basedir, fname, basename, ext, outdir, codename = Utils.buildPaths( reference )
+    basedir, fname, basename, ext, outdir, codename, notebookname = Utils.buildPaths( reference )
 
     # path to root relative to rst
     rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )

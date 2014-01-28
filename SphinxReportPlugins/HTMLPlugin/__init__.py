@@ -19,8 +19,8 @@ class HTMLPlugin(Component):
                  srcdir,
                  content,
                  display_options,
-                 linked_codename,
-                 tracker_id):
+                 tracker_id,
+                 links = {}):
         '''collect html output from result blocks.
 
         HTML output is written to a file and a link will be inserted at

@@ -746,6 +746,114 @@ def buildPaths( reference ):
     basename, ext = os.path.splitext(fname)
     outdir = os.path.join('_static', 'report_directive', basedir)
     codename = quote_filename(reference) + ".code"
+    notebookname = quote_filename(reference) + ".notebook"
 
-    return basedir, fname, basename, ext, outdir, codename
+    return basedir, fname, basename, ext, outdir, codename, notebookname
 
+NOTEBOOK_TEMPLATE = """%%matplotlib inline
+import SphinxReport.test
+result = SphinxReport.test.main( %(options)s )
+"""
+
+# %%load_ext rmagic
+
+def writeNoteBookEntry( outfile, tracker, renderer, transformers, options ):
+    '''output text for pasting into an ipython notebook into *outfile*
+    '''
+
+    cmd_options = [ 
+        'do_print = False',
+        'tracker="%s"' % tracker,
+        'renderer="%s"' % renderer,
+        'workdir="%s"' % os.getcwd() ]
+
+    for key, val in options:
+        if val == None:
+            cmd_options.append( "%s" % key )
+        else:
+            cmd_options.append( "%s=%s" % (key,val) )
+            
+    if transformers:
+        cmd_options.append( "transformer=['%s']" % "','".join( transformers))
+
+    # no module name in tracker
+    params = { "options" : ",".join( cmd_options ),
+               "curdir" : os.getcwd() }
+
+    outfile.write( NOTEBOOK_TEMPLATE % params )
+
+
+def buildRstWithImage( outname, outdir, rstdir, builddir, srcdir, 
+                       additional_formats, tracker_id, links,
+                       display_options ):
+    '''output rst text for inserting an image.'''
+
+    rst_output = ""
+    
+    # path to build directory from rst directory
+    rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
+
+    # path to src directory from rst directory
+    rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
+        
+    # for image diretive - image path is relative from rst file to external build dir
+    imagepath = re.sub( "\\\\", "/", os.path.join( rst2builddir, outname ) )
+    # for links - path is from rst file to internal root dir
+    relative_imagepath = re.sub( "\\\\", "/", os.path.join( rst2srcdir, outname ) )
+
+    linked_text = relative_imagepath + ".txt"
+
+    urls = asList( PARAMS["report_urls"] )
+
+    image_options = getImageOptions( display_options )
+
+    if SphinxReport.Config.HTML_IMAGE_FORMAT:
+
+        id, format, dpi = SphinxReport.Config.HTML_IMAGE_FORMAT
+        template = '''
+.. htmlonly::
+
+   .. image:: %(linked_image)s
+%(image_options)s
+
+   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
+'''
+
+        linked_image = imagepath + ".%s" % format
+
+        extra_images=[]
+        for id, format, dpi in additional_formats:
+            extra_images.append( "`%(id)s <%(relative_imagepath)s.%(format)s>`__" % locals())
+        if extra_images: extra_images = " " + " ".join( extra_images)
+        else: extra_images = ""
+
+        # construct additional urls
+        code_url, data_url, rst_url, nb_url = "", "", "", ""
+        if "code" in urls:
+            code_url = "`code <%(code_url)s>`__" % links
+
+        if "notebook" in urls:
+            nb_url = "`nb <%(notebook_url)s>`__" % links
+            
+        if "data" in urls:
+            data_url = "`data </data/%(tracker_id)s>`__" % locals()
+            
+        if "rst" in urls:
+            rst_url = "`rst <%(linked_text)s>`__" % locals()
+
+        rst_output += template % locals()
+
+    # treat latex separately
+    if SphinxReport.Config.LATEX_IMAGE_FORMAT:
+        id, format, dpi = SphinxReport.Config.LATEX_IMAGE_FORMAT
+        template = '''
+.. latexonly::
+
+   .. image:: %(linked_image)s
+%(image_options)s
+'''
+        linked_image = imagepath + ".%s" % format
+        rst_output += template % locals()
+            
+    return rst_output
+    

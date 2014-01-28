@@ -31,8 +31,8 @@ class RPlotPlugin(Component):
                  srcdir,
                  content,
                  display_options,
-                 linked_codename,
-                 tracker_id):
+                 tracker_id,
+                 links = {}):
         '''collect one or more R figures from all active devices
         and
         
@@ -46,20 +46,12 @@ class RPlotPlugin(Component):
         # disable plotting if no rpy installed
         if R == None: return {}
 
-        # path to build directory from rst directory
-        rst2builddir = os.path.join( os.path.relpath( builddir, start = rstdir ), outdir )
-
-        # path to src directory from rst directory
-        rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
-        
         map_figure2text = {}
 
         # determine the image formats to create
         default_format, additional_formats = Utils.getImageFormats( display_options )
         all_formats = [default_format,] + additional_formats
         image_options = Utils.getImageOptions( display_options )
-
-        urls = Utils.asList( Utils.PARAMS["report_urls"] )
 
         devices = R["dev.list"]()
         try:
@@ -148,57 +140,15 @@ class RPlotPlugin(Component):
             R["dev.off"](figid)
 
             # create the text element
-            rst_output = ""
-            # for image diretive - image path is relative from rst file to external build dir
-            imagepath = re.sub( "\\\\", "/", os.path.join( rst2builddir, outname ) )
-            # for links - path is from rst file to internal root dir
-            relative_imagepath = re.sub( "\\\\", "/", os.path.join( rst2srcdir, outname ) )
-
-            linked_text = relative_imagepath + ".txt"
-
-            if Config.HTML_IMAGE_FORMAT:
-                id, format, dpi = Config.HTML_IMAGE_FORMAT
-                template = '''
-.. htmlonly::
-
-   .. image:: %(linked_image)s
-%(image_options)s
-
-   [%(code_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
-'''
-
-                linked_image = imagepath + ".%s" % format
-
-                extra_images=[]
-                for id, format, dpi in additional_formats:
-                    extra_images.append( "`%(id)s <%(relative_imagepath)s.%(format)s>`__" % locals())
-                if extra_images: extra_images = " " + " ".join( extra_images)
-                else: extra_images = ""
-
-                # construct additional urls
-                code_url, data_url, rst_url = "", "", ""
-                if "code" in urls:
-                    code_url = "`code <%(linked_codename)s>`__" % locals()
-
-                if "data" in urls:
-                    data_url = "`data </data/%(tracker_id)s>`__" % locals()
-
-                if "rst" in urls:
-                    rst_url = "`rst <%(linked_text)s>`__" % locals()
-
-                rst_output += template % locals()
-
-            # treat latex separately
-            if Config.LATEX_IMAGE_FORMAT:
-                id, format, dpi = Config.LATEX_IMAGE_FORMAT
-                template = '''
-.. latexonly::
-
-   .. image:: %(linked_image)s
-%(image_options)s
-'''
-                linked_image = imagepath + ".%s" % format
-                rst_output += template % locals()
+            rst_output = Utils.buildRstWithImage( outname,
+                                                  outdir,
+                                                  rstdir,
+                                                  builddir,
+                                                  srcdir,
+                                                  additional_formats,
+                                                  tracker_id, 
+                                                  links,
+                                                  display_options )
 
             map_figure2text[ "#$rpl %i$#" % figid] = rst_output
 

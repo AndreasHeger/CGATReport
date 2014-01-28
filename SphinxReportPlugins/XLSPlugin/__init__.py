@@ -18,8 +18,8 @@ class XLSPlugin(Component):
                  srcdir,
                  content,
                  display_options,
-                 linked_codename,
-                 tracker_id):
+                 tracker_id,
+                 links = {}):
         '''collect xls output from result blocks.
 
         xls output is written to a file and a link will be inserted at
