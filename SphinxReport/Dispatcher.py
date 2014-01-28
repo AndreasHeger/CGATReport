@@ -5,12 +5,10 @@ from SphinxReport import DataTree
 from SphinxReport.Component import *
 from SphinxReport import Utils
 from SphinxReport import Cache
+from SphinxReport import Tracker
 
 # move User renderer to SphinxReport main distribution
 from SphinxReportPlugins import Renderer
-
-import SphinxReport.Tracker
-
 import numpy
 
 VERBOSE=True
@@ -547,10 +545,20 @@ class Dispatcher(Component):
 
         self.debug( "profile: started: tracker: %s" % (self.tracker))
 
-        if isinstance( self.tracker, SphinxReport.Tracker.Empty):
-            # no data if tracker is the empty tracker
-            return ResultBlocks( self.renderer() )
-
+        # collect no data if tracker is the empty tracker
+        # and go straight to rendering
+        try:
+            if self.tracker.getTracks() == ["empty"]:
+                # is instance does not work because of module mapping
+                # type(Tracker.Empty) == SphinxReport.Tracker.Empty
+                # type(self.tracker) == Tracker.Empty 
+                # if isinstance( self.tracker, Tracker.Empty):
+                result =self.renderer() 
+                return ResultBlocks( result )
+        except AttributeError:
+            # for function trackers
+            pass
+        
         # collecting data 
         try: self.collect()
         except: 

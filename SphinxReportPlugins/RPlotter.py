@@ -436,9 +436,11 @@ class GGPlot( Renderer, Plotter ):
         except ValueError as msg:
             raise ValueError( "could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg ))
             
-        self.startPlot()
-        # plot
-        R.plot( pp )
+        figname = re.sub( '/', '_', path2str(path) )
+        r = ResultBlock( '#$ggplot %s$#' % figname,
+                         title = path2str(path) )
+        r.ggplot = pp
+        r.figname = figname
 
-        return self.endPlot( dataframe, path )
+        return ResultBlocks( r )
 

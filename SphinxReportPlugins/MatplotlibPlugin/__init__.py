@@ -55,9 +55,9 @@ class MatplotlibPlugin(Component):
         for figman in fig_managers:
             # create all images
             figid = figman.num
-            for id, format, dpi in all_formats:
+            outname = "%s_%02d" % (template_name, figid)
 
-                outname = "%s_%02d" % (template_name, figid)
+            for id, format, dpi in all_formats:
 
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
 
@@ -68,23 +68,23 @@ class MatplotlibPlugin(Component):
                     warnings.warn(s)
                     return []
 
-                if format=='png':
-                    thumbdir = os.path.join(outdir, 'thumbnails')
-                    try:
-                        os.makedirs(thumbdir)
-                    except OSError:
-                        pass
-                    thumbfile = str('%s.png' % os.path.join(thumbdir, outname) )
-                    captionfile = str('%s.txt' % os.path.join(thumbdir, outname) )
-                    if not os.path.exists(thumbfile):
-                        # thumbnail only available in matplotlib >= 0.98.4
-                        try:
-                            figthumb = image.thumbnail(str(outpath), str(thumbfile), scale=0.3)
-                        except AttributeError:
-                            pass
-                    outfile = open(captionfile,"w")
-                    outfile.write( "\n".join( content ) + "\n" )
-                    outfile.close()
+                # if format=='png':
+                #     thumbdir = os.path.join(outdir, 'thumbnails')
+                #     try:
+                #         os.makedirs(thumbdir)
+                #     except OSError:
+                #         pass
+                #     thumbfile = str('%s.png' % os.path.join(thumbdir, outname) )
+                #     captionfile = str('%s.txt' % os.path.join(thumbdir, outname) )
+                #     if not os.path.exists(thumbfile):
+                #         # thumbnail only available in matplotlib >= 0.98.4
+                #         try:
+                #             figthumb = image.thumbnail(str(outpath), str(thumbfile), scale=0.3)
+                #         except AttributeError:
+                #             pass
+                #     outfile = open(captionfile,"w")
+                #     outfile.write( "\n".join( content ) + "\n" )
+                #     outfile.close()
 
             # create the text element
             rst_output = Utils.buildRstWithImage( outname, 

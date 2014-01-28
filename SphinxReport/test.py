@@ -406,7 +406,7 @@ def main( argv = None, **kwargs ):
             tracker_name = parts[-1]
         else:
             tracker_modulename = None
-            tracker_name = None
+            tracker_name = options.tracker
 
         for name, tracker, modulename, is_derived  in trackers:
             if name == tracker_name:

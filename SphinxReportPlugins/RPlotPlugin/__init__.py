@@ -33,8 +33,11 @@ class RPlotPlugin(Component):
                  display_options,
                  tracker_id,
                  links = {}):
-        '''collect one or more R figures from all active devices
-        and
+        '''collect one or more R figures.
+
+        Plots are collected from all active devices.
+        Plots are also collected from result-blocks
+        containing a 'ggplot' attribute.
         
         1. save as png, hires-png and pdf
         2. save thumbnail
@@ -42,7 +45,6 @@ class RPlotPlugin(Component):
 
         returns a map of place holder to placeholder text.
         '''
-        
         # disable plotting if no rpy installed
         if R == None: return {}
 
@@ -53,12 +55,16 @@ class RPlotPlugin(Component):
         all_formats = [default_format,] + additional_formats
         image_options = Utils.getImageOptions( display_options )
 
+        ##########################################
+        ##########################################
+        ##########################################
+        # iterate over devices
         devices = R["dev.list"]()
         try:
             maxid = max( R["dev.list"]() )
         except TypeError:
-            return map_figure2text
-        
+            maxid = 0
+            
         for figid in range( 2, maxid+1 ):
 
             for id, format, dpi in all_formats:
@@ -66,7 +72,6 @@ class RPlotPlugin(Component):
                 R["dev.set"]( figid )
 
                 outname = "%s_%02d" % (template_name, figid)
-
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
 
                 if format.endswith( "png" ):
@@ -137,7 +142,7 @@ class RPlotPlugin(Component):
                     outfile.write( "\n".join( content ) + "\n" )
                     outfile.close()
 
-            R["dev.off"](figid)
+                R["dev.off"](figid)
 
             # create the text element
             rst_output = Utils.buildRstWithImage( outname,
@@ -151,6 +156,50 @@ class RPlotPlugin(Component):
                                                   display_options )
 
             map_figure2text[ "#$rpl %i$#" % figid] = rst_output
+            
+        figid = maxid
+        ##########################################
+        ##########################################
+        ##########################################
+        # iterate over ggplot plots
+        for xblocks in blocks:
+            for block in xblocks:
+                if not hasattr( block, "ggplot" ): continue
+                pp = block.ggplot
+                figname = block.figname
+
+                outname = "%s_%s" % (template_name, figname)
+                
+                for id, format, dpi in all_formats:
+                    outpath = os.path.join(outdir, '%s.%s' % (outname, format))
+                    
+                    width, height = 3 * dpi, 3 * dpi
+                    if format.endswith( "png"):
+                        R.png( outpath, 
+                               width = width,
+                               height = height )
+                    elif format.endswith( "svg" ):
+                        R.svg( outpath )
+                    elif format.endswith( "eps" ):
+                        R.postscript( outpath )
+                    elif format.endswith( "pdf" ):
+                        R.pdf( outpath )
+                        
+                    R.plot( pp )
+                    R["dev.off"]()
+
+                # create the text element
+                rst_output = Utils.buildRstWithImage( outname,
+                                                      outdir,
+                                                      rstdir,
+                                                      builddir,
+                                                      srcdir,
+                                                      additional_formats,
+                                                      tracker_id, 
+                                                      links,
+                                                      display_options )
+
+                map_figure2text[ "#$ggplot %s$#" % figname] = rst_output
 
         return map_figure2text
 
