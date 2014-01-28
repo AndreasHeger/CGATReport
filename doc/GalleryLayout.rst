@@ -2,7 +2,8 @@
 Layouts
 =======
 
-Testing the layout option
+Testing the :term:`layout` option
+=================================
 
 .. report:: TestCases.LayoutTest
    :render: line-plot
@@ -40,4 +41,20 @@ Testing the layout option
 
    Grid layout
 
+Testing the :term:`split-at` option
+===================================
+
+.. report:: TestCases.SplittingTest
+   :render: line-plot
+   :split-at: 4
+
+   Splitting to show 4 tracks per plot
+
+.. report:: TestCases.SplittingTest
+   :render: line-plot
+   :split-at: 4
+   :split-always: track0
+
+   Splitting to show 4 tracks per plot
+   including track0
 

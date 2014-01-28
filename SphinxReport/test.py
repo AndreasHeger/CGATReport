@@ -131,11 +131,9 @@ RST_TEMPLATE = """.. _%(label)s:
    %(caption)s
 """
 
-NOTEBOOK_TEMPLATE = """import os
-os.chdir('%(curdir)s')
+NOTEBOOK_TEMPLATE = """%%matplotlib inline
 import SphinxReport.test
-args = "-r none -t %(tracker)s %(options)s".split(" ")
-result = SphinxReport.test.main( args )
+result = SphinxReport.test.main( %(options)s )
 %%load_ext rmagic
 """
 
@@ -208,23 +206,26 @@ def writeNotebook( outfile, options, kwargs,
     '''write a snippet to paste with the ipython notebook.
     '''
 
-    cmd_options = []
-    
+    cmd_options = [ 
+        'do_print = False',
+        'tracker="%s"' % options.tracker,
+        'renderer="%s"' % options.renderer,
+        'workdir="%s"' % os.getcwd() ]
+                    
     for key, val in list(kwargs.items()) +\
         list(renderer_options.items()) +\
         list(transformer_options.items()):
         if val == None:
-            cmd_options.append( "-o %s" % key )
+            cmd_options.append( "%s" % key )
         else:
-            cmd_options.append( "-o %s=%s" % (key,val) )
-        
+            cmd_options.append( "%s=%s" % (key,val) )
+            
     if options.transformers:
-        for t in options.transformers:
-            cmd_options.append( "-m %s" % t )
-        
+        cmd_options.extend( "transformer=['%s']" % "','".join( options.transformers))
+
     # no module name in tracker
     params = { "tracker" : "%s" % (name),
-               "options" : " ".join(cmd_options),
+               "options" : ",".join( cmd_options ),
                "curdir" : os.getcwd() }
     
     outfile.write( NOTEBOOK_TEMPLATE % params )
@@ -240,10 +241,9 @@ def main( argv = None, **kwargs ):
     '''main function for test.py.
 
     Long-form of command line arguments can also be supplied as kwargs.
-    '''
-    
-    if argv == None: argv = sys.argv
 
+    If argv is not None, command line parsing will be performed.
+    '''
     parser = optparse.OptionParser( version = "%prog version: $Id$", 
                                     usage = globals()["__doc__"] )
 
@@ -292,6 +292,9 @@ def main( argv = None, **kwargs ):
     parser.add_option( "-I", "--ii", "--start-ipython", dest="start_ipython", action="store_true",
                        help = "do not render, start ipython interpreter [default=%default]." )
 
+    parser.add_option( "--workdir", dest="workdir", type="string",
+                          help="working directory - change to this directory before executing [default=%default]" )
+
     parser.add_option( "--hardcopy", dest="hardcopy", type="string",
                        help = "output images of plots. The parameter should contain one or more %s "
                        " The suffix determines the type of plot. "
@@ -314,21 +317,32 @@ def main( argv = None, **kwargs ):
         start_interpreter = False,
         start_ipython = False,
         language = "rst",
+        workdir = None,
         dpi = 100 )
+
+    if argv:
+        (options, args) = parser.parse_args( argv )
+
+        if len(args) == 2:
+            options.tracker, options.renderer = args
     
-    (options, args) = parser.parse_args( argv )
+    else:
+        (options, args) = parser.parse_args( [] )
 
-    if len(args) == 2:
-        options.tracker, options.renderer = args
+        ######################################################
+        # set keyword arguments as options
+        for keyword, value in kwargs.items():
+            if hasattr( options, keyword ):
+                setattr( options, keyword, value )
+            else:
+                raise ValueError('unknown keyword argument %s' % keyword )
+          
+    if options.workdir is not None:
+        savedir = os.getcwd()
+        os.chdir( options.workdir )
+    else:
+        savedir = None
 
-    ######################################################
-    # set keyword arguments as options
-    for keyword, value in kwargs.items():
-        if hasattr( options, keyword ):
-            setattr( options, keyword, value )
-        else:
-            raise ValueError('unknown keyword argument %s' % keyword )
-                
     ######################################################
     # configure options
     options.dir_trackers = os.path.abspath( os.path.expanduser( options.dir_trackers ) )
@@ -447,9 +461,10 @@ def main( argv = None, **kwargs ):
     
         if result and renderer != None: 
             for r in result:
-                print ("")
-                print ("title: %s" % r.title)
-                print ("")
+                if r.title:
+                    print ("")
+                    print ("title: %s" % r.title)
+                    print ("")
                 for s in r:
                     print(str(s))
                     
@@ -497,6 +512,9 @@ def main( argv = None, **kwargs ):
     else:
         raise ValueError("please specify either a tracker (-t/--tracker) or a page (-p/--page) to test")
 
+    if savedir is not None:
+        os.chdir( savedir )
+
     if renderer == None:
         dataframe = asDataFrame( result )
 
@@ -526,5 +544,5 @@ def main( argv = None, **kwargs ):
         return result
     
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main( argv = sys.argv ))
 

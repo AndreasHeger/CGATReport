@@ -42,6 +42,18 @@ investigate netCDF/HFS5 support
 Release Notes
 =============
 
+Version 3.0
+============
+
+   * Moved to gitbuh
+   * Use pandas dataframes
+   * Use seaborn plot aesthatics
+   * Refined notebook integration
+
+Incompatibilities to Version 2
+
+   * pie-plot might orient the data differently.
+
 Version 2.2
 ============
 

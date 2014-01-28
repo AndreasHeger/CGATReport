@@ -1112,7 +1112,7 @@ class LinePlot( Renderer, Plotter ):
 
         fig = self.startPlot()
         
-        paths = dataframe.index.get_level_values(0)
+        paths = dataframe.index.get_level_values(0).unique()
 
         self.initPlot( fig, dataframe, path )
 
@@ -1127,7 +1127,7 @@ class LinePlot( Renderer, Plotter ):
             work = dataframe.ix[path]
             xvalues = work[columns[0]]
             for column in work.columns[1:]:
-
+            
                 self.initLine( column, work )
 
                 yvalues = work[column]
@@ -1146,8 +1146,8 @@ class LinePlot( Renderer, Plotter ):
                               nplotted )
                 nplotted += 1
                 
-                self.legend.append( column )
-
+                self.legend.append( path2str(path) + "/" + column )
+            
         self.finishPlot( fig, dataframe, path )
 
         return self.endPlot( self.plots, self.legend, path )
@@ -1751,7 +1751,7 @@ class DataSeriesPlot(Renderer, Plotter):
         return
 
 class MultipleSeriesPlot(Renderer, Plotter):        
-    """Plot one or more data series in mulitple plots.
+    """Plot one or more data series in multiple plots.
     
     This :class:`Renderer` requires two levels.
 
@@ -1769,11 +1769,15 @@ class MultipleSeriesPlot(Renderer, Plotter):
 
         blocks = ResultBlocks()
 
-        for column in dataframe.columns:
-
-            self.startPlot()
-            plts = self.plot( dataframe[column], path )
-            blocks.extend( self.endPlot( plts, None, path ) )
+        if len(dataframe.columns) == 1:
+            for column in dataframe.columns:
+                blocks.extend( self.plot( dataframe[column], path ))
+        else:
+            for title, row in dataframe.iterrows():
+                row = row[row.notnull()]
+                values = row.tolist()
+                headers = list( row.index)
+                blocks.extend( self.plot( row, path ) )
 
         return blocks
 
@@ -1795,7 +1799,7 @@ class PlotByRow( Renderer, Plotter ):
 
 
     def render( self, dataframe, path ):
-        
+
         blocks = ResultBlocks()
         for title, row in dataframe.iterrows():
             row = row[row.notnull()]
@@ -2284,6 +2288,7 @@ class VennPlot( MultipleSeriesPlot ):
         values = dataseries
 
         subsets = dict( zip( headers, values) )
+        self.startPlot()
 
         if "labels" in subsets:
             setlabels = subsets["labels"]

@@ -55,6 +55,16 @@ class LayoutTest( Tracker ):
     def __call__(self, track, slice = None):
         return odict( ( ("data", [ random.gauss( 0,1 ) for x in range(self.nsamples) ]),))
 
+class SplittingTest( Tracker ):
+    '''return a single column of data.'''
+    tracks = [ "track%i" % x for x in range(0,10) ]
+    slices = ["slice%i" % x for x in range(0,2) ]
+    def __call__(self, track, slice = None):
+        s = [random.randint(0,20) for x in range(10)]
+        random.shuffle( s )
+        return odict( ( ('x', list(range(len(s)))), ('y',s)) )
+
+
 class MultipleHistogramTest( Tracker ):
     """Layout testing."""
     nslices = 3

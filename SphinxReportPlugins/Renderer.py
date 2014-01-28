@@ -102,35 +102,28 @@ class Renderer(Component):
             result.append( EmptyResultBlock( title = path2str(path) ) )
             return result
 
-        result.extend( self.render( dataframe, path ) )
+        if not self.split_at:
+            # print without splitting
+            result.extend( self.render( dataframe, path ) )
+        else:
+            # split dataframe at first index
+            first_level_labels = dataframe.index.get_level_values(0).unique()
+            if len(first_level_labels) < self.split_at:
+                result.extend( self.render( dataframe, path ) )
+            else:
+                # select tracks to always add to split 
+                # pick always tracks
+                if self.split_always:
+                    always = [ x for x, y in itertools.product( first_level_labels, self.split_always) \
+                                   if re.search( y, x ) ]
+                else:
+                    always = []
 
-        # for p in paths:
-        #     work = DataTree.getLeaf( data, p )
-        #     if not work: continue
-        #     if self.split_at:
-        #         k = list(work.keys())
-        #         # select tracks to always add to split 
-        #         if self.split_always:
-        #             always = [ x for x, y in itertools.product( k, self.split_always) if re.search( y, x ) ]
-                    
-        #         for z, x in enumerate(range( 0, len(k), self.split_at)) :
-        #             if self.split_always:
-        #                 w = odict( [ (xx, work[xx]) for xx in always ] )
-        #             else:
-        #                 w = odict()
+                for z, x in enumerate(range( 0, len(first_level_labels), self.split_at)) :
+                    select = always + list(first_level_labels[x:x+self.split_at])
 
-        #             w.update( odict( [ (xx, work[xx]) for xx in k[x:x+self.split_at] ] ) )
-        #             try:
-        #                 result.extend( self.render( w, path + p + (str(z),) ) )
-        #             except:
-        #                 self.warn("exeception raised in rendering for path: %s" % str(path+p+str((z,))))
-        #                 raise 
-        #     else:
-        #         try:
-        #             result.extend( self.render( work, path + p ) )
-        #         except:
-        #             self.warn("exeception raised in rendering for path: %s" % str(path+p))
-        #             raise 
+                    work = pandas.concat( [dataframe.ix[s] for s in select], keys = select )
+                    result.extend( self.render( work, path + (z, ) )
             
         return result
 

@@ -264,7 +264,6 @@ def asDataFrame( data ):
     ######################################################
     ######################################################
     ######################################################
-
     labels = getPaths( data )
     # build multi-index
     leaves = list(getNodes( data, len(labels) -1 ))
@@ -285,10 +284,9 @@ def asDataFrame( data ):
             dataframes.append( dataframe )
             if len(path) == 1:
                 # if only one level, do not use tuple
-                index_tuples.append( path[0] )
+                index_tuples.append( path )
             else: 
                 index_tuples.append( path )
-        index = pandas.MultiIndex.from_tuples( index_tuples )
         df = pandas.concat( dataframes, keys = index_tuples )
 
     elif Utils.isDataFrame( leaf ):
@@ -329,6 +327,7 @@ def asDataFrame( data ):
                 dataframes.append( df )
                 index_tuples.extend( [path] )
             df = pandas.concat( dataframes, keys = index_tuples)
+
     return df
 
 def getPaths( work ):
