@@ -136,7 +136,7 @@ as interleaved bars. Both *interleaved-bars* and *bars* can be used.
    :layout: row
    :width: 200
 
-   A bar plot with interleaved bars and errors
+   A bar plot with overlapping bars and errors
 
 .. report:: Trackers.LabeledDataWithErrorsAndLabelsExample
    :render: interleaved-bar-plot
@@ -160,7 +160,7 @@ as interleaved bars. Both *interleaved-bars* and *bars* can be used.
    :layout: row
    :width: 200
 
-   A bar plot with interleaved bars and errors
+   A bar plot with overlapping bars and labels
 
 .. report:: Trackers.LabeledDataWithErrorsAndLabelsExample
    :render: interleaved-bar-plot
@@ -168,7 +168,7 @@ as interleaved bars. Both *interleaved-bars* and *bars* can be used.
    :layout: row
    :width: 200
 
-   A bar plot with interleaved bars and errors
+   A bar plot with interleaved bars and labels
 
 .. report:: Trackers.LabeledDataWithErrorsAndLabelsExample
    :render: stacked-bar-plot
@@ -176,6 +176,6 @@ as interleaved bars. Both *interleaved-bars* and *bars* can be used.
    :layout: row
    :width: 200
 
-   A bar plot with interleaved bars and errors
+   A bar plot with stacked bars and labels
 
 

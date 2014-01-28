@@ -1,6 +1,9 @@
 from logging import warn, log, debug, info
 import itertools
 import numpy
+import pandas
+
+# used in evals for computing bins in histograms
 from numpy import arange
 
 from collections import OrderedDict as odict
@@ -28,6 +31,10 @@ class Transformer(Component):
     Implements the basic __call__ method that iterates over a :term:`data tree`
     and calls self.transform method on the appropriate levels in the
     hierarchy.
+
+    Levels:
+    0 - the actual data point
+    1 - dictionary of data points
     '''
 
     capabilities = ['transform']
@@ -44,14 +51,17 @@ class Transformer(Component):
         labels = DataTree.getPaths( data )        
         debug( "transform: started with paths: %s" % labels)
         assert len(labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
-        
-        paths = list(itertools.product( *labels[:-self.nlevels] ))
+        if self.nlevels:
+            paths = list(itertools.product( *labels[:-self.nlevels] ))
+        else:
+            paths = list(itertools.product( *labels ))
+
         for path in paths:
             work = DataTree.getLeaf( data, path )
             if not work: continue
             new_data = self.transform( work, path )
-            if new_data:
-                if path:
+            if new_data is not None:
+                if path is not None and len(path) > 0:
                     DataTree.setLeaf( data, path, new_data )
                 else:
                     # set new root
@@ -164,7 +174,7 @@ class TransformerToList( Transformer ):
 ########################################################################
 ########################################################################
 ########################################################################
-class TransformerToDataFrame( Transformer ):
+class TransformerToRDataFrame( Transformer ):
     '''transform data into one or more data frames.
 
     Example::
@@ -198,6 +208,27 @@ class TransformerToDataFrame( Transformer ):
 
         return rpy2.robjects.DataFrame(t)
 
+class TransformerToDataFrame( Transformer ):
+    '''transform data into one or more data frames.
+
+    Example::
+
+       Input:                                Output:
+       experiment1/expression = [1,2,3]      experiment1/df({ expression : [1,2,3], counts : [3,4,5] })
+       experiment1/counts = [3,4,5]          experiment2/df({ expression : [8,9,1], counts : [4,5,6] })
+       experiment2/expression = [8,9,1]
+       experiment2/counts = [4,5,6]
+
+    '''
+
+    def __init__(self,*args,**kwargs):
+        Transformer.__init__( self, *args, **kwargs )
+        
+    def __call__( self, data ):
+        
+        result = DataTree.asDataFrame( data )
+        return odict( ( ('all', result),) )
+
 ########################################################################
 ########################################################################
 ########################################################################
@@ -215,11 +246,12 @@ class TransformerIndicator( Transformer ):
 
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
-
+        
+        raise NotImplementedError('transformer indicator is not implemented')
         try:
             self.filter = kwargs["tf-fields"]
         except KeyError: 
-            raise KeyError( "TransformerFilter requires the `tf-fields` option to be set." )
+            raise KeyError( "TransformerIndicator requires the `tf-fields` option to be set." )
 
         try: self.nlevels = int(kwargs["tf-level"])
         except KeyError: pass
@@ -542,7 +574,7 @@ class TransformerStats( Transformer ):
     For example::
 
        Input:      
-       [1,2,3,4,5,6,7,8,9,10
+       [1,2,3,4,5,6,7,8,9,10]
 
        Output:
        counts=10
@@ -555,35 +587,18 @@ class TransformerStats( Transformer ):
        q1=3
        q3=8
     '''
-    nlevels = 1
+    nlevels = 0
 
     def __init__(self,*args,**kwargs):
         Transformer.__init__( self, *args, **kwargs )
 
     def transform(self, data, path ):
         debug( "%s: called" % str(self))
-        # do not use iteritems as loop motifies dictionary
 
-        to_delete = []
-        for header, values in data.items():
-            if len(values) == 0: 
-                warn( "no data for %s -removing" % header)
-                to_delete.append( header )
-                continue
-            
-            try:
-                data[header] = Stats.Summary( values )._data
-            except TypeError:
-                warn("%s: could not compute stats: expected an array of values, but got '%s'" % (str(self), str(values)) )
-                to_delete.append( header )
-            except ValueError as msg:
-                warn("%s: could not compute stats: '%s'" % (str(self), msg) )
-                to_delete.append( header )
-
-        for header in to_delete:
-            del data[header]
-
-        return data
+        if Utils.isArray( data ):
+            return Stats.Summary( data )._data
+        else:
+            return None
 
 ########################################################################
 ########################################################################
@@ -911,7 +926,7 @@ class TransformerHistogram( TransformerAggregate ):
      
     '''
 
-    nlevels = 1
+    nlevels = 0
 
     options = Transformer.options +\
         ( ('tf-bins', directives.unchanged), 
@@ -992,7 +1007,7 @@ class TransformerHistogram( TransformerAggregate ):
                 ma = numpy.log10( ma )
                 mi = numpy.log10( mi )
                 try:
-                    bins = [ 10 ** x for x in arange( mi, ma, ma / nbins ) ]
+                    bins = [ 10 ** x for x in numpy.arange( mi, ma, ma / nbins ) ]
                 except ValueError as msg:
                     raise ValueError("can not compute %i bins for %f-%f: %s" % \
                                          (nbins, mi, ma, msg ) )
@@ -1029,20 +1044,17 @@ class TransformerHistogram( TransformerAggregate ):
     def transform(self, data, path):
         debug( "%s: called for path %s" % (str(self), str(path)))
 
-        to_delete = set()
-        for header, values in data.items():
-            bins, values = self.toHistogram(values)
-            if bins != None:
-                for converter in self.mConverters: values = converter(values)
-                data[header] =  odict( ((header, bins), ("frequency", values)))
-            else:
-                to_delete.add( header )
+        if not Utils.isArray( data ): return None
 
-        for header in to_delete:
-            del data[header]
+        bins, values = self.toHistogram(data)
+        if bins != None:
+            for converter in self.mConverters: values = converter(values)
 
-        debug( "%s: completed for path %s" % (str(self), str(path)))
-        return data
+        debug( "%s: completed for path %s" % (str(self), str(path)))            
+        header = "bins"
+        #if len(path) > 1: header = path[-1]
+        #else: header = "bins"
+        return odict( ((header, bins), ("frequency", values)))
 
 class TransformerMelt( Transformer ):
     ''' Create a melted table

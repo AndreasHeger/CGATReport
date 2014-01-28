@@ -1,5 +1,8 @@
 import os, sys, re, shelve, traceback, pickle, types, itertools, collections
 
+import json
+import pprint
+
 # so that arange is available in eval
 import numpy
 import numpy.ma
@@ -76,7 +79,7 @@ class Renderer(Component):
         else:
             self.split_always = None
 
-    def __call__(self, dataseries, path ):
+    def __call__(self, dataframe, path ):
         '''iterate over leaves/branches in data structure.
 
         This method will call the :meth:`render` method for 
@@ -85,8 +88,8 @@ class Renderer(Component):
         if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
 
         try:
-            labels = dataseries.index.levels
-            paths = dataseries.index.unique()
+            labels = dataframe.index.levels
+            paths = dataframe.index.unique()
         except AttributeError:
             labels = ['dummy1'] 
             paths = ['dummy1']
@@ -99,7 +102,7 @@ class Renderer(Component):
             result.append( EmptyResultBlock( title = path2str(path) ) )
             return result
 
-        result.extend( self.render( dataseries, path ) )
+        result.extend( self.render( dataframe, path ) )
 
         # for p in paths:
         #     work = DataTree.getLeaf( data, p )
@@ -196,7 +199,7 @@ class TableBase( Renderer ):
 
         return r
 
-    def asSpreadSheet( self, matrix, row_headers, col_headers, title ):
+    def asSpreadSheet( self, dataframe, row_headers, col_headers, title ):
         '''save the table as an xls file.
 
         Multiple files of the same Renderer/Tracker combination are distinguished 
@@ -222,8 +225,9 @@ class TableBase( Renderer ):
         ws.title = title[:31]
 
         ws.append( [""] + list(col_headers) )
-        for x,row in enumerate( matrix ):
-            ws.append( [row_headers[x]] + row )
+        for x,row in enumerate( dataframe.iterrows() ):
+            idx, data = row
+            ws.append( [path2str(row_headers[x])] + list(data) )
 
         r.xls = wb
 
@@ -268,17 +272,18 @@ class Table( TableBase ):
         self.add_percent = kwargs.get( 'add-percent', None )
         self.head = int( kwargs.get( 'head', 0 ) )
 
-    def modifyTable( self, matrix, row_headers, col_headers ):
+    def modifyTable( self, dataframe ):
         '''modify table if required, for example adding percentages.'''
         
         if self.add_percent:
+            columns = dataframe.columns
             parts = self.add_percent.split(";")
             for part in parts:
                 total, other_col = None, None
                 if "," in part: 
                     column, method = part.split(",")
                     if method in col_headers:
-                        other_col = col_headers.index( method )
+                        other_col = columns.index( method )
                     else:
                         try: total = float( method )
                         except ValueError:
@@ -286,36 +291,28 @@ class Table( TableBase ):
                 else:
                     column = part
                 
-                if column not in col_headers:
+                if column not in columns:
                     raise ValueError("unknown column `%s` to add-percent" % (column))
 
-                col = col_headers.index( column )
-                values = [ float(x[col]) for x in matrix ]
+                values = numpy.array( dataframe.sum(axis = 1), dtype=numpy.float)
 
                 if other_col:
-                    for row in matrix:
-                        row.insert( col+1, 100.0 * float(row[col]) / float(row[other_col]) )
+                    dataframe['%s/%%' % column ] = 100.0 * dataframe[column] / dataframe[other_col]
                 else:
-                    if total == None: total = sum(values)
-                    for row in matrix:
-                        row.insert( col+1, 100.0 * float(row[col]) / total )
+                    if total == None: total = float(sum(values))
+                    dataframe['%s/%%' % column ] = 100.0 * dataframe[column] / values
 
-                col_headers.insert( col+1, "%s / %%" % column )
+        return dataframe
 
-        return matrix, row_headers, col_headers
-
-    def __call__(self, dataseries, path):
+    def __call__(self, dataframe, path):
         
         # modify table (adding/removing columns) according to user options
         # matrix, row_headers, col_headers = self.modifyTable( matrix, row_headers, col_headers )
-
+        dataframe = self.modifyTable( dataframe )
+        
         title = path2str(path)
 
         results = ResultBlocks()
-        try:
-            dataframe = dataseries.unstack()
-        except pandas.core.reshape.ReshapeError:
-            dataframe = pandas.DataFrame(dataseries)
 
         row_headers = dataframe.index
         col_headers = dataframe.columns
@@ -760,7 +757,8 @@ class MatrixBase:
         for x in range(len(rows)):
             lines.append( '   "%s","%s"' % (rows[x], '","'.join( [ self.toString(x) for x in matrix[x,:] ] ) ) )
         lines.append( "") 
-        if not path: subtitle = ""
+
+        if path is None: subtitle = ""
         else: subtitle = path2str(path)
 
         results.append( ResultBlock( "\n".join(lines), title = subtitle ) )
@@ -775,7 +773,7 @@ class TableMatrix(TableBase, MatrixBase):
     All values need to be numerical.
     """
 
-    nlevels = 2
+    nlevels = 1
 
     options = TableBase.options +\
         ( ('transform-matrix', directives.unchanged), )
@@ -786,7 +784,7 @@ class TableMatrix(TableBase, MatrixBase):
         MatrixBase.__init__(self, *args, **kwargs )
 
     def buildMatrix( self, 
-                     dataseries, 
+                     dataframe, 
                      missing_value = 0, 
                      apply_transformations = True,
                      take = None,
@@ -805,12 +803,11 @@ class TableMatrix(TableBase, MatrixBase):
         is set.
         """
 
-        dataframe = dataseries.unstack()
         rows = list(dataframe.index)
         columns = list(dataframe.columns)
 
-        matrix = dataframe.as_matrix() 
-
+        matrix = dataframe.as_matrix()
+        
         if self.converters and apply_transformations:
             for converter in self.converters: 
                 self.debug("applying converter %s" % converter)
@@ -821,167 +818,33 @@ class TableMatrix(TableBase, MatrixBase):
         columns = [ str(x) for x in columns ]
         
         return matrix, rows, columns
-
-        # labels = DataTree.getPaths( work )
-        # levels = len(labels)
-
-        # rows, columns = labels[:2]
-
-        # if ignore != None: 
-        #     columns = [x for x in columns if x not in ignore ]
-
-        # # if take is specified, this takes priority
-        # if take:
-        #     if levels == 3: 
-        #         if take not in labels[-1]: raise ValueError( "no data on `%s`" % take )
-        #         take_f = lambda row,column: work[row][column][take]
-        #     elif levels == 2:
-        #         take_f = lambda row,column: work[row][take]
-        #         columns = [take]
-        #     else:
-        #         raise ValueError( "expected two or three levels, got %i: '%s'" % (levels, labels) )
-        # else:
-        #     if levels == 3:
-        #         take = [ x for x in labels[-1] if x not in ignore ]
-        #         if len(take) != 1:
-        #             self.warn( "received data with three level, but third level is ambiguous, taking first of: %s" % take)
-        #         take=take[0]
-        #         take_f = lambda row, column: work[row][column][take]
-        #     elif levels == 2: 
-        #         take_f = lambda row,column: work[row][column]
-        #     else:
-        #         raise ValueError( "expected two levels, got %i: %s" % (levels, str(labels) ))
-
-        # self.debug("creating matrix: taking=%s, ignoring=%s" % (take,ignore))
-        # matrix = numpy.array( [missing_value] * (len(rows) * len(columns) ), dtype )
-        # matrix.shape = (len(rows), len(columns) )
-        # self.debug("constructing matrix")
-        # for x,row in enumerate(rows):
-        #     for y, column in enumerate(columns):
-        #         # missing values from DataTree
-        #         try:
-        #             v = take_f( row, column )
-        #         except KeyError:
-        #             continue
-
-        #         # empty values from DataTree
-        #         try:
-        #             if len(v) == 0: continue
-        #         except TypeError:
-        #             pass
-
-        #         # convert
-        #         try:
-        #             matrix[x,y] = v
-        #         except ValueError as msg:
-        #             raise ValueError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]),msg) )
-        #         except TypeError as msg:
-        #             raise TypeError( "malformatted data: expected scalar, got '%s'; msg=%s" % (str(work[row][column]), msg) )
-        
 
 # for compatibility
 Matrix = TableMatrix
 
-class NumpyMatrix( TableBase, MatrixBase ): 
-    """A nxm matrix.
-
-    It implements column-wise and row-wise transformations.
-
-    This class adds the following options to the :term:`report` directive.
-
-        :term:`transform-matrix`: apply a matrix transform. Possible choices are:
-
-           * *correspondence-analysis*: use correspondence analysis to permute rows/columns 
-           * *normalized-column-total*: normalize by column total
-           * *normalized-column-max*: normalize by column maximum
-           * *normalized-row-total*: normalize by row total
-           * *normalized-row-max*: normalize by row maximum
-           * *normalized-total*: normalize over whole matrix
-           * *normalized-max*: normalize over whole matrix
-           * *sort* : sort matrix rows and columns alphanumerically.
-           * filter-by-rows: only take columns that are also present in rows
-           * filter-by-cols: only take columns that are also present in cols
-           * square: make square matrix (only take rows and columns present in both)
-           * *add-row-total* : add the row total at the bottom
-           * *add-column-total* : add the column total as a last column
-
-    Requires one level with three fields:
-
-       rows
-       columns
-       matrix
-
-    All values need to be numerical.
+class NumpyMatrix( TableMatrix, MatrixBase ): 
+    """Deprecated - not needed any more as equivalent to TableMatrix
     """
-    
-    nlevels = 1
-
-    options = TableBase.options +\
-        ( ('transform-matrix', directives.unchanged), )
-
-    def __init__(self, *args, **kwargs):
-
-        TableBase.__init__(self, *args, **kwargs )
+    def __init__(self, *args, **kwargs ):
+        TableMatrix.__init__(self, *args, **kwargs)
         MatrixBase.__init__(self, *args, **kwargs )
 
-    def buildMatrix( self, 
-                     work, 
-                     missing_value = 0, 
-                     apply_transformations = True,
-                     take = None,
-                     dtype = numpy.float ):
-        """build a matrix from work, a single level dictionary with 
-        three fields: rows, columns, matrix."""
-        
-        try: rows = work["rows"]
-        except KeyError: raise KeyError( "expected rownames in field 'rows' - no 'rows' present: %s " % \
-                                             str(list(work.keys()) ))
-        
-        try: columns = work["columns"]
-        except KeyError: raise KeyError( "expected column names in field 'columns' - no 'columns' present: %s " % \
-                                             str(list(work.keys())) )
-
-        try: matrix = work["matrix"]
-        except KeyError: raise KeyError( "expected matrix in field 'matrix' - no 'matrix' present: %s" % \
-                                             str(list(work.keys())) )
-        
-        nrows, ncolumns = matrix.shape
-
-        if len(rows) != nrows:
-            raise ValueError("number of rows does not correspond to matrix: %i != %i" % (len(rows), nrows))
-
-        if len(columns) != ncolumns:
-            raise ValueError("number of columns does not correspond to matrix: %i != %i" % (len(columns), ncolumns))
-
-        # convert rows/columns to str (might be None)
-        rows = [ str(x) for x in rows ]
-        columns = [ str(x) for x in columns ]
-
-        if self.converters and apply_transformations:
-            for converter in self.converters: 
-                self.debug("applying converter %s" % converter)
-                matrix, rows, columns = converter(matrix, rows, columns)
-        
-        return matrix, rows, columns
-
 class Debug( Renderer ):
-    '''a simple renderer, returning the type of data and the number of items at each path.'''
+    '''a simple renderer, returning the type of data 
+    and the number of items at each path.'''
 
     # only look at leaves
     nlevels = 1
 
-    def render( self, dataseries, path ):
+    def render( self, data, path ):
         
-        print dataseries
-        print path
         # initiate output structure
         results = ResultBlocks( title = path )
 
-        # iterate over all items at leaf
-        results.append( ResultBlock( "path= %s, data= %s" % \
-                                         ( path2str(path),
-                                           dataseries), 
-                                     title = "") )
+        try:
+            results.append( ResultBlock(json.dumps(data, indent=4), title=''))
+        except TypeError:
+            results.append( ResultBlock(str(data), title=''))
 
         return results
         
@@ -1035,8 +898,17 @@ class Status( Renderer ):
                        'WARNING' : "warning.png",
                        'WARN': "warning.png" }
 
-    def __call__(self, data, path ):
+    def __call__(self, dataframe, path ):
 
+        # convert to dataframe
+        # index has test names
+        # columns are description, info, status
+        columns = ('description', 'info', 'status')
+        if set(dataframe.columns) != set(columns):
+            raise ValueError( "invalid columns: expected '%s', got '%s' " %\
+                                  (columns, dataframe.columns))
+        
+        
         lines = []
         dirname = os.path.join( os.path.dirname(sys.modules["SphinxReport"].__file__), "images" )
         descriptions = {}
@@ -1047,19 +919,22 @@ class Status( Renderer ):
         lines.append( "   :class: sortable" )
         lines.append( '   :header: "Track", "Test", "", "Status", "Info" ' )
         lines.append( '' )
-
-        for testname, w in data.items():
-            for track, work in w.items():
+        
+        for index, values in dataframe.iterrows():
             
-                status = str(work['status']).strip()
-                descriptions[testname] = work.get('description', "")
-                info = str(work['info']).strip()
-                try:
-                    image = ".. image:: %s" % os.path.join( dirname, self.map_code2image[status.upper()] )
-                except KeyError:
-                    image = ""
+            description=values['description']
+            info = values['info']
+            status = values['status']
+            testname, track = index
 
-                lines.append( '   "%(track)s",":term:`%(testname)s`","%(image)s","%(status)s","%(info)s"' % locals() )
+            descriptions[testname] = description
+
+            try:
+                image = ".. image:: %s" % os.path.join( dirname, self.map_code2image[status.upper()] )
+            except KeyError:
+                image = ""
+
+            lines.append( '   "%(track)s",":term:`%(testname)s`","%(image)s","%(status)s","%(info)s"' % locals() )
                 
         lines.append( "") 
         

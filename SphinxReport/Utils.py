@@ -49,8 +49,12 @@ except AttributeError as msg:
                  numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64)
 
 def isDataFrame( data ):
-    '''return True if data is likely to be a dataframe.'''
+    '''return True if data is a dataframe.'''
     return type(data) == pandas.DataFrame
+
+def isDataSeries( data ):
+    '''return True if data is a series.'''
+    return type(data) == pandas.Series
 
 def isArray( data ):
     '''return True if data is an array.'''

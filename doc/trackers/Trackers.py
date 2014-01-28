@@ -13,13 +13,15 @@ class LabeledDataExample( Tracker ):
     slices = ("slice1", "slice2")
     tracks = ("track1", "track2", "track3")
     def __call__(self, track, slice = None):
+
+        v = int(track[-1]) * int(slice[-1])
         if slice == "slice1":
-            return odict( (("column1", 10),
-                           ("column2", 20 ),) )
+            return odict( (("column1", v ),
+                           ("column2", v * 2),) )
         elif slice == "slice2":
-            return odict ( (("column1", 20),
-                            ("column2", 10),
-                            ("column3", 5),) )
+            return odict ( (("column1", v),
+                            ("column2", v * 2),
+                            ("column3", v * 3),) )
 
 class LabeledDataLargeExample( Tracker ):
     slices = ("slice1", "slice2")
@@ -101,10 +103,10 @@ class ArrayDataExample( Tracker ):
 
     def __call__(self, track, slice = None):
 
-        scale = (3-int(track[-1])) 
+        scale = (3-int(track[-1])) * (2-int(slice[-1]))
         
-        data = odict( (("x", range(0,50)),
-                       ("y", [ x * scale for x in range(0,50) ] ) ) )
+        data = odict( (("x", range(0,10)),
+                       ("y", [ x * scale for x in range(0,10) ] ) ) )
         
         return data
 
@@ -146,10 +148,10 @@ class MultipleColumnDataExample( Tracker ):
         data = []
         if slice == "slice1":
             for x in range(len(self.mColumns)-1):
-                data.append( [ y + random.gauss( 0, 0.2 ) for y in range(20) ] )
+                data.append( [ y + random.gauss( 0, 0.2 ) for y in range(10) ] )
         elif slice == "slice2":
             for x in range(len(self.mColumns)):
-                data.append( [ y + random.gauss( 0, 0.5 ) for y in range(20) ] )
+                data.append( [ y + random.gauss( 0, 0.5 ) for y in range(10) ] )
         return odict( zip(self.mColumns, data) )
 
 class MultipleColumnDataFullExample( Tracker ):

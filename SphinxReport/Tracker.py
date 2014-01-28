@@ -730,11 +730,10 @@ class Empty( Tracker ):
 
     def getTracks( self, subset = None ):
         """return a list of all tracks that this tracker provides."""
-        if subset: return subset
         return ["empty"]
 
     def __call__(self, *args ):
-        return odict( (("a", 1),))
+        return None
 
 ###########################################################################
 ###########################################################################
@@ -1270,13 +1269,13 @@ class MeltedTableTracker( TrackerSQL ):
             
             track = re.search( self.pattern, table ).groups()[0]
 
-            results.extend( self.get( "SELECT '%(track)s', %(fields)s FROM %(table)s ORDER by gene_id" ) )
+            results.extend( self.get( "SELECT '%(track)s' as track, %(fields)s FROM %(table)s" ) )
 
         ref_columns.insert( 0, "track")
 
         return odict( zip( ref_columns, zip(*results) ))
 
-class MeltedTableTrackerDataframe( TrackerSQL ): 
+class MeltedTableTrackerDataframe( MeltedTableTracker ): 
     '''Tracker representing multiple tables with the same columns.
 
     The tables are melted - a column called ``track`` is added
@@ -1291,28 +1290,5 @@ class MeltedTableTrackerDataframe( TrackerSQL ):
         TrackerSQL.__init__(self, *args, **kwargs )
 
     def __call__(self, track ):
-        assert( self.pattern != None )
-        tables = self.getTables( self.pattern )
-
-        self.rconnect()        
-        ref_columns = self.getColumns( tables[0] )
-        fields = ",".join( ref_columns )
-        results = []
-
-        stmt = "SELECT '%(track)s' as track, %(fields)s FROM %(table)s" 
-
-        for table in tables:
-            columns = self.getColumns( table )
-            if columns != ref_columns:
-                E.warn( "incompatible column names in table %s - skipped" % table )
-                continue
-            
-            track = re.search( self.pattern, table ).groups()[0]
-            results.append( R.dbGetQuery(self.rdb, stmt % locals() ))
-
-        # merge data frames
-        result = results[0]
-        for r in results[1:]:
-            result = R.rbind( results[0], r )
-
-        return result
+        data = MeltedTableTracker.__call__(self, track )
+        return pandas.DataFrame.from_dict( data )

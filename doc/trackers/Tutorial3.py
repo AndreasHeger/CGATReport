@@ -34,7 +34,7 @@ class WordCounterWithSlices(Tracker):
         return ( "all", ".py", ".rst" )
 
     def getSlices( self, subset = None ):
-        return ( "all", "vocals", "consonants")
+        return ( "any", "vocals", "consonants")
 
     def __call__(self, track, slice = None ):
         word_sizes = []
@@ -44,7 +44,7 @@ class WordCounterWithSlices(Tracker):
         else:
             tracks = [track]
 
-        if slice == "all" or slice == None:
+        if slice == "any" or slice == None:
             test_f = lambda x: True
         elif slice == "vocals":
             test_f = lambda x: x[0].upper() in "AEIOU"

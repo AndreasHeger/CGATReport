@@ -225,11 +225,11 @@ class LinePlot( Renderer, Plotter ):
         keys = list(coords.keys())
         return keys[0], keys[1:]
 
-    def render(self, dataseries, path ):
+    def render(self, dataframe, path ):
 
         fig = self.startPlot()
         
-        labels = dataseries.index.levels
+        labels = dataframe.index.levels
 
         paths = list(itertools.product( *labels ) )
         
@@ -278,28 +278,14 @@ class BoxPlot( Renderer, Plotter ):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-    def render(self, dataseries, path ):
+    def render(self, dataframe, path ):
 
         self.startPlot()
 
-        plts, legend = [], []
-        all_data = []
-        
-        tracks = itertools.product( *dataseries.index.levels )
-        
-        for track in tracks:
-            d = dataseries.ix[track]
-            # convert to float, required for seaborn.kdeplot
-            all_data.append( ro.FloatVector( d ) )
-            legend.append( "/".join( (str(path),str(track))))
+        rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
+        R.boxplot( rframe )
 
-        if len(all_data) == 0: 
-            return self.endPlot( plts, None, path )
-            raise ValueError("no data" )
-            
-        R.boxplot( all_data )
-
-        return self.endPlot( dataseries, path )
+        return self.endPlot( dataframe, path )
 
 class SmoothScatterPlot(Renderer, Plotter):
     """A smoothed scatter plot.
@@ -324,27 +310,22 @@ class SmoothScatterPlot(Renderer, Plotter):
             if "," in self.nbins: self.nbins=list(map(int, self.nbins.split(",")))
             else: self.nbins=int(self.nbins)
 
-    def render(self, dataseries, path ):
+    def render(self, dataframe, path ):
         
-        labels = dataseries.index.levels
-        paths = list(itertools.product( *labels ) )
-
-        if len(paths) < 2:
-            raise ValueError( "requiring two coordinates, only got %s" % str(list(paths)))
+        if len(dataframe.columns) < 2:
+            raise ValueError( "requiring two coordinates, only got %s" % str(dataframe.columns))
 
         plts, legend = [], []
-        xlabels, ylabels = [], []
-
         blocks = ResultBlocks()
-        for idx in range( 0, len(paths), 2):
 
-            xpath = paths[idx]
-            ypath = paths[idx+1]
-        
-            xvalues, yvalues = dataseries.ix[xpath], dataseries.ix[ypath]
+        for xcolumn, ycolumn in itertools.combinations( dataframe.columns, 2 ):
 
+            # remove missing data points
+            xvalues, yvalues = Stats.filterMissing( (dataframe[xcolumn], dataframe[ycolumn]) )
+
+            # remove columns with all NaN
             if len(xvalues) == 0 or len(yvalues) == 0:
-                raise ValueError("no data" )
+                continue
 
             # apply log transformation on data not on plot
             if self.logscale:
@@ -356,10 +337,10 @@ class SmoothScatterPlot(Renderer, Plotter):
             self.startPlot()
             R.smoothScatter( xvalues, 
                              yvalues, 
-                             xlab=path2str(xpath), 
-                             ylab=path2str(ypath),
+                             xlab=xcolumn, 
+                             ylab=ycolumn,
                              nbin = self.nbins )
-            blocks.extend( self.endPlot( dataseries, path ) )
+            blocks.extend( self.endPlot( dataframe, path ) )
 
         return blocks
 
@@ -374,7 +355,7 @@ class HeatmapPlot(NumpyMatrix, Plotter):
     """
     options = NumpyMatrix.options + Plotter.options 
     
-    nlevels = 1
+    nlevels = 2
 
     def __init__(self, *args, **kwargs):
         NumpyMatrix.__init__(self, *args, **kwargs )
@@ -443,8 +424,6 @@ class GGPlot( Renderer, Plotter ):
 
         R.library( 'ggplot2' )
 
-        self.startPlot()
-
         rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
         R.assign( "rframe", rframe )
         
@@ -457,6 +436,7 @@ class GGPlot( Renderer, Plotter ):
         except ValueError as msg:
             raise ValueError( "could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg ))
             
+        self.startPlot()
         # plot
         R.plot( pp )
 

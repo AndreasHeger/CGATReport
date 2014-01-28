@@ -10,10 +10,10 @@ class ProjectDatesExample( Tracker ):
         # define a convenience function to convert
         # a three-number tuple to a scalar date float:
         f = lambda year, month, day: matplotlib.dates.date2num( datetime.datetime( year, month, day ))
-
+        
         if track == "proj1":
             return odict( ( ( "start", f(2012,1,1) ),
-                          ( "duration", 100 ) ) )
+                            ( "duration", 100 ) ) )
         elif track == "proj2":
             return odict( ( ( "start", f(2012,6,1) ),
                             ( "duration", 200 ) ) )

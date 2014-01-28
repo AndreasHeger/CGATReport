@@ -28,7 +28,7 @@ For better re-use, it is good practice to separate the data and the rendering pr
 The same plot with a :term:`Tracker` and a :term:`Renderer`.
 
 .. report:: MyPlots.ExampleData1
-   :render: MyPlots.ExampleWithoutData
+   :render: MyPlots.ExampleWithData
 
    The same plot, but separated into a :term:`Tracker`
    and :term:`Renderer`.
@@ -37,7 +37,7 @@ As a benefit of this approach, the individual components can be re-used.
 For example, a different dataset can be plotted in the same way:
 
 .. report:: MyPlots.ExampleData2
-   :render: MyPlots.ExampleWithoutData
+   :render: MyPlots.ExampleWithData
 
    The same plot, but separated into a :term:`Tracker`
    and :term:`Renderer`.

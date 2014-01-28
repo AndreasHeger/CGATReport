@@ -99,7 +99,7 @@ from matplotlib import _pylab_helpers
 from SphinxReport.Component import *
 from SphinxReport.Tracker import Tracker
 from SphinxReport.ResultBlock import flat_iterator
-
+from SphinxReport.DataTree import asDataFrame
 from SphinxReport import Utils
 
 import SphinxReport.clean
@@ -236,8 +236,12 @@ def run( name, t, kwargs ):
     t( **kwargs )
     print("%s: collecting data finished" % name)     
 
-def main( argv = None ):
+def main( argv = None, **kwargs ):
+    '''main function for test.py.
 
+    Long-form of command line arguments can also be supplied as kwargs.
+    '''
+    
     if argv == None: argv = sys.argv
 
     parser = optparse.OptionParser( version = "%prog version: $Id$", 
@@ -316,7 +320,16 @@ def main( argv = None ):
 
     if len(args) == 2:
         options.tracker, options.renderer = args
-        
+
+    ######################################################
+    # set keyword arguments as options
+    for keyword, value in kwargs.items():
+        if hasattr( options, keyword ):
+            setattr( options, keyword, value )
+        else:
+            raise ValueError('unknown keyword argument %s' % keyword )
+                
+    ######################################################
     # configure options
     options.dir_trackers = os.path.abspath( os.path.expanduser( options.dir_trackers ) )
     if not os.path.exists( options.dir_trackers ):
@@ -324,6 +337,7 @@ def main( argv = None ):
 
     sys.path.insert( 0, options.dir_trackers )
 
+    ######################################################
     # test plugins
     kwargs = {}
     for x in options.options:
@@ -344,6 +358,7 @@ def main( argv = None ):
     transformer_options = Utils.selectAndDeleteOptions( kwargs, option_map["transform"])
     display_options = Utils.selectAndDeleteOptions( kwargs, option_map["display"])
 
+    ######################################################
     # decide whether to render or not
     if options.renderer == "none" or options.start_interpreter or \
             options.start_ipython or options.language == "notebook":
@@ -367,6 +382,8 @@ def main( argv = None ):
                     "DataSimple", 
                     "Data"  ) )
 
+    ######################################################
+    ## build from tracker
     if options.tracker:
 
         trackers = []
@@ -454,7 +471,10 @@ def main( argv = None ):
             elif len(_pylab_helpers.Gcf.get_all_fig_managers()) > 0:
                 plt.show()
 
+    ######################################################
+    ## build page
     elif options.page:
+
         from SphinxReport import build
         SphinxReport.report_directive.DEBUG = True
         SphinxReport.report_directive.FORCE = True
@@ -465,7 +485,7 @@ def main( argv = None ):
         options.num_jobs = 1
 
         build.buildPlots( [ options.page, ], options, [], os.path.dirname( options.page ) )
-        
+
         if options.do_show: 
             if options.renderer.startswith("r-"):
                 print("press Ctrl-c to stop")
@@ -478,29 +498,30 @@ def main( argv = None ):
         raise ValueError("please specify either a tracker (-t/--tracker) or a page (-p/--page) to test")
 
     if renderer == None:
+        dataframe = asDataFrame( result )
 
-        print ("----------------------------------------")
-        print ("data is available in the 'result' object")
-        print ("----------------------------------------")
+        print ("--> sphinxreport - available data structures <--")
+        print ("    result=%s" % type(result))
+        print ("    dataframe=%s" % type(dataframe))
         
         # trying to push R objects
-        from rpy2.robjects import r as R
-        for k, v in flat_iterator( result ):
-            try:
-                R.assign( k, v )
-                print ("pushed '%s' to R" % k)
-            except ValueError, msg:
-                print ( "could not push %s: %s" % (k,msg))
-                pass
-        print ("----------------------------------------")
+        # from rpy2.robjects import r as R
+        # for k, v in flat_iterator( result ):
+        #     try:
+        #         R.assign( k, v )
+        #     except ValueError, msg:
+        #         print ( "could not push %s: %s" % (k,msg))
+        #         pass
+        # print ("----------------------------------------")
 
         if options.start_interpreter:
             interpreter = code.InteractiveConsole( dict( globals().items() + locals().items()) )
             interpreter.interact()
-
+            return
         elif options.start_ipython:
             import IPython
             IPython.embed()
+            return
 
         return result
     

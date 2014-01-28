@@ -157,13 +157,13 @@ The data is now in a single melted data frame with a column called
 
     .. report:: Tutorial9.MeltedExpressionLevels
        :render: r-ggplot
-       :statement: aes(expression, color=track) + geom_density()
+       :statement: aes(expression, color=factor(track)) + geom_density()
 
        Plot of gene expression densities
 
 .. report:: Tutorial9.MeltedExpressionLevels
     :render: r-ggplot
-    :statement: aes(expression, color=track) + geom_density()
+    :statement: aes(expression, color=factor(track)) + geom_density()
 
     Plot of gene expression densities
 

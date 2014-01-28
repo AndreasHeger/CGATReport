@@ -137,23 +137,23 @@ After transformation:
 
    TransformerCombinations
 
-TransformerIndicator
------------------------
+.. TransformerIndicator
+.. -----------------------
 
-Before transformation:
+.. Before transformation:
 
-.. report:: Transformers.TrackerIndicator
-   :render: debug
+.. .. report:: Transformers.TrackerIndicator
+..    :render: debug
    
-   TransformerIndicator
+..    TransformerIndicator
 
-After transformation:
+.. After transformation:
 
-.. report:: Transformers.TrackerIndicator
-   :render: debug
-   :transform: indicator
-
-   TransformerIndicator
+.. .. report:: Transformers.TrackerIndicator
+..    :render: debug
+..    :transform: indicator
+   
+..    TransformerIndicator
 
 TransformerGroup
 -----------------------
@@ -170,6 +170,7 @@ After transformation:
 .. report:: Transformers.TrackerGroup
    :render: debug
    :transform: group
+   :tf-fields: x
 
    TransformerGroup
 

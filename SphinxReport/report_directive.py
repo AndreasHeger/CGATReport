@@ -64,13 +64,12 @@ def run(arguments,
 
     # get the directory of the rst file
     rstdir, rstfile = os.path.split( document ) # state_machine.document.attributes['source'])
-
     # root of document tree
-    if not srcdir:
+    if srcdir is None:
         srcdir = setup.srcdir
 
     # build directory 
-    if not builddir:
+    if builddir is None:
         builddir = setup.confdir
     
     # remove symbolic links

@@ -130,7 +130,13 @@ The easiest way to do this is to specify the `ListA`, `ListB` and  `ListC` attri
                   "Bound by ERG" ]
 
 
-Note how I've used the %(track) and %(slice) place holders in the SQL statements, these will be substuted when the querys are executed. Now because hypergeometric testing requires a background, we need to produce a background list. For example, the differential testing used here didn't test genes that arn't expressed in either sample, so there is no way they could be in the differential set. So our background set is all genes that appear in the differential table::
+Note how I've used the ``%(track)`` and ``%(slice)`` place holders in the SQL
+statements, these will be substuted when the querys are executed. Now
+because hypergeometric testing requires a background, we need to
+produce a background list. For example, the differential testing used
+here didn't test genes that arn't expressed in either sample, so there
+is no way they could be in the differential set. So our background set
+is all genes that appear in the differential table::
     
     from SphinxReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
@@ -155,7 +161,10 @@ Note how I've used the %(track) and %(slice) place holders in the SQL statements
                   "Bound by ERG",
 		  "background" ]
 
-Now we are almost finised. There is only one problem. Our background is all genes in the differential table. But there could be genes in the Bound genes lists that arn't in the background, so we need to limit these::
+Now we are almost finised. There is only one problem. Our background
+is all genes in the differential table. But there could be genes in
+the Bound genes lists that arn't in the background, so we need to
+limit these::
 
     from SphinxReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
@@ -184,7 +193,7 @@ Now we are almost finised. There is only one problem. Our background is all gene
                   "Bound by ERG",
 		  "background" ]
 
-Now we have finished our tracker. Lets see if it works using the debug render
+Now we have finished our tracker. Lets see if it works using the debug render:
 
 .. report:: Genelists.OverlapTracker
    :render: debug
@@ -192,12 +201,25 @@ Now we have finished our tracker. Lets see if it works using the debug render
    Output from the OverlapTracker
 
 
-Don't worry if you don't understand this. What we are seeing is a nested dictionary. There are two entries on the top level "logFC < 0" and "logFC > 0", then each of those has entries "greatdomains" and "Promoters". At the bottom level each entry contains four lists of gene ids.
+Don't worry if you don't understand this. What we are seeing is a
+nested dictionary. There are two entries on the top level "logFC < 0"
+and "logFC > 0", then each of those has entries "greatdomains" and
+"Promoters". At the bottom level each entry contains four lists of
+gene ids.
 
 Plotting venns
 ---------------
 
-Now we've got our gene lists, lets have a look at the overlaps. One way to visualise this is as a venn diagram. We already have a `venn-plot` render, but it requires the data to be as a dictionary with entries like '01','10' and '11', which specify the number of items in the first set but not the second, the second set but not the first and in both sets respectively, while our data is as lists of genes. This is where the venn transformer comes in. It takes our gene lists and computes the entries for the dictionary that venn-plot takes. It will work on 2 and 3 way intersections. Lets see this on our Tracker:
+Now we've got our gene lists, lets have a look at the overlaps. One
+way to visualise this is as a venn diagram. We already have a
+`venn-plot` render, but it requires the data to be as a dictionary
+with entries like '01','10' and '11', which specify the number of
+items in the first set but not the second, the second set but not the
+first and in both sets respectively, while our data is as lists of
+genes. This is where the venn transformer comes in. It takes our gene
+lists and computes the entries for the dictionary that venn-plot
+takes. It will work on 2 and 3 way intersections. Lets see this on our
+Tracker:
 
 .. report:: Genelists.OverlapTracker
    :render: debug
@@ -208,8 +230,8 @@ Now we've got our gene lists, lets have a look at the overlaps. One way to visua
 
    Output from the debug render from our venn transformed tracker data for one slice and one track.
 
-
-So we are now ready to plot these are venn diagrams, using a block like this in our report::
+So we are now ready to plot these are venn diagrams, using a block
+like this in our report::
 
     .. report:: Genelists.OverlapTracker
        :render: venn-plot
@@ -228,12 +250,21 @@ And the results look like this:
 
    Venn diagrams showing the overlap between Up and down regulated genes and CHiP-seq intervals
 
-Note that the background list has been ignored for the sake of plotting the venn diagrams. If you really want to keep it, add the options ``:keep-background:`` but remeber that venn-plot can only do 3 way overlaps max.
+Note that the background list has been ignored for the sake of
+plotting the venn diagrams. If you really want to keep it, add the
+options ``:keep-background:`` but remeber that venn-plot can only do 3
+way overlaps max.
 
 Calculating Enrichments and p-values
 -------------------------------------
 
-Its all very well looking at overlapping venn diagrams, but we don't know if the size of the overlaps is more or less than we would expect by chance. This where the ``hypergeometric`` transformer comes in. It looks at how big the overlap between the lists are compared to what you would expect by chance and calculates a p-value based on the hypergeometric distribution. Using it is as simple as transforming and then rendering using a table:
+Its all very well looking at overlapping venn diagrams, but we don't
+know if the size of the overlaps is more or less than we would expect
+by chance. This where the ``hypergeometric`` transformer comes in. It
+looks at how big the overlap between the lists are compared to what
+you would expect by chance and calculates a p-value based on the
+hypergeometric distribution. Using it is as simple as transforming and
+then rendering using a table:
 
 .. report:: Genelists.OverlapTracker
    :render: table
@@ -244,7 +275,16 @@ Its all very well looking at overlapping venn diagrams, but we don't know if the
    Statitics on the overlap between Down regulated genes and genes with AR or ERG signals at their promoters.
 
 
-Note that because there are three lists (plus the background) the transformer calculates the stats for all pairwise combinations. Awesome. But there are three tests here, and this only one track and one slice. There are two tracks and two slices, each with three tests. Thats a total 2x2x3=12 tests. We might worry that we will run into a multiple testing problem. Not to worry. The ``p-adjust`` transformer will take any data that has a P-value column (or other column sepecied using the ``:p-value:`` option) and correct the p-values for multiple testing, adding these corrected values as a new column:
+Note that because there are three lists (plus the background) the
+transformer calculates the stats for all pairwise
+combinations. Awesome. But there are three tests here, and this only
+one track and one slice. There are two tracks and two slices, each
+with three tests. Thats a total 2x2x3=12 tests. We might worry that we
+will run into a multiple testing problem. Not to worry. The
+``p-adjust`` transformer will take any data that has a P-value column
+(or other column sepecied using the ``:p-value:`` option) and correct
+the p-values for multiple testing, adding these corrected values as a
+new column:
 
 .. report:: Genelists.OverlapTracker
    :render: table
@@ -253,11 +293,21 @@ Note that because there are three lists (plus the background) the transformer ca
 
    Statistics with adjusted P-values
 
-By default ``p-adjust`` corrects accross the whole set of p-values, but you can restrict it to just correct within a slice using ``:adj-levels: 2`` or just within one track/slice combination with ``:adj-levels: 1``. The default correction is a BH correction, but any correction method understood by R's p.adjust function can be specified using ``:adj-method:``.
+By default ``p-adjust`` corrects accross the whole set of p-values,
+but you can restrict it to just correct within a slice using
+``:adj-levels: 2`` or just within one track/slice combination with
+``:adj-levels: 1``. The default correction is a BH correction, but any
+correction method understood by R's p.adjust function can be specified
+using ``:adj-method:``.
 
 Conclusion
 ----------
 
-So there you have it. In 16 lines of Tracker code and 6 lines of rst code we have calclated the overlap between two TFs and Up or Down regulated genes for two different difinitions of the regulator region of a gene, plotted them as venn diagrams and calculated the stats on that. Clearly for simple comparisions with only two lists and no tracks or slices, the process is even easier. 
+So there you have it. In 16 lines of Tracker code and 6 lines of rst
+code we have calclated the overlap between two TFs and Up or Down
+regulated genes for two different difinitions of the regulator region
+of a gene, plotted them as venn diagrams and calculated the stats on
+that. Clearly for simple comparisions with only two lists and no
+tracks or slices, the process is even easier.
 
 

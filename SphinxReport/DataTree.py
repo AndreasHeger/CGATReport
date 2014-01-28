@@ -14,10 +14,9 @@ def unique( iterables ):
 
 def path2str( path ):
     '''convert path to printable string.'''
-    if path:
-        return "/".join(map(str,path))
-    else:
-        return ""
+    if path is None: return ""
+    if isinstance( path, str ): return path
+    return "/".join(map(str,path))
 
 ## This module needs to be properly refactored to use
 ## proper tree traversal algorithms. It currently is
@@ -179,53 +178,157 @@ class DataTree( object ):
     def __setattr__(self, name, value):
         setattr(self._data, name, value) 
 
-def asDataSeries( data ):
+def asDataFrame( data ):
     '''return data tree as a pandas series.
     
-    The series is multi-indexed.
+    The data frame is multi-indexed according to the
+    depth within the data tree.
+
+    If the data-tree has only one level, the 
+    data will be single-indexed because pandas
+    will not tolerate a single level MultiIndex.
+
+    The code assumes that the data tree has a uniform
+    depth and structure.
+
+    The inner-most level in the *data* tree will be columns. However, if
+    *data* is only a single-level dictionary, the keys in the dictionary
+    will be row labels and the resultant dataframe will have only one
+    column.
+
+    Depending on the type of the leaf, the data frame is
+    constructed as follows:
+
+    Leaf is an array
+        Leaves on the same branch are added as columns
+        
+        Requires:
+            All leaves on the same branch need to have the
+            same length.
+
+    Leaf is a dataframe
+        Dataframes will be concatenated. 
+
+        Requires:
+            All dataframes need to have the same columns.
+
+    Leaf is a scalar
+        Dataframes will be built from a nested dictionary
+
+    Special cases for backwards compatibility:
+
+    1. Lowest level dictionary contains the following arrays:
+        rows, columns, matrix - numpy matrix, convert to dataframe and apply as above
+
+    2. Lowest level dictionary contains the following keys:
+        '01', '10', '11' - Venn 2-set data, convert columns
+        '001', '010', ... - Venn 3-set data, convert columns
+    
     '''
+    if data is None or len(data) == 0:
+        return None
 
-    # build multi-index
+    levels = getDepths( data )
+    mi, ma = min(levels), max(levels)
+    if mi != ma: 
+        raise NotImplementedError( 'data tree not of uniform depth, min=%i, max=%i' %(mi,ma))
+
     labels = getPaths( data )
-    
-    leaves = list(getNodes( data, len(labels) -1 ))
 
-    index_tuples = []
-    
+    ######################################################
+    ######################################################
+    ######################################################
+    # check special cases
+    MATRIX = ('rows', 'columns', 'matrix')
+    VENN2 = ('10', '01', '11')
+    VENN3 = ('010', '001', '011')
+
+    branches = list(getNodes( data, len(labels) -2 ))
+    for path, branch in branches:
+        # Numpy matrix - dictionary with keys matrix, rows, columns
+
+        if len(set(branch.keys()).intersection( MATRIX )) == len(MATRIX):
+            df = pandas.DataFrame( branch['matrix'], 
+                                   columns = branch['columns'],
+                                   index = branch['rows'] )
+            setLeaf( data, path, df )
+
+        elif len(set(branch.keys()).intersection( VENN2 )) == len(VENN2) or \
+                len(set(branch.keys()).intersection( VENN3 )) == len(VENN3):
+            # sort so that 'labels' is not the first item
+            # specify data such that 'labels' will a single tuple entry
+            values = sorted( branch.items() )
+            df = pandas.DataFrame( [x[1] for x in values], index = [x[0] for x in values] )
+            setLeaf( data, path, df )
+
+    ######################################################
+    ######################################################
+    ######################################################
+
+    labels = getPaths( data )
+    # build multi-index
+    leaves = list(getNodes( data, len(labels) -1 ))
     leaf = leaves[0][1]
 
     if Utils.isArray( leaf ):
         # build dataframe from array
-        df_data = []
-        for path, leaf in leaves:
-            index_tuples.extend( [path] * len(leaf))
-            df_data.extend( leaf )
+        dataframes = []
+        index_tuples = []
+        # not a nested dictionary
+        if len(labels) == 1:
+            branches = [('all', data)]
+        else:
+            branches = list(getNodes( data, max(0, len(labels)-2 )) )
+            
+        for path, leaves in branches:
+            dataframe = pandas.DataFrame( leaves ) 
+            dataframes.append( dataframe )
+            if len(path) == 1:
+                # if only one level, do not use tuple
+                index_tuples.append( path[0] )
+            else: 
+                index_tuples.append( path )
         index = pandas.MultiIndex.from_tuples( index_tuples )
-        df = pandas.Series( df_data, index = index )
+        df = pandas.concat( dataframes, keys = index_tuples )
 
     elif Utils.isDataFrame( leaf ):
         # build dataframe from list of dataframes
         # dataframes are not stacked
+        # the existing index of dataframes 
+        # will be overwritten
         dataframes = []
+        index_tuples = []
         for path, dataframe in leaves:
+            if len(path) == 1:
+                # if only one level, do not use tuple
+                index_tuples.append( path[0] )
+            else: 
+                index_tuples.append( path )
             dataframes.append( dataframe )
-            index_tuples.append( [path] )
-        df = pandas.concat( dataframes, keys = index_tuples)
-
+        df = pandas.concat( dataframes, keys = index_tuples )
     else:
-        branches = list(getNodes( data, max(0, len(labels)-3 )) )
-        dataframes = []
-        for path, dct in branches:
-            # transpose to invert columns and rows
-            # in sphinxreport convention, the most nested
-            # level in a dictionary are columns, while
-            # in pandas they are rows.
-            df = pandas.DataFrame( dct ).transpose()
-            df = df.stack()
-            dataframes.append( df )
-            index_tuples.extend( [path] )
-        df = pandas.concat( dataframes, keys = index_tuples)
-
+        if len(labels) == 1:
+            # { 'x' : 1, 'y': 2 } -> DF with one row and two columns (x, y)
+            df = pandas.DataFrame( data.values(), index = data.keys() )
+        elif len(labels) == 2:
+            # { 'a': {'x':1, 'y':2}, 'b': {'y',2} -> DF with two columns(x,y) and two rows(a,b) 
+            df = pandas.DataFrame.from_dict( data ).transpose()
+            # reorder so that order of columns corresponds to data
+            df = df[labels[-1]]
+        else:
+            # We are dealing with a simple nested dictionary
+            branches = list(getNodes( data, max(0, len(labels)-3 )) )
+            dataframes = []
+            index_tuples = []
+            for path, nested_dict in branches:
+                # transpose to invert columns and rows
+                # in sphinxreport convention, the deeper 
+                # level in a dictionary in sphinxreport are columns, while
+                # in pandas they are rows.
+                df = pandas.DataFrame( nested_dict ).transpose()
+                dataframes.append( df )
+                index_tuples.extend( [path] )
+            df = pandas.concat( dataframes, keys = index_tuples)
     return df
 
 def getPaths( work ):
@@ -243,6 +346,7 @@ def getPaths( work ):
         for x in [ x for x in this_level if hasattr( x, "keys")]:
             # ignore data frame for path calculation
             if isinstance( x, pandas.DataFrame ): break
+            if isinstance( x, pandas.Series ): break
             l.extend( list(x.keys()) )
             next_level.extend( list(x.values()) )
         if not l: break
@@ -269,6 +373,19 @@ def getNodes( work, level = 0):
         if isinstance(v, dict):
             stack.extend([ (n, l + 1, x) for x in v.iteritems()] )
             
+def getDepths( work ):
+    '''return a list of depth of leaves.'''
+    stack = [ (0, x) for x in work.values() ]
+    
+    levels = []
+    while stack:
+        level, v = stack.pop()
+        if isinstance(v,dict):
+            stack.extend( [ (level + 1,x) for x in v.values() ] )
+        else:
+            levels.append( level )
+    return levels
+
 def getLeaf( work, path ):
     '''get leaf/branch at *path*.'''
     for x in path:
@@ -421,11 +538,11 @@ def removeEmptyLeaves( work ):
     # return True if not empty
     # numpy arrays do not test True if they contain
     # elements.
-    if isinstance( work, pandas.DataFrame ):
+    if isinstance( work, pandas.DataFrame ) or isinstance( work, pandas.Series):
         return len(work) > 0
 
     try:
-        return work != "" or work != None
+        return work is not None or work != ""  
     except ValueError:
         # for numpy arrays
         return len(work) > 0
@@ -617,3 +734,56 @@ def fromCache( cache,
                 data[track][slice] = cache[tokey(track,slice)]
     return data
     
+def prune( data, ignore = [] ):
+    '''prune data tree.
+
+    Remove all empty leaves.
+    
+    Remove all levels from the data tree that are
+    superfluous, i.e. levels that contain only a single label
+    and all labels in the hierarchy below are the same.
+    
+    Do not prune top-level, if it is the only level.
+    
+    Ignore certain labels given by ignore.
+
+    Returns the levels and labels which have been pruned.
+    '''
+
+    # remove all empty leaves        
+    removeEmptyLeaves( data )
+
+    # prune superfluous levels
+    data_paths = getPaths( data )
+    nlevels = len(data_paths)
+
+    levels_to_prune = []
+
+    # used to be: 1 (no pruning on first level)
+    for level in range( 0, nlevels):
+
+        # check for single label in level
+        if len(data_paths[level]) == 1:
+            label = data_paths[level][0]
+            if label in ignore: continue
+            prefixes = getPrefixes( data, level )
+            keep = False
+            for prefix in prefixes:
+                leaves = getLeaf( data, prefix )
+                if leaves is None: continue
+                if len(leaves) > 1 or label not in leaves:
+                    keep = True
+                    break
+            if not keep: levels_to_prune.append( (level, label) )
+
+    levels_to_prune.reverse()
+
+    pruned = []
+    for level, label in levels_to_prune:
+        # do not prune top-level, if it is the only level
+        if level == 0 and nlevels == 1: continue
+        pruned.append( (level, label) )
+        removeLevel( data, level )
+        nlevels -= 1
+
+    return pruned 

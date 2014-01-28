@@ -8,7 +8,6 @@ class LongLabelsSmall( Tracker ):
     numwords = 5
     slices = ( "small", "large", "gigantic" )
     tracks = ( "track1", "track2", "track3" )
-    tracks = ( "track1", )
 
     def __call__(self, track, slice = None):
         if slice == "small": ncolumns = 10
@@ -21,8 +20,7 @@ class LongLabelsSmall( Tracker ):
 
         data = []
         for x in range( 0, ncolumns):
-            # label = "%s:%i %s" % ( slice, x, " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
-            label = "%s" % ( " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
+            label = "%s:%i %s" % ( slice, x, " ".join([ "a" * self.wordsize for y in range(self.numwords) ] ))
             data.append( (label, random.randint( 0,100 )) )
 
         return odict( sorted(data ))
@@ -96,7 +94,7 @@ class LargeTable( Tracker ):
     
     def __call__(self, track, slice = None ):
 
-        data = [ "value%i" % y for y in range(self.nrows) ]
+        data = [ "value=%i" % random.randint(0, 100) for y in range(self.nrows) ]
         return odict( [ ("col%i" % x, data) for x in range(self.ncols)] )
 
 class VeryLargeMatrix( Tracker ):

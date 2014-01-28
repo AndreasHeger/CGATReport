@@ -521,6 +521,19 @@ def filterNone( args, missing = ("na", "Nan", None, "", 'None', 'none'), dtype =
 
     return [ numpy.array( [x[i] for i in range(len(x)) if not mask[i]], dtype = dtype) for x in args ]
 
+def filterMissing( args, missing = ("na", "Nan", None, "", 'None', 'none'), dtype = numpy.float ):
+    '''remove rows in args where at least one of the columns have a 
+       missing value.'''
+
+    mi = min([len(x) for x in args])
+    ma = max([len(x) for x in args])
+    assert mi == ma, "arrays have unequal length to start with: min=%i, max=%i." % (mi,ma)
+
+    keep = numpy.array( [True] * ma)
+    for values in args: keep &= values.notnull()
+
+    return [ x[keep] for x in args ]
+
 def doCorrelationTest( xvals, yvals, method = "pearson" ):
     """compute correlation between x and y.
 

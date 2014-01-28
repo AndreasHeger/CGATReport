@@ -6,11 +6,18 @@ from SphinxReport.Component import *
 from SphinxReport import Utils
 from SphinxReport import Cache
 
+# move User renderer to SphinxReport main distribution
+from SphinxReportPlugins import Renderer
+
+import SphinxReport.Tracker
+
 import numpy
 
 VERBOSE=True
 # maximimum number of levels in data tree
 MAX_PATH_NESTING=5
+
+import pandas
 
 from collections import OrderedDict as odict
 
@@ -422,48 +429,9 @@ class Dispatcher(Component):
         Ignore both the first and last level for this analyis.
         '''
 
-        # remove all empty leaves        
-        DataTree.removeEmptyLeaves( self.data )
-        
-        # prune superfluous levels
-        data_paths = DataTree.getPaths( self.data )
-        nlevels = len(data_paths)
-
-        # get number of levels required by renderer
-        try:
-            renderer_nlevels = self.renderer.nlevels
-        except AttributeError:
-            renderer_nlevels = 0
-
-        # With data frames: Prune always
-        # do not prune for renderers that want all data
-        # if renderer_nlevels < 0: return
-
-        levels_to_prune = []
-
-        for level in range( 1, nlevels):
-
-            # check for single label in level
-            if len(data_paths[level]) == 1:
-                label = data_paths[level][0]
-                if label in Utils.TrackerKeywords: continue
-                prefixes = DataTree.getPrefixes( self.data, level )
-                keep = False
-                for prefix in prefixes:
-                    leaves = DataTree.getLeaf( self.data, prefix )
-                    if leaves is None: continue
-                    if len(leaves) > 1 or label not in leaves:
-                        keep = True
-                        break
-                if not keep: levels_to_prune.append( (level, label) )
-
-        levels_to_prune.reverse()
-
-        # only prune to the minimum of levels required by renderer at most
-        #levels_to_prune = levels_to_prune[:nlevels - renderer_nlevels]
-        for level, label in levels_to_prune:
+        pruned = DataTree.prune( self.data, ignore = Utils.TrackerKeywords )
+        for level, label in pruned:
             self.debug( "pruning level %i from data tree: label='%s'" % (level, label) )
-            DataTree.removeLevel( self.data, level )
 
     def render( self ):
         '''supply the :class:`Renderer.Renderer` with the data to render. 
@@ -477,6 +445,15 @@ class Dispatcher(Component):
 
         results = ResultBlocks( title="main" )
 
+        # Special renderers
+        if isinstance( self.renderer, Renderer.User):
+            # do not convert to data frame
+            results.append( self.renderer( self.data, ('') ) )
+            return results
+        elif isinstance( self.renderer, Renderer.Debug):
+            results.append( self.renderer( self.data, ('') ) )
+            return results
+
         # get number of levels required by renderer
         try:
             renderer_nlevels = self.renderer.nlevels
@@ -489,36 +466,63 @@ class Dispatcher(Component):
         # BMW    speed    100
         # Golf   price    5000
         # Golf   speed    50    
-        dataseries = DataTree.asDataSeries( self.data )
-
-        index = dataseries.index
-        nlevels = len(index.levels)
+        dataframe = DataTree.asDataFrame( self.data )
+        # dataframe.write_csv( "test.csv" )
         
-        group_level = self.group_level
+        if dataframe is None:
+            self.warn( "%s: no data after conversion" % self )
+            raise ValueError( "no data for renderer" )            
 
+        index = dataframe.index
+        try:
+            # hierarchical index
+            nlevels = len(index.levels)
+        except AttributeError:
+            nlevels = 1
+            #raise ValueError('data frame without MultiIndex' )
+
+        group_level = self.group_level
         self.debug( "%s: rendering data started. levels=%i, required levels>=%i, group_level=%i, data_paths=%s" %\
                         (self, nlevels, 
                          renderer_nlevels,
                          group_level, 
                          str(index)) )
-        
-        if nlevels < renderer_nlevels:
-            # add some dummy levels if levels is not enough
-            d = self.data
-            for x in range( renderer_nlevels - nlevels):
-                d = odict( (("all", d ),))
-            results.append( self.renderer( d, path = ("all",) ) )
 
-        elif group_level < 0 or renderer_nlevels < 0:
+        if renderer_nlevels < 0:
             # no grouping
-            results.append( self.renderer( dataseries, path = () ) )
+            results.append( self.renderer( dataframe, path = () ) )
         else:
+            if nlevels <= renderer_nlevels:
+                # add dummy levels if levels are not enough
+                prefix = ["level%i" % x for x in range( 1 + renderer_nlevels - nlevels)]
+                dataframe.index = pandas.MultiIndex.from_tuples( [ prefix + [x] for x in dataframe.index ] )
+                #results.append( self.renderer( dataframe,
+                #                               path = ('all',) ))
+                
             # used to be: group_level + 1
-            # levels[:-renderer_nlevels] ) )
-            paths = numpy.unique( [ x[:-renderer_nlevels] for x in dataseries.index.unique() ] )
+            # hierarchical index
+            paths = map( tuple, numpy.unique( [ x[:-renderer_nlevels] for x in dataframe.index.unique() ] ))
+            pathlength = len(paths[0]) - 1
+            dataframe = dataframe.sortlevel()
+
+            if dataframe.index.lexsort_depth < pathlength:
+                raise ValueError('could not sort data frame: sort depth=%i < pathlength=%i' \
+                                     % (dataframe.index.lexsort_depth, 
+                                        pathlength ))
+
             for path in paths:
+                if path:
+                    # path needs to be a tuple for .ix
+                    work = dataframe.ix[path]
+                else:
+                    # empty tuple - use full data set
+                    work = dataframe
+
+                # remove columns and rows in work that are all Na
+                work = work.dropna( axis=1, how='all').dropna( axis=0, how='all')
+
                 try:
-                    results.append( self.renderer( dataseries.ix[path], 
+                    results.append( self.renderer( work,
                                                    path = path ))
                 except:
                     self.error( "%s: exception in rendering" % self )
@@ -543,6 +547,11 @@ class Dispatcher(Component):
 
         self.debug( "profile: started: tracker: %s" % (self.tracker))
 
+        if isinstance( self.tracker, SphinxReport.Tracker.Empty):
+            # no data if tracker is the empty tracker
+            return ResultBlocks( self.renderer() )
+
+        # collecting data 
         try: self.collect()
         except: 
             self.error( "%s: exception in collection" % self )
