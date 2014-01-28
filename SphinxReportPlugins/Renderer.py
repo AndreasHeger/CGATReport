@@ -123,7 +123,7 @@ class Renderer(Component):
                     select = always + list(first_level_labels[x:x+self.split_at])
 
                     work = pandas.concat( [dataframe.ix[s] for s in select], keys = select )
-                    result.extend( self.render( work, path + (z, ) )
+                    result.extend( self.render( work, path + (z, ) ) )
             
         return result
 
