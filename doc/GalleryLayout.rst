@@ -47,6 +47,8 @@ Testing the :term:`split-at` option
 .. report:: TestCases.SplittingTest
    :render: line-plot
    :split-at: 4
+   :layout: column-4
+   :width: 200
 
    Splitting to show 4 tracks per plot
 
@@ -54,6 +56,8 @@ Testing the :term:`split-at` option
    :render: line-plot
    :split-at: 4
    :split-always: track0
+   :layout: column-4
+   :width: 200
 
    Splitting to show 4 tracks per plot
    including track0
