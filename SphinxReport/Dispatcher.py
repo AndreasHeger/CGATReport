@@ -501,13 +501,15 @@ class Dispatcher(Component):
             # hierarchical index
             paths = map( tuple, numpy.unique( [ x[:-renderer_nlevels] for x in dataframe.index.unique() ] ))
             pathlength = len(paths[0]) - 1
-            dataframe = dataframe.sortlevel()
 
+            # Note: can only sort hierarchical indices
+            # need to test
+            dataframe = dataframe.sortlevel()
             if dataframe.index.lexsort_depth < pathlength:
                 raise ValueError('could not sort data frame: sort depth=%i < pathlength=%i' \
                                      % (dataframe.index.lexsort_depth, 
                                         pathlength ))
-
+            
             for path in paths:
                 if path:
                     # path needs to be a tuple for .ix

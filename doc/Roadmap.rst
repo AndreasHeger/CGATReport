@@ -180,4 +180,7 @@ matrix plot legend
    is too small.
 
 legend
-   fix dimensioning of outer legend.
+   fix dimensioning of outer legend. Maybe add a separate
+   legend plot.
+
+

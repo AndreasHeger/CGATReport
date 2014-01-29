@@ -1797,7 +1797,6 @@ class PlotByRow( Renderer, Plotter ):
         Renderer.__init__(self, *args, **kwargs )
         Plotter.__init__(self, *args, **kwargs )
 
-
     def render( self, dataframe, path ):
 
         blocks = ResultBlocks()
@@ -2026,7 +2025,7 @@ class DensityPlot(DataSeriesPlot):
                                           kernel = self.kernel ) )
         return plts
 
-class GalleryPlot(Renderer, Plotter):
+class GalleryPlot(PlotByRow):
     '''Plot an image.
     '''
 
@@ -2035,16 +2034,23 @@ class GalleryPlot(Renderer, Plotter):
     nlevels = 1
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        PlotByRow.__init__(self, *args, **kwargs )
 
-    def render(self, dataseries, path ):
+    def plot(self, headers, values, path ):
 
+        dataseries = dict( zip(headers,values))
         try:
             # return value is a series
-            filename = dataseries['filename'][0]
+            filename = dataseries['filename']
         except KeyError:
             self.warn( "no 'filename' key in path %s" % (path2str(path )))
+            return
+        
+        try:
+            # return value is a series
+            name = dataseries['name']
+        except KeyError:
+            self.warn( "no 'name' key in path %s" % (path2str(path )))
             return
 
         rst_text = '''.. figure:: %(fn)s
@@ -2076,7 +2082,7 @@ class GalleryPlot(Renderer, Plotter):
         ax = plt.gca()
         ax.axison = False
         plts.append( plt.imshow( data ) )
-        return self.endPlot( plts, None, path )
+        return self.endPlot( plts, None, path + (name,) )
 
 class ScatterPlot(Renderer, Plotter):
     """Scatter plot.

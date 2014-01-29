@@ -278,7 +278,7 @@ def asDataFrame( data ):
             branches = [('all', data)]
         else:
             branches = list(getNodes( data, max(0, len(labels)-2 )) )
-            
+
         for path, leaves in branches:
             dataframe = pandas.DataFrame( leaves ) 
             dataframes.append( dataframe )
@@ -287,6 +287,7 @@ def asDataFrame( data ):
                 index_tuples.append( path )
             else: 
                 index_tuples.append( path )
+
         df = pandas.concat( dataframes, keys = index_tuples )
 
     elif Utils.isDataFrame( leaf ):

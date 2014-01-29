@@ -314,6 +314,9 @@ def main( argv = None, **kwargs ):
         workdir = None,
         dpi = 100 )
 
+    if argv is None and len(kwargs) == 0:
+        argv = sys.argv
+
     if argv:
         (options, args) = parser.parse_args( argv )
 
