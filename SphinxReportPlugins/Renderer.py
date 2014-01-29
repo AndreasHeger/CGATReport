@@ -161,20 +161,19 @@ class TableBase( Renderer ):
         Multiple files of the same Renderer/Tracker combination are distinguished 
         by the title.
         '''
-
         self.debug("%s: saving %i x %i table as file'"% (id(self), 
                                                          len(row_headers), 
                                                          len(col_headers)))
         lines = []
         lines.append("`%i x %i table <#$html %s$#>`__" %\
-                     (len(row_headers), len(col_headers),
-                      title) )
+                         (len(row_headers), len(col_headers),
+                          title) )
+
+        r = ResultBlock( "\n".join(lines) + "\n", title = title)
 
         out = StringIO.StringIO()
         dataframe.to_csv( out )
         lines = out.getvalue().split("\n")            
-
-        r = ResultBlock( "\n".join(lines) + "\n", title = title)
 
         # create an html table
         data = ["<table>"]
