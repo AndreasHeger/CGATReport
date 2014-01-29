@@ -2061,6 +2061,7 @@ class GalleryPlot(PlotByRow):
         
         plts = []
 
+
         absfn = os.path.abspath( filename ) 
         title = os.path.basename( filename )            
 
@@ -2079,10 +2080,18 @@ class GalleryPlot(PlotByRow):
             except IOError:
                 raise ValueError( "file format for file '%s' not recognized" % filename )
 
-        ax = plt.gca()
-        ax.axison = False
-        plts.append( plt.imshow( data ) )
-        return self.endPlot( plts, None, path + (name,) )
+            ax = plt.gca()
+            ax.axison = False
+            plts.append( plt.imshow( data ) )
+        
+        blocks = ResultBlocks( ResultBlock( "\n".join( 
+                    ("#$mpl %i$#" % (self.mFigure), 
+                     "",
+                     "* `%(title)s <%(absfn)s>`_" % locals(),
+                     )), 
+                                            title = path2str(path) ) )
+        
+        return blocks
 
 class ScatterPlot(Renderer, Plotter):
     """Scatter plot.
