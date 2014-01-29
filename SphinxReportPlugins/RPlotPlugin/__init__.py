@@ -185,7 +185,11 @@ class RPlotPlugin(Component):
                     elif format.endswith( "pdf" ):
                         R.pdf( outpath )
                         
-                    R.plot( pp )
+                    try:
+                        R.plot( pp )
+                    except RRuntimeError, msg:
+                        raise 
+                    
                     R["dev.off"]()
 
                 # create the text element

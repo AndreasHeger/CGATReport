@@ -543,8 +543,6 @@ class Dispatcher(Component):
             self.error( "%s: exception in parsing" % self )
             return ResultBlocks(ResultBlocks( Utils.buildException( "parsing" ) ))
 
-        self.debug( "profile: started: tracker: %s" % (self.tracker))
-
         # collect no data if tracker is the empty tracker
         # and go straight to rendering
         try:
@@ -558,6 +556,8 @@ class Dispatcher(Component):
         except AttributeError:
             # for function trackers
             pass
+
+        self.debug( "profile: started: tracker: %s" % (self.tracker))
         
         # collecting data 
         try: self.collect()

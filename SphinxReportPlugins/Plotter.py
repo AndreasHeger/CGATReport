@@ -1994,14 +1994,36 @@ class DensityPlot(DataSeriesPlot):
 
     labels[dict] / data[array]
     """
+    options = DataSeriesPlot.options +\
+        ( ('shade', directives.flag), 
+          ('vertical', directives.flag), 
+          ('kernel', directives.unchanged), 
+          ('bw', directives.unchanged),
+          ('gridsize', directives.unchanged),
+          ('cut', directives.unchanged),
+          ('clip', directives.unchanged),
+          )
+
     def __init__(self, *args, **kwargs):
         DataSeriesPlot.__init__(self,*args, **kwargs)
+
+        self.shade = kwargs.get( 'shade', False )
+        self.vertical = kwargs.get( 'shade', False )
+        self.kernel = kwargs.get( 'kernel', 'gau' )
+        self.bw = kwargs.get( 'bw', 'scott' )
+        self.gridsize = int( kwargs.get( 'gridsize', 100))
+        self.cut = int( kwargs.get( 'cut', 3))
+        if 'clip' in kwargs:
+            self.clip = map(int, kwargs[clip].split( ',') )
 
     def plotData( self, data, legend ):
         plts = []
         for column in data.columns:
             plts.append( seaborn.kdeplot( numpy.array( data[column], dtype=numpy.float), 
-                                          label=column) )
+                                          label=column,
+                                          shade = self.shade,
+                                          vertical = self.vertical,
+                                          kernel = self.kernel ) )
         return plts
 
 class GalleryPlot(Renderer, Plotter):

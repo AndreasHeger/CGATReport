@@ -36,9 +36,9 @@ Documentation is available here `here
 <http://www.cgat.org/~andreas/documentation/sphinx-report/index.html>`_
 Some quick links are below:
 
-* <a href="http://www.cgat.org/~andreas/documentation/sphinx-report/contents.html">Contents</a>
-* <a href="http://www.cgat.org/~andreas/documentation/sphinx-report/Tutorials.html">Tutorials</a>
-* <a href="http://www.cgat.org/~andreas/documentation/sphinx-report/Reference.html">Reference</a>
+* `Contents <http://www.cgat.org/~andreas/documentation/sphinx-report/contents.html>`_
+* `Tutorials <http://www.cgat.org/~andreas/documentation/sphinx-report/Tutorials.html>`_
+* `Reference <http://www.cgat.org/~andreas/documentation/sphinx-report/Reference.html">`_
 
 Installation
 ============

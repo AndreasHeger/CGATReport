@@ -9,9 +9,6 @@ Planned features
 
 The following features are planned:
 
-error bars
-   add error bars to scatter plots
-
 latex/pdf
    test latex/pdf rendering of documents
 
@@ -33,22 +30,20 @@ optional pdf support
     with many points take a long while to render and these should
     be thinned.
 
-investigate netCDF/HFS5 support
-   as data sources or as ways to store the data instead of shelve?
-
 .. _Releases:
 
 =============
 Release Notes
 =============
 
-Version 3.0
+Version 2.3
 ============
 
-   * Moved to gitbuh
-   * Use pandas dataframes
-   * Use seaborn plot aesthatics
+   * Moved to github
+   * Use pandas dataframes for rendering
+   * Use seaborn plot aesthetics and plots
    * Refined notebook integration
+   * ggplot now plots without needing X
 
 Incompatibilities to Version 2
 
@@ -185,7 +180,4 @@ matrix plot legend
    is too small.
 
 legend
-   fix dimensioning of outer legend. Maybe add a separate
-   legend plot.
-
-
+   fix dimensioning of outer legend.

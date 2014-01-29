@@ -270,7 +270,6 @@ def run(arguments,
         code = None
         tracker_id = None
 
-
     logging.debug( "report_directive.run: profile: started: collecting: %s" % tag )
 
     ########################################################
@@ -297,18 +296,26 @@ def run(arguments,
     # collect images
     ###########################################################
     map_figure2text = {}
-    for collector in collectors:
-        map_figure2text.update( collector.collect( blocks,
-                                                   template_name, 
-                                                   outdir, 
-                                                   rstdir,
-                                                   builddir,
-                                                   srcdir,
-                                                   content, 
-                                                   display_options,
-                                                   tracker_id,
-                                                   links = { 'code_url' : linked_codename,
-                                                             'notebook_url' : linked_notebookname} ) )
+    try:
+        for collector in collectors:
+            map_figure2text.update( collector.collect( blocks,
+                                                       template_name, 
+                                                       outdir, 
+                                                       rstdir,
+                                                       builddir,
+                                                       srcdir,
+                                                       content, 
+                                                       display_options,
+                                                       tracker_id,
+                                                       links = { 'code_url' : linked_codename,
+                                                                 'notebook_url' : linked_notebookname} ) )
+    except:
+                    
+        logging.warn("report_directive.run: exception caught while collecting with %s at %s:%i - see document" % \
+                         (collector, str(document), lineno) )
+        blocks = ResultBlocks(ResultBlocks( Utils.buildException( "collection" ) ))
+        code = None
+        tracker_id = None
         
     ###########################################################
     # replace place holders or add text
