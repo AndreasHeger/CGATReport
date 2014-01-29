@@ -2080,7 +2080,10 @@ class GalleryPlot(PlotByRow):
                 raise ValueError( "file format for file '%s' not recognized" % filename )
 
         ax = plt.gca()
+
+        ax.frameon = False
         ax.axison = False
+
 
         # remove excess space around the image
         plt.tight_layout(pad=0)
@@ -2091,6 +2094,7 @@ class GalleryPlot(PlotByRow):
         self.mCurrentFigure.set_figheight(plt_size[0]*im_aspect)
         
         plts.append( plt.imshow( data ) )
+        ax.set_position([0,0,1,1])
         return self.endPlot( plts, None, path + (name,) )
 
 class ScatterPlot(Renderer, Plotter):
