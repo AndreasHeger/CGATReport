@@ -2081,6 +2081,15 @@ class GalleryPlot(PlotByRow):
 
         ax = plt.gca()
         ax.axison = False
+
+        # remove excess space around the image
+        plt.tight_layout(pad=0)
+
+        ## Create a plot which the same shape as the original plot
+        im_aspect = float(data.shape[0])/float(data.shape[1])
+        plt_size = self.mCurrentFigure.get_size_inches()
+        self.mCurrentFigure.set_figheight(plt_size[0]*im_aspect)
+        
         plts.append( plt.imshow( data ) )
         return self.endPlot( plts, None, path + (name,) )
 
