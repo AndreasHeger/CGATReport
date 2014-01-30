@@ -447,6 +447,9 @@ class Dispatcher(Component):
         except AttributeError:
             renderer_nlevels = 0
 
+        # initiate output structure
+        results = ResultBlocks( title = "")
+
         # convert to data series
         # The data is melted, i.e,
         # BMW    price    10000
