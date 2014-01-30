@@ -409,7 +409,7 @@ class GGPlot( Renderer, Plotter ):
         ('statement',  directives.unchanged),
         ) + Renderer.options + Plotter.options
 
-    nlevels = 1
+    nlevels = -1
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )

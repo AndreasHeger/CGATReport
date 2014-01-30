@@ -60,7 +60,7 @@ class MatplotlibPlugin(Component):
             for id, format, dpi in all_formats:
 
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
-
+                
                 try:
                     figman.canvas.figure.savefig( outpath, dpi=dpi )
                 except:
@@ -95,7 +95,8 @@ class MatplotlibPlugin(Component):
                                                   additional_formats,
                                                   tracker_id, 
                                                   links,
-                                                  display_options )
+                                                  display_options,
+                                                  default_format)
 
             map_figure2text[ "#$mpl %i$#" % figid] = rst_output
 
