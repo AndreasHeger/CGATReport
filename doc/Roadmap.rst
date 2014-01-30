@@ -40,10 +40,11 @@ Version 2.3
 ============
 
    * Moved to github
-   * Use pandas dataframes for rendering
-   * Use seaborn plot aesthetics and plots
+   * Use pandas_ dataframes for rendering
+   * Use seaborn_ plot aesthetics and plots
    * Refined notebook integration
-   * ggplot now plots without needing X
+   * r-ggplot now plots without needing X
+   * ggplot_ added
 
 Incompatibilities to Version 2
 

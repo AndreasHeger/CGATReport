@@ -58,7 +58,7 @@ need first be converted to a :term:`data frame` with the
 
    Debugging   
    
-Plotting is that done with :ref:`r-ggplot`. This :term:`Renderer` 
+Plotting is then done with :ref:`r-ggplot`. This :term:`Renderer` 
 requires a ``statement`` describing the plot aesthetics and geometry. 
 
 The simple example below plots the data on a straight line. Note
@@ -180,6 +180,3 @@ refinement of such plots.
    python and SQL.
 
 
-
-.. _ggplot2: http://ggplot2.org/
-.. _rpy2: http://rpy.sourceforge.net/rpy2.html

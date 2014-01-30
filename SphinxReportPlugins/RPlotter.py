@@ -439,7 +439,7 @@ class GGPlot( Renderer, Plotter ):
         figname = re.sub( '/', '_', path2str(path) )
         r = ResultBlock( '#$ggplot %s$#' % figname,
                          title = path2str(path) )
-        r.ggplot = pp
+        r.rggplot = pp
         r.figname = figname
 
         return ResultBlocks( r )

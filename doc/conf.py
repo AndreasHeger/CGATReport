@@ -63,6 +63,31 @@ extensions = ['sphinx.ext.autodoc',
 if sys.version_info[0] == 2:
     extensions.append( 'sphinx.ext.inheritance_diagram' )
 
+# Included at the end of each rst file
+rst_epilog='''
+.. _CGAT Training Programme: http://www.cgat.org
+.. _pysam: http://code.google.com/p/pysam/
+.. _samtools: http://samtools.sourceforge.net/
+.. _tabix: http://samtools.sourceforge.net/tabix.shtml/
+.. _Galaxy: https://main.g2.bx.psu.edu/
+.. _cython: http://cython.org/
+.. _pyximport: http://www.prescod.net/pyximport/
+.. _sphinx: http://sphinx-doc.org/
+.. _ruffus: http://www.ruffus.org.uk/
+.. _sphinxreport: http://code.google.com/p/sphinx-report/
+.. _sqlite: http://www.sqlite.org/
+.. _make: http://www.gnu.org/software/make
+.. _UCSC: http://genome.ucsc.edu
+.. _mysql: https://mariadb.org/
+.. _postgres: http://www.postgresql.org/
+.. _bedtools: http://bedtools.readthedocs.org/en/latest/
+.. _UCSC Tools: http://genome.ucsc.edu/admin/git.html
+.. _seaborn: https://github.com/mwaskom/seaborn
+.. _ggplot: https://github.com/yhat/ggplot/
+.. _ggplot2: http://ggplot2.org/
+.. _rpy2: http://rpy.sourceforge.net/rpy2.html
+.. _pandas: http://pandas.pydata.org/
+'''
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

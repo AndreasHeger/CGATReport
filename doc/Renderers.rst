@@ -21,6 +21,7 @@ that are included in sphinxreport.
    GalleryDensityPlots.rst
    GalleryScatterPlots.rst
    GalleryVenn.rst
+   GalleryGGPlot.rst
    GalleryConfig.rst
    GalleryStatus.rst
    GalleryGallery.rst

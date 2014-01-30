@@ -164,33 +164,33 @@ class RPlotPlugin(Component):
         # iterate over ggplot plots
         for xblocks in blocks:
             for block in xblocks:
-                if not hasattr( block, "ggplot" ): continue
-                pp = block.ggplot
+                if not hasattr( block, "rggplot" ): continue
+                pp = block.rggplot
                 figname = block.figname
 
                 outname = "%s_%s" % (template_name, figname)
                 
                 for id, format, dpi in all_formats:
                     outpath = os.path.join(outdir, '%s.%s' % (outname, format))
-                    
-                    width, height = 3 * dpi, 3 * dpi
-                    if format.endswith( "png"):
-                        R.png( outpath, 
-                               width = width,
-                               height = height )
-                    elif format.endswith( "svg" ):
-                        R.svg( outpath )
-                    elif format.endswith( "eps" ):
-                        R.postscript( outpath )
-                    elif format.endswith( "pdf" ):
-                        R.pdf( outpath )
-                        
-                    try:
-                        R.plot( pp )
+
+                    try:                    
+                        R.ggsave( outpath, plot = pp, dpi = dpi )
                     except RRuntimeError, msg:
                         raise 
-                    
-                    R["dev.off"]()
+
+                    # width, height = 3 * dpi, 3 * dpi
+                    # if format.endswith( "png"):
+                    #     R.png( outpath, 
+                    #            width = width,
+                    #            height = height )
+                    # elif format.endswith( "svg" ):
+                    #     R.svg( outpath )
+                    # elif format.endswith( "eps" ):
+                    #     R.postscript( outpath )
+                    # elif format.endswith( "pdf" ):
+                    #     R.pdf( outpath )
+                    #R.plot( pp )
+                    # R["dev.off"]()
 
                 # create the text element
                 rst_output = Utils.buildRstWithImage( outname,

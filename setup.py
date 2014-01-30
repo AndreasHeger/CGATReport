@@ -33,6 +33,7 @@ shared_dependencies = [
     'scipy>=0.11',
     'matplotlib>=1.3.0', 
     'sqlalchemy>=0.7.0', 
+    'ggplot>=0.4.5',
     'openpyxl>=1.5.7' ]
 
 if major==2 and minor1<5 or major<2:
@@ -153,6 +154,7 @@ setup(name='SphinxReport',
             'render-box-plot=SphinxReportPlugins.Plotter:BoxPlot',
             'render-violin-plot=SphinxReportPlugins.Plotter:ViolinPlot',
             'render-venn-plot=SphinxReportPlugins.Plotter:VennPlot',
+            'render-ggplot=SphinxReportPlugins.GGPlotter:GGPlot',        
             'render-r-line-plot=SphinxReportPlugins.RPlotter:LinePlot',
             'render-r-box-plot=SphinxReportPlugins.RPlotter:BoxPlot',
             'render-r-smooth-scatter-plot=SphinxReportPlugins.RPlotter:SmoothScatterPlot',

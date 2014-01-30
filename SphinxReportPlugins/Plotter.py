@@ -2357,3 +2357,5 @@ class VennPlot( MultipleSeriesPlot ):
             raise ValueError( "require 3 or 7 values for a Venn diagramm, got %i" % len(subsets))    
 
         return self.endPlot( plts, None, path )
+
+

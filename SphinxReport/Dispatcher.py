@@ -463,7 +463,7 @@ class Dispatcher(Component):
         # BMW    price    10000
         # BMW    speed    100
         # Golf   price    5000
-        # Golf   speed    50    
+        # Golf   speed    50  
         dataframe = DataTree.asDataFrame( self.data )
         # dataframe.write_csv( "test.csv" )
         
