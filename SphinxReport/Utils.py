@@ -236,7 +236,7 @@ def getImageOptions( display_options = None):
     if display_options:
         return "\n".join( \
             ['      :%s: %s' % (key, val) for key, val in display_options.items() \
-                 if key not in ('format', 'extra-formats')] )
+                 if key not in ('format', 'extra-formats','display')] )
     else:
         return ''
 
@@ -785,7 +785,7 @@ def writeNoteBookEntry( outfile, tracker, renderer, transformers, options ):
 
 def buildRstWithImage( outname, outdir, rstdir, builddir, srcdir, 
                        additional_formats, tracker_id, links,
-                       display_options ):
+                       display_options, default_format = None ):
     '''output rst text for inserting an image.'''
 
     rst_output = ""
@@ -809,7 +809,11 @@ def buildRstWithImage( outname, outdir, rstdir, builddir, srcdir,
 
     if SphinxReport.Config.HTML_IMAGE_FORMAT:
 
-        id, format, dpi = SphinxReport.Config.HTML_IMAGE_FORMAT
+        if default_format:
+            id,format,dpi = default_format
+        else:
+            id, format, dpi = SphinxReport.Config.HTML_IMAGE_FORMAT
+
         template = '''
 .. htmlonly::
 

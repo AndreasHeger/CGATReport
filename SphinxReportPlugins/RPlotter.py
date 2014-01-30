@@ -423,7 +423,7 @@ class GGPlot( Renderer, Plotter ):
     def render(self, dataframe, path ):
 
         R.library( 'ggplot2' )
-        print dataframe
+
         rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
         R.assign( "rframe", rframe )
         
