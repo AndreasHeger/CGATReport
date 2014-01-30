@@ -491,6 +491,16 @@ def main( argv = None, **kwargs ):
 
         if options.do_show: 
             if options.renderer.startswith("r-"):
+                for rr in result:
+                    for r in rr:
+                        if hasattr(r, 'rggplot'):
+                            from rpy2.robjects import r as R
+                            import rpy2.rinterface
+                            try:
+                                R.plot( r.rggplot)
+                            except rpy2.rinterface.RRuntimeError, msg:
+                                pass
+
                 print("press Ctrl-c to stop")
                 while 1: pass
             
