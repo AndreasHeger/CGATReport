@@ -177,7 +177,7 @@ class TableBase( Renderer ):
 
         # create an html table
         data = ["<table>"]
-        data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( map(str,lines[0])) )
+        data.append( "<tr><th></th><th>%s</th></tr>" % "</th><th>".join( map(str,lines[0].split(","))) )
         data.extend( ["<tr><td>%s</td></tr>" % \
                           ("</td><td>".join(x.split(","))) for x in lines[1:]] )
         data.append( "</table>\n" )
