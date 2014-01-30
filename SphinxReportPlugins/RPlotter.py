@@ -425,8 +425,21 @@ class GGPlot( Renderer, Plotter ):
         R.library( 'ggplot2' )
 
         rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
+
+        unAsIs = R('''function (x) {
+                         if(typeof(x) %in% c("integer","double")) {
+                             class(x) <- "numeric"
+                             return (x)}
+                         else if (typeof(x) == "character") {
+                             class(x) <- "character"
+                             return (x) }
+                         else {
+                             return(x) } }''')
+
+        rframe = R["as.data.frame"](R.lapply(rframe,unAsIs))
+
         R.assign( "rframe", rframe )
-        
+
         # start plot
         R('''gp = ggplot( rframe )''')
 
@@ -443,4 +456,3 @@ class GGPlot( Renderer, Plotter ):
         r.figname = figname
 
         return ResultBlocks( r )
-

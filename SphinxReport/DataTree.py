@@ -224,6 +224,10 @@ def asDataFrame( data ):
         '01', '10', '11' - Venn 2-set data, convert columns
         '001', '010', ... - Venn 3-set data, convert columns
     
+    Pandas attempts to find a column data type that will
+    fit all values in a column. Thus, if a column is numeric,
+    but contains values such as "inf", "Inf", as well, the
+    column type might be set to object or char.
     '''
     if data is None or len(data) == 0:
         return None
