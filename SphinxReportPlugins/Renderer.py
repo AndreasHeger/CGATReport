@@ -852,21 +852,21 @@ class User(Renderer):
     """
 
     # only leaves
-    nlevels = 1
+    nlevels = -1
 
     def render( self, work, path ):
         
         # initiate output structure
         results = ResultBlocks( title = path2str(path) )
 
+        labels = DataTree.getPaths( work )
         # iterate over all items at leaf
-        #for key in work:
-
-        for key in Utils.TrackerKeywords:
-            if key in work:
-                # add a result block
-                results.append( ResultBlock( work[key],
-                                             title = "" ) )
+        for path, branch in DataTree.getNodes( work, len(labels) - 2 ):
+            for key in Utils.TrackerKeywords:
+                if key in branch:
+                    # add a result block
+                    results.append( ResultBlock( branch[key],
+                                                 title = path2str(path) ) )
             
         return results
 

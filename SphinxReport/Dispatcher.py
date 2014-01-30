@@ -441,17 +441,6 @@ class Dispatcher(Component):
         self.debug( "%s: rendering data started for %i items" % (self,
                                                                  len(self.data)))
 
-        results = ResultBlocks( title="main" )
-
-        # Special renderers
-        if isinstance( self.renderer, Renderer.User):
-            # do not convert to data frame
-            results.append( self.renderer( self.data, ('') ) )
-            return results
-        elif isinstance( self.renderer, Renderer.Debug):
-            results.append( self.renderer( self.data, ('') ) )
-            return results
-
         # get number of levels required by renderer
         try:
             renderer_nlevels = self.renderer.nlevels
@@ -589,6 +578,17 @@ class Dispatcher(Component):
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after transformation: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
+
+        # special Renderers - do not proceed
+        # Special renderers
+        if isinstance( self.renderer, Renderer.User):
+            results = ResultBlocks( title="main" )
+            results.append( self.renderer( self.data, ('') ) )
+            return results
+        elif isinstance( self.renderer, Renderer.Debug):
+            results = ResultBlocks( title="main" )
+            results.append( self.renderer( self.data, ('') ) )
+            return results
 
         # self.debug( "%s: heap after transformation\n%s" % (self, str(HP.heap()) ))        
         # restrict

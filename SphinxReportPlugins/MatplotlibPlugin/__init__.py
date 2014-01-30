@@ -51,8 +51,10 @@ class MatplotlibPlugin(Component):
         default_format, additional_formats = Utils.getImageFormats( display_options )
         all_formats = [default_format,] + additional_formats
 
+
         # create all the images
         for figman in fig_managers:
+
             # create all images
             figid = figman.num
             outname = "%s_%02d" % (template_name, figid)
@@ -99,6 +101,6 @@ class MatplotlibPlugin(Component):
                                                   default_format)
 
             map_figure2text[ "#$mpl %i$#" % figid] = rst_output
-
+            
         return map_figure2text
 

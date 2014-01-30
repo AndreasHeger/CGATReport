@@ -323,7 +323,6 @@ def run(arguments,
     ## add default for text-only output
     map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
     map_figure2text["default-suffix"] = ""
-
     blocks.updatePlaceholders( map_figure2text )
     
     ###########################################################
