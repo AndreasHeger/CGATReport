@@ -409,7 +409,7 @@ class GGPlot( Renderer, Plotter ):
         ('statement',  directives.unchanged),
         ) + Renderer.options + Plotter.options
 
-    nlevels = 1
+    nlevels = -1
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs )
@@ -423,7 +423,7 @@ class GGPlot( Renderer, Plotter ):
     def render(self, dataframe, path ):
 
         R.library( 'ggplot2' )
-
+        print dataframe
         rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
         R.assign( "rframe", rframe )
         
