@@ -38,9 +38,6 @@ class Renderer(Component):
     restructured text. Images are automatically collected from matplotlib
     and inserted at place-holders.
 
-    This class adds the following options to the :term:`report` directive.
-
-       :term:`groupby`: group data by :term:`track` or :term:`slice`.
     """
     # plugin fields
     capabilities = ["render"]
@@ -50,6 +47,11 @@ class Renderer(Component):
                 ('split-always', directives.unchanged), )
 
     # required levels in DataTree
+    # -1: Renderer can work from any number of levels
+    # 0: Renderer needs scalar
+    # 1: Renderer requires dataframe with 1 row-label 
+    # 2: Renderer requires dataframe with 2 row-labels
+    # ...
     nlevels = None
 
     # default number format
@@ -851,7 +853,7 @@ class User(Renderer):
     the place-holders.
     """
 
-    # only leaves
+    # return the complete data set
     nlevels = -1
 
     def render( self, work, path ):

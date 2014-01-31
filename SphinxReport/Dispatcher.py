@@ -67,6 +67,13 @@ class Dispatcher(Component):
 
         self.data = DataTree.DataTree()
 
+        # Level at which to group the results of Renderers
+        # None is no grouping
+        # 0: group on first level ('groupby=track')
+        # 1: group on second level ('groupby=slice')
+        # n: group on n-th level
+        self.group_level = 1
+
     def __del__(self):
         pass
 
@@ -366,9 +373,12 @@ class Dispatcher(Component):
         return self.data
 
     def group( self ):
-        '''rearrange data tree for grouping.
-
+        '''rearrange data tree for grouping
         and set group level.
+
+        Through grouping the data tree is rearranged such
+        that the level at which data will be grouped will 
+        be the top (0th) level in the nested dictionary.
         '''
 
         data_paths = DataTree.getPaths( self.data )
@@ -397,18 +407,18 @@ class Dispatcher(Component):
             # rearrange tracks and slices in data tree
             if nlevels <= 2 :
                 self.warn( "grouping by slice, but only %i levels in data tree - all are grouped" % nlevels)
-                self.group_level = -1
+                self.group_level = None
             else:
                 self.data = DataTree.swop( self.data, 0, 1)
                 self.group_level = 0
 
         elif self.groupby == "all":
             # group everthing together
-            self.group_level = -1
+            self.group_level = None
 
         else:
             # neither group by slice or track ("ungrouped")
-            self.group_level = -1
+            self.group_level = None
 
         return self.data
 
@@ -436,7 +446,7 @@ class Dispatcher(Component):
         
         The data supplied will depend on the ``groupby`` option.
 
-        return resultblocks
+        returns a ResultBlocks data structure.
         '''
         self.debug( "%s: rendering data started for %i items" % (self,
                                                                  len(self.data)))
@@ -472,10 +482,10 @@ class Dispatcher(Component):
             #raise ValueError('data frame without MultiIndex' )
 
         group_level = self.group_level
-        self.debug( "%s: rendering data started. levels=%i, required levels>=%i, group_level=%i, data_paths=%s" %\
+        self.debug( "%s: rendering data started. levels=%i, required levels>=%i, group_level=%s, data_paths=%s" %\
                         (self, nlevels, 
                          renderer_nlevels,
-                         group_level, 
+                         str(group_level), 
                          str(index)) )
 
         if renderer_nlevels < 0:
@@ -486,8 +496,6 @@ class Dispatcher(Component):
                 # add dummy levels if levels are not enough
                 prefix = ["level%i" % x for x in range( 1 + renderer_nlevels - nlevels)]
                 dataframe.index = pandas.MultiIndex.from_tuples( [ prefix + [x] for x in dataframe.index ] )
-                #results.append( self.renderer( dataframe,
-                #                               path = ('all',) ))
                 
             # used to be: group_level + 1
             # hierarchical index
