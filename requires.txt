@@ -4,6 +4,7 @@ numpy>=1.7
 matplotlib-venn>=0.5
 matplotlib>=1.3.0
 pandas>=0.13.0
+seaborn>=0.2.1
 rpy2>=2.3.4
 ggplot>=0.4.5
 scipy>=0.11
