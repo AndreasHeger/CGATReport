@@ -335,7 +335,7 @@ class SmoothScatterPlot(Renderer, Plotter):
                     yvalues = R.log10(yvalues)
 
             self.startPlot()
-            # wrap, as panads series can not
+            # wrap, as pandas series can not
             # passed through rpy2.
             R.smoothScatter( numpy.array( xvalues, dtype=numpy.float), 
                              numpy.array( yvalues, dtype=numpy.float), 
