@@ -9,8 +9,8 @@ SPHINXBUILD   = $(BINDIR)sphinxreport-build --num-jobs=4 $(BINDIR)sphinx-build
 SPHINXCLEAN   = $(BINDIR)sphinxreport-clean
 PAPER         =
 
-DIR_PUBLISH       = ~/public_html/documentation/SphinxReport
-URL_SUB="s/\/ifs\/devel\/SphinxReport\/doc\/doc/http:\/\/www.cgat.org\/~andreas\/documentation\/SphinxReport/"
+DIR_PUBLISH       = ~/public_html/documentation/sphinx-report
+URL_SUB="s/\/ifs\/devel\/SphinxReport\/doc\/doc/http:\/\/www.cgat.org\/~andreas\/documentation\/sphinx-report/"
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4

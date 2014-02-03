@@ -45,7 +45,7 @@ Installation
 
 sphinx-report is available on pypi_, to install, type::
 
-    pip install sphinx-report
+    pip install SphinxReport
 
 sphinx-report is under active development, the lastest development
 snapshot can be found ot github_::
