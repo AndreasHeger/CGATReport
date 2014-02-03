@@ -53,9 +53,17 @@ def ExampleWithData( data, path ):
     ind = np.arange(N)    # the x locations for the groups
     width = 0.35       # the width of the bars: can also be len(x) sequence
 
-    p1 = plt.bar(ind, data["menMeans"],   width, color='r', yerr=data["womenStd"])
-    p2 = plt.bar(ind, data["womenMeans"], width, color='y',
-                 bottom=data["menMeans"], yerr=data["menStd"])
+    p1 = plt.bar(ind, 
+                 data["menMeans"],   
+                 width, 
+                 color='r', 
+                 yerr=data["womenStd"])
+    p2 = plt.bar(ind, 
+                 data["womenMeans"], 
+                 width, 
+                 color='y',
+                 bottom=data["menMeans"], 
+                 yerr=data["menStd"])
 
     plt.ylabel('Scores')
     plt.title('Scores by group and gender')

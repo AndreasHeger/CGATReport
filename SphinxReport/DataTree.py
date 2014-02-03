@@ -272,7 +272,6 @@ def asDataFrame( data ):
     # build multi-index
     leaves = list(getNodes( data, len(labels) -1 ))
     leaf = leaves[0][1]
-
     if Utils.isArray( leaf ):
         # build dataframe from array
         dataframes = []
@@ -310,6 +309,7 @@ def asDataFrame( data ):
             dataframes.append( dataframe )
         df = pandas.concat( dataframes, keys = index_tuples )
     else:
+
         if len(labels) == 1:
             # { 'x' : 1, 'y': 2 } -> DF with one row and two columns (x, y)
             df = pandas.DataFrame( data.values(), index = data.keys() )
@@ -332,6 +332,7 @@ def asDataFrame( data ):
                 dataframes.append( df )
                 index_tuples.extend( [path] )
             df = pandas.concat( dataframes, keys = index_tuples)
+
 
     return df
 

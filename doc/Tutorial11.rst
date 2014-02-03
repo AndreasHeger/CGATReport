@@ -196,7 +196,8 @@ limit these::
                   "Bound by ERG",
 		  "background" ]
 
-Now we have finished our tracker. Lets see if it works using the debug render:
+Now we have finished our tracker. Lets see if it works using the table 
+:term:`Renderer`:
 
 .. report:: Genelists.OverlapTracker
    :render: debug

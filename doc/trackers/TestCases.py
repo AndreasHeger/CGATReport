@@ -123,3 +123,28 @@ class VeryLargeMatrix( Tracker ):
             data.append( ("col%i%s" % (x,"f"*193),x ))
 
         return odict( data )
+
+class DeepTree( Tracker ):
+    '''example of a deeple nested data tree '''
+    tracks = ("track1", "track2", "track3")
+    nlevels = 8
+    nslices = 2
+
+    def __call__(self, track):
+        
+        root = odict()
+        current = [root]
+
+        for level in range(self.nlevels):
+            new = []
+            for x in current:
+                for y in range(self.nslices):
+                    o = odict()
+                    x['slice%i' % y ] = o
+                    new.append( o )
+            current = new
+        
+        for x in current:
+            x['data']= random.randint( 0, 100 )
+        
+        return root

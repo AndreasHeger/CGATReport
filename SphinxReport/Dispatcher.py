@@ -383,7 +383,7 @@ class Dispatcher(Component):
 
         data_paths = DataTree.getPaths( self.data )
         nlevels = len(data_paths)
-
+        
         # get number of levels required by renderer
         try:
             renderer_nlevels = self.renderer.nlevels
@@ -391,11 +391,11 @@ class Dispatcher(Component):
             renderer_nlevels = 0
         
         if self.groupby == "none":
-            self.group_level = renderer_nlevels
-        
+            self.group_level = nlevels - 1
+
         elif self.groupby == "track":
             # track is first level
-            self.group_level = 0
+            self.group_level = 1
             # add pseudo levels, if there are not enough levels
             # to group by track
             if nlevels == renderer_nlevels:
@@ -407,18 +407,18 @@ class Dispatcher(Component):
             # rearrange tracks and slices in data tree
             if nlevels <= 2 :
                 self.warn( "grouping by slice, but only %i levels in data tree - all are grouped" % nlevels)
-                self.group_level = None
+                self.group_level = 0
             else:
                 self.data = DataTree.swop( self.data, 0, 1)
-                self.group_level = 0
+                self.group_level = 1
 
         elif self.groupby == "all":
-            # group everthing together
-            self.group_level = None
+            # group everything together
+            self.group_level = 0
 
         else:
             # neither group by slice or track ("ungrouped")
-            self.group_level = None
+            self.group_level = 0
 
         return self.data
 
@@ -455,7 +455,10 @@ class Dispatcher(Component):
         try:
             renderer_nlevels = self.renderer.nlevels
         except AttributeError:
-            renderer_nlevels = 0
+            # set to -1 to avoid any grouping
+            # important for user renderers that are functions
+            # and have no level attribute.
+            renderer_nlevels = -1
 
         # initiate output structure
         results = ResultBlocks( title = "")
@@ -474,55 +477,88 @@ class Dispatcher(Component):
             raise ValueError( "no data for renderer" )            
 
         index = dataframe.index
-        try:
-            # hierarchical index
-            nlevels = len(index.levels)
-        except AttributeError:
-            nlevels = 1
-            #raise ValueError('data frame without MultiIndex' )
 
-        group_level = self.group_level
+        def getIndexLevels( index ):
+            try:
+                # hierarchical index
+                nlevels = len(index.levels)
+            except AttributeError:
+                nlevels = 1
+                index = [ (x,) for x in index]
+            #raise ValueError('data frame without MultiIndex' )
+            return nlevels
+
+        nlevels = getIndexLevels( index )
+
         self.debug( "%s: rendering data started. levels=%i, required levels>=%i, group_level=%s, data_paths=%s" %\
                         (self, nlevels, 
                          renderer_nlevels,
-                         str(group_level), 
+                         str(self.group_level), 
                          str(index)) )
 
-        if renderer_nlevels < 0:
-            # no grouping
+        if renderer_nlevels < 0 and self.group_level <= 0:
+            # no grouping for renderers that will accept
+            # a dataframe with any level of indices and no explicit
+            # grouping has been asked for.
             results.append( self.renderer( dataframe, path = () ) )
         else:
-            if nlevels <= renderer_nlevels:
-                # add dummy levels if levels are not enough
-                prefix = ["level%i" % x for x in range( 1 + renderer_nlevels - nlevels)]
-                dataframe.index = pandas.MultiIndex.from_tuples( [ prefix + [x] for x in dataframe.index ] )
+            # user specified group level by default
+            group_level = self.group_level
+
+            # set group level to maximum allowed by renderer
+            if renderer_nlevels >= 0:
+                group_level = max(nlevels - renderer_nlevels, group_level)
                 
+            # add additional level if necessary
+            if nlevels < group_level:
+                prefix = tuple(["level%i" % x for x in range( group_level - nlevels)])
+                dataframe.index = pandas.MultiIndex.from_tuples( [ prefix + x for x in dataframe.index ] )
+
             # used to be: group_level + 1
             # hierarchical index
             # numpy.unique converts everything to a string
             # which is not consistent with selecting later
-            paths = map( tuple, DataTree.unique( [ x[:-renderer_nlevels] for x in dataframe.index.unique() ] ))
+            paths = map( tuple, DataTree.unique( [ x[:group_level] for x in dataframe.index.unique() ] ))
 
             pathlength = len(paths[0]) - 1
 
-            # Note: can only sort hierarchical indices
-            # need to test
-            dataframe = dataframe.sortlevel()
-            if dataframe.index.lexsort_depth < pathlength:
-                raise ValueError('could not sort data frame: sort depth=%i < pathlength=%i' \
-                                     % (dataframe.index.lexsort_depth, 
-                                        pathlength ))
+            is_hierarchical = isinstance( dataframe.index, pandas.core.index.MultiIndex )
+
+            if is_hierarchical:
+                # Note: can only sort hierarchical indices
+                dataframe = dataframe.sortlevel()
+
+                if dataframe.index.lexsort_depth < pathlength:
+                    raise ValueError('could not sort data frame: sort depth=%i < pathlength=%i, dataframe=%s' \
+                                         % (dataframe.index.lexsort_depth, 
+                                            pathlength,
+                                            dataframe))
             
             for path in paths:
+
                 if path:
-                    # path needs to be a tuple for .xs
-                    work = dataframe.xs(path, axis=0 )
+                    if len(path) == nlevels:
+                        # extract with loc in order to obtain dataframe
+                        work = dataframe.loc[[path]]
+                    else:
+                        # select data frame as cross-section
+                        work = dataframe.xs(path, axis=0 )
                 else:
                     # empty tuple - use full data set
                     work = dataframe
 
                 # remove columns and rows in work that are all Na
                 work = work.dropna( axis=1, how='all').dropna( axis=0, how='all')
+                
+                if is_hierarchical and renderer_nlevels >= 0:
+                    work_levels = getIndexLevels( work.index )
+                    # reduce levels of indices required to that required
+                    # for Renderer. This occurs if groupby=none.
+                    if work_levels > renderer_nlevels:
+                        sep = work_levels - (renderer_nlevels - 1)
+                        tuples = [ ( DataTree.path2str( x[:sep] ), ) + x[sep:] \
+                                       for x in work.index ]
+                        work.index = pandas.MultiIndex.from_tuples( tuples )
 
                 try:
                     results.append( self.renderer( work,

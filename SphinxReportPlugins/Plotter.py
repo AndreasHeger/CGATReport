@@ -2334,7 +2334,7 @@ class VennPlot( MultipleSeriesPlot ):
 
         headers = tuple(dataseries.index)
         values = dataseries
-
+        
         subsets = dict( zip( headers, values) )
         self.startPlot()
 

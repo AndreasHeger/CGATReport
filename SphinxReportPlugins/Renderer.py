@@ -98,11 +98,15 @@ class Renderer(Component):
 
         result = ResultBlocks()
 
-        if len(labels) < self.nlevels:
-            self.warn( "at %s: expected at least %i levels - got %i: %s" %\
-                           (str(path), self.nlevels, len(labels), str(labels)) )
-            result.append( EmptyResultBlock( title = path2str(path) ) )
-            return result
+        #print len(labels), self.nlevels
+        #print dataframe
+
+        if self.nlevels != -1 and len(labels) != self.nlevels:
+            raise ValueError( "at path %s: expected %i levels - got %i: %s" %\
+                                  (str(path), self.nlevels, 
+                                   len(labels), str(labels)) )
+            #result.append( EmptyResultBlock( title = path2str(path) ) )
+            #return result
 
         if not self.split_at:
             # print without splitting
