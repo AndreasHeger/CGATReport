@@ -13,7 +13,7 @@ except ImportError:
     ez_setup.use_setuptools()
     from setuptools import setup, find_packages
 
-import glob, sys, os
+import glob, sys, os, re
 
 major, minor1, minor2, s, tmp = sys.version_info
 
