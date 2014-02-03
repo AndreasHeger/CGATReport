@@ -17,30 +17,70 @@ import glob, sys, os
 
 major, minor1, minor2, s, tmp = sys.version_info
 
-if major==2:
-    extra_dependencies = [ 'web.py>=0.37',
-                           'xlwt>=0.7.4', 
-                           #'matplotlib-venn>=0.5' 
-			]
-elif major==3:
-    extra_dependencies = []
+#####################################################################
+#####################################################################
+## Code to install dependencies from a repository
+#####################################################################
+## Modified from http://stackoverflow.com/a/9125399
+#####################################################################
+def which(program):
+    """
+    Detect whether or not a program is installed.
+    Thanks to http://stackoverflow.com/a/377028/70191
+    """
+    def is_exe(fpath):
+        return os.path.exists(fpath) and os.access(fpath, os.X_OK)
 
-# Dependencies shared between python 2 and 3
-shared_dependencies = [
-    'sphinx>=1.0.5',
-    'rpy2>=2.3.4',
-    'numpy>=1.7',
-    'scipy>=0.11',
-    'matplotlib>=1.3.0', 
-    'sqlalchemy>=0.7.0', 
-    'ggplot>=0.4.5',
-    'openpyxl>=1.5.7' ]
+    fpath, _ = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ['PATH'].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
+REPO_REQUIREMENT = re.compile(r'^-e (?P<link>(?P<vcs>git|svn|hg|bzr).+#egg=(?P<package>.+)-(?P<version>\d(?:\.\d)*))$')
+HTTPS_REQUIREMENT = re.compile(r'^-e (?P<link>.*).+#(?P<package>.+)-(?P<version>\d(?:\.\d)*)$')
+install_requires = []
+dependency_links = []
+
+for requirement in (l.strip() for l in open('requires.txt') if not l.startswith("#")):
+    match = REPO_REQUIREMENT.match(requirement)
+    if match:
+        assert which(match.group('vcs')) is not None, \
+            "VCS '%(vcs)s' must be installed in order to install %(link)s" % match.groupdict()
+        install_requires.append("%(package)s==%(version)s" % match.groupdict())
+        dependency_links.append(match.group('link'))
+        continue
+
+    if requirement.startswith("https"):
+        install_requires.append(requirement)
+        continue
+
+    match = HTTPS_REQUIREMENT.match(requirement)
+    if match:
+        install_requires.append("%(package)s>=%(version)s" % match.groupdict())
+        dependency_links.append(match.group('link'))
+        continue
+
+    install_requires.append(requirement)
+
+if major==2:
+    install_requires.extend( [ 'web.py>=0.37',
+                               'xlwt>=0.7.4', 
+                               'matplotlib-venn>=0.5' ] )
+elif major==3:
+    pass
 
 if major==2 and minor1<5 or major<2:
     raise SystemExit("""SphinxReport requires Python 2.5 or later.""")
 
 classifiers="""
-Development Status :: 3 - Alpha
+Development Status :: 4 - Beta
 Intended Audience :: Science/Research
 Intended Audience :: Developers
 License :: OSI Approved
@@ -78,7 +118,7 @@ setup(name='SphinxReport',
       keywords="report generator sphinx matplotlib sql",
       long_description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       classifiers = filter(None, classifiers.split("\n")),
-      install_requires = shared_dependencies + extra_dependencies,
+      install_requires = install_requires,
       zip_safe = False,
       include_package_data = True,
       test_suite = "tests",

@@ -10,7 +10,7 @@ before_install:
 
 install:
   - chmod +x setup-DEBs.sh
-#  - sudo ./setup-CGAT.sh
+  - sudo ./setup-Python.sh
 
 script: 
   - python setup.py install
