@@ -900,11 +900,10 @@ class Status( Renderer ):
         # convert to dataframe
         # index has test names
         # columns are description, info, status
-        columns = ('description', 'info', 'status')
+        columns = ('description', 'info', 'status', 'name')
         if set(dataframe.columns) != set(columns):
             raise ValueError( "invalid columns: expected '%s', got '%s' " %\
                                   (columns, dataframe.columns))
-        
         
         lines = []
         dirname = os.path.join( os.path.dirname(sys.modules["SphinxReport"].__file__), "images" )
@@ -916,13 +915,14 @@ class Status( Renderer ):
         lines.append( "   :class: sortable" )
         lines.append( '   :header: "Track", "Test", "", "Status", "Info" ' )
         lines.append( '' )
-        
+
         for index, values in dataframe.iterrows():
-            
+
+            testname=values['name']
             description=values['description']
             info = values['info']
             status = values['status']
-            testname, track = index
+            track = index
 
             descriptions[testname] = description
 

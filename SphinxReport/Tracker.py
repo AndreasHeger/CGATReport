@@ -765,9 +765,10 @@ class Status( TrackerSQL ):
         description = getattr( self, "test%s" % slice ).__doc__
         
         return odict( 
-            (( 'status', status),
-             ( 'info', str(value)),
-             ( 'description', description ) ) )
+            (   ( 'name' , slice ),
+                ( 'status', status),
+                ( 'info', str(value)),
+                ( 'description', description ) ) )
     
 ###########################################################################
 ###########################################################################
