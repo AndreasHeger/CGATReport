@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 pip install virtualenv
-python virtualenv cgat-venv
+virtualenv cgat-venv --system-site-packages
 source cgat-venv/bin/activate
 
 # Install some Python prerequisites
