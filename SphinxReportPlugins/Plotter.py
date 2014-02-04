@@ -1123,8 +1123,8 @@ class LinePlot( Renderer, Plotter ):
         if len(columns) < 2:
             raise ValueError( 'require at least two columns, got %i' % len(columns))
 
-        for path in paths:
-            work = dataframe.ix[path]
+        for ppath in paths:
+            work = dataframe.ix[ppath]
             xvalues = work[columns[0]]
             for column in work.columns[1:]:
             
@@ -1145,8 +1145,8 @@ class LinePlot( Renderer, Plotter ):
                               columns[0], column,
                               nplotted )
                 nplotted += 1
-                
-                self.legend.append( path2str(path) + "/" + column )
+
+                self.legend.append( path2str(ppath) + "/" + column )
             
         self.finishPlot( fig, dataframe, path )
 

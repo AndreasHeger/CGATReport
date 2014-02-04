@@ -490,11 +490,10 @@ class Dispatcher(Component):
 
         nlevels = getIndexLevels( index )
 
-        self.debug( "%s: rendering data started. levels=%i, required levels>=%i, group_level=%s, data_paths=%s" %\
+        self.debug( "%s: rendering data started. levels=%i, required levels>=%i, group_level=%s" %\
                         (self, nlevels, 
                          renderer_nlevels,
-                         str(self.group_level), 
-                         str(index)) )
+                         str(self.group_level) ) )
 
         if renderer_nlevels < 0 and self.group_level <= 0:
             # no grouping for renderers that will accept

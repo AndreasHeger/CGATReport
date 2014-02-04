@@ -15,7 +15,7 @@ def unique( iterables ):
 def path2str( path ):
     '''convert path to printable string.'''
     if path is None: return ""
-    if isinstance( path, str ): return path
+    if Utils.isString( path ): return path
     return "/".join(map(str,path))
 
 ## This module needs to be properly refactored to use
@@ -281,7 +281,7 @@ def asDataFrame( data ):
             branches = [('all', data)]
         else:
             branches = list(getNodes( data, max(0, len(labels)-2 )) )
-
+        
         for path, leaves in branches:
             dataframe = pandas.DataFrame( leaves ) 
             dataframes.append( dataframe )

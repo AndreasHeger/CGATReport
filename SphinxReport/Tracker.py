@@ -1050,6 +1050,7 @@ class SingleTableTrackerHistogram( TrackerSQL ):
     exclude_columns = ("track,")
     table = None
     column = None
+    value = 'data'
 
     def __init__(self, *args, **kwargs ):
         TrackerSQL.__init__(self, *args, **kwargs )
@@ -1063,7 +1064,9 @@ class SingleTableTrackerHistogram( TrackerSQL ):
 
     def __call__(self, track, slice = None ):
         if self.column == None: raise NotImplementedError( "column not set - Tracker not fully implemented" )
-        data = self.getAll( "SELECT %(column)s, %(track)s FROM %(table)s" )
+        # labels need to be consistent in order 
+        # so rename track to value.
+        data = self.getAll( "SELECT %(column)s, %(track)s AS %(value)s FROM %(table)s" )
         return data
 
 class MultipleTableTrackerHistogram( TrackerSQL ): 

@@ -70,6 +70,11 @@ def isInt( obj ):
 def isFloat( obj ):
     return type(obj) in FloatTypes
 
+def isString( obj ):
+    # Python 3
+    # return isinstance( obj, str )
+    return isinstance( obj, basestring )
+
 def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
     return all(hasattr(obj, attr) for attr in attrs)
