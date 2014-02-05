@@ -110,8 +110,10 @@ def getOptionMap():
             'nocache': directives.flag,
             }
 
+        # options used in trackers
         options["tracker"] = {
-            'tracker': directives.unchanged
+            'regex': directives.unchanged,
+            'glob': directives.unchanged,
             }
 
         options["display"]  = {

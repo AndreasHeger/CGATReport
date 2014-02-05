@@ -776,7 +776,10 @@ def writeNoteBookEntry( outfile, tracker, renderer, transformers, options ):
         if val == None:
             cmd_options.append( "%s" % key )
         else:
-            cmd_options.append( "%s=%s" % (key,val) )
+            if isString( val ):
+                cmd_options.append( "%s='%s'" % (key,val) )
+            else:
+                cmd_options.append( '%s=%s' % (key,str(val)) )
             
     if transformers:
         cmd_options.append( "transformer=['%s']" % "','".join( transformers))

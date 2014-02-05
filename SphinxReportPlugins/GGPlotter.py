@@ -38,6 +38,10 @@ class GGPlot( Renderer, Plotter ):
 
     def render(self, dataframe, path ):
 
+        # the index in the dataframe is reset in order
+        # to add the first level in the index as a column.
+        dataframe.reset_index(0, inplace = True )
+
         s = "p = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom ) 
         exec s in globals(), locals()
 

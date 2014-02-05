@@ -545,7 +545,7 @@ class Dispatcher(Component):
                 else:
                     # empty tuple - use full data set
                     work = dataframe
-
+                    
                 # remove columns and rows in work that are all Na
                 work = work.dropna( axis=1, how='all').dropna( axis=0, how='all')
                 

@@ -128,8 +128,9 @@ class Renderer(Component):
                 for z, x in enumerate(range( 0, len(first_level_labels), self.split_at)) :
                     select = list(DataTree.unique( always + list(first_level_labels[x:x+self.split_at]) ))
                     work = pandas.concat( [dataframe.ix[s] for s in select], keys = select )
+                    work.index.names = dataframe.index.names
                     result.extend( self.render( work, path + (z, ) ) )
-            
+                    
         return result
 
     def toString( self, value ):

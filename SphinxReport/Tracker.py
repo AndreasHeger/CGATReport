@@ -184,17 +184,85 @@ class Tracker(object):
 ###########################################################################
 ###########################################################################
 ###########################################################################
-class TrackerTSV( Tracker ):
+class TrackerSingleFile( Tracker ):
+    '''base class for tracker obtaining data from a single file.
+
+    Tracks and slices are defined by the file contents.
+    '''
+    def __init__(self, *args, **kwargs ):
+        Tracker.__init__(self, *args, **kwargs )
+        if "filename" not in kwargs:
+            raise ValueError( "TrackerSingleFile requires a :filename: parameter" )
+        
+        self.filename = kwargs['filename'].strip()
+    
+#######################################################
+#######################################################
+#######################################################
+class TrackerMultipleFiles( Tracker ):
+    '''base class for trackers obtaining data from a multilpe files.
+
+    Tracks are names derived from filenames via a
+    regular expression.
+    
+    This tracker accepts the following parameters:
+
+    :glob: 
+    
+        glob expression describing the files to include.
+
+    :regex: 
+        
+        regular expression for extracting a track label from
+        a filename. If not given, the complete filename 
+        path is used.
+
+    '''
+    def getTracks(self, subset = None ):
+        files = glob.glob( self.glob )
+        self.mapTrack2File = {}
+        for f in files:
+            try:
+                track = self.regex.search( f ).groups()[0]
+            except AttributeError:
+                raise ValueError( "filename %s does not match regular expression" % f )
+
+            self.mapTrack2File[track] = f
+        return self.mapTrack2File.keys()
+
+    def __init__(self, *args, **kwargs ):
+        Tracker.__init__(self, *args, **kwargs )
+        if "glob" not in kwargs:
+            raise ValueError( "TrackerMultipleFiles requires a :glob: parameter" )
+
+        self.glob = kwargs['glob'].strip()
+        self.regex = kwargs.get( 'regex', '(.*)' )
+        
+        if '(' not in self.regex:
+            raise ValueError( "regular expression requires exactly one group enclosed in ()")
+        self.regex = re.compile( self.regex)
+
+    def openFile( self, track ):
+        '''open a file.'''
+        filename = self.mapTrack2File[track]
+        if filename.endswith( ".gz" ):
+            infile = gzip.open( filename, "r" )
+        else:
+            infile = open( filename, "r" )
+        return infile
+
+#######################################################
+#######################################################
+#######################################################
+class TrackerTSV( TrackerSingleFile ):
     """Base class for trackers that fetch data from an CSV file.
 
     Each track is a column in the file.
     """
+
     def __init__(self, *args, **kwargs ):
-        Tracker.__init__(self, *args, **kwargs )
-        if "tracker" not in kwargs:
-            raise ValueError( "TrackerTSV requires a :tracker: parameter" )
-        
-        self.filename = kwargs['tracker'].strip()
+        TrackerSingleFile.__init__(self, *args, **kwargs )
+
         self._data = None
         self._tracks = None
 
@@ -229,24 +297,16 @@ class TrackerTSV( Tracker ):
         self.readData()
         return self.data[track]
 
-class TrackerMatrix( TrackerTSV ):
-    """Return matrix data from a matrix in flat-file format.
-    """
-    def getTracks(self, subset = None ):
-        return glob.glob( self.glob )
 
-    def __init__(self, *args, **kwargs ):
-        TrackerTSV.__init__(self, *args, **kwargs )
-        self.glob = kwargs['tracker'].strip()
+class TrackerMatrices( TrackerMultipleFiles ):
+    """Return matrix data from multiple files.
+    """
 
     def __call__(self, track, **kwargs ):
         """return a data structure for track :param: track"""
-        
-        if track.endswith( ".gz" ):
-            infile = gzip.open( track, "r" )
-        else:
-            infile = open( track, "r" )
-        
+
+        infile = self.openFile( track )
+
         dtype = numpy.float
 
         lines = [ l for l in infile.readlines() if not l.startswith("#") ]
@@ -266,6 +326,26 @@ class TrackerMatrix( TrackerTSV ):
                         ('rows', row_headers),
                         ('columns', col_headers) ) )
 
+#######################################################
+#######################################################
+#######################################################
+class TrackerDataframes( TrackerMultipleFiles ):
+    '''return dataframe from files.
+
+    By default, the dataframe has no row names. 
+    If self.index_column is set, the specified column
+    will be used as row names.
+    '''
+    def __init__(self, *args, **kwargs ):
+        TrackerMultipleFiles.__init__(self, *args, **kwargs )
+        self.index_column = kwargs.get('index_column', None )
+
+    def __call__( self, track, **kwargs ):
+
+        df = pandas.read_csv( self.openFile(track), sep='\t', header=0, 
+                              index_col=self.index_column )
+        return df
+        
 ###########################################################################
 ###########################################################################
 ###########################################################################

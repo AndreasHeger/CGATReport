@@ -333,6 +333,13 @@ def asDataFrame( data ):
                 index_tuples.extend( [path] )
             df = pandas.concat( dataframes, keys = index_tuples)
 
+    # rename levels in hierarchical index
+    is_hierarchical = isinstance( df.index, pandas.core.index.MultiIndex )
+    if is_hierarchical:
+        d = ['track','slice'] + ['level%i' for i in range( len(df.index.names) - 2 )]
+        df.index.names = d[:len(df.index.names)]
+    else:
+        df.index.name = 'track'
 
     return df
 

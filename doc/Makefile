@@ -50,6 +50,7 @@ csvdb: csvdb_data.txt.gz
 	rm -f $@; gunzip < $< | sqlite3 $@
 
 html: csvdb
+	ipython nbconvert --to html notebooks/SphinxReportTutorial14.ipynb
 	$(XVFB) $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."

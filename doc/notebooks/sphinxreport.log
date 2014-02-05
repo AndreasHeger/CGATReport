@@ -1,0 +1,79 @@
+2014-02-05 14:55:08,233 INFO initialising plugins
+2014-02-05 14:55:12,172 DEBUG found plugins: 3 capabilites and 62 plugins
+2014-02-05 14:55:12,174 DEBUG disp53637520: 53637520: starting renderer '<SphinxReportPlugins.GGPlotter.GGPlot object at 0x3327190>'
+2014-02-05 14:55:12,174 DEBUG entered getModule with `TestCases`
+2014-02-05 14:55:12,174 DEBUG searching for module name=TestCases at path=None
+2014-02-05 14:55:12,175 DEBUG loading module: TestCases: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/TestCases.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/TestCases.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,194 DEBUG entered getModule with `Tutorial5`
+2014-02-05 14:55:12,194 DEBUG searching for module name=Tutorial5 at path=None
+2014-02-05 14:55:12,195 DEBUG loading module: Tutorial5: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial5.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial5.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,197 DEBUG entered getModule with `Transformers`
+2014-02-05 14:55:12,197 DEBUG searching for module name=Transformers at path=None
+2014-02-05 14:55:12,198 DEBUG loading module: Transformers: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Transformers.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Transformers.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,200 DEBUG entered getModule with `MyPlots`
+2014-02-05 14:55:12,200 DEBUG searching for module name=MyPlots at path=None
+2014-02-05 14:55:12,200 DEBUG loading module: MyPlots: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/MyPlots.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/MyPlots.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,202 DEBUG entered getModule with `Tutorial1`
+2014-02-05 14:55:12,202 DEBUG searching for module name=Tutorial1 at path=None
+2014-02-05 14:55:12,203 DEBUG loading module: Tutorial1: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial1.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial1.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,203 DEBUG entered getModule with `Tutorial3`
+2014-02-05 14:55:12,204 DEBUG searching for module name=Tutorial3 at path=None
+2014-02-05 14:55:12,204 DEBUG loading module: Tutorial3: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial3.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial3.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,206 DEBUG entered getModule with `UserTrackers`
+2014-02-05 14:55:12,206 DEBUG searching for module name=UserTrackers at path=None
+2014-02-05 14:55:12,207 DEBUG loading module: UserTrackers: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/UserTrackers.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/UserTrackers.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,209 DEBUG entered getModule with `Tutorial9`
+2014-02-05 14:55:12,210 DEBUG searching for module name=Tutorial9 at path=None
+2014-02-05 14:55:12,210 DEBUG loading module: Tutorial9: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial9.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial9.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,212 DEBUG entered getModule with `Tutorial8`
+2014-02-05 14:55:12,212 DEBUG searching for module name=Tutorial8 at path=None
+2014-02-05 14:55:12,212 DEBUG loading module: Tutorial8: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial8.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial8.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,214 DEBUG entered getModule with `Tutorial10`
+2014-02-05 14:55:12,214 DEBUG searching for module name=Tutorial10 at path=None
+2014-02-05 14:55:12,215 DEBUG loading module: Tutorial10: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial10.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial10.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,219 DEBUG entered getModule with `Trackers`
+2014-02-05 14:55:12,219 DEBUG searching for module name=Trackers at path=None
+2014-02-05 14:55:12,220 DEBUG loading module: Trackers: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Trackers.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Trackers.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,221 DEBUG entered getModule with `Genelists`
+2014-02-05 14:55:12,221 DEBUG searching for module name=Genelists at path=None
+2014-02-05 14:55:12,222 DEBUG loading module: Genelists: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Genelists.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Genelists.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,224 DEBUG entered getModule with `Tutorial2`
+2014-02-05 14:55:12,224 DEBUG searching for module name=Tutorial2 at path=None
+2014-02-05 14:55:12,224 DEBUG loading module: Tutorial2: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial2.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Tutorial2.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,226 DEBUG entered getModule with `Trackers_test`
+2014-02-05 14:55:12,226 DEBUG searching for module name=Trackers_test at path=None
+2014-02-05 14:55:12,227 DEBUG loading module: Trackers_test: <open file '/ifs/devel/andreas/sphinx-report/doc/trackers/Trackers_test.py', mode 'U' at 0x55e0f60>, /ifs/devel/andreas/sphinx-report/doc/trackers/Trackers_test.py, ('.py', 'U', 1)
+2014-02-05 14:55:12,230 DEBUG disp90785808: starting dispatcher '<SphinxReport.Dispatcher.Dispatcher object at 0x5694810>': tracker='<SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>', renderer='<SphinxReportPlugins.GGPlotter.GGPlot object at 0x3327190>', transformer:='[]'
+2014-02-05 14:55:12,732 DEBUG disp90784336: using cache _cache/SphinxReport_Tracker_TrackerDataframes
+2014-02-05 14:55:12,736 DEBUG disp90784336: keys in cache: ['hmC-foetal-dex-R1', 'hmC-foetal-sal-R2', 'mC-foetal-dex-R1', 'mC-foetal-sal-R2', 'hmC-foetal-dex-R2', 'hmC-foetal-sal-R1', 'hmC-input-R1', 'mC-foetal-dex-R2', 'mC-foetal-sal-R1', 'mC-input-R1']
+2014-02-05 14:55:12,737 DEBUG disp90785808: profile: started: tracker: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>
+2014-02-05 14:55:12,737 DEBUG disp90785808: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>: collecting data paths.
+2014-02-05 14:55:12,738 DEBUG disp90785808: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>: collected data paths.
+2014-02-05 14:55:12,738 DEBUG disp90785808: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>: filtering data paths.
+2014-02-05 14:55:12,738 DEBUG disp90785808: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>: filtered data paths.
+2014-02-05 14:55:12,738 DEBUG disp90785808: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>: building all_paths
+2014-02-05 14:55:12,738 DEBUG disp90785808: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>: collecting data started for 10 data paths
+2014-02-05 14:55:12,743 DEBUG disp90784336: retrieved data for key 'hmC-foetal-dex-R1' from cache
+2014-02-05 14:55:12,748 DEBUG disp90784336: retrieved data for key 'hmC-foetal-dex-R2' from cache
+2014-02-05 14:55:12,753 DEBUG disp90784336: retrieved data for key 'hmC-foetal-sal-R2' from cache
+2014-02-05 14:55:12,758 DEBUG disp90784336: retrieved data for key 'hmC-foetal-sal-R1' from cache
+2014-02-05 14:55:12,763 DEBUG disp90784336: retrieved data for key 'hmC-input-R1' from cache
+2014-02-05 14:55:12,767 DEBUG disp90784336: retrieved data for key 'mC-input-R1' from cache
+2014-02-05 14:55:12,772 DEBUG disp90784336: retrieved data for key 'mC-foetal-sal-R2' from cache
+2014-02-05 14:55:12,777 DEBUG disp90784336: retrieved data for key 'mC-foetal-dex-R2' from cache
+2014-02-05 14:55:12,782 DEBUG disp90784336: retrieved data for key 'mC-foetal-dex-R1' from cache
+2014-02-05 14:55:12,787 DEBUG disp90784336: retrieved data for key 'mC-foetal-sal-R1' from cache
+2014-02-05 14:55:12,787 DEBUG disp90785808: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>: collecting data finished for 10 data paths
+2014-02-05 14:55:12,787 DEBUG disp90785808: profile: finished: tracker: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>
+2014-02-05 14:55:12,787 DEBUG disp90785808: <SphinxReport.Dispatcher.Dispatcher object at 0x5694810>: after collection: 1 data_paths: [['hmC-foetal-dex-R1', 'hmC-foetal-dex-R2', 'hmC-foetal-sal-R2', 'hmC-foetal-sal-R1', 'hmC-input-R1', 'mC-input-R1', 'mC-foetal-sal-R2', 'mC-foetal-dex-R2', 'mC-foetal-dex-R1', 'mC-foetal-sal-R1']]
+2014-02-05 14:55:12,788 DEBUG disp90785808: <SphinxReport.Dispatcher.Dispatcher object at 0x5694810>: after transformation: 1 data_paths: [['hmC-foetal-dex-R1', 'hmC-foetal-dex-R2', 'hmC-foetal-sal-R2', 'hmC-foetal-sal-R1', 'hmC-input-R1', 'mC-input-R1', 'mC-foetal-sal-R2', 'mC-foetal-dex-R2', 'mC-foetal-dex-R1', 'mC-foetal-sal-R1']]
+2014-02-05 14:55:12,788 DEBUG disp90785808: <SphinxReport.Dispatcher.Dispatcher object at 0x5694810>: after restrict: 1 data_paths: [['hmC-foetal-dex-R1', 'hmC-foetal-dex-R2', 'hmC-foetal-sal-R2', 'hmC-foetal-sal-R1', 'hmC-input-R1', 'mC-input-R1', 'mC-foetal-sal-R2', 'mC-foetal-dex-R2', 'mC-foetal-dex-R1', 'mC-foetal-sal-R1']]
+2014-02-05 14:55:12,788 DEBUG disp90785808: <SphinxReport.Dispatcher.Dispatcher object at 0x5694810>: after exclude: 1 data_paths: [['hmC-foetal-dex-R1', 'hmC-foetal-dex-R2', 'hmC-foetal-sal-R2', 'hmC-foetal-sal-R1', 'hmC-input-R1', 'mC-input-R1', 'mC-foetal-sal-R2', 'mC-foetal-dex-R2', 'mC-foetal-dex-R1', 'mC-foetal-sal-R1']]
+2014-02-05 14:55:12,788 DEBUG disp90785808: <SphinxReport.Dispatcher.Dispatcher object at 0x5694810>: after pruning: 1 data_paths: [['hmC-foetal-dex-R1', 'hmC-foetal-dex-R2', 'hmC-foetal-sal-R2', 'hmC-foetal-sal-R1', 'hmC-input-R1', 'mC-input-R1', 'mC-foetal-sal-R2', 'mC-foetal-dex-R2', 'mC-foetal-dex-R1', 'mC-foetal-sal-R1']]
+2014-02-05 14:55:12,788 WARNING disp90785808: grouping by slice, but only 1 levels in data tree - all are grouped
+2014-02-05 14:55:12,788 DEBUG disp90785808: <SphinxReport.Dispatcher.Dispatcher object at 0x5694810>: after grouping: 1 data_paths: [['hmC-foetal-dex-R1', 'hmC-foetal-dex-R2', 'hmC-foetal-sal-R2', 'hmC-foetal-sal-R1', 'hmC-input-R1', 'mC-input-R1', 'mC-foetal-sal-R2', 'mC-foetal-dex-R2', 'mC-foetal-dex-R1', 'mC-foetal-sal-R1']]
+2014-02-05 14:55:12,789 DEBUG disp90785808: profile: started: renderer: <SphinxReportPlugins.GGPlotter.GGPlot object at 0x3327190>
+2014-02-05 14:55:12,789 DEBUG disp90785808: <SphinxReport.Dispatcher.Dispatcher object at 0x5694810>: rendering data started for 10 items
+2014-02-05 14:55:12,793 DEBUG disp90785808: <SphinxReport.Dispatcher.Dispatcher object at 0x5694810>: rendering data started. levels=2, required levels>=-1, group_level=0
+2014-02-05 14:55:14,029 DEBUG disp90785808: <SphinxReport.Tracker.TrackerDataframes object at 0x533dcd0>: rendering data finished with 1 blocks
+2014-02-05 14:55:14,031 DEBUG disp90785808: profile: finished: renderer: <SphinxReportPlugins.GGPlotter.GGPlot object at 0x3327190>

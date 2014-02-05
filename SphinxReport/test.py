@@ -204,6 +204,7 @@ def writeNotebook( outfile, options, kwargs,
         'do_print = False',
         'tracker="%s"' % options.tracker,
         'renderer="%s"' % options.renderer,
+        'trackerdir="%s"' % options.trackerdir,
         'workdir="%s"' % os.getcwd() ]
                     
     for key, val in list(kwargs.items()) +\
@@ -212,15 +213,16 @@ def writeNotebook( outfile, options, kwargs,
         if val == None:
             cmd_options.append( "%s" % key )
         else:
-            cmd_options.append( "%s=%s" % (key,val) )
-            
+            if Utils.isString( val ):
+                cmd_options.append( '%s="%s"' % (key,val) )
+            else:
+                cmd_options.append( '%s=%s' % (key,val) )
     if options.transformers:
         cmd_options.append( "transformer=['%s']" % "','".join( options.transformers))
 
     # no module name in tracker
     params = { "tracker" : "%s" % (name),
-               "options" : ",".join( cmd_options ),
-               "curdir" : os.getcwd() }
+               "options" : ",\n".join( cmd_options ) }
     
     outfile.write( Utils.NOTEBOOK_TEMPLATE % params )
 
@@ -259,7 +261,7 @@ def main( argv = None, **kwargs ):
     parser.add_option( "-r", "--renderer", dest="renderer", type="string",
                        help="renderer to use [default=%default]" )
 
-    parser.add_option( "-w", "--path", dest="dir_trackers", type="string",
+    parser.add_option( "-w", "--path", "--trackerdir", dest="trackerdir", type="string",
                           help="path to trackers [default=%default]" )
 
     parser.add_option( "-f", "--force", dest="force", action="store_true",
@@ -287,7 +289,8 @@ def main( argv = None, **kwargs ):
                        help = "do not render, start ipython interpreter [default=%default]." )
 
     parser.add_option( "--workdir", dest="workdir", type="string",
-                          help="working directory - change to this directory before executing [default=%default]" )
+                          help="working directory - change to this directory before executing "
+                          " [default=%default]" )
 
     parser.add_option( "--hardcopy", dest="hardcopy", type="string",
                        help = "output images of plots. The parameter should contain one or more %s "
@@ -305,7 +308,7 @@ def main( argv = None, **kwargs ):
         do_show = True,
         do_print = True,
         force = False,
-        dir_trackers = TRACKERDIR,
+        trackerdir = TRACKERDIR,
         label = "GenericLabel",
         caption = "add caption here",
         start_interpreter = False,
@@ -331,9 +334,8 @@ def main( argv = None, **kwargs ):
         for keyword, value in kwargs.items():
             if hasattr( options, keyword ):
                 setattr( options, keyword, value )
-            else:
-                raise ValueError('unknown keyword argument %s' % keyword )
-          
+                del kwargs[keyword]
+
     if options.workdir is not None:
         savedir = os.getcwd()
         os.chdir( options.workdir )
@@ -342,15 +344,14 @@ def main( argv = None, **kwargs ):
 
     ######################################################
     # configure options
-    options.dir_trackers = os.path.abspath( os.path.expanduser( options.dir_trackers ) )
-    if not os.path.exists( options.dir_trackers ):
-        raise IOError("directory %s does not exist" % options.dir_trackers )
+    options.trackerdir = os.path.abspath( os.path.expanduser( options.trackerdir ) )
+    if not os.path.exists( options.trackerdir ):
+        raise IOError("directory %s does not exist" % options.trackerdir )
 
-    sys.path.insert( 0, options.dir_trackers )
+    sys.path.insert( 0, options.trackerdir )
 
     ######################################################
     # test plugins
-    kwargs = {}
     for x in options.options:
         if "=" in x:
             data = x.split("=")
@@ -399,7 +400,7 @@ def main( argv = None, **kwargs ):
 
         trackers = []
 
-        for filename in glob.glob( os.path.join( options.dir_trackers, "*.py" )):
+        for filename in glob.glob( os.path.join( options.trackerdir, "*.py" )):
             modulename = os.path.basename( filename )
             trackers.extend( [ x for x in getTrackers( modulename ) if x[0] not in exclude ] )
         
@@ -449,7 +450,7 @@ def main( argv = None, **kwargs ):
 
         if options.do_print:                        
 
-            sys.stdout.write("..Template start\n\n")
+            sys.stdout.write(".. Template start\n\n")
 
             if options.language == "rst":
                 writeRST( sys.stdout, 
@@ -468,7 +469,7 @@ def main( argv = None, **kwargs ):
                           display_options,
                           modulename, name)
 
-            sys.stdout.write ("\n..Template ends\n")
+            sys.stdout.write ("\n.. Template end\n")
     
         if result and renderer != None: 
             for r in result:
@@ -556,13 +557,13 @@ def main( argv = None, **kwargs ):
         if options.start_interpreter:
             interpreter = code.InteractiveConsole( dict( globals().items() + locals().items()) )
             interpreter.interact()
-            return
+            return dataframe
         elif options.start_ipython:
             import IPython
             IPython.embed()
-            return
+            return dataframe
 
-        return result
+        return dataframe
     
 if __name__ == "__main__":
     sys.exit(main( argv = sys.argv ))
