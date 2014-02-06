@@ -656,10 +656,10 @@ class Dispatcher(Component):
         self.debug( "%s: after exclude: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         # remove superfluous levels
-        try: self.prune()
-        except: 
-            self.error( "%s: exception in pruning" % self )
-            return ResultBlocks(ResultBlocks( Utils.buildException( "pruning" ) ))
+        #try: self.prune()
+        #except: 
+        #    self.error( "%s: exception in pruning" % self )
+        #    return ResultBlocks(ResultBlocks( Utils.buildException( "pruning" ) ))
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after pruning: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
