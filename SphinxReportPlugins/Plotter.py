@@ -2038,22 +2038,23 @@ class GalleryPlot(PlotByRow):
 
     def plot(self, headers, values, path ):
 
+        blocks = ResultBlocks()
         dataseries = dict( zip(headers,values))
         try:
             # return value is a series
             filename = dataseries['filename']
         except KeyError:
             self.warn( "no 'filename' key in path %s" % (path2str(path )))
-            return
+            return blocks
         
         try:
             # return value is a series
             name = dataseries['name']
         except KeyError:
             self.warn( "no 'name' key in path %s" % (path2str(path )))
-            return
+            return blocks
 
-        rst_text = '''.. figure:: %(fn)s
+        rst_text = '''.. figure:: %(filename)s
 '''
 
         rst_link = '''* `%(title)s <%(absfn)s>`_ 

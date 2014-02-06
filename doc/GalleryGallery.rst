@@ -9,7 +9,7 @@ files as returned by :class:`SphinxReport.Tracker.TrackerImages`.
 
 .. report:: Tracker.TrackerImages
    :render: gallery-plot
-   :tracker: images/*.png
+   :glob: images/*.png
 
    A collection of images
 

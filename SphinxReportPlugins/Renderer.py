@@ -741,7 +741,7 @@ class MatrixBase:
         # do not output large matrices as rst files
         # separate and force need to be mixed in.
         if self.separate or (not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols)):
-            return ResultBlocks( self.asFile( [ [ self.toString(x) for x in r ] for r in matrix ], 
+            return ResultBlocks( self.asFile( matrix, 
                                               rows, 
                                               columns, 
                                               title ),

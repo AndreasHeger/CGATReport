@@ -355,9 +355,9 @@ class TrackerImages( Tracker ):
     
     def __init__(self, *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
-        if "tracker" not in kwargs:
-            raise ValueError( "TrackerImages requires a :tracker: parameter" )
-        self.glob = kwargs["tracker"]
+        if "glob" not in kwargs:
+            raise ValueError( "TrackerImages requires a :glob: parameter" )
+        self.glob = kwargs["glob"]
 
     def getTracks(self, subset = None ):
         return glob.glob( self.glob )
