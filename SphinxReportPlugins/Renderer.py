@@ -741,7 +741,9 @@ class MatrixBase:
         # do not output large matrices as rst files
         # separate and force need to be mixed in.
         if self.separate or (not self.force and (len(rows) > self.max_rows or len(columns) > self.max_cols)):
-            return ResultBlocks( self.asFile( matrix, 
+            return ResultBlocks( self.asFile( pandas.DataFrame( matrix, 
+                                                                index = rows,
+                                                                columns = columns),
                                               rows, 
                                               columns, 
                                               title ),
