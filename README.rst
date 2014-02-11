@@ -32,7 +32,7 @@ and sphinx_, in particular, it
 Documentation
 ================
 
-Documentation is available `here <http://www.cgat.org/~andreas/documentation/sphinx-report/index.html>`_
+Documentation is available `here <http://www.cgat.org/~andreas/documentation/sphinx-report/index.html>`_.
 
 Some quick links are below:
 
@@ -57,3 +57,4 @@ snapshot can be found ot github_::
 .. _pypi: http://pypi.python.org/pypi/sphinx-report
 .. _github: https://github.com/AndreasHeger/sphinx-report
 .. _restructured text: http://docutils.sourceforge.net/rst.html
+.. _sphinx: http://sphinx-doc.org/
