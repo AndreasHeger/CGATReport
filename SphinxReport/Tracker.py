@@ -388,7 +388,7 @@ class TrackerSQL( Tracker ):
     pattern = None
     as_tables = False
 
-    def __init__(self, backend = None, *args, **kwargs ):
+    def __init__(self, backend = None, attach = [], *args, **kwargs ):
         Tracker.__init__(self, *args, **kwargs )
 
         # connection within python
@@ -396,6 +396,9 @@ class TrackerSQL( Tracker ):
 
         # connection within R
         self.rdb = None
+
+        # attach to additional tables
+        self.attach = attach
 
         if backend != None:
             # backend given - use it
@@ -419,6 +422,28 @@ class TrackerSQL( Tracker ):
         if not self.db:
             
             logging.debug( "connecting to %s" % self.backend )
+
+            # attach to additional databases (sqlite)
+            if self.attach:
+                
+                if creator is not None: 
+                    raise NotImplementedError( 'attach not implemented if creator is set')
+                
+                if not self.backend.startswith( 'sqlite' ):
+                    raise NotImplementedError( 'attach only implemented for sqlite backend')
+
+                def _my_creator():
+                    # issuing the ATTACH DATABASE into the sqlalchemy ORM (self.db.execute( ... ))
+                    # does not work. The database is attached, but tables are not accessible in later
+                    # SELECT statements.
+                    import sqlite3
+                    conn = sqlite3.connect(re.sub( "sqlite:///", "", self.backend) )
+                    for filename, name in self.attach:
+                        conn.execute( "ATTACH DATABASE '%s' AS %s" % \
+                                          (os.path.abspath(filename),
+                                           name))
+                    return conn
+                creator = _my_creator
 
             # creator can not be None.
             if creator:

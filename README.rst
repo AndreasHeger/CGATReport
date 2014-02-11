@@ -32,13 +32,13 @@ and sphinx_, in particular, it
 Documentation
 ================
 
-Documentation is available here `here
-<http://www.cgat.org/~andreas/documentation/sphinx-report/index.html>`_
+Documentation is available `here <http://www.cgat.org/~andreas/documentation/sphinx-report/index.html>`_
+
 Some quick links are below:
 
 * `Contents <http://www.cgat.org/~andreas/documentation/sphinx-report/contents.html>`_
 * `Tutorials <http://www.cgat.org/~andreas/documentation/sphinx-report/Tutorials.html>`_
-* `Reference <http://www.cgat.org/~andreas/documentation/sphinx-report/Reference.html">`_
+* `Reference <http://www.cgat.org/~andreas/documentation/sphinx-report/Reference.html>`_
 
 Installation
 ============

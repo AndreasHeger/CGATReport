@@ -90,7 +90,7 @@ their data sources.
 """
 
 
-import sys, os, imp, io, re, types, glob, optparse, code
+import sys, os, imp, io, re, types, glob, optparse, code, tempfile
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -508,6 +508,15 @@ def main( argv = None, **kwargs ):
             elif len(_pylab_helpers.Gcf.get_all_fig_managers()) > 0:
                 plt.show()
 
+            else:
+                for rr in result:
+                    for r in rr:
+                        if hasattr( r, 'xls' ):
+                            tmpfile, outpath = tempfile.mkstemp( dir ='.', suffix = '.xlsx' )
+                            os.close(tmpfile)
+                            print ('saving xlsx to %s' % outpath )
+                            r.xls.save( outpath )
+                            
     ######################################################
     ## build page
     elif options.page:

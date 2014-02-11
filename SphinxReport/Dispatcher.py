@@ -437,7 +437,12 @@ class Dispatcher(Component):
         Ignore both the first and last level for this analyis.
         '''
 
-        pruned = DataTree.prune( self.data, ignore = Utils.TrackerKeywords )
+        # set method to outwards - only prune leaves if they
+        # are superfluous. 
+        pruned = DataTree.prune( self.data, 
+                                 ignore = Utils.TrackerKeywords,
+                                 method = 'bottom-up' )
+
         for level, label in pruned:
             self.debug( "pruning level %i from data tree: label='%s'" % (level, label) )
 
@@ -656,10 +661,10 @@ class Dispatcher(Component):
         self.debug( "%s: after exclude: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))
 
         # remove superfluous levels
-        #try: self.prune()
-        #except: 
-        #    self.error( "%s: exception in pruning" % self )
-        #    return ResultBlocks(ResultBlocks( Utils.buildException( "pruning" ) ))
+        try: self.prune()
+        except: 
+           self.error( "%s: exception in pruning" % self )
+           return ResultBlocks(ResultBlocks( Utils.buildException( "pruning" ) ))
 
         data_paths = DataTree.getPaths( self.data )
         self.debug( "%s: after pruning: %i data_paths: %s" % (self,len(data_paths), str(data_paths)))

@@ -1,4 +1,4 @@
-import re, os, sys, imp, io, types, traceback, logging, math
+import re, os, sys, imp, io, types, traceback, logging, math, glob
 
 # Python 2/3 Compatibility
 try: import ConfigParser as configparser
@@ -147,7 +147,7 @@ def configToDictionary( config ):
         
     return p
 
-def getParameters( filenames = ["sphinxreport.ini",] ):
+def getParameters( filenames ):
     '''read a config file and return as a dictionary.
 
     Sections and keys are combined with an underscore. If
@@ -173,14 +173,18 @@ def getParameters( filenames = ["sphinxreport.ini",] ):
     global CONFIG
 
     CONFIG = configparser.ConfigParser()
-    CONFIG.read( filenames )
+    CONFIG.read( [ x for x in filenames if x ] )
 
     p = configToDictionary( CONFIG )
     PARAMS.update( p )
 
     return PARAMS
 
-getParameters( filenames = ["sphinxreport.ini",] )
+# DEFAULT: read parameters from config files 
+# in the current directory sorted by name
+# If 'inifile' is in conf.py, read it first.
+getParameters( filenames = [ getattr( SphinxReport.Config, 'inifile', None) ] +\
+               sorted(glob.glob( "*.ini" ) ) )
 
 def selectAndDeleteOptions( options, select ):
     '''collect options in *select* and from *options* and remove those found.
@@ -273,7 +277,7 @@ class memoized(object):
 
 @memoized
 def getModule( name ):
-    """load module in fullpath
+    """load module in fullpat
     """
     # remove leading '.'
     logging.debug( "entered getModule with `%s`" % name )

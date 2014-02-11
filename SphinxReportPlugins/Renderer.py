@@ -127,7 +127,16 @@ class Renderer(Component):
 
                 for z, x in enumerate(range( 0, len(first_level_labels), self.split_at)) :
                     select = list(DataTree.unique( always + list(first_level_labels[x:x+self.split_at]) ))
-                    work = pandas.concat( [dataframe.ix[s] for s in select], keys = select )
+
+                    if len(dataframe.index.names) == 1:
+                        # if only one level, use loc to obtain dataframe
+                        # index is duplicated, so ignore second level
+                        work = pandas.concat( [dataframe.loc[[s]] for s in select], keys = select )
+                        work.reset_index( range( 1, len(work.index.names)), drop=True, inplace=True )
+                    else:
+                        work = pandas.concat( [dataframe.xs(s, axis=0) for s in select], keys = select )
+                        
+                    # reconcile index names
                     work.index.names = dataframe.index.names
                     result.extend( self.render( work, path + (z, ) ) )
                     
@@ -207,6 +216,74 @@ class TableBase( Renderer ):
         self.debug("%s: saving %i x %i table as spread-sheet'"% (id(self), 
                                                                  len(row_headers), 
                                                                  len(col_headers)))
+        quick = len(dataframe) > 10000
+        
+        if quick:
+            # quick writing, only append method works
+            wb = openpyxl.Workbook( optimized_write = True)
+            def addWorksheet( wb, dataframe, title ):
+                ws = wb.create_sheet()
+
+                ws.append( [""] + list(col_headers) )
+                for x,row in enumerate( dataframe.iterrows() ):
+                    ws.append( [path2str(row_headers[x])] + list(row) )
+
+                # patch: maximum title length seems to be 31
+                ws.title = title[:30]
+                    
+        else:
+            # do it cell-by-cell, this might be slow
+            wb = openpyxl.Workbook( optimized_write = False)
+            def addWorksheet( wb, dataframe, title ):
+                ws = wb.create_sheet()
+
+                # regex to detect rst hypelinks
+                regex_link = re.compile( '`(.*) <(.*)>`_')
+                for column, column_name in enumerate( dataframe.columns ):
+                    c = ws.cell( row=0, column=column)
+                    c.value = column_name
+                    dataseries = dataframe[column_name]
+                    if dataseries.dtype == object:
+                        for row, value in enumerate( dataseries ):
+                            c = ws.cell( row=row+1, column=column)
+                            value = str(value)
+                            if value.startswith('`'):
+                                c.value, c.hyperlink = regex_link.match( value ).groups()
+                            else:
+                                c.value = value 
+                    else:
+                        for row, value in enumerate( dataseries ):
+                            c = ws.cell( row=row+1, column=column)
+                            c.value = value 
+                # patch: maximum title length seems to be 31
+                ws.title = title[:30]
+
+        is_hierarchical = isinstance( dataframe.index, pandas.core.index.MultiIndex )
+
+        split = is_hierarchical and len(dataframe.index.levels) > 1
+
+        if split:
+            # create separate worksheets for nested indices
+            nlevels = len(dataframe.index.levels)
+            paths = map( tuple, DataTree.unique( [ x[:nlevels-1] for x in dataframe.index.unique() ] ))
+
+            ws = wb.worksheets[0]
+            ws.title = 'Summary' 
+            ws.append( [dataframe.index.labels[:nlevels-1]] + ["Worksheet", "Rows" ] )
+
+            for row, path in enumerate(paths):
+                # select data frame as cross-section
+                work = dataframe.xs(path, axis=0 )
+                title = path2str( path )[:30]
+                ws.append( list(path) + [title, len(work)] )
+                c = ws.cell( row = row+1, column = nlevels )
+                c.hyperlink = "#%s" % title
+                addWorksheet( wb, work, title = title )
+                
+        else:
+            writeWorksheet( wb, dataframe, title = title )
+
+        # write result block 
         lines = []
         lines.append("`%i x %i table <#$xls %s$#>`__" %\
                      (len(row_headers), len(col_headers),
@@ -214,25 +291,11 @@ class TableBase( Renderer ):
         lines.append( "" )
         
         r = ResultBlock( "\n".join(lines), title = title)
-
-        # create an html table
-        wb = openpyxl.Workbook( optimized_write = True)
-
-        ws = wb.create_sheet()
-        # patch: maximum title length seems to be 31
-        ws.title = title[:31]
-
-        ws.append( [""] + list(col_headers) )
-        for x,row in enumerate( dataframe.iterrows() ):
-            idx, data = row
-            ws.append( [path2str(row_headers[x])] + list(data) )
-
         r.xls = wb
 
         self.debug("%s: saved %i x %i table as spread-sheet'"% (id(self), 
                                                                 len(row_headers), 
                                                                 len(col_headers)))
-
         return r
 
 class Table( TableBase ):

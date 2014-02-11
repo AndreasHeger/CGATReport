@@ -1,3 +1,11 @@
+'''Configuration values in SphinxReport.
+
+This module sets some default variables and
+neads the sphinx conf.py file. 
+'''
+
+import os
+
 SEPARATOR="@"
 
 HTML_IMAGE_FORMAT = ('main', 'png', 80)
@@ -9,4 +17,12 @@ ADDITIONAL_FORMATS = [
     # ('svg', 'svg', 50 ),
     # ('pdf', 'pdf', 50 ),
     ]
+
+# import conf.py
+if os.path.exists("conf.py"):
+    try:
+        exec(compile(open( "conf.py" ).read(), "conf.py", 'exec'))
+    except ValueError:
+        pass
+
 

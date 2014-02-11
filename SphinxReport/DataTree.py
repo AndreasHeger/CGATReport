@@ -16,7 +16,10 @@ def path2str( path ):
     '''convert path to printable string.'''
     if path is None: return ""
     if Utils.isString( path ): return path
-    return "/".join(map(str,path))
+    try:
+        return "/".join(map(str,path))
+    except:
+        return str(path)
 
 ## This module needs to be properly refactored to use
 ## proper tree traversal algorithms. It currently is
@@ -332,7 +335,7 @@ def asDataFrame( data ):
                 dataframes.append( df )
                 index_tuples.extend( [path] )
             df = pandas.concat( dataframes, keys = index_tuples)
-
+            
     # rename levels in hierarchical index
     is_hierarchical = isinstance( df.index, pandas.core.index.MultiIndex )
     if is_hierarchical:
@@ -746,7 +749,9 @@ def fromCache( cache,
                 data[track][slice] = cache[tokey(track,slice)]
     return data
     
-def prune( data, ignore = [] ):
+def prune( data, 
+           ignore = [],
+           method = 'bottom-up' ):
     '''prune data tree.
 
     Remove all empty leaves.
@@ -791,9 +796,14 @@ def prune( data, ignore = [] ):
     levels_to_prune.reverse()
 
     pruned = []
+
     for level, label in levels_to_prune:
         # do not prune top-level, if it is the only level
         if level == 0 and nlevels == 1: continue
+        if method == 'bottom-up':
+            # stop pruning if not on deepest level
+            if level != nlevels-1: break
+            
         pruned.append( (level, label) )
         removeLevel( data, level )
         nlevels -= 1
