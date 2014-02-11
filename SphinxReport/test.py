@@ -490,7 +490,7 @@ def main( argv = None, **kwargs ):
                 outfile = re.sub( "%s", str(figid), options.hardcopy)
                 figman.canvas.figure.savefig( outfile, dpi=options.dpi )
 
-        if options.do_show: 
+        if result and options.do_show: 
             if options.renderer.startswith("r-"):
                 for rr in result:
                     for r in rr:
@@ -500,8 +500,11 @@ def main( argv = None, **kwargs ):
                             try:
                                 R.plot( r.rggplot) 
                             except rpy2.rinterface.RRuntimeError, msg:
-                                pass
-
+                                if re.search("object.*not found", str(msg)):
+                                    print '%s: available columns in dataframe=%s' % \
+                                        ( msg,
+                                          R('''colnames(rframe)'''))
+                                
                 print("press Ctrl-c to stop")
                 while 1: pass
             
@@ -516,7 +519,7 @@ def main( argv = None, **kwargs ):
                             os.close(tmpfile)
                             print ('saving xlsx to %s' % outpath )
                             r.xls.save( outpath )
-                            
+                    
     ######################################################
     ## build page
     elif options.page:

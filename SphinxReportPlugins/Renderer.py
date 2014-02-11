@@ -99,7 +99,7 @@ class Renderer(Component):
         result = ResultBlocks()
 
         #print len(labels), self.nlevels
-        #print dataframe
+        #print 'dataframe=', dataframe
 
         if self.nlevels != -1 and len(labels) != self.nlevels:
             raise ValueError( "at path %s: expected %i levels - got %i: %s" %\

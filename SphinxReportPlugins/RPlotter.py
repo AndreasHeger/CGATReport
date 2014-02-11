@@ -427,6 +427,9 @@ class GGPlot( Renderer, Plotter ):
         R.library( 'ggplot2' )
 
         rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
+        
+        # sometimes the row/column mapping did not work
+        # rframe.colnames = dataframe.columns
 
         unAsIs = R('''function (x) {
                          if(typeof(x) %in% c("integer","double")) {
@@ -441,7 +444,6 @@ class GGPlot( Renderer, Plotter ):
         rframe = R["as.data.frame"](R.lapply(rframe,unAsIs))
 
         R.assign( "rframe", rframe )
-
         # start plot
         R('''gp = ggplot( rframe )''')
 

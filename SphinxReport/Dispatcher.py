@@ -444,7 +444,10 @@ class Dispatcher(Component):
                                  method = 'bottom-up' )
 
         for level, label in pruned:
-            self.debug( "pruning level %i from data tree: label='%s'" % (level, label) )
+            self.debug( "pruned level %i from data tree: label='%s'" % (level, label) )
+
+        # save for conversion
+        self.pruned = pruned
 
     def render( self ):
         '''supply the :class:`Renderer.Renderer` with the data to render. 
@@ -481,6 +484,12 @@ class Dispatcher(Component):
             self.warn( "%s: no data after conversion" % self )
             raise ValueError( "no data for renderer" )            
 
+        # special patch: set column names to pruned levels
+        # if there are no column names
+        if len(dataframe.columns) == len(self.pruned):
+            if list(dataframe.columns) == list(range( len(dataframe.columns))):
+                dataframe.columns = [x[1] for x in self.pruned]
+        
         index = dataframe.index
 
         def getIndexLevels( index ):
