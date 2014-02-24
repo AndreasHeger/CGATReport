@@ -171,6 +171,33 @@ class TableBase( Renderer ):
         self.max_rows = kwargs.get( "max-rows", 50 )
         self.max_cols = kwargs.get( "max-cols", 20 )
 
+    def asRST( self, matrix, row_headers, col_headers, title):
+        '''save the table using RST.'''
+        
+        lines = []
+        lines.append(".. csv-table:: %s" % title)
+        lines.append("   :class: sortable")
+
+        if self.add_rowindex:
+            lines.append('   :header: "row", "", "%s" ' % '","'.join( map(str, col_headers)))
+            lines.append('')
+
+            x = 0
+            for header, line in zip(row_headers, matrix):
+                x += 1
+                lines.append('   %i,"%s","%s"' % (x, str(header), '","'.join( map(str, line))))
+
+        else:
+            lines.append('   :header: "", "%s" ' % '","'.join( map(str, col_headers)))
+            lines.append('')
+
+            for header, line in zip(row_headers, matrix):
+                lines.append('   "%s","%s"' % (str(header), '","'.join(map(str, line))))
+
+        lines.append("") 
+
+        return ResultBlock("\n".join(lines), title=title)
+
     def asFile( self, dataframe, row_headers, col_headers, title ):
         '''save the table as HTML file.
 
@@ -394,30 +421,7 @@ class Table( TableBase ):
             else:
                 return results
 
-        out = StringIO.StringIO()
-        dataframe.to_csv( out )
-        lines = []
-        lines.append( ".. csv-table:: %s" % title )
-        lines.append( "   :class: sortable" )
-        
-        if self.add_rowindex:
-            lines.append( '   :header: "row", "", "%s" ' % '","'.join( map(str, col_headers) ) )
-            lines.append( '' )
-
-            x = 0
-            for header, line in zip( row_headers, matrix ):
-                x += 1
-                lines.append( '   %i,"%s","%s"' % (x, str(header), '","'.join( map(str, line) ) ) )
-
-        else:
-            l = out.getvalue().split("\n")            
-            lines.append( '   :header: %s' % l[0] )
-            lines.append( '' )
-            lines.extend( ['   %s' % x for x in l[1:] ] )
-
-        lines.append( "") 
-        
-        results.append( ResultBlock( "\n".join(lines), title = title) )
+        results.append(self.asRST(dataframe, row_headers, col_headers, title))
 
         return results
 
