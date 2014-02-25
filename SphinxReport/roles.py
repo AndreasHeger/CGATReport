@@ -9,9 +9,9 @@ from sphinx.util import ws_re, caption_ref_re
 from SphinxReport import Utils
 
 default_settings = {
-    'pubmed_url' : "http://www.ncbi.nlm.nih.gov/pubmed/%i" }
+    'pubmed_url': "http://www.ncbi.nlm.nih.gov/pubmed/%i" }
 
-def writeCode( class_name, code, inliner ):
+def writeCode(class_name, code, inliner):
     '''write code of class to file.
 
     returns URI of written code.
@@ -23,24 +23,24 @@ def writeCode( class_name, code, inliner ):
     # root of document tree
     srcdir = setup.srcdir
 
-    # build directory 
+    # build directory
     builddir = setup.confdir
-    
-    # get the directory of the rst file
-    rstdir, rstfile = os.path.split( document )
 
-    basedir, fname, basename, ext, outdir, codename, notebookname = Utils.buildPaths( reference )
+    # get the directory of the rst file
+    rstdir, rstfile = os.path.split(document)
+
+    basedir, fname, basename, ext, outdir, codename, notebookname = Utils.buildPaths(reference)
 
     # path to root relative to rst
-    rst2srcdir = os.path.join( os.path.relpath( srcdir, start = rstdir ), outdir )
+    rst2srcdir = os.path.join(os.path.relpath(srcdir, start = rstdir), outdir)
 
     # output code
-    linked_codename = re.sub( "\\\\", "/", os.path.join( rst2srcdir, codename ))
+    linked_codename = re.sub("\\\\", "/", os.path.join(rst2srcdir, codename))
     if code and basedir != outdir:
-        outfile = open( os.path.join(outdir, codename ), "w" )
-        for line in code: outfile.write( line )
+        outfile = open(os.path.join(outdir, codename), "w")
+        for line in code: outfile.write(line)
         outfile.close()
-        
+
     return linked_codename
 
 def pmid_reference_role(role, rawtext, text, lineno, inliner,
@@ -65,7 +65,7 @@ def pmid_reference_role(role, rawtext, text, lineno, inliner,
 
     return [node], []
 
-def param_role( role, rawtext, text, lineno, inliner,
+def param_role(role, rawtext, text, lineno, inliner,
                 options={}, content=[]):
     '''inserts a member variable of a tracker class in the text.'''
 
@@ -81,7 +81,7 @@ def param_role( role, rawtext, text, lineno, inliner,
     class_name, parameter_name = ".".join(parts[:-1]), parts[-1]
 
     try:
-        code, tracker = Utils.makeTracker( class_name )
+        code, tracker = Utils.makeTracker(class_name)
     except AttributeError:
         tracker = None
 
@@ -93,7 +93,7 @@ def param_role( role, rawtext, text, lineno, inliner,
         return [prb], [msg]
 
     try:
-        value = getattr( tracker, parameter_name )
+        value = getattr(tracker, parameter_name)
     except AttributeError:
         msg = inliner.reporter.error(
             ':param: can not find variable %s in '
@@ -101,24 +101,24 @@ def param_role( role, rawtext, text, lineno, inliner,
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 
-    
-    linked_codename = writeCode( class_name, code, inliner )
 
-    node = nodes.reference(rawtext, 
+    linked_codename = writeCode(class_name, code, inliner)
+
+    node = nodes.reference(rawtext,
                            utils.unescape(str(value)),
                            refuri=linked_codename,
                            **options)
 
     return [node], []
 
-def value_role( role, rawtext, text, lineno, inliner,
+def value_role(role, rawtext, text, lineno, inliner,
                 options={}, content=[]):
     '''insert a single value from a tracker into text.'''
 
     class_name = text
 
     try:
-        code, tracker = Utils.makeTracker( class_name )
+        code, tracker = Utils.makeTracker(class_name)
     except (AttributeError, ImportError):
         tracker = None
 
@@ -131,21 +131,21 @@ def value_role( role, rawtext, text, lineno, inliner,
 
     # Python 2/3
     try:
-        value = str( tracker() )
+        value = str(tracker())
     except TypeError as msg:
-        print("python 3 problem: %s: tracker=%s" % (msg, str(tracker()) ))
-        
+        print("python 3 problem: %s: tracker=%s" % (msg, str(tracker())))
 
-    linked_codename = writeCode( class_name, code, inliner )
+
+    linked_codename = writeCode(class_name, code, inliner)
 
     # Base URL mainly used by inliner.rfc_reference, so this is correct:
     # ref = inliner.document.settings.rfc_base_url + inliner.rfc_url % value
     # in example, but deprecated
     # set_classes(options)
-    #node = nodes.literal(rawtext, 
-    #                    utils.unescape(str(value)), 
+    #node = nodes.literal(rawtext,
+    #                    utils.unescape(str(value)),
     #                   **options)
-    node = nodes.reference(rawtext, 
+    node = nodes.reference(rawtext,
                            utils.unescape(str(value)),
                            refuri=linked_codename,
                            **options)
@@ -164,5 +164,5 @@ roles.register_local_role('pmid', pmid_reference_role)
 roles.register_local_role('param', param_role)
 roles.register_local_role('value', value_role)
 
-#def setup( self ):
+#def setup(self):
 #    pass

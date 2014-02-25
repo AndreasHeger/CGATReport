@@ -5,8 +5,8 @@
 
     Collect all warnings
 
-    :copyright: Copyright 2007-2009 by the Andreas Heger, see AUTHORS.
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2007-2009 by the Andreas Heger, see AUTHORS.
+:license: BSD, see LICENSE for details.
 """
 
 from docutils import nodes
@@ -31,7 +31,7 @@ class SphinxreportWarning(Directive):
 
     def run(self):
         env = self.state.document.settings.env
-        targetid = "sphinxreportwarning-%s" % env.new_serialno( 'sphinxreportwarning' )
+        targetid = "sphinxreportwarning-%s" % env.new_serialno('sphinxreportwarning')
         # env.index_num += 1
         targetnode = nodes.target('', '', ids=[targetid])
 
@@ -43,8 +43,8 @@ class SphinxreportWarning(Directive):
         else:
             warningclass = "generic"
 
-        ad = make_admonition(sphinxreportwarning_node, 
-                             self.name, 
+        ad = make_admonition(sphinxreportwarning_node,
+                             self.name,
                              [_('SphinxreportWarning')],
                              self.options,
                              self.content, self.lineno, self.content_offset,
@@ -58,7 +58,7 @@ class SphinxreportWarning(Directive):
             'docname': env.docname,
             'lineno': self.lineno,
             'sphinxreportwarning': ad[0].deepcopy(),
-            'warningclass' : warningclass,
+            'warningclass': warningclass,
             'target': targetnode,
         })
 
@@ -103,8 +103,8 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
         nwarnings = 0
 
         para = nodes.paragraph()
-        para += nodes.Text( "There are %i warnings" % len(env.sphinxreportwarning_all_sphinxreportwarnings) )
-        content.append( para )
+        para += nodes.Text("There are %i warnings" % len(env.sphinxreportwarning_all_sphinxreportwarnings))
+        content.append(para)
 
         #table = nodes.enumerated_list()
         #table['enumtype'] = 'arabic'
@@ -134,15 +134,15 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
                 # ignore if no URI can be determined, e.g. for LaTeX output
                 pass
             newnode.append(innernode)
-            
+
             para += newnode
-            para += nodes.Text(description_str, description_str )
-            para += nodes.Text("\n", "\n" )
+            para += nodes.Text(description_str, description_str)
+            para += nodes.Text("\n", "\n")
 
             # could not get a list to work - the list was created
             # with the correct numbers of items, but there was no
             # text.
-            # i= nodes.list_item( "sthtsnh")
+            # i= nodes.list_item("sthtsnh")
 
             # (Recursively) resolve references in the sphinxreportwarning content
             sphinxreportwarning_entry = sphinxreportwarning_info['sphinxreportwarning']
@@ -151,9 +151,9 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
 
             # add item to table
             # table += i
-            content.append( para )
+            content.append(para)
 
-        #content.append( table )
+        #content.append(table)
 
         node.replace_self(content)
 

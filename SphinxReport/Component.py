@@ -14,7 +14,7 @@ LOGGING_FORMAT='%(asctime)s %(levelname)s %(message)s'
 logging.basicConfig(
     level=logging.DEBUG,
     format= LOGGING_FORMAT,
-    stream = open( LOGFILE, "a" ) )
+    stream = open(LOGFILE, "a") )
 
 class Component(object):
     '''base class for SphinxReport components.
@@ -23,19 +23,19 @@ class Component(object):
     # options exported to sphinx
     options = ()
 
-    def __init__(self, *args, **kwargs ):
+    def __init__(self, *args, **kwargs):
         pass
 
-    def debug( self, msg ):
-        debug( "disp%s: %s" % (id(self),msg) )
-    def warn( self, msg ):
-        warn( "disp%s: %s" % (id(self),msg) ) 
-    def info( self, msg ):
-        logging.info( "disp%s: %s" % (id(self),msg) ) 
-    def error( self, msg ):
-        error( "disp%s: %s" % (id(self),msg) ) 
-    def critical( self, msg ):
-        critical( "disp%s: %s" % (id(self),msg) ) 
+    def debug(self, msg):
+        debug("disp%s: %s" % (id(self),msg))
+    def warn(self, msg):
+        warn("disp%s: %s" % (id(self),msg))
+    def info(self, msg):
+        logging.info("disp%s: %s" % (id(self),msg))
+    def error(self, msg):
+        error("disp%s: %s" % (id(self),msg))
+    def critical(self, msg):
+        critical("disp%s: %s" % (id(self),msg))
 
 # plugins are only initialized once they are called
 # for in order to remove problems with cyclic imports
@@ -45,14 +45,14 @@ ENTRYPOINT = 'SphinxReport.plugins'
 
 def init_plugins():
 
-    info( "initialising plugins" )
+    info("initialising plugins")
     try:
         pkg_resources.working_set.add_entry(sphinxreport_plugins)
         pkg_env = pkg_resources.Environment(sphinxreport_plugins)
     except NameError:
         pkg_env = pkg_resources.Environment()
 
-    plugins = collections.defaultdict( dict )
+    plugins = collections.defaultdict(dict)
     for name in pkg_env:
         egg = pkg_env[name][0]
         egg.activate()
@@ -62,7 +62,7 @@ def init_plugins():
             cls = entry_point.load()
             if not hasattr(cls, 'capabilities'):
                cls.capabilities = []
-               
+
             for c in cls.capabilities:
                plugins[c][name] = cls
 
@@ -70,7 +70,7 @@ def init_plugins():
         warn("did not find any plugins")
     else:
         debug("found plugins: %i capabilites and %i plugins" % \
-                  (len(plugins), sum( [len(x) for x in list(plugins.values()) ] ) ))
+                  (len(plugins), sum([len(x) for x in list(plugins.values()) ]) ))
 
     return plugins
 
@@ -97,7 +97,7 @@ def getOptionMap():
             options[section] = {}
             for name, cls in plugins.items():
                 try:
-                    options[section].update( dict( cls.options) )
+                    options[section].update(dict(cls.options))
                 except AttributeError:
                     pass
         options["dispatch"] = {
@@ -125,23 +125,23 @@ def getOptionMap():
             'class': directives.class_option,
             # 'align': align,
             # options for sphinxreport
-            'render' : directives.unchanged,
-            'transform' : directives.unchanged,
+            'render': directives.unchanged,
+            'transform': directives.unchanged,
             'display': directives.unchanged,
-            'extra-formats' : directives.unchanged,
+            'extra-formats': directives.unchanged,
             }
 
     return options
 
 def getOptionSpec():
     '''build option spec for sphinx
-    
-    This method returns a flattened :var:`options`.
+
+    This method returns a flattened:var:`options`.
     '''
     o = getOptionMap()
     r = {}
-    for x, xx in o.items(): r.update( xx )
-        
+    for x, xx in o.items(): r.update(xx)
+
     # add the primary actor options
     r["render"] = directives.unchanged
     r["transform"] = directives.unchanged

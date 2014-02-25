@@ -5,8 +5,8 @@
 
     Collect all errors
 
-    :copyright: Copyright 2007-2009 by the Andreas Heger, see AUTHORS.
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2007-2009 by the Andreas Heger, see AUTHORS.
+:license: BSD, see LICENSE for details.
 """
 
 from docutils import nodes
@@ -31,7 +31,7 @@ class SphinxreportError(Directive):
 
     def run(self):
         env = self.state.document.settings.env
-        targetid = "sphinxreporterror-%s" % env.new_serialno( 'sphinxreporterror' )
+        targetid = "sphinxreporterror-%s" % env.new_serialno('sphinxreporterror')
         # env.index_num += 1
         targetnode = nodes.target('', '', ids=[targetid])
 
@@ -43,8 +43,8 @@ class SphinxreportError(Directive):
         else:
             errorclass = "generic"
 
-        ad = make_admonition(sphinxreporterror_node, 
-                             self.name, 
+        ad = make_admonition(sphinxreporterror_node,
+                             self.name,
                              [_('SphinxreportError')],
                              self.options,
                              self.content, self.lineno, self.content_offset,
@@ -58,7 +58,7 @@ class SphinxreportError(Directive):
             'docname': env.docname,
             'lineno': self.lineno,
             'sphinxreporterror': ad[0].deepcopy(),
-            'errorclass' : errorclass,
+            'errorclass': errorclass,
             'target': targetnode,
         })
 
@@ -103,8 +103,8 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
         nerrors = 0
 
         para = nodes.paragraph()
-        para += nodes.Text( "There are %i errors" % len(env.sphinxreporterror_all_sphinxreporterrors) )
-        content.append( para )
+        para += nodes.Text("There are %i errors" % len(env.sphinxreporterror_all_sphinxreporterrors))
+        content.append(para)
 
         #table = nodes.enumerated_list()
         #table['enumtype'] = 'arabic'
@@ -134,15 +134,15 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
                 # ignore if no URI can be determined, e.g. for LaTeX output
                 pass
             newnode.append(innernode)
-            
+
             para += newnode
-            para += nodes.Text(description_str, description_str )
-            para += nodes.Text("\n", "\n" )
+            para += nodes.Text(description_str, description_str)
+            para += nodes.Text("\n", "\n")
 
             # could not get a list to work - the list was created
             # with the correct numbers of items, but there was no
             # text.
-            # i= nodes.list_item( "sthtsnh")
+            # i= nodes.list_item("sthtsnh")
 
             # (Recursively) resolve references in the sphinxreporterror content
             sphinxreporterror_entry = sphinxreporterror_info['sphinxreporterror']
@@ -151,9 +151,9 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
 
             # add item to table
             # table += i
-            content.append( para )
+            content.append(para)
 
-        #content.append( table )
+        #content.append(table)
 
         node.replace_self(content)
 

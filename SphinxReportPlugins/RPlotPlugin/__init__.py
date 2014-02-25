@@ -21,11 +21,11 @@ class RPlotPlugin(Component):
 
     def __init__(self, *args, **kwargs):
         Component.__init__(self,*args,**kwargs)
-    
-    def collect( self, 
+
+    def collect(self,
                  blocks,
-                 template_name, 
-                 outdir, 
+                 template_name,
+                 outdir,
                  rstdir,
                  builddir,
                  srcdir,
@@ -38,7 +38,7 @@ class RPlotPlugin(Component):
         Plots are collected from all active devices.
         Plots are also collected from result-blocks
         containing a 'ggplot' attribute.
-        
+
         1. save as png, hires-png and pdf
         2. save thumbnail
         3. insert rendering code at placeholders in output
@@ -51,9 +51,9 @@ class RPlotPlugin(Component):
         map_figure2text = {}
 
         # determine the image formats to create
-        default_format, additional_formats = Utils.getImageFormats( display_options )
+        default_format, additional_formats = Utils.getImageFormats(display_options)
         all_formats = [default_format,] + additional_formats
-        image_options = Utils.getImageOptions( display_options )
+        image_options = Utils.getImageOptions(display_options)
 
         ##########################################
         ##########################################
@@ -61,33 +61,33 @@ class RPlotPlugin(Component):
         # iterate over devices
         devices = R["dev.list"]()
         try:
-            maxid = max( R["dev.list"]() )
+            maxid = max(R["dev.list"]())
         except TypeError:
             maxid = 0
-            
-        for figid in range( 2, maxid+1 ):
+
+        for figid in range(2, maxid+1):
 
             for id, format, dpi in all_formats:
 
-                R["dev.set"]( figid )
+                R["dev.set"](figid)
 
                 outname = "%s_%02d" % (template_name, figid)
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
 
-                if format.endswith( "png" ):
+                if format.endswith("png"):
                     # for busy images there is a problem with figure margins
                     # simply increase dpi until it works.
-                    R["dev.set"]( figid )
+                    R["dev.set"](figid)
 
                     width = height = 480 * dpi / 80
                     x = 0
                     while 1:
-                        try: 
-                            R["dev.copy"]( device = R.png,
+                        try:
+                            R["dev.copy"](device = R.png,
                                            filename = outpath,
                                            res = dpi,
-                                           width = width, 
-                                           height = height )
+                                           width = width,
+                                           height = height)
                             R["dev.off"]()
                         except rpy2.rinterface.RRuntimeError:
                             width *= 2
@@ -96,33 +96,33 @@ class RPlotPlugin(Component):
                                 continue
                         break
 
-                elif format.endswith( "svg" ):
-                    R["dev.copy"]( device = R.svg,
-                                   filename = outpath )
+                elif format.endswith("svg"):
+                    R["dev.copy"](device = R.svg,
+                                   filename = outpath)
                     R["dev.off"]()
 
-                elif format.endswith( "eps" ):
-                    R["dev.copy"]( device = R.postscript,
+                elif format.endswith("eps"):
+                    R["dev.copy"](device = R.postscript,
                                    paper = 'special',
                                    width = 6,
                                    height = 6,
                                    file = outpath,
-                                   onefile = True )
+                                   onefile = True)
                     R["dev.off"]()
-                elif format.endswith( "pdf" ):
-                    R["dev.copy"]( device = R.pdf,
+                elif format.endswith("pdf"):
+                    R["dev.copy"](device = R.pdf,
                                    paper = 'special',
                                    width = 6,
                                    height = 6,
                                    file = outpath,
-                                   onefile = True )
+                                   onefile = True)
                     R["dev.off"]()
                 else:
-                    raise ValueError( "format '%s' not supported" % format )
+                    raise ValueError("format '%s' not supported" % format)
 
-                if not os.path.exists( outpath ):
+                if not os.path.exists(outpath):
                     continue
-                    # raise ValueError( "rendering problem: image file was not be created: %s" % outpath )
+                    # raise ValueError("rendering problem: image file was not be created: %s" % outpath)
 
                 if format=='png':
                     thumbdir = os.path.join(outdir, 'thumbnails')
@@ -130,8 +130,8 @@ class RPlotPlugin(Component):
                         os.makedirs(thumbdir)
                     except OSError:
                         pass
-                    thumbfile = str('%s.png' % os.path.join(thumbdir, outname) )
-                    captionfile = str('%s.txt' % os.path.join(thumbdir, outname) )
+                    thumbfile = str('%s.png' % os.path.join(thumbdir, outname))
+                    captionfile = str('%s.txt' % os.path.join(thumbdir, outname))
                     if not os.path.exists(thumbfile):
                         # thumbnail only available in matplotlib >= 0.98.4
                         try:
@@ -139,24 +139,24 @@ class RPlotPlugin(Component):
                         except AttributeError:
                             pass
                     outfile = open(captionfile,"w")
-                    outfile.write( "\n".join( content ) + "\n" )
+                    outfile.write("\n".join(content) + "\n")
                     outfile.close()
 
                 R["dev.off"](figid)
 
             # create the text element
-            rst_output = Utils.buildRstWithImage( outname,
+            rst_output = Utils.buildRstWithImage(outname,
                                                   outdir,
                                                   rstdir,
                                                   builddir,
                                                   srcdir,
                                                   additional_formats,
-                                                  tracker_id, 
+                                                  tracker_id,
                                                   links,
-                                                  display_options )
+                                                  display_options)
 
             map_figure2text[ "#$rpl %i$#" % figid] = rst_output
-            
+
         figid = maxid
         ##########################################
         ##########################################
@@ -164,44 +164,44 @@ class RPlotPlugin(Component):
         # iterate over ggplot plots
         for xblocks in blocks:
             for block in xblocks:
-                if not hasattr( block, "rggplot" ): continue
+                if not hasattr(block, "rggplot"): continue
                 pp = block.rggplot
                 figname = block.figname
 
                 outname = "%s_%s" % (template_name, figname)
-                
+
                 for id, format, dpi in all_formats:
                     outpath = os.path.join(outdir, '%s.%s' % (outname, format))
 
-                    try:                    
-                        R.ggsave( outpath, plot = pp, dpi = dpi )
+                    try:
+                        R.ggsave(outpath, plot = pp, dpi = dpi)
                     except rpy2.rinterface.RRuntimeError, msg:
-                        raise 
+                        raise
 
                     # width, height = 3 * dpi, 3 * dpi
-                    # if format.endswith( "png"):
-                    #     R.png( outpath, 
+                    # if format.endswith("png"):
+                    #     R.png(outpath,
                     #            width = width,
-                    #            height = height )
-                    # elif format.endswith( "svg" ):
-                    #     R.svg( outpath )
-                    # elif format.endswith( "eps" ):
-                    #     R.postscript( outpath )
-                    # elif format.endswith( "pdf" ):
-                    #     R.pdf( outpath )
-                    #R.plot( pp )
+                    #            height = height)
+                    # elif format.endswith("svg"):
+                    #     R.svg(outpath)
+                    # elif format.endswith("eps"):
+                    #     R.postscript(outpath)
+                    # elif format.endswith("pdf"):
+                    #     R.pdf(outpath)
+                    #R.plot(pp)
                     # R["dev.off"]()
 
                 # create the text element
-                rst_output = Utils.buildRstWithImage( outname,
+                rst_output = Utils.buildRstWithImage(outname,
                                                       outdir,
                                                       rstdir,
                                                       builddir,
                                                       srcdir,
                                                       additional_formats,
-                                                      tracker_id, 
+                                                      tracker_id,
                                                       links,
-                                                      display_options )
+                                                      display_options)
 
                 map_figure2text[ "#$ggplot %s$#" % figname] = rst_output
 

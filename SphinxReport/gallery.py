@@ -6,12 +6,12 @@
 sphinxreport-gallery
 --------------------
 
-The :file:`sphinxreport-gallery` utility examines the build directory for images
-and constructs a gallery. It should be called from the :term:`source directory`.
+The:file:`sphinxreport-gallery` utility examines the build directory for images
+and constructs a gallery. It should be called from the:term:`source directory`.
 
    $ sphinxreport-gallery
 
-Calling :file:`sphinxreport-gallery` is usually not necessary if :file:`sphinxreport-build`
+Calling:file:`sphinxreport-gallery` is usually not necessary if:file:`sphinxreport-build`
 is used.
 """
 
@@ -40,11 +40,11 @@ SimpleContextMenu.attach('container', 'CM1');
 """
 
 """
-<div id="divContext" style="border: 1px solid blue; display: none; position: absolute">  
-<ul class="cmenu">  
-<li><a id="aContextNav" href="#">Navigate to</a></li>  
-<li><a id="aAddWebmark" href="#">Add to WebMark</a></li>  
-<li class="topSep">  <a id="aDisable" href="#">disable this menu</a>  </li>  
+<div id="divContext" style="border: 1px solid blue; display: none; position: absolute">
+<ul class="cmenu">
+<li><a id="aContextNav" href="#">Navigate to</a></li>
+<li><a id="aAddWebmark" href="#">Add to WebMark</a></li>
+<li class="topSep">  <a id="aDisable" href="#">disable this menu</a>  </li>
 </ul> </div>
 
 <p><a id="aEnable" style="display:none" href="#">Enable context menus</a></p>
@@ -60,8 +60,8 @@ rootdir = '_static/report_directive'
 dest = '_templates/gallery.html'
 
 # create directory if not present
-if not os.path.exists(os.path.dirname( dest )):
-    os.makedirs( os.path.dirname( dest ))
+if not os.path.exists(os.path.dirname(dest)):
+    os.makedirs(os.path.dirname(dest))
 
 # number of columns in gallery
 columns = 5
@@ -79,28 +79,28 @@ skips = set([
     ])
 
 # build map of images to html files
-rx = re.compile( "_images/(\S+).png" )
-map_image2file = collections.defaultdict( set )
+rx = re.compile("_images/(\S+).png")
+map_image2file = collections.defaultdict(set)
 
 basedir = '_build/html'
 
-def main( argv = sys.argv ):
+def main(argv = sys.argv):
 
     for root, dirs, files in os.walk(basedir):
         for f in files:
-            if f.endswith( ".html" ):
-                fn = os.path.join( root, f) 
-                infile = open( fn, "r")
+            if f.endswith(".html"):
+                fn = os.path.join(root, f)
+                infile = open(fn, "r")
                 for l in infile:
-                    x = rx.search( l )
-                    if x: map_image2file[x.groups()[0]].add( fn[len(basedir)+1:] )
+                    x = rx.search(l)
+                    if x: map_image2file[x.groups()[0]].add(fn[len(basedir)+1:])
 
     data = []
-    for subdir in ( '', ):
+    for subdir in ('',):
         thisdir = os.path.join(rootdir,subdir)
         if not os.path.exists(thisdir):
             print("no directory '%s' - no gallery created" % thisdir)
-            return 
+            return
         thumbdir = os.path.join(thisdir, 'thumbnails')
         if not os.path.exists(thumbdir):
             print("no thumbnail directory '%s' - no gallery created" % thumbdir)
@@ -133,7 +133,7 @@ def main( argv = sys.argv ):
 
             #print 'datasource=', datasource, "renderer=", renderer, "filename=",filename, "basename=",basename, "ext=",ext
             #print 'pngfile', pngfile, "thumbfile", thumbfile
-            data.append( (datasource, subdir, thisdir, renderer, basename, pngfile, thumbfile, captionfile))
+            data.append((datasource, subdir, thisdir, renderer, basename, pngfile, thumbfile, captionfile))
     link_template = """
     <td>
     <table>
@@ -154,7 +154,7 @@ def main( argv = sys.argv ):
     # sort data by datasource
     data.sort()
 
-    rows = [] 
+    rows = []
 
     print("SphinxReport: creating %i thumbnails" % len(data))
     col = 0
@@ -162,44 +162,44 @@ def main( argv = sys.argv ):
     for (datasource, subdir, thisdir, renderer, basename, pngfile, thumbfile, captionfile) in data:
         if datasource != last_datasource:
             if last_datasource:
-                rows.append( "</tr></table>" )
-            rows.append( "<table><tr><th>%s</th></tr><tr>" % datasource )
+                rows.append("</tr></table>")
+            rows.append("<table><tr><th>%s</th></tr><tr>" % datasource)
         last_datasource = datasource
 
         if col > columns:
-            rows.append( "</tr><tr>" )
+            rows.append("</tr><tr>")
             col = 0
 
         if thumbfile is not None:
-            code = os.path.join( thisdir, datasource ) + ".code"
-            rst = os.path.join( thisdir, basename ) + ".txt"
-            png = os.path.join( thisdir, basename ) + ".png"
-            hires = os.path.join( thisdir, basename ) + ".hires.png"
-            pdf = os.path.join( thisdir, basename ) + ".pdf"
+            code = os.path.join(thisdir, datasource) + ".code"
+            rst = os.path.join(thisdir, basename) + ".txt"
+            png = os.path.join(thisdir, basename) + ".png"
+            hires = os.path.join(thisdir, basename) + ".hires.png"
+            pdf = os.path.join(thisdir, basename) + ".pdf"
 
-            if os.path.exists(captionfile): 
-                caption = "".join( open(captionfile,"r").readlines() )
-            else: 
+            if os.path.exists(captionfile):
+                caption = "".join(open(captionfile,"r").readlines())
+            else:
                 caption = "no caption"
 
-            rows.append( link_template % locals() )
+            rows.append(link_template % locals())
 
             b = re.sub(SEPARATOR, "&#64;", basename)
             if b in map_image2file:
                 rows.append("<tr><td>")
-                for x,link in enumerate( map_image2file[b]):
-                    rows.append( """<a href="%s">[%i]</a> """ % ( link, x) )
+                for x,link in enumerate(map_image2file[b]):
+                    rows.append("""<a href="%s">[%i]</a> """ % (link, x))
                 rows.append("</td></tr>")
 
-            rows.append( "</table></td>" )
+            rows.append("</table></td>")
 
         col += 1
 
-    rows.append( "</tr></table>" )
+    rows.append("</tr></table>")
 
     fh = file(dest, 'w')
     fh.write(template%'\n'.join(rows))
     fh.close()
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv) )
+    sys.exit(main(sys.argv))

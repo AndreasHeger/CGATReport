@@ -6,8 +6,8 @@ from sqlalchemy.ext.sqlsoup import SqlSoup
 
 # ignore unknown type BigInt warnings
 try:
-    db = create_engine( sql_backend )
-    db.echo = False  
+    db = create_engine(sql_backend)
+    db.echo = False
 except NameError:
     db = None
 
@@ -17,20 +17,20 @@ if db:
     #with warnings.catch_warnings():
     #    warnings.simplefilter("ignore")
     #    metadata = MetaData(db, reflect = True)
-        
+
 def getTables():
     return metadata.sorted_tables
 
-def getTable( name ):
+def getTable(name):
     """return table with name *name*."""
     for table in metadata.sorted_tables:
         if table.name == name: return table
-    raise IndexError( "table %s no found" % name )
+    raise IndexError("table %s no found" % name)
 
-def execute( stmt ):
+def execute(stmt):
     return db.execute(stmt)
 
-def getValue( stmt ):
+def getValue(stmt):
     """return a single value from an SQL statement.
 
     This function will return the first value in the first row
@@ -38,7 +38,7 @@ def getValue( stmt ):
     """
     return execute(stmt).fetchone()[0]
 
-def getValues( stmt ):
+def getValues(stmt):
     """return all results from an SQL statement.
 
     This function will return the first value in each row
@@ -46,7 +46,7 @@ def getValues( stmt ):
     """
     return [x[0] for x in execute(stmt).fetchall() ]
 
-def getAll( stmt ):
+def getAll(stmt):
     """return all results from an SQL statement.
     """
     return execute(stmt).fetchall()

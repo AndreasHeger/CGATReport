@@ -18,25 +18,25 @@ class MatplotlibPlugin(Component):
 
     def __init__(self, *args, **kwargs):
         Component.__init__(self,*args,**kwargs)
-    
-        plt.close('all')    
+
+        plt.close('all')
         # matplotlib.rcdefaults()
         # set a figure size that doesn't overflow typical browser windows
         matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
 
-    def collect( self, 
+    def collect(self,
                  blocks,
-                 template_name, 
-                 outdir, 
+                 template_name,
+                 outdir,
                  rstdir,
                  builddir,
                  srcdir,
                  content,
                  display_options,
                  tracker_id,
-                 links = {} ):
-        '''collect one or more matplotlib figures and 
-        
+                 links = {}):
+        '''collect one or more matplotlib figures and
+
         1. save as png, hires-png and pdf
         2. save thumbnail
         3. insert rendering code at placeholders in output
@@ -48,7 +48,7 @@ class MatplotlibPlugin(Component):
         map_figure2text = {}
 
         # determine the image formats to create
-        default_format, additional_formats = Utils.getImageFormats( display_options )
+        default_format, additional_formats = Utils.getImageFormats(display_options)
         all_formats = [default_format,] + additional_formats
 
 
@@ -62,9 +62,9 @@ class MatplotlibPlugin(Component):
             for id, format, dpi in all_formats:
 
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
-                
+
                 try:
-                    figman.canvas.figure.savefig( outpath, dpi=dpi )
+                    figman.canvas.figure.savefig(outpath, dpi=dpi)
                 except:
                     s = Utils.collectExceptionAsString("Exception running plot %s" % outpath)
                     warnings.warn(s)
@@ -76,8 +76,8 @@ class MatplotlibPlugin(Component):
                 #         os.makedirs(thumbdir)
                 #     except OSError:
                 #         pass
-                #     thumbfile = str('%s.png' % os.path.join(thumbdir, outname) )
-                #     captionfile = str('%s.txt' % os.path.join(thumbdir, outname) )
+                #     thumbfile = str('%s.png' % os.path.join(thumbdir, outname))
+                #     captionfile = str('%s.txt' % os.path.join(thumbdir, outname))
                 #     if not os.path.exists(thumbfile):
                 #         # thumbnail only available in matplotlib >= 0.98.4
                 #         try:
@@ -85,22 +85,22 @@ class MatplotlibPlugin(Component):
                 #         except AttributeError:
                 #             pass
                 #     outfile = open(captionfile,"w")
-                #     outfile.write( "\n".join( content ) + "\n" )
+                #     outfile.write("\n".join(content) + "\n")
                 #     outfile.close()
 
             # create the text element
-            rst_output = Utils.buildRstWithImage( outname, 
+            rst_output = Utils.buildRstWithImage(outname,
                                                   outdir,
                                                   rstdir,
                                                   builddir,
                                                   srcdir,
                                                   additional_formats,
-                                                  tracker_id, 
+                                                  tracker_id,
                                                   links,
                                                   display_options,
                                                   default_format)
 
             map_figure2text[ "#$mpl %i$#" % figid] = rst_output
-            
+
         return map_figure2text
 

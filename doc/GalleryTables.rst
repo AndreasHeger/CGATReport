@@ -154,3 +154,51 @@ Alternatives can be
 * another column such as ``:add-percent:column1,column2``, or
 * a value such as ``:add-percent:column1,20``.
 
+
+=========
+rst-table
+=========
+
+The :class:`SphinxReportPlugins.Renderer.RSTTable` renders :term:`labeled
+values` as a table in rst format
+
+.. report:: Trackers.LabeledDataExample
+   :render: rst-table
+
+   RST tables
+
+=========
+xls-table
+=========
+
+The :class:`SphinxReportPlugins.Renderer.XlsTable` renders :term:`labeled
+values` as a table in xls format to download
+
+.. report:: Trackers.LabeledDataExample
+   :render: xls-table
+
+   XLS Tables
+
+==========
+html-table
+==========
+
+The :class:`SphinxReportPlugins.Renderer.HtmlTable` renders :term:`labeled
+values` as a table in html format to download
+
+.. report:: Trackers.LabeledDataExample
+   :render: html-table
+
+   HTML Tables
+
+=========
+glossary
+=========
+
+The :class:`SphinxReportPlugins.Renderer.GlossaryTable` renders :term:`labeled
+values` as a table as a glossary
+
+.. report:: Trackers.LabeledDataExample
+   :render: glossary-table
+
+   A glossary table

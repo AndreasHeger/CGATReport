@@ -17,7 +17,7 @@ class MultiProcessingLogHandler(logging.Handler):
         self._handler = handler
         self.queue = queue
 
-        self.counts = collections.defaultdict( int )
+        self.counts = collections.defaultdict(int)
 
         # we only want one of the loggers to be pulling from the queue.
         # If there is a way to do this without needing to be passed this
@@ -75,7 +75,7 @@ class MultiProcessingLogHandler(logging.Handler):
     def __del__(self):
         self.close() # hopefully this aids in orderly shutdown when things are going poorly.
 
-    def getCounts( self ):
+    def getCounts(self):
         return self.counts
 
 def f(x):
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         logging.debug('starting main')
 
         # when bulding the pool on a Windows machine we also have to init the logger in all the instances with the queue and the level of logging.
-        pool = multiprocessing.Pool(processes=10, initializer=initPool, initargs=[logQueue, logging.getLogger('').getEffectiveLevel()] ) # start worker processes
+        pool = multiprocessing.Pool(processes=10, initializer=initPool, initargs=[logQueue, logging.getLogger('').getEffectiveLevel()]) # start worker processes
         pool.map(f, list(range(0,50)))
         pool.close()
 
@@ -116,9 +116,9 @@ if __name__ == '__main__':
         print(stream.getvalue())
     else:
         logQueue = multiprocessing.Queue(100)
-        handler= MultiProcessingLogHandler(logging.FileHandler( "test.log", "w"), logQueue)
+        handler= MultiProcessingLogHandler(logging.FileHandler("test.log", "w"), logQueue)
         #logging.setLoggerClass(CountedLogger)
-        #logging.root = CountedLogger( "" )
+        #logging.root = CountedLogger("")
         #print dir(logging.getLogger(''))
         #print logging.getLogger("").getCounts()
         logging.getLogger('').addHandler(handler)
@@ -127,7 +127,7 @@ if __name__ == '__main__':
         logging.debug('starting main')
 
         # when bulding the pool on a Windows machine we also have to init the logger in all the instances with the queue and the level of logging.
-        pool = multiprocessing.Pool(processes=10, initializer=initPool, initargs=[logQueue, logging.getLogger('').getEffectiveLevel()] ) # start worker processes
+        pool = multiprocessing.Pool(processes=10, initializer=initPool, initargs=[logQueue, logging.getLogger('').getEffectiveLevel()]) # start worker processes
         pool.map(f, list(range(0,10)))
         pool.close()
 

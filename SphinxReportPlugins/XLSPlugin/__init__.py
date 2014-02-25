@@ -9,10 +9,10 @@ class XLSPlugin(Component):
     def __init__(self, *args, **kwargs):
         Component.__init__(self,*args,**kwargs)
 
-    def collect( self,
+    def collect(self,
                  blocks,
-                 template_name, 
-                 outdir, 
+                 template_name,
+                 outdir,
                  rstdir,
                  builddir,
                  srcdir,
@@ -29,16 +29,16 @@ class XLSPlugin(Component):
         extension = "xlsx"
         for xblocks in blocks:
             for block in xblocks:
-                if not hasattr( block, "xls" ): continue
+                if not hasattr(block, "xls"): continue
 
                 outname = "%s_%s" % (template_name, block.title)
                 outputpath = os.path.join(outdir, '%s.%s' % (outname, extension))
 
                 # save to file
-                block.xls.save( outputpath )
-                
+                block.xls.save(outputpath)
+
                 # use absolute path
-                link = os.path.abspath( outputpath )
+                link = os.path.abspath(outputpath)
 
                 rst_output = "%(link)s" % locals()
                 map_figure2text[ "#$xls %s$#" % block.title] = rst_output

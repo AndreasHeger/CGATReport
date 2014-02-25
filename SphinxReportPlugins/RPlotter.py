@@ -26,7 +26,7 @@ except ImportError:
 from docutils.parsers.rst import directives
 
 def parseRanges(r):
-    '''given a string in the format "x,y", 
+    '''given a string in the format "x,y",
     return a tuple of values (x,y).
 
     missing values are set to None.
@@ -49,51 +49,51 @@ def getCurrentRDevice():
 class Plotter(object):
     """Base class for Renderers that do simple 2D plotting.
 
-    This mixin class provides convenience function for :class:`Renderer.Renderer`
+    This mixin class provides convenience function for:class:`Renderer.Renderer`
     classes that do 2D plotting.
 
     The base class takes care of counting the plots created,
-    provided that the methods :meth:`startPlot` and :meth:`endPlot`
+    provided that the methods:meth:`startPlot` and:meth:`endPlot`
     are called appropriately. It then inserts the appropriate place holders.
 
-    This class adds the following options to the :term:`report` directive:
+    This class adds the following options to the:term:`report` directive:
 
-       :term:`logscale`: apply logscales one or more axes.
+:term:`logscale`: apply logscales one or more axes.
 
-       :term:`xtitle`: add a label to the X axis
+:term:`xtitle`: add a label to the X axis
 
-       :term:`ytitle`: add a label to the Y axis
+:term:`ytitle`: add a label to the Y axis
 
-       :term:`title`:  title of the plot
-       
-       :term:`add-title`: add title to each plot
+:term:`title`:  title of the plot
 
-       :term:`legend-location`: specify the location of the legend
+:term:`add-title`: add title to each plot
 
-       :term:`as-lines`: do not plot symbols
+:term:`legend-location`: specify the location of the legend
 
-       :term:`xrange`: restrict plot a part of the x-axis
+:term:`as-lines`: do not plot symbols
 
-       :term:`yrange`: restrict plot a part of the y-axis
+:term:`xrange`: restrict plot a part of the x-axis
 
-    With some plots default layout options will result in plots 
+:term:`yrange`: restrict plot a part of the y-axis
+
+    With some plots default layout options will result in plots
     that are misaligned (legends truncated, etc.). To fix this it might
     be necessary to increase plot size, reduce font size, or others.
     The following options will be passed on the matplotlib to permit
     this control.
 
-       :term:`mpl-figure`: options for matplotlib
+:term:`mpl-figure`: options for matplotlib
            ``figure`` calls().
 
-       :term:`mpl-legend`: options for matplotlib
+:term:`mpl-legend`: options for matplotlib
            ``legend`` calls().
 
-       :term:`mpl-subplot`: options for matplotlib
+:term:`mpl-subplot`: options for matplotlib
            ``subplots_adjust`` calls().
-           
-       :term:`mpl-rc`: general environment settings for matplotlib.
+
+:term:`mpl-rc`: general environment settings for matplotlib.
           See the matplotlib documentation. Multiple options can be
-          separated by ;, for example 
+          separated by ;, for example
           ``:mpl-rc: figure.figsize=(20,10);legend.fontsize=4``
 
     """
@@ -118,12 +118,12 @@ class Plotter(object):
         ('mpl-figure',  directives.unchanged),
         ('mpl-legend',  directives.unchanged),
         ('mpl-subplot',  directives.unchanged),
-        ('mpl-rc',  directives.unchanged), 
+        ('mpl-rc',  directives.unchanged),
         ('as-lines', directives.flag),
         ('legend-location',  directives.unchanged),
         )
 
-    def __init__(self, *args, **kwargs ):
+    def __init__(self, *args, **kwargs):
         """parse option arguments."""
 
         self.mFigure = 0
@@ -131,42 +131,42 @@ class Plotter(object):
         self.mSymbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
         self.mMarkers = "so^>dph8+x"
 
-        self.logscale = kwargs.get("logscale", None )
-        self.title = kwargs.get("title", None )
+        self.logscale = kwargs.get("logscale", None)
+        self.title = kwargs.get("title", None)
         self.add_title = "add-title" in kwargs
-        self.xlabel = kwargs.get("xtitle", None )
-        self.ylabel = kwargs.get("ytitle", None )
+        self.xlabel = kwargs.get("xtitle", None)
+        self.ylabel = kwargs.get("ytitle", None)
 
         # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
         self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
 
-        self.width = kwargs.get("width", 0.50 )
+        self.width = kwargs.get("width", 0.50)
         self.mAsLines = "as-lines" in kwargs
-        self.xrange = parseRanges(kwargs.get("xrange", None ))
-        self.yrange = parseRanges(kwargs.get("yrange", None ))
-        self.zrange = parseRanges(kwargs.get("zrange", None ))
+        self.xrange = parseRanges(kwargs.get("xrange", None))
+        self.yrange = parseRanges(kwargs.get("yrange", None))
+        self.zrange = parseRanges(kwargs.get("zrange", None))
 
         if self.mAsLines:
             self.mSymbols = []
             for y in ("-",":","--"):
                 for x in "gbrcmyk":
-                    self.mSymbols.append( y+x )
+                    self.mSymbols.append(y+x)
 
 
-    def startPlot( self ):
+    def startPlot(self):
         R.x11()
-                        
-    def endPlot( self, work, path ):
+
+    def endPlot(self, work, path):
         # currently: collects only single plots.
         figid = getCurrentRDevice()
-        blocks = ResultBlocks( ResultBlock( "\n".join( ("#$rpl %i$#" % (figid), "")), 
-                                            title = "/".join(map(str, path)) ) )
+        blocks = ResultBlocks(ResultBlock("\n".join(("#$rpl %i$#" % (figid), "")),
+                                            title = "/".join(map(str, path))) )
         return blocks
 
-class LinePlot( Renderer, Plotter ):
+class LinePlot(Renderer, Plotter):
     '''create a line plot.
 
-    This :class:`Renderer` requires at least three levels:
+    This:class:`Renderer` requires at least three levels:
 
     line / data / coords.
 
@@ -181,7 +181,7 @@ class LinePlot( Renderer, Plotter ):
         for coords in data:
             xlabel, ylabels = initCoords()
             for ylabel in ylabels:
-                addData( xlabel, ylabel )
+                addData(xlabel, ylabel)
             finishCoords()
         finishLine()
 
@@ -190,83 +190,83 @@ class LinePlot( Renderer, Plotter ):
     nlevels = 3
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        Renderer.__init__(self, *args, **kwargs)
+        Plotter.__init__(self, *args, **kwargs)
 
-    def initPlot(self, fig, work, path ):
+    def initPlot(self, fig, work, path):
         '''initialize plot.'''
- 
+
         self.legend = []
         self.plots = []
         self.xlabels = []
         self.ylabels = []
 
-    def addData( self, 
+    def addData(self,
                  line, label,
                  xlabel, ylabel,
-                 xvals, yvals, 
-                 nplotted ):
+                 xvals, yvals,
+                 nplotted):
 
         s = self.mSymbols[nplotted % len(self.mSymbols)]
-        
-        self.plots.append( plt.plot( xvals,
+
+        self.plots.append(plt.plot(xvals,
                                      yvals,
-                                     s ) )
-        
+                                     s) )
+
         self.ylabels.append(ylabel)
         self.xlabels.append(xlabel)
 
-    def initCoords( self, label, coords ):
+    def initCoords(self, label, coords):
         '''hook for code working a collection of coords.
 
-        should return a single key for xvalues and 
+        should return a single key for xvalues and
         one or more keys for y-values.
         '''
         keys = list(coords.keys())
         return keys[0], keys[1:]
 
-    def render(self, dataframe, path ):
+    def render(self, dataframe, path):
 
         fig = self.startPlot()
-        
+
         labels = dataframe.index.levels
 
-        paths = list(itertools.product( *labels ) )
-        
-        self.initPlot( fig, dataseries, path )
+        paths = list(itertools.product(*labels) )
+
+        self.initPlot(fig, dataseries, path)
 
         nplotted = 0
 
-        for idx in range( 0, len(paths), 2):
+        for idx in range(0, len(paths), 2):
 
-            self.initLine( path, dataseries )
+            self.initLine(path, dataseries)
 
             xpath = paths[idx]
             ypath = paths[idx+1]
 
             xvalues, yvalues = dataseries.ix[xpath], dataseries.ix[ypath]
 
-            if len(xvalues) != len(yvalues): 
-                raise ValueError( "length of x,y tuples not consistent: %i != %i" % \
+            if len(xvalues) != len(yvalues):
+                raise ValueError("length of x,y tuples not consistent: %i != %i" % \
                                       len(xvalues), len(yvalues))
 
-            R.plot( xvalues, yvalues )
-            self.initCoords( xvalues, yvalues )
+            R.plot(xvalues, yvalues)
+            self.initCoords(xvalues, yvalues)
 
             nplotted += 1
-            
-        self.finishPlot( fig, dataseries, path )
+
+        self.finishPlot(fig, dataseries, path)
 
         figid = getCurrentRDevice()
-        blocks = ResultBlocks( ResultBlock( "\n".join( ("#$rpl %i$#" % (figid), "")), 
-                                            title = "/".join(path) ) )
+        blocks = ResultBlocks(ResultBlock("\n".join(("#$rpl %i$#" % (figid), "")),
+                                            title = "/".join(path)) )
 
         return blocks
 
-class BoxPlot( Renderer, Plotter ):
+class BoxPlot(Renderer, Plotter):
     """Write a set of box plots.
-    
-    This :class:`Renderer` requires two levels.
+
+    This:class:`Renderer` requires two levels.
 
     labels[dict] / data[array]
     """
@@ -275,53 +275,53 @@ class BoxPlot( Renderer, Plotter ):
     nlevels = 1
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        Renderer.__init__(self, *args, **kwargs)
+        Plotter.__init__(self, *args, **kwargs)
 
-    def render(self, dataframe, path ):
+    def render(self, dataframe, path):
 
         self.startPlot()
 
         rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
-        R.boxplot( rframe )
+        R.boxplot(rframe)
 
-        return self.endPlot( dataframe, path )
+        return self.endPlot(dataframe, path)
 
 class SmoothScatterPlot(Renderer, Plotter):
     """A smoothed scatter plot.
 
     See R.smoothScatter.
 
-    This :class:`Renderer` requires one levels:
+    This:class:`Renderer` requires one levels:
 
     coords[dict]
     """
     options = Renderer.options + Plotter.options +\
-        ( ('bins', directives.unchanged), )
-    
+        (('bins', directives.unchanged),)
+
     nlevels = 2
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        Renderer.__init__(self, *args, **kwargs)
+        Plotter.__init__(self, *args, **kwargs)
 
-        self.nbins = kwargs.get("nbins", "128" )
+        self.nbins = kwargs.get("nbins", "128")
         if self.nbins:
             if "," in self.nbins: self.nbins=list(map(int, self.nbins.split(",")))
             else: self.nbins=int(self.nbins)
 
-    def render(self, dataframe, path ):
-        
+    def render(self, dataframe, path):
+
         if len(dataframe.columns) < 2:
-            raise ValueError( "requiring two coordinates, only got %s" % str(dataframe.columns))
+            raise ValueError("requiring two coordinates, only got %s" % str(dataframe.columns))
 
         plts, legend = [], []
         blocks = ResultBlocks()
 
-        for xcolumn, ycolumn in itertools.combinations( dataframe.columns, 2 ):
+        for xcolumn, ycolumn in itertools.combinations(dataframe.columns, 2):
 
             # remove missing data points
-            xvalues, yvalues = Stats.filterMissing( (dataframe[xcolumn], dataframe[ycolumn]) )
+            xvalues, yvalues = Stats.filterMissing((dataframe[xcolumn], dataframe[ycolumn]))
 
             # remove columns with all NaN
             if len(xvalues) == 0 or len(yvalues) == 0:
@@ -337,12 +337,12 @@ class SmoothScatterPlot(Renderer, Plotter):
             self.startPlot()
             # wrap, as pandas series can not
             # passed through rpy2.
-            R.smoothScatter( numpy.array( xvalues, dtype=numpy.float), 
-                             numpy.array( yvalues, dtype=numpy.float), 
-                             xlab=xcolumn, 
+            R.smoothScatter(numpy.array(xvalues, dtype=numpy.float),
+                             numpy.array(yvalues, dtype=numpy.float),
+                             xlab=xcolumn,
                              ylab=ycolumn,
-                             nbin = self.nbins )
-            blocks.extend( self.endPlot( dataframe, path ) )
+                             nbin = self.nbins)
+            blocks.extend(self.endPlot(dataframe, path) )
 
         return blocks
 
@@ -351,20 +351,20 @@ class HeatmapPlot(NumpyMatrix, Plotter):
 
     See R.heatmap.2 in the gplots package
 
-    This :class:`Renderer` requires one levels:
+    This:class:`Renderer` requires one levels:
 
     coords[dict]
     """
-    options = NumpyMatrix.options + Plotter.options 
-    
+    options = NumpyMatrix.options + Plotter.options
+
     nlevels = 2
 
     def __init__(self, *args, **kwargs):
-        NumpyMatrix.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
+        NumpyMatrix.__init__(self, *args, **kwargs)
+        Plotter.__init__(self, *args, **kwargs)
 
-    def plot( self,  matrix, row_headers, col_headers, path ):
-        '''plot matrix. 
+    def plot(self,  matrix, row_headers, col_headers, path):
+        '''plot matrix.
 
         Large matrices are split into several plots.
         '''
@@ -373,9 +373,9 @@ class HeatmapPlot(NumpyMatrix, Plotter):
 
         self.startPlot()
 
-        R.library( 'gplots' )
-        
-        R["heatmap.2"]( matrix,
+        R.library('gplots')
+
+        R["heatmap.2"](matrix,
                         trace = 'none',
                         dendrogram = 'none',
                         col=R.bluered(75),
@@ -386,24 +386,24 @@ class HeatmapPlot(NumpyMatrix, Plotter):
                         labRow = row_headers,
                         labCol = col_headers,
                         mar = ro.IntVector((10,10)),
-                        keysize = 1 )
+                        keysize = 1)
 
         self.debug("HeatmapPlot finished")
 
-        return self.endPlot( None, path )
+        return self.endPlot(None, path)
 
-    def render(self, dataseries, path ):
-        
+    def render(self, dataseries, path):
+
         self.debug("building matrix started")
-        matrix, rows, columns = self.buildMatrix( dataseries )
+        matrix, rows, columns = self.buildMatrix(dataseries)
         self.debug("building matrix finished")
 
-        return self.plot( matrix, rows, columns, path )
+        return self.plot(matrix, rows, columns, path)
 
-class GGPlot( Renderer, Plotter ):
+class GGPlot(Renderer, Plotter):
     """Write a set of box plots.
-    
-    This :class:`Renderer` requires two levels.
+
+    This:class:`Renderer` requires two levels.
 
     labels[dict] / data[array]
     """
@@ -414,20 +414,20 @@ class GGPlot( Renderer, Plotter ):
     nlevels = 1
 
     def __init__(self, *args, **kwargs):
-        Renderer.__init__(self, *args, **kwargs )
-        Plotter.__init__(self, *args, **kwargs )
-        
+        Renderer.__init__(self, *args, **kwargs)
+        Plotter.__init__(self, *args, **kwargs)
+
         if "statement" not in kwargs:
-            raise ValueError("r-ggplot renderer requires a statement option" )
+            raise ValueError("r-ggplot renderer requires a statement option")
 
-        self.statement = kwargs.get( 'statement' )
+        self.statement = kwargs.get('statement')
 
-    def render(self, dataframe, path ):
+    def render(self, dataframe, path):
 
-        R.library( 'ggplot2' )
+        R.library('ggplot2')
 
         rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
-        
+
         # sometimes the row/column mapping did not work
         # rframe.colnames = dataframe.columns
 
@@ -443,20 +443,20 @@ class GGPlot( Renderer, Plotter ):
 
         rframe = R["as.data.frame"](R.lapply(rframe,unAsIs))
 
-        R.assign( "rframe", rframe )
+        R.assign("rframe", rframe)
         # start plot
-        R('''gp = ggplot( rframe )''')
+        R('''gp = ggplot(rframe)''')
 
         # add aesthetics and geometries
         try:
-            pp = R('''gp + %s ''' % self.statement )
+            pp = R('''gp + %s ''' % self.statement)
         except ValueError as msg:
-            raise ValueError( "could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg ))
-            
-        figname = re.sub( '/', '_', path2str(path) )
-        r = ResultBlock( '#$ggplot %s$#' % figname,
-                         title = path2str(path) )
+            raise ValueError("could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg))
+
+        figname = re.sub('/', '_', path2str(path))
+        r = ResultBlock('#$ggplot %s$#' % figname,
+                         title = path2str(path))
         r.rggplot = pp
         r.figname = figname
 
-        return ResultBlocks( r )
+        return ResultBlocks(r)
