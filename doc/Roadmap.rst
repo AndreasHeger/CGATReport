@@ -45,10 +45,9 @@ Version 2.3
    * Refined notebook integration
    * r-ggplot now plots without needing X
    * ggplot_ added
-
-Incompatibilities to Version 2
-
-   * pie-plot might orient the data differently.
+   * pep8 reformatting
+   * added xls-table, rst-table, glossary-table
+   * TrackerImages requires :glob: attribute
 
 Version 2.2
 ============

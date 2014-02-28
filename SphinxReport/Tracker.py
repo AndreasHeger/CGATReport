@@ -883,18 +883,24 @@ class SingleTableTrackerRows(TrackerSQL):
 
     Returns a dictionary of values.
 
-    The tracks are given by rows in table:py:attr:`table`. The tracks are
+    The tracks are given by rows in table :py:attr:`table`. The tracks are
     specified by the:py:attr:`fields`.
 
-:py:attr:`fields` is a tuple of column names (default = ``(track,)``).
+    :py:attr:`fields` is a tuple of column names (default = ``(track,)``).
 
-    If multiple columns are specified, they will all be used to define the
-    tracks in the table.
+    If multiple columns are specified, they will all be used to define
+    the tracks in the table.
 
-    Rows in the table need to be unique for any combination:py:attr:`fields`.
+    Rows in the table need to be unique for any
+    combination:py:attr:`fields`.
 
-    attribute:`extra_columns` can be used to add additional columns to the table.
-    This attribute is a dictionary.
+    :py:attr:`extra_columns` can be used to add additional columns to
+    the table. This attribute is a dictionary, though only the keys
+    are being used.
+
+    :py:attr:`where` is an optional where that will be added as a
+    WHERE clause to the SQL statement
+
     '''
     exclude_columns = ()
     table = None
@@ -902,6 +908,7 @@ class SingleTableTrackerRows(TrackerSQL):
     extra_columns = {}
     sort = None
     loaded = False
+    where = None
 
     # not called by default as Mixin class
     def __init__(self, *args, **kwargs):
@@ -915,12 +922,23 @@ class SingleTableTrackerRows(TrackerSQL):
         '''
         if not self.loaded:
             nfields = len(self.fields)
-            if self.sort: sort = "ORDER BY %s" % self.sort
-            else: sort = ""
-            self._tracks = self.get("SELECT DISTINCT %s FROM %s %s" % \
-                                         (",".join(self.fields), self.table, sort))
+            if self.sort:
+                sort_statement = "ORDER BY %s" % self.sort
+            else:
+                sort_statement = ""
+
+            if self.where:
+                where_statement = "WHERE %s" % self.where
+            else:
+                where_statement = ""
+            self._tracks = self.get("SELECT DISTINCT %s FROM %s %s %s" %
+                                    (",".join(self.fields), self.table, 
+                                     where_statement,
+                                     sort_statement))
             columns = self.getColumns(self.table)
-            self._slices = [ x for x in columns if x not in self.exclude_columns and x not in self.fields ] + list(self.extra_columns.keys())
+            self._slices = [x for x in columns if x not in self.exclude_columns
+                            and x not in self.fields] +\
+                list(self.extra_columns.keys())
             # remove columns with special characters (:, +, -,)
             self._slices = [ x for x in self._slices if not re.search("[:+-]", x)]
 
@@ -934,8 +952,10 @@ class SingleTableTrackerRows(TrackerSQL):
 
     @property
     def tracks(self):
-        if not self.hasTable(self.table): return []
-        if not self.loaded: self._load()
+        if not self.hasTable(self.table):
+            return []
+        if not self.loaded:
+            self._load()
         if len(self.fields) == 1:
             return tuple([x[0] for x in self._tracks ])
         else:
@@ -1019,7 +1039,7 @@ class SingleTableTrackerEdgeList(TrackerSQL):
 
     The tracks are given by entries in the:py:attr:`row` column in a
     table:py:attr:`table`.  The slices are given by entries in the
-:py:attr:`column` column in a table.
+    :py:attr:`column` column in a table.
 
     The:py:attr:`value` is a third column specifying the value
     returned. If:py:attr:`where` is set, it is added to the SQL
