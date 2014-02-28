@@ -19,7 +19,7 @@ to query for available :term:`tracks`.
 Adding a data source
 ********************
 
-Create the file :file:`Tutorial2.py` in the :file:`python` subdirectory and add 
+Create the file :file:`Tutorial2.py` in the :file:`trackers` subdirectory and add 
 the following code::
 
   from SphinxReport.Tracker import *
@@ -32,9 +32,9 @@ the following code::
       def __call__(self, track, slice = None ):
 	  return dict( (("header1", 10), ("header2", 20)),)
 
-The module sphinxreport`Trackers` is imported and the data source ``MyData`` is derived from it::
+The module sphinxreport`Trackers` is imported and the data source ``MyDataOneTrack`` is derived from it::
    
-   class MyData(Tracker):
+   class MyDataOneTrack(Tracker):
 
 The docstring::
 
