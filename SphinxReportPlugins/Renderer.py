@@ -296,14 +296,11 @@ class TableBase(Renderer):
                     len(row_headers),
                     len(col_headers)))
         quick = len(dataframe) > 10000
-
         if quick:
             # quick writing, only append method works
             wb = openpyxl.Workbook(optimized_write=True)
 
-            def addWorksheet(wb, dataframe, title):
-                ws = wb.create_sheet()
-
+            def fillWorksheet(ws, dataframe, title):
                 ws.append([""] + list(col_headers))
                 for x, row in enumerate(dataframe.iterrows()):
                     ws.append([path2str(row_headers[x])] + list(row))
@@ -315,19 +312,26 @@ class TableBase(Renderer):
             # do it cell-by-cell, this might be slow
             wb = openpyxl.Workbook(optimized_write=False)
 
-            def addWorksheet(wb, dataframe, title):
-                ws = wb.create_sheet()
-
+            def fillWorksheet(ws, dataframe, title):
                 # regex to detect rst hypelinks
                 regex_link = re.compile('`(.*) <(.*)>`_')
+                # write row names
+                for row, row_name in enumerate(dataframe.index):
+                    c = ws.cell(row=row + 1, column=0)
+                    c.value = row_name
+
+                # write columns
                 for column, column_name in enumerate(dataframe.columns):
-                    c = ws.cell(row=0, column=column)
+                    # set column title
+                    c = ws.cell(row=0, column=column + 1)
                     c.value = column_name
+
+                    # set column values
                     dataseries = dataframe[column_name]
                     if dataseries.dtype == object:
                         for row, value in enumerate(dataseries):
                             c = ws.cell(row=row + 1,
-                                        column=column)
+                                        column=column + 1)
                             value = str(value)
                             if value.startswith('`'):
                                 c.value, c.hyperlink =\
@@ -350,8 +354,9 @@ class TableBase(Renderer):
         if split:
             # create separate worksheets for nested indices
             nlevels = len(dataframe.index.levels)
-            paths = map(tuple, DataTree.unique([x[:nlevels - 1]
-                                                for x in dataframe.index.unique()]))
+            paths = map(tuple, DataTree.unique(
+                [x[:nlevels - 1]
+                 for x in dataframe.index.unique()]))
 
             ws = wb.worksheets[0]
             ws.title = 'Summary'
@@ -366,10 +371,11 @@ class TableBase(Renderer):
                 c = ws.cell(row=row + 1,
                             column=nlevels)
                 c.hyperlink = "#%s" % title
-                addWorksheet(wb, work, title=title)
-
+                fillWorksheet(wb.create_sheet(), work,
+                              title=title)
         else:
-            addWorksheet(wb, dataframe, title=title)
+            fillWorksheet(wb.worksheets[0], dataframe,
+                          title=title)
 
         # write result block
         lines = []
