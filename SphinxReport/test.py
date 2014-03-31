@@ -1,7 +1,6 @@
 #! /bin/env python
 
-"""
-sphinxreport-test
+"""sphinxreport-test
 =================
 
 :file:`sphinxreport-test` permits testing:class:`Trackers` and
@@ -21,7 +20,8 @@ The options are:
    force update of a:class:`Tracker`. Removes all data from cache.
 
 **-m/--transformer** transformer
-:class:`Transformer` to use. Several transformers can be applied via multiple **-m** options.
+   :class:`Transformer` to use. Several transformers can be applied
+   via multiple **-m** options.
 
 **-a/--tracks** tracks
    Tracks to display as a comma-separated list.
@@ -31,19 +31,21 @@ The options are:
 
 **-o/--option** option
    Options for the renderer/transformer. These correspond to options
-   within restructured text directives, but supplied as key=value pairs (without spaces).
-   For example: ``:width: 300`` will become ``-o width=300``. Several **-o** options can
-   be supplied on the command line.
+   within restructured text directives, but supplied as key=value
+   pairs (without spaces).  For example: ``:width: 300`` will become
+   ``-o width=300``. Several **-o** options can be supplied on the
+   command line.
 
 **--no-print**
    Do not print an rst text template corresponding to the displayed plots.
 
 **--no-show**
-   Do not show plot. Use this to just display the tracks/slices that will be generated.
+   Do not show plot. Use this to just display the tracks/slices that
+   will be generated.
 
 **-w/--path** path
-   Path with trackers. By default,:term:`trackers` are searched in the directory:file`trackers`
-   within the current directory.
+   Path with trackers. By default,:term:`trackers` are searched in the
+   directory:file`trackers` within the current directory.
 
 **-i/--interactive**
    Start python interpreter.
@@ -70,8 +72,8 @@ restructured text snippet that can be directly inserted into a document.
 Rendering a document
 ++++++++++++++++++++
 
-With the ``-p/--page`` option, ``sphinxreport-test`` will create the restructured
-text document as it is supplied to sphinx::
+With the ``-p/--page`` option, ``sphinxreport-test`` will create the
+restructured text document as it is supplied to sphinx::
 
    sphinxreport-test --page=example.rst
 
@@ -87,18 +89,20 @@ Running sphinxreport-test without options::
 will collect all:class:`Trackers` and will execute them.
 Use this method to see if all:class:`Trackers` can access
 their data sources.
+
 """
+import sys
+import os
+import re
+import glob
+import optparse
+import code
+import tempfile
 
-
-import sys, os, imp, io, re, types, glob, optparse, code, tempfile
-
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
 
 from SphinxReport.Component import *
-from SphinxReport.Tracker import Tracker
-from SphinxReport.ResultBlock import flat_iterator
 from SphinxReport.DataTree import asDataFrame
 from SphinxReport import Utils
 
@@ -125,7 +129,7 @@ if "docsdir" in locals():
 RST_TEMPLATE = """.. _%(label)s:
 
 .. report:: %(tracker)s
-:render: %(renderer)s
+   :render: %(renderer)s
    %(options)s
 
    %(caption)s
@@ -165,9 +169,11 @@ def getTrackers(fullpath):
 
     return trackers
 
+
 def writeRST(outfile, options, kwargs,
-              renderer_options, transformer_options, display_options,
-              modulename, name):
+             renderer_options, transformer_options,
+             display_options,
+             modulename, name):
     '''write RST snippet to outfile to be include in a sphinxreport document
     '''
 
@@ -178,16 +184,16 @@ def writeRST(outfile, options, kwargs,
         list(transformer_options.items()) +\
         list(display_options.items()):
 
-        if val == None:
+        if val is None:
             options_rst.append(":%s:" % key)
         else:
-            options_rst.append(":%s: %s" % (key,val))
+            options_rst.append(":%s: %s" % (key, val))
 
-    params = { "tracker": "%s.%s" % (modulename, name),
-               "renderer": options.renderer,
-               "label": options.label,
-               "options": ("\n   ").join(options_rst),
-               "caption": options.caption }
+    params = {"tracker": "%s.%s" % (modulename, name),
+              "renderer": options.renderer,
+              "label": options.label,
+              "options": ("\n   ").join(options_rst),
+              "caption": options.caption}
     if options.transformers:
         params["options"] = ":transform: %s\n   %s" %\
             (",".join(options.transformers), params["options"])
@@ -195,8 +201,10 @@ def writeRST(outfile, options, kwargs,
     outfile.write(RST_TEMPLATE % params)
 
 def writeNotebook(outfile, options, kwargs,
-                   renderer_options, transformer_options, display_options,
-                   modulename, name):
+                  renderer_options,
+                  transformer_options,
+                  display_options,
+                  modulename, name):
     '''write a snippet to paste with the ipython notebook.
     '''
 
@@ -210,19 +218,20 @@ def writeNotebook(outfile, options, kwargs,
     for key, val in list(kwargs.items()) +\
         list(renderer_options.items()) +\
         list(transformer_options.items()):
-        if val == None:
+        if val is None:
             cmd_options.append("%s" % key)
         else:
             if Utils.isString(val):
-                cmd_options.append('%s="%s"' % (key,val))
+                cmd_options.append('%s="%s"' % (key, val))
             else:
-                cmd_options.append('%s=%s' % (key,val))
+                cmd_options.append('%s=%s' % (key, val))
     if options.transformers:
-        cmd_options.append("transformer=['%s']" % "','".join(options.transformers))
+        cmd_options.append(
+            "transformer=['%s']" % "','".join(options.transformers))
 
     # no module name in tracker
-    params = { "tracker": "%s" % (name),
-               "options": ",\n".join(cmd_options) }
+    params = {"tracker": "%s" % (name),
+              "options": ",\n".join(cmd_options)}
 
     outfile.write(Utils.NOTEBOOK_TEMPLATE % params)
 
@@ -233,7 +242,8 @@ def run(name, t, kwargs):
     t(**kwargs)
     print("%s: collecting data finished" % name)
 
-def main(argv = None, **kwargs):
+
+def main(argv=None, **kwargs):
     '''main function for test.py.
 
     Long-form of command line arguments can also be supplied as kwargs.
@@ -241,7 +251,7 @@ def main(argv = None, **kwargs):
     If argv is not None, command line parsing will be performed.
     '''
     parser = optparse.OptionParser(version = "%prog version: $Id$",
-                                    usage = globals()["__doc__"])
+                                   usage = globals()["__doc__"])
 
     parser.add_option("-t", "--tracker", dest="tracker", type="string",
                           help="tracker to use [default=%default]")
@@ -454,21 +464,21 @@ def main(argv = None, **kwargs):
 
             if options.language == "rst":
                 writeRST(sys.stdout,
-                          options,
-                          kwargs,
-                          renderer_options,
-                          transformer_options,
-                          display_options,
-                          modulename, name)
+                         options,
+                         kwargs,
+                         renderer_options,
+                         transformer_options,
+                         display_options,
+                         modulename, name)
             elif options.language == "notebook":
                 writeNotebook(sys.stdout,
-                          options,
-                          kwargs,
-                          renderer_options,
-                          transformer_options,
-                          display_options,
-                          modulename, name)
-
+                              options,
+                              kwargs,
+                              renderer_options,
+                              transformer_options,
+                              display_options,
+                              modulename, name)
+                
             sys.stdout.write ("\n.. Template end\n")
 
         if result and renderer != None:

@@ -276,9 +276,11 @@ class TableBase(Renderer):
         data.append("</table>\n")
 
         # substitute links
-        data = [re.sub("`(.*?(?:\".+\"|\'.+\')?.*?)\s<(.*?(?:\".+\"|\'.+\')?.*?)>`_",
-                       r'<a href="\2">\1</a>', x)
-                for x in data]
+        data = [re.sub(
+            "`(.*?(?:\".+\"|\'.+\')?.*?)\s<(.*?(?:\".+\"|\'.+\')?.*?)>`_",
+            r'<a href="\2">\1</a>',
+            x)
+            for x in data]
 
         r.html = "\n".join(data)
 
@@ -431,7 +433,8 @@ class Table(TableBase):
         self.head = int(kwargs.get('head', 0))
 
     def modifyTable(self, dataframe):
-        '''modify table if required, for example adding percentages.'''
+        '''modify table if required, for example adding percentages.
+        '''
 
         if self.add_percent:
             columns = dataframe.columns
@@ -446,7 +449,10 @@ class Table(TableBase):
                         try:
                             total = float(method)
                         except ValueError:
-                            raise ValueError("can't compute total from expression `%s` - missing column?" % method)
+                            raise ValueError(
+                                ("can't compute total from "
+                                 "expression `%s` - missing column?") %
+                                method)
                 else:
                     column = part
 
@@ -465,6 +471,15 @@ class Table(TableBase):
                         total = float(sum(values))
                     dataframe['%s/%%' % column] = 100.0 *\
                         dataframe[column] / values
+
+        # If index is not hierarchical, but contains tuples,
+        # split tuples in index to build a new (hierarchical) index
+        is_hierarchical = isinstance(dataframe.index,
+                                     pandas.core.index.MultiIndex)
+
+        if not is_hierarchical and isinstance(dataframe.index[0], tuple):
+            idx = pandas.MultiIndex.from_tuples(dataframe.index)
+            dataframe.index = idx
 
         return dataframe
 
@@ -617,19 +632,23 @@ class MatrixBase:
 
     :term:`transform-matrix`: apply a matrix transform. Possible choices are:
 
-           * *correspondence-analysis*: use correspondence analysis to permute rows/columns
+           * *correspondence-analysis*: use correspondence analysis
+             to permute rows/columns
            * *normalized-col-total*: normalize by column total
            * *normalized-col-max*: normalize by column maximum,
-           * *normalized-col-first*: normalize by first column. The first column is then removed.
+           * *normalized-col-first*: normalize by first column.
+             The first column is then removed.
            * *normalized-row-total*: normalize by row total
            * *normalized-row-max*: normalize by row maximum
-           * *normalized-row-first*: normalize by first row. The first row is then removed.
+           * *normalized-row-first*: normalize by first row.
+             The first row is then removed.
            * *normalized-total*: normalize over whole matrix
            * *normalized-max*: normalize over whole matrix
            * *sort*: sort matrix rows and columns alphanumerically.
            * filter-by-rows: only take columns that are also present in rows
            * filter-by-cols: only take columns that are also present in cols
-           * square: make square matrix (only take rows and columns present in both)
+           * square: make square matrix (only take rows and columns present
+             in both)
            * *add-row-total*: add the row total at the bottom
            * *add-column-total*: add the column total as a last column
 
@@ -674,8 +693,12 @@ class MatrixBase:
                 try:
                     self.converters.append(self.mMapKeywordToTransform[kw])
                 except KeyError:
-                    raise ValueError("unknown matrix transformation %s, possible values are: %s" %
-                                     (kw, ",".join(sorted(self.mMapKeywordToTransform.keys())) ))
+                    raise ValueError(("unknown matrix transformation %s, "
+                                      "possible values are: %s") %
+                                     (kw,
+                                      ",".join(sorted(
+                                          self.mMapKeywordToTransform.keys()
+                                      ))))
 
     def transformAddRowTotal(self, matrix, row_headers, col_headers):
         '''add row total to the matrix.'''
@@ -704,7 +727,7 @@ class MatrixBase:
         take = [x for x in range(len(row_headers))
                 if row_headers[x] in col_headers]
         return (matrix.take(take, axis=0),
-                [row_headers[x] for x in take ],
+                [row_headers[x] for x in take],
                 col_headers)
 
     def transformSquare(self, matrix, row_headers, col_headers):
@@ -734,7 +757,8 @@ class MatrixBase:
         """
 
         if len(row_headers) <= 1 or len(col_headers) <= 1:
-            self.warn("correspondence analysis skipped for matrices with single row/column")
+            self.warn("correspondence analysis skipped for "
+                      "matrices with single row/column")
             return matrix, row_headers, col_headers
 
         try:
@@ -1039,6 +1063,7 @@ class TableMatrix(TableBase, MatrixBase):
 # for compatibility
 Matrix = TableMatrix
 
+
 class NumpyMatrix(TableMatrix, MatrixBase):
     """Deprecated - not needed any more as equivalent to TableMatrix
     """
@@ -1154,8 +1179,9 @@ class Status(Renderer):
             except KeyError:
                 image = ""
 
-            lines.append('   "%(track)s",":term:`%(testname)s`","%(image)s","%(status)s","%(info)s"' %
-                         locals())
+            lines.append(
+                '   "%(track)s",":term:`%(testname)s`","%(image)s","%(status)s","%(info)s"' %
+                locals())
 
         lines.append("")
 

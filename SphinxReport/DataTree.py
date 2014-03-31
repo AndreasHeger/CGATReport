@@ -1,9 +1,12 @@
-import collections, itertools
-from logging import warn, log, debug, info
-
+import collections
+import itertools
+from logging import debug
 from collections import OrderedDict as odict
-from SphinxReport import Utils
 import pandas
+
+from SphinxReport import Utils
+
+
 
 def unique(iterables):
     s = set()
@@ -12,14 +15,18 @@ def unique(iterables):
             yield x
             s.add(x)
 
+
 def path2str(path):
     '''convert path to printable string.'''
-    if path is None: return ""
-    if Utils.isString(path): return path
+    if path is None:
+        return ""
+    if Utils.isString(path):
+        return path
     try:
-        return "/".join(map(str,path))
+        return "/".join(map(str, path))
     except:
         return str(path)
+
 
 ## This module needs to be properly refactored to use
 ## proper tree traversal algorithms. It currently is
@@ -43,23 +50,27 @@ class DataTree(object):
 
     slots = "_data"
 
-    def __init__(self, data = None):
+    def __init__(self, data=None):
 
-        if not data: data = odict()
+        if not data:
+            data = odict()
         object.__setattr__(self, "_data", data)
 
     def __iter__(self):
         return self._data.__iter__()
+
     def __getitem__(self, key):
         return self._data.__getitem__(key)
+
     def __delitem__(self, key):
         return self._data.__delitem__(key)
-    def __setitem__(self, key,value):
-        return self._data.__setitem__(key,value)
+
+    def __setitem__(self, key, value):
+        return self._data.__setitem__(key, value)
+
     def __len__(self):
         return self._data.__len__()
-    def __str__(self):
-        return str(self._data)
+
     def getPaths(self):
         '''extract labels from data.
 
@@ -68,14 +79,15 @@ class DataTree(object):
         '''
         labels = []
 
-        this_level = [self._data,]
+        this_level = [self._data, ]
 
         while 1:
             l, next_level = [], []
-            for x in [ x for x in this_level if hasattr(x, "keys")]:
+            for x in [x for x in this_level if hasattr(x, "keys")]:
                 l.extend(list(x.keys()))
                 next_level.extend(list(x.values()))
-            if not l: break
+            if not l:
+                break
             labels.append(list(unique(l)))
             this_level = next_level
 
@@ -117,42 +129,55 @@ class DataTree(object):
         '''
         nlevels = len(self.getPaths())
         if nlevels <= level1:
-            raise IndexError("level out of range: %i >= %i" % (level1, nlevels))
+            raise IndexError("level out of range: %i >= %i" %
+                             (level1, nlevels))
         if nlevels <= level2:
-            raise IndexError("level out of range: %i >= %i" % (level2, nlevels))
-        if level1 == level2: return
+            raise IndexError("level out of range: %i >= %i" %
+                             (level2, nlevels))
+        if level1 == level2:
+            return
         if level1 > level2:
             level1, level2 = level2, level1
 
         paths = self.getPaths()
         prefixes = paths[:level1]
-        infixes = paths[level1+1:level2]
-        suffixes = paths[level2+1:]
+        infixes = paths[level1 + 1:level2]
+        suffixes = paths[level2 + 1:]
 
-        if prefixes: prefixes = list(itertools.product(*prefixes))
-        else: prefixes = [(None,)]
+        if prefixes:
+            prefixes = list(itertools.product(*prefixes))
+        else:
+            prefixes = [(None,)]
 
-        if infixes: infixes = list(itertools.product(*infixes))
-        else: infixes = [(None,)]
+        if infixes:
+            infixes = list(itertools.product(*infixes))
+        else:
+            infixes = [(None,)]
 
-        if suffixes: suffixes = list(itertools.product(*suffixes))
-        else: suffixes = [(None,)]
+        if suffixes:
+            suffixes = list(itertools.product(*suffixes))
+        else:
+            suffixes = [(None,)]
 
         # write to new tree in order to ensure that labels
         # that exist in both level1 and level2 are not
         # overwritten.
         newtree = DataTree()
 
-        def _f(p): return tuple([x for x in p if x != None])
+        def _f(p):
+            return tuple([x for x in p if x is not None])
 
         for p1, p2 in itertools.product(paths[level1], paths[level2]):
-            for prefix, infix, suffix in itertools.product(prefixes, infixes, suffixes):
+            for prefix, infix, suffix in itertools.product(prefixes,
+                                                           infixes,
+                                                           suffixes):
                 oldpath = _f(prefix + (p1,) + infix + (p2,) + suffix)
                 newpath = _f(prefix + (p2,) + infix + (p1,) + suffix)
                 # note: getLeaf, setLeaf are inefficient in this
                 # context as they traverse the tree again
                 data = self.getLeaf(oldpath)
-                if data == None: continue
+                if data is None:
+                    continue
                 newtree.setLeaf(newpath, data)
 
         object.__setattr__(self, "_data", newtree._data)
@@ -173,13 +198,17 @@ class DataTree(object):
 
     def __str__(self):
         paths = self.getPaths()
-        if len(paths) == 0: return "NA"
-        else: return "< datatree: %s >" % str(paths)
+        if len(paths) == 0:
+            return "NA"
+        else:
+            return "< datatree: %s >" % str(paths)
 
     def __getattr__(self, name):
         return getattr(self._data, name)
+
     def __setattr__(self, name, value):
         setattr(self._data, name, value)
+
 
 def asDataFrame(data):
     '''return data tree as a pandas series.
@@ -220,8 +249,9 @@ def asDataFrame(data):
 
     Special cases for backwards compatibility:
 
-    1. Lowest level dictionary contains the following arrays:
-        rows, columns, matrix - numpy matrix, convert to dataframe and apply as above
+    1. Lowest level dictionary contains the following arrays: rows,
+        columns, matrix - numpy matrix, convert to dataframe and apply
+        as above
 
     2. Lowest level dictionary contains the following keys:
         '01', '10', '11' - Venn 2-set data, convert columns
@@ -231,6 +261,7 @@ def asDataFrame(data):
     fit all values in a column. Thus, if a column is numeric,
     but contains values such as "inf", "Inf", as well, the
     column type might be set to object or char.
+
     '''
     if data is None or len(data) == 0:
         return None
@@ -238,7 +269,9 @@ def asDataFrame(data):
     levels = getDepths(data)
     mi, ma = min(levels), max(levels)
     if mi != ma:
-        raise NotImplementedError('data tree not of uniform depth, min=%i, max=%i' %(mi,ma))
+        raise NotImplementedError(
+            'data tree not of uniform depth, min=%i, max=%i' %
+            (mi, ma))
 
     labels = getPaths(data)
 
@@ -250,14 +283,14 @@ def asDataFrame(data):
     VENN2 = ('10', '01', '11')
     VENN3 = ('010', '001', '011')
 
-    branches = list(getNodes(data, len(labels) -2))
+    branches = list(getNodes(data, len(labels) - 2))
     for path, branch in branches:
         # Numpy matrix - dictionary with keys matrix, rows, columns
 
         if len(set(branch.keys()).intersection(MATRIX)) == len(MATRIX):
             df = pandas.DataFrame(branch['matrix'],
-                                   columns = branch['columns'],
-                                   index = branch['rows'])
+                                  columns=branch['columns'],
+                                  index=branch['rows'])
             setLeaf(data, path, df)
 
         elif len(set(branch.keys()).intersection(VENN2)) == len(VENN2) or \
@@ -265,7 +298,8 @@ def asDataFrame(data):
             # sort so that 'labels' is not the first item
             # specify data such that 'labels' will a single tuple entry
             values = sorted(branch.items())
-            df = pandas.DataFrame([x[1] for x in values], index = [x[0] for x in values])
+            df = pandas.DataFrame([x[1] for x in values],
+                                  index=[x[0] for x in values])
             setLeaf(data, path, df)
 
     ######################################################
@@ -273,7 +307,7 @@ def asDataFrame(data):
     ######################################################
     labels = getPaths(data)
     # build multi-index
-    leaves = list(getNodes(data, len(labels) -1))
+    leaves = list(getNodes(data, len(labels) - 1))
     leaf = leaves[0][1]
     if Utils.isArray(leaf):
         # build dataframe from array
@@ -283,7 +317,7 @@ def asDataFrame(data):
         if len(labels) == 1:
             branches = [('all', data)]
         else:
-            branches = list(getNodes(data, max(0, len(labels)-2)))
+            branches = list(getNodes(data, max(0, len(labels) - 2)))
 
         for path, leaves in branches:
             dataframe = pandas.DataFrame(leaves)
@@ -294,7 +328,7 @@ def asDataFrame(data):
             else:
                 index_tuples.append(path)
 
-        df = pandas.concat(dataframes, keys = index_tuples)
+        df = pandas.concat(dataframes, keys=index_tuples)
 
     elif Utils.isDataFrame(leaf):
         # build dataframe from list of dataframes
@@ -310,20 +344,21 @@ def asDataFrame(data):
             else:
                 index_tuples.append(path)
             dataframes.append(dataframe)
-        df = pandas.concat(dataframes, keys = index_tuples)
+        df = pandas.concat(dataframes, keys=index_tuples)
     else:
 
         if len(labels) == 1:
             # { 'x': 1, 'y': 2 } -> DF with one row and two columns (x, y)
-            df = pandas.DataFrame(data.values(), index = data.keys())
+            df = pandas.DataFrame(data.values(), index=data.keys())
         elif len(labels) == 2:
-            # { 'a': {'x':1, 'y':2}, 'b': {'y',2} -> DF with two columns(x,y) and two rows(a,b)
+            # { 'a': {'x':1, 'y':2}, 'b': {'y',2}
+            # -> DF with two columns(x,y) and two rows(a,b)
             df = pandas.DataFrame.from_dict(data).transpose()
             # reorder so that order of columns corresponds to data
             df = df[labels[-1]]
         else:
             # We are dealing with a simple nested dictionary
-            branches = list(getNodes(data, max(0, len(labels)-3)))
+            branches = list(getNodes(data, max(0, len(labels) - 3)))
             dataframes = []
             index_tuples = []
             for path, nested_dict in branches:
@@ -334,17 +369,19 @@ def asDataFrame(data):
                 df = pandas.DataFrame(nested_dict).transpose()
                 dataframes.append(df)
                 index_tuples.extend([path])
-            df = pandas.concat(dataframes, keys = index_tuples)
+            df = pandas.concat(dataframes, keys=index_tuples)
 
     # rename levels in hierarchical index
     is_hierarchical = isinstance(df.index, pandas.core.index.MultiIndex)
     if is_hierarchical:
-        d = ['track','slice'] + ['level%i' for i in range(len(df.index.names) - 2)]
+        d = ['track', 'slice'] + ['level%i' for i in
+                                  range(len(df.index.names) - 2)]
         df.index.names = d[:len(df.index.names)]
     else:
         df.index.name = 'track'
 
     return df
+
 
 def getPaths(work):
     '''extract labels from data.

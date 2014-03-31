@@ -542,6 +542,8 @@ class TrackerSQL(Tracker):
     def getValue(self, stmt):
         """returns a single value from SQL statement *stmt*.
 
+        If the result is empty, None is returned.
+
         The SQL statement is subjected to variable interpolation.
 
         This function will return the first value in the first row
@@ -549,8 +551,8 @@ class TrackerSQL(Tracker):
         """
         statement = self.buildStatement(stmt)
         result = self.execute(statement).fetchone()
-        if result == None:
-            raise exc.SQLAlchemyError("no result from %s" % statement)
+        if result is None:
+            return result
         return result[0]
 
     def getFirstRow(self, stmt):
@@ -870,10 +872,11 @@ class Status(TrackerSQL):
         description = getattr(self, "test%s" % slice).__doc__
 
         return odict(
-            (( 'name' , slice),
-                ('status', status),
-                ('info', str(value)),
-                ('description', description) ))
+            (('name', slice),
+             ('status', status),
+             ('info', str(value)),
+             ('description', description)))
+
 
 ###########################################################################
 ###########################################################################
@@ -932,7 +935,8 @@ class SingleTableTrackerRows(TrackerSQL):
             else:
                 where_statement = ""
             self._tracks = self.get("SELECT DISTINCT %s FROM %s %s %s" %
-                                    (",".join(self.fields), self.table, 
+                                    (",".join(self.fields),
+                                     self.table,
                                      where_statement,
                                      sort_statement))
             columns = self.getColumns(self.table)
@@ -940,14 +944,18 @@ class SingleTableTrackerRows(TrackerSQL):
                             and x not in self.fields] +\
                 list(self.extra_columns.keys())
             # remove columns with special characters (:, +, -,)
-            self._slices = [ x for x in self._slices if not re.search("[:+-]", x)]
+            self._slices = [x for x in self._slices
+                            if not re.search("[:+-]", x)]
 
             data = self.get("SELECT %s, %s FROM %s" %
-                             (",".join(self.fields), ",".join(self._slices), self.table))
+                            (",".join(self.fields),
+                             ",".join(self._slices),
+                             self.table))
             self.data = odict()
             for d in data:
                 tr = tuple(d[:nfields])
-                self.data[tr] = odict(list(zip(self._slices, tuple(d[nfields:]))))
+                self.data[tr] = odict(list(zip(self._slices,
+                                               tuple(d[nfields:]))))
             self.loaded = True
 
     @property
@@ -957,19 +965,23 @@ class SingleTableTrackerRows(TrackerSQL):
         if not self.loaded:
             self._load()
         if len(self.fields) == 1:
-            return tuple([x[0] for x in self._tracks ])
+            return tuple([x[0] for x in self._tracks])
         else:
-            return tuple([tuple(x) for x in self._tracks ])
+            return tuple([tuple(x) for x in self._tracks])
 
     @property
     def slices(self):
-        if not self.hasTable(self.table): return []
-        if not self.loaded: self._load()
+        if not self.hasTable(self.table):
+            return []
+        if not self.loaded:
+            self._load()
         return self._slices
 
-    def __call__(self, track, slice = None):
-        if not self.loaded: self._load()
-        if len(self.fields) == 1: track = (track,)
+    def __call__(self, track, slice=None):
+        if not self.loaded:
+            self._load()
+        if len(self.fields) == 1:
+            track = (track,)
         return self.data[track][slice]
 
 ###########################################################################
