@@ -374,7 +374,7 @@ def asDataFrame(data):
     # rename levels in hierarchical index
     is_hierarchical = isinstance(df.index, pandas.core.index.MultiIndex)
     if is_hierarchical:
-        d = ['track', 'slice'] + ['level%i' for i in
+        d = ['track', 'slice'] + ['level%i' % i for i in
                                   range(len(df.index.names) - 2)]
         df.index.names = d[:len(df.index.names)]
     else:
@@ -391,17 +391,20 @@ def getPaths(work):
     '''
     labels = []
 
-    this_level = [work,]
+    this_level = [work, ]
 
     while 1:
         l, next_level = [], []
-        for x in [ x for x in this_level if hasattr(x, "keys")]:
+        for x in [x for x in this_level if hasattr(x, "keys")]:
             # ignore data frame for path calculation
-            if isinstance(x, pandas.DataFrame): break
-            if isinstance(x, pandas.Series): break
+            if isinstance(x, pandas.DataFrame):
+                break
+            if isinstance(x, pandas.Series):
+                break
             l.extend(list(x.keys()))
             next_level.extend(list(x.values()))
-        if not l: break
+        if not l:
+            break
         labels.append(list(unique(l)))
         this_level = next_level
 

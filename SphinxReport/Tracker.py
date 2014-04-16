@@ -490,8 +490,7 @@ class TrackerSQL(Tracker):
                 else:
                     raise NotImplementedError("can not connect to %s in R" % self.backend)
 
-
-    def getTables(self, pattern = None):
+    def getTables(self, pattern=None):
         """return a list of tables matching a *pattern*.
 
         This function does not return table views.

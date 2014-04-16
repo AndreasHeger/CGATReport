@@ -297,15 +297,21 @@ class TableBase(Renderer):
                    (id(self),
                     len(row_headers),
                     len(col_headers)))
+
+        is_hierarchical = isinstance(dataframe.index,
+                                     pandas.core.index.MultiIndex)
+
+        split = is_hierarchical and len(dataframe.index.levels) > 1
+
         quick = len(dataframe) > 10000
-        if quick:
+        if quick and not split:
             # quick writing, only append method works
             wb = openpyxl.Workbook(optimized_write=True)
 
             def fillWorksheet(ws, dataframe, title):
                 ws.append([""] + list(col_headers))
                 for x, row in enumerate(dataframe.iterrows()):
-                    ws.append([path2str(row_headers[x])] + list(row))
+                    ws.append([path2str(row[0])] + list(row[1]))
 
                 # patch: maximum title length seems to be 31
                 ws.title = title[:30]
@@ -346,12 +352,10 @@ class TableBase(Renderer):
                                         column=column)
                             c.value = value
                 # patch: maximum title length seems to be 31
-                ws.title = title[:30]
+                ws.title = re.sub("/", "_", title)[:30]
 
-        is_hierarchical = isinstance(dataframe.index,
-                                     pandas.core.index.MultiIndex)
-
-        split = is_hierarchical and len(dataframe.index.levels) > 1
+        if len(wb.worksheets) == 0:
+            wb.create_sheet()
 
         if split:
             # create separate worksheets for nested indices
@@ -362,18 +366,23 @@ class TableBase(Renderer):
 
             ws = wb.worksheets[0]
             ws.title = 'Summary'
-            ws.append([dataframe.index.labels[:nlevels - 1]] +
-                      ["Worksheet", "Rows"])
+            ws.append(
+                [""] * (nlevels - 1) + ["Worksheet", "Rows"])
 
             for row, path in enumerate(paths):
                 # select data frame as cross-section
                 work = dataframe.xs(path, axis=0)
-                title = path2str(path)[:30]
+                title = path2str(path)
+                if len(title) > 30:
+                    title = "sheet%i" % row
+
                 ws.append(list(path) + [title, len(work)])
                 c = ws.cell(row=row + 1,
                             column=nlevels)
-                c.hyperlink = "#%s" % title
-                fillWorksheet(wb.create_sheet(), work,
+                # this does not work in oocalc
+                c.hyperlink = "#%s!A1" % title
+                fillWorksheet(wb.create_sheet(),
+                              work,
                               title=title)
         else:
             fillWorksheet(wb.worksheets[0], dataframe,

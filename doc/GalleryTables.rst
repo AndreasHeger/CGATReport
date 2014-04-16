@@ -179,6 +179,14 @@ values` as a table in xls format to download
 
    XLS Tables
 
+The following is an example of XLS tables with a hierarchical
+index
+
+.. report:: Trackers.LabeledDataHierarchialExample
+   :render: xls-table
+
+   XLS Tables
+
 ==========
 html-table
 ==========

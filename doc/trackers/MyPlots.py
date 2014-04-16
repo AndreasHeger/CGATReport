@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 from SphinxReport.Tracker import *
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 
+
 def ExampleWithoutData():
     '''example taken from matplotlib gallery.'''
     N = 5
-    menMeans   = (20, 35, 30, 35, 27)
+    menMeans = (20, 35, 30, 35, 27)
     womenMeans = (25, 32, 34, 20, 25)
-    menStd     = (2, 3, 4, 1, 2)
-    womenStd   = (3, 5, 2, 3, 3)
+    menStd = (2, 3, 4, 1, 2)
+    womenStd = (3, 5, 2, 3, 3)
     ind = np.arange(N)    # the x locations for the groups
     width = 0.35       # the width of the bars: can also be len(x) sequence
 
@@ -20,28 +21,30 @@ def ExampleWithoutData():
 
     plt.ylabel('Scores')
     plt.title('Scores by group and gender')
-    plt.xticks(ind+width/2., ('G1', 'G2', 'G3', 'G4', 'G5'))
-    plt.yticks(np.arange(0,81,10))
+    plt.xticks(ind + width / 2., ('G1', 'G2', 'G3', 'G4', 'G5'))
+    plt.yticks(np.arange(0, 81, 10))
     plt.legend((p1[0], p2[0]), ('Men', 'Women'))
 
     # return a place holder for this figure
     return ResultBlocks(
         ResultBlock("#$mpl 1$#\n", ""),
-        title = "MyTitle")
+        title="MyTitle")
+
 
 def ExampleData1():
     return odict((
-            ("menMeans", (20, 35, 30, 35, 27),),
-            ("womenMeans", (25, 32, 34, 20, 25),),
-            ("menStd", (2, 3, 4, 1, 2),),
-            ("womenStd", (3, 5, 2, 3, 3)),) )
+        ("menMeans", (20, 35, 30, 35, 27),),
+        ("womenMeans", (25, 32, 34, 20, 25),),
+        ("menStd", (2, 3, 4, 1, 2),),
+        ("womenStd", (3, 5, 2, 3, 3)),))
+
 
 def ExampleData2():
     return odict((
-            ("menMeans", (30, 25, 20, 25, 17),),
-            ("womenMeans", (15, 12, 24, 10, 15),),
-            ("menStd", (2, 1, 2, 1, 2),),
-            ("womenStd", (1, 2, 2, 4, 3)),) )
+        ("menMeans", (30, 25, 20, 25, 17),),
+        ("womenMeans", (15, 12, 24, 10, 15),),
+        ("menStd", (2, 1, 2, 1, 2),),
+        ("womenStd", (1, 2, 2, 4, 3)),))
 
 
 def ExampleWithData(data, path):
@@ -67,11 +70,11 @@ def ExampleWithData(data, path):
 
     plt.ylabel('Scores')
     plt.title('Scores by group and gender')
-    plt.xticks(ind+width/2., ('G1', 'G2', 'G3', 'G4', 'G5'))
-    plt.yticks(np.arange(0,81,10))
+    plt.xticks(ind + width / 2., ('G1', 'G2', 'G3', 'G4', 'G5'))
+    plt.yticks(np.arange(0, 81, 10))
     plt.legend((p1[0], p2[0]), ('Men', 'Women'))
 
     # return a place holder for this figure
     return ResultBlocks(
         ResultBlock("#$mpl 0$#\n", ""),
-        title = "MyTitle")
+        title="MyTitle")
