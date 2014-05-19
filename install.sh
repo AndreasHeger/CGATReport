@@ -85,8 +85,6 @@ fi # if-OS
 } # install_os_packages
 
 # funcion to install Python dependencies
-# by default in $HOME/CGAT
-# otherwise, in $CGAT_HOME
 install_python_deps() {
 
 if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
@@ -98,7 +96,7 @@ if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
    # Go to CGAT_HOME to continue with installation
    if [ -z "$CGAT_HOME" ] ; then
       # install in default location
-      CGAT_HOME=$HOME/CGAT-DEPS
+      CGAT_HOME=$HOME/SPHINXREPORT
    fi
 
    # Build Python 2.7.5
@@ -167,8 +165,8 @@ else
 fi # if-OS
 } # install_python_deps
 
-# function to run nosetests
-run_nosetests() {
+# function to run tests
+run_tests() {
 
 if [ "$OS" == "travis" ] ; then
 
@@ -179,35 +177,17 @@ if [ "$OS" == "travis" ] ; then
    cd $INIT_DIR
    export PYTHONPATH=$PYTHONPATH:$INIT_DIR
 
-   # bx-python
-   export C_INCLUDE_PATH=/home/travis/virtualenv/python2.7/local/lib/python2.7/site-packages/numpy/core/include
-
    python setup.py install
-
    cd doc
    make html	
 
 elif [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
 
    # prepare external dependencies
-   nosetests_external_deps $OS
-
-   # Go to CGAT_GITHUB to continue with installation
-   if [ -z "$CGAT_GITHUB" ] ; then
-      # install in default location
-      CGAT_GITHUB=$HOME/CGAT-GITHUB
-   fi
-
-   # clone CGAT repository to run nosetests
-   git clone https://github.com/CGATOxford/cgat.git $CGAT_GITHUB
-   cd $CGAT_GITHUB
+   tests_external_deps $OS
 
    # Set up other environment variables
-   export PYTHONPATH=$PYTHONPATH:$CGAT_GITHUB
    source $CGAT_HOME/virtualenv-1.10.1/cgat-venv/bin/activate
-
-   # bx-python
-   export C_INCLUDE_PATH=$CGAT_HOME/virtualenv-1.10.1/cgat-venv/lib/python2.7/site-packages/numpy/core/include
 
    python setup.py install
    cd doc
@@ -219,7 +199,7 @@ else
 
 fi # if-OS
 
-} # run_nosetests
+} # run_tests
 
 # function to display help message
 help_message() {
@@ -243,16 +223,16 @@ else
 fi 
 echo " cgat --help "
 echo
-echo " The CGAT Code Collection tests the software with nosetests. If you are interested in running those, please continue with the following steps:"
+echo " The CGAT Code Collection tests the software with tests. If you are interested in running those, please continue with the following steps:"
 echo
 echo " 3) Become root to install external tools and set up the environment: "
-echo " ./install-CGAT-tools.sh --install-nosetests-deps"
+echo " ./install-CGAT-tools.sh --install-tests-deps"
 echo
-echo " 4) Then, back again as a normal user (non root), run nosetests as follows:"
-echo " ./install-CGAT-tools.sh --run-nosetests"
+echo " 4) Then, back again as a normal user (non root), run tests as follows:"
+echo " ./install-CGAT-tools.sh --run-tests"
 echo 
 echo " This will clone the CGAT repository from GitHub to: $HOME/CGAT-GITHUB by default. If you want to change that use --git-hub-dir as follows:"
-echo " ./install-CGAT-tools.sh --run-nosetests --git-hub-dir /path/to/folder"
+echo " ./install-CGAT-tools.sh --run-tests --git-hub-dir /path/to/folder"
 echo
 echo " NOTES: "
 echo " * Supported operating systems: Ubuntu 12.x and Scientific Linux 6.x "
@@ -276,17 +256,17 @@ TRAVIS=
 OS_PKGS=
 # install Python dependencies
 PY_PKGS=
-# install dependencies to run nosetests
+# install dependencies to run tests
 NT_PKGS=
-# run nosetests
+# run tests
 NT_RUN=
 # variable to actually store the input parameters
 INPUT_ARGS=$(getopt -n "$0" -o ht1234g:c: --long "help,
                                                   travis,
                                                   install-os-packages,
                                                   install-python-deps,
-                                                  install-nosetests-deps,
-                                                  run-nosetests,
+                                                  install-tests-deps,
+                                                  run-tests,
                                                   git-hub-dir:,
                                                   cgat-deps-dir:"  -- "$@")
 eval set -- "$INPUT_ARGS"
@@ -314,12 +294,12 @@ do
       PY_PKGS=1
       shift ;
 
-  elif [ "$1" == "-3" -o "$1" == "--install-nosetests-deps" ] ; then
+  elif [ "$1" == "-3" -o "$1" == "--install-tests-deps" ] ; then
 
       NT_PKGS=1
       shift ;
 
-  elif [ "$1" == "-4" -o "$1" == "--run-nosetests" ] ; then
+  elif [ "$1" == "-4" -o "$1" == "--run-tests" ] ; then
 
       NT_RUN=1
       shift ;
@@ -349,7 +329,7 @@ if [ "$TRAVIS" == "1" ] ; then
   OS="travis"
   install_os_packages
   install_python_deps
-  run_nosetests
+  run_tests
 
 else 
 
@@ -369,13 +349,13 @@ else
 
   if [ "$NT_PKGS" == "1" ] ; then
 
-    install_nosetests_deps
+    install_tests_deps
 
   fi
 
   if [ "$NT_RUN" == "1" ] ; then
 
-    run_nosetests
+    run_tests
 
   fi
 
