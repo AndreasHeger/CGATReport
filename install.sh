@@ -129,6 +129,7 @@ if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
    pip install numpy
    pip install matplotlib
    pip install scipy
+   pip install patsy
    pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
    pip install --upgrade setuptools ;
 
@@ -155,6 +156,7 @@ elif [ "$OS" == "travis" ] ; then
    pip install numpy
    pip install matplotlib
    pip install scipy
+   pip install patsy
    pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
    pip install --upgrade setuptools ;
 
