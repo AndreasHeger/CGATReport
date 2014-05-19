@@ -692,13 +692,14 @@ class MatrixBase:
             "add-column-total": self.transformAddColumnTotal,
             "sort": self.transformSort,
         }
-
+        self.tofloat = False
         self.converters = []
         if "transform-matrix" in kwargs:
             for kw in [x.strip() for x in
                        kwargs["transform-matrix"].split(",")]:
                 if kw.startswith("normalized"):
                     self.format = "%6.4f"
+                    self.tofloat = True
                 try:
                     self.converters.append(self.mMapKeywordToTransform[kw])
                 except KeyError:
@@ -905,7 +906,7 @@ class MatrixBase:
         nrows, ncols = matrix.shape
 
         for x in range(nrows):
-            m = max(matrix[x,:])
+            m = max(matrix[x, :])
             if m != 0:
                 for y in range(ncols):
                     matrix[x, y] /= m
@@ -1028,10 +1029,14 @@ class TableMatrix(TableBase, MatrixBase):
     options = TableBase.options +\
         (('transform-matrix', directives.unchanged),)
 
+    # wether or not to convert matrix to float
+    tofloat = False
+
     def __init__(self, *args, **kwargs):
 
         TableBase.__init__(self, *args, **kwargs)
         MatrixBase.__init__(self, *args, **kwargs)
+
 
     def buildMatrix(self,
                     dataframe,
@@ -1059,6 +1064,10 @@ class TableMatrix(TableBase, MatrixBase):
         matrix = dataframe.as_matrix()
 
         if self.converters and apply_transformations:
+            # convert to float for conversions
+            if self.tofloat:
+                matrix = numpy.matrix(matrix, dtype=numpy.float)
+
             for converter in self.converters:
                 self.debug("applying converter %s" % converter)
                 matrix, rows, columns = converter(matrix, rows, columns)

@@ -4,16 +4,8 @@ language: python
 python:
   - "2.7"
 
-before_install:
-  - chmod +x setup-DEBs.sh
-  - sudo ./setup-DEBs.sh
-
-install:
-  - chmod +x setup-DEBs.sh
-  - sudo ./setup-Python.sh
-
 script: 
-  - python setup.py install
+   - ./install.sh --travis
 
 notifications:
   email:

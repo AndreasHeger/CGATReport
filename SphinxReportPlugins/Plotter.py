@@ -213,7 +213,8 @@ class Plotter(object):
         self.mCurrentFigure = plt.figure(num = self.mFigure)
         # , **self.mMPLFigureOptions)
 
-        if self.title:  plt.title(self.title)
+        if self.title:
+            plt.title(self.title)
 
         return self.mCurrentFigure
 
@@ -457,6 +458,7 @@ class Plotter(object):
                                       currentAxesPos.width,
                                       currentAxesPos.height -offset))
 
+
 class PlotterMatrix(Plotter):
     """Plot a matrix.
 
@@ -510,7 +512,7 @@ class PlotterMatrix(Plotter):
         self.label_cols = "nolabel-cols" not in kwargs
 
     def addColourBar(self):
-        plt.colorbar(format = self.mBarFormat)
+        plt.colorbar(format=self.mBarFormat)
 
     def buildWrappedHeaders(self, headers):
         """build headers. Long headers are split using
@@ -558,7 +560,9 @@ class PlotterMatrix(Plotter):
 
         return fontsize, headers
 
-    def plotMatrix(self, matrix, row_headers, col_headers, vmin, vmax, color_scheme = None):
+    def plotMatrix(self, matrix, row_headers, col_headers,
+                   vmin, vmax,
+                   color_scheme=None):
 
         self.debug("plot matrix started")
 
@@ -567,41 +571,39 @@ class PlotterMatrix(Plotter):
         # better would be to move the axes as well to the left of
         # the figure.
         if len(row_headers) > 2 * len(col_headers):
-            r = float(len(row_headers)) /  len(col_headers) * 0.5
-            w,h = self.mCurrentFigure.get_size_inches()
+            r = float(len(row_headers)) / len(col_headers) * 0.5
+            w, h = self.mCurrentFigure.get_size_inches()
             self.mCurrentFigure.set_size_inches(w, h * r)
         elif len(col_headers) > 2 * len(row_headers):
-            r = float(len(col_headers)) /  len(row_headers)
-            w,h = self.mCurrentFigure.get_size_inches() * 0.5
+            r = float(len(col_headers)) / len(row_headers)
+            w, h = self.mCurrentFigure.get_size_inches() * 0.5
             self.mCurrentFigure.set_size_inches(w * r, h)
 
         plot = plt.imshow(matrix,
                           cmap=color_scheme,
                           origin='lower',
-                          vmax = vmax,
-                          vmin = vmin,
+                          vmax=vmax,
+                          vmin=vmin,
                           interpolation='nearest')
-
 
         # offset=0: x=center,y=center
         # offset=0.5: y=top/x=right
         offset = 0.0
 
         if self.label_rows:
-            row_headers = [ str(x) for x in row_headers ]
+            row_headers = [str(x) for x in row_headers]
             yfontsize, row_headers = self.mFontSize, row_headers
-            plt.yticks([ offset + y for y in range(len(row_headers)) ],
-                        row_headers,
-                        fontsize=yfontsize)
+            plt.yticks([offset + y for y in range(len(row_headers))],
+                       row_headers,
+                       fontsize=yfontsize)
 
         if self.label_cols:
-            col_headers = [ str(x) for x in col_headers ]
+            col_headers = [str(x) for x in col_headers]
             xfontsize, col_headers = self.mFontSize, col_headers
-            plt.xticks([ offset + x for x in range(len(col_headers)) ],
-                        col_headers,
-                        rotation="vertical",
-                        fontsize=xfontsize)
-
+            plt.xticks([offset + x for x in range(len(col_headers))],
+                       col_headers,
+                       rotation="vertical",
+                       fontsize=xfontsize)
 
         self.debug("plot matrix finished")
 
@@ -620,10 +622,12 @@ class PlotterMatrix(Plotter):
         nrows, ncols = matrix.shape
         if self.zrange:
             vmin, vmax = self.zrange
-            if vmin == None: vmin = matrix.min()
-            if vmax == None: vmax = matrix.max()
-            matrix[ matrix < vmin ] = vmin
-            matrix[ matrix > vmax ] = vmax
+            if vmin is None:
+                vmin = matrix.min()
+            if vmax is None:
+                vmax = matrix.max()
+            matrix[matrix < vmin] = vmin
+            matrix[matrix > vmax] = vmax
         else:
             vmin, vmax = None, None
 
@@ -643,12 +647,12 @@ class PlotterMatrix(Plotter):
         split_row = self.mMaxRows > 0 and nrows > self.mMaxRows
         split_col = self.mMaxCols > 0 and ncols > self.mMaxCols
 
-
         if (split_row and split_col) or not (split_row or split_col):
             self.debug("not splitting matrix")
             # do not split small or symmetric matrices
 
-            cax = self.plotMatrix(matrix, row_headers, col_headers, vmin, vmax, color_scheme)
+            cax = self.plotMatrix(matrix, row_headers, col_headers,
+                                  vmin, vmax, color_scheme)
             plots.append(cax)
             # plots, labels = None, None
             self.rescaleForVerticalLabels(col_headers, cliplen = 12)
@@ -657,24 +661,27 @@ class PlotterMatrix(Plotter):
             if False:
                 plot_nrows = int(math.ceil(float(nrows) / self.mMaxRows))
                 plot_ncols = int(math.ceil(float(ncols) / self.mMaxCols))
-                new_row_headers = [ "R%s" % (x + 1) for x in range(len(row_headers))]
-                new_col_headers = [ "C%s" % (x + 1) for x in range(len(col_headers))]
+                #new_row_headers = ["R%s" % (x + 1) for x in range(len(row_headers))]
+                #new_col_headers = ["C%s" % (x + 1) for x in range(len(col_headers))]
+                new_row_headers = row_headers
+                new_col_headers = col_headers
                 nplot = 1
                 for row in range(plot_nrows):
                     for col in range(plot_ncols):
                         plt.subplot(plot_nrows, plot_ncols, nplot)
                         nplot += 1
                         row_start = row * self.mMaxRows
-                        row_end = row_start+min(plot_nrows,self.mMaxRows)
+                        row_end = row_start + min(plot_nrows, self.mMaxRows)
                         col_start = col * self.mMaxRows
-                        col_end = col_start+min(plot_ncols,self.mMaxCols)
-                        self.plotMatrix(matrix[row_start:row_end,col_start:col_end],
-                                         new_row_headers[row_start:row_end],
-                                         new_col_headers[col_start:col_end],
-                                         vmin, vmax,
-                                         color_scheme)
+                        col_end = col_start + min(plot_ncols, self.mMaxCols)
+                        self.plotMatrix(
+                            matrix[row_start:row_end, col_start:col_end],
+                            new_row_headers[row_start:row_end],
+                            new_col_headers[col_start:col_end],
+                            vmin, vmax,
+                            color_scheme)
 
-                labels = ["%s: %s" % x for x in zip(new_headers, row_headers) ]
+                labels = ["%s: %s" % x for x in zip(new_headers, row_headers)]
                 self.legend_location = "extra"
                 plt.subplots_adjust(**self.mMPLSubplotOptions)
 
@@ -684,16 +691,18 @@ class PlotterMatrix(Plotter):
             if not self.zrange:
                 vmin, vmax = matrix.min(), matrix.max()
             nplots = int(math.ceil(float(nrows) / self.mMaxRows))
-            new_headers = [ "%s" % (x + 1) for x in range(len(row_headers))]
+            # not sure why this switch to numbers - disable
+            # new_headers = ["%s" % (x + 1) for x in range(len(row_headers))]
+            new_headers = row_headers
             for x in range(nplots):
                 plt.subplot(1, nplots, x+1)
                 start = x * self.mMaxRows
-                end = start+min(nrows,self.mMaxRows)
-                cax = self.plotMatrix(matrix[start:end,:],
-                                       new_headers[start:end],
-                                       col_headers,
-                                       vmin, vmax,
-                                       color_scheme)
+                end = start + min(nrows, self.mMaxRows)
+                cax = self.plotMatrix(matrix[start:end, :],
+                                      new_headers[start:end],
+                                      col_headers,
+                                      vmin, vmax,
+                                      color_scheme)
                 plots.append(cax)
             # labels = ["%s: %s" % x for x in zip(new_headers, row_headers) ]
 
@@ -706,16 +715,18 @@ class PlotterMatrix(Plotter):
             if not self.zrange:
                 vmin, vmax = matrix.min(), matrix.max()
             nplots = int(math.ceil(float(ncols) / self.mMaxCols))
-            new_headers = [ "%s" % (x + 1) for x in range(len(col_headers))]
+            # not sure why this switch to numbers - disable
+            # new_headers = ["%s" % (x + 1) for x in range(len(col_headers))]
+            new_headers = col_headers
             for x in range(nplots):
                 plt.subplot(nplots, 1, x+1)
                 start = x * self.mMaxCols
-                end = start+min(ncols,self.mMaxCols)
-                cax = self.plotMatrix(matrix[:,start:end],
-                                       row_headers,
-                                       new_headers[start:end],
-                                       vmin, vmax,
-                                       color_scheme)
+                end = start+min(ncols, self.mMaxCols)
+                cax = self.plotMatrix(matrix[:, start:end],
+                                      row_headers,
+                                      new_headers[start:end],
+                                      vmin, vmax,
+                                      color_scheme)
                 plots.append(cax)
             # labels = ["%s: %s" % x for x in zip(new_headers, col_headers) ]
 
@@ -814,7 +825,7 @@ class PlotterHinton(PlotterMatrix):
 
         scale = vmax - vmin
 
-        if self.colour_matrix != None:
+        if self.colour_matrix is not None:
             colour_matrix = self.colour_matrix
         else:
             colour_matrix = weight_matrix
@@ -1358,6 +1369,7 @@ class HistogramGradientPlot(LinePlot):
         cax = plt.axes([0.85, 0.1, 0.075, 0.8])
         plt.colorbar(cax=cax, format=self.mBarFormat)
 
+
 class BarPlot(TableMatrix, Plotter):
     '''A bar plot.
 
@@ -1367,15 +1379,15 @@ class BarPlot(TableMatrix, Plotter):
 
     options = TableMatrix.options + Plotter.options +\
         (('label', directives.unchanged),
-          ('error', directives.unchanged),
-          ('colour', directives.unchanged),
-          ('transparency', directives.unchanged),
-          ('bottom-value', directives.unchanged),
-          ('orientation', directives.unchanged),
-          ('first-is-offset', directives.unchanged),
-          ('switch', directives.unchanged),
-          ('bar-width', directives.unchanged),
-          )
+         ('error', directives.unchanged),
+         ('colour', directives.unchanged),
+         ('transparency', directives.unchanged),
+         ('bottom-value', directives.unchanged),
+         ('orientation', directives.unchanged),
+         ('first-is-offset', directives.unchanged),
+         ('switch', directives.unchanged),
+         ('bar-width', directives.unchanged),
+        )
 
     # column to use for error bars
     error = None
@@ -1418,10 +1430,12 @@ class BarPlot(TableMatrix, Plotter):
         self.colour = kwargs.get("colour", None)
         self.switch_row_col = 'switch' in kwargs
         self.transparency = kwargs.get("transparency", None)
-        if self.transparency: raise NotImplementedError("transparency not implemented yet")
+        if self.transparency:
+            raise NotImplementedError("transparency not implemented yet")
         self.orientation = kwargs.get('orientation', 'vertical')
+
         if 'bar-width' in kwargs:
-            self.bar_width = float(kwargs.get('bar-width') )
+            self.bar_width = float(kwargs.get('bar-width'))
 
         if self.orientation == 'vertical':
             self.plotf = plt.bar
@@ -1434,23 +1448,28 @@ class BarPlot(TableMatrix, Plotter):
         self.bottom_value = kwargs.get("bottom-value", None)
         self.first_is_offset = 'first-is-offset' in kwargs
 
-        self.bar_patterns = list(itertools.product(self.mPatterns, self.format_colors))
+        self.bar_patterns = list(itertools.product(self.mPatterns,
+                                                   self.format_colors))
+
 
     def addLabels(self, xvals, yvals, labels):
         '''add labels at x,y at current plot.
         '''
 
         def coord_offset(ax, fig, x, y):
-            return matplotlib.transforms.offset_copy(ax.transData, fig, x=x, y=y, units='dots')
+            return matplotlib.transforms.offset_copy(
+                ax.transData,
+                fig, x=x, y=y, units='dots')
 
         if self.orientation == 'horizontal':
-            xvals,yvals=yvals,xvals
+            xvals, yvals = yvals, xvals
 
         ax = plt.gca()
-        trans=coord_offset(ax, self.mCurrentFigure,
-                           self.label_offset_x,
-                           self.label_offset_y)
-        for xval, yval, label in zip(xvals,yvals,labels):
+        trans = coord_offset(ax, self.mCurrentFigure,
+                             self.label_offset_x,
+                             self.label_offset_y)
+
+        for xval, yval, label in zip(xvals, yvals, labels):
             ax.text(xval, yval, label, transform=trans)
 
     def buildMatrices(self, dataframe):
@@ -1460,25 +1479,30 @@ class BarPlot(TableMatrix, Plotter):
         is transposed.
         '''
 
-        self.error_matrix = None
-        self.label_matrix = None
-        self.colour_matrix = None
-        self.transparency_matrix = None
+        def _getMatrix(l, dataframe):
+            if l is None:
+                return None
+            m = dataframe[l]
+            try:
+                m = m.unstack()
+                return m.as_matrix()
+            except AttributeError:
+                # is not a multi-index object, no need to unstack
+                m = m.as_matrix()
+                m.shape = len(m), 1
+                return m
 
-        if self.error:
-            self.error_matrix = dataframe[self.error].unstack().as_matrix()
-        elif self.label:
-            self.label_matrix = dataframe[self.label].unstack().as_matrix()
-        elif self.colour:
-            self.colour_matrix = dataframe[self.label].unstack().as_matrix()
-        elif self.transparency:
-            self.transparency_matrix = dataframe[transparancy].unstack().as_matrix()
+        self.error_matrix = _getMatrix(self.error, dataframe)
+        self.label_matrix = _getMatrix(self.label, dataframe)
+        self.colour_matrix = _getMatrix(self.colour, dataframe)
+        self.transparency_matrix = _getMatrix(self.transparency, dataframe)
 
+        # remove the special columns
         if self.error or self.label or self.colour or self.transparency:
-            # remove the special columns
-            dataframe = dataframe[ [ x for x in dataframe.columns \
-                                         if x not in (self.error, self.label,
-                                                      self.colour, self.transparency) ] ]
+            dataframe = dataframe[
+                [x for x in dataframe.columns
+                 if x not in (self.error, self.label,
+                              self.colour, self.transparency)]]
 
         # take first of the remaining columns ignoring the rest
         try:
@@ -1492,26 +1516,33 @@ class BarPlot(TableMatrix, Plotter):
         self.data_matrix = df.as_matrix()
 
         if self.switch_row_col or self.data_matrix.shape[0] == 1:
-            if self.data_matrix != None: self.data_matrix = self.data_matrix.transpose()
-            if self.error_matrix != None: self.error_matrix = self.error_matrix.transpose()
-            if self.label_matrix != None: self.label_matrix = self.label_matrix.transpose()
-            if self.colour_matrix != None: self.colour_matrix = self.colour_matrix.transpose()
-            if self.transparency_matrix != None: self.transparency_matrix = self.transparency_matrix.transpose()
+            if self.data_matrix is not None:
+                self.data_matrix = self.data_matrix.transpose()
+            if self.error_matrix is not None:
+                self.error_matrix = self.error_matrix.transpose()
+            if self.label_matrix is not None:
+                self.label_matrix = self.label_matrix.transpose()
+            if self.colour_matrix is not None:
+                self.colour_matrix = self.colour_matrix.transpose()
+            if self.transparency_matrix is not None:
+                self.transparency_matrix = self.transparency_matrix.transpose()
             self.rows, self.columns = self.columns, self.rows
 
     def getColour(self, idx, column):
         '''return hatch and colour.'''
 
-        if self.transparency_matrix != None:
-            alpha = self.transparency_matrix[:,column]
+        if self.transparency_matrix is not None:
+            alpha = self.transparency_matrix[:, column]
         else:
             alpha = None
 
-        if self.colour_matrix != None:
-            color = self.colour_matrix[:,column]
+        # the colour plotting has a problem with arrays, return
+        # a list
+        if self.colour_matrix is not None:
+            color = list(self.colour_matrix[:, column])
             hatch = None
         else:
-            hatch, color = self.bar_patterns[ idx % len(self.bar_patterns) ]
+            hatch, color = self.bar_patterns[idx % len(self.bar_patterns)]
         return hatch, color, alpha
 
     def addTicks(self, xvals):
@@ -1556,7 +1587,7 @@ class BarPlot(TableMatrix, Plotter):
             hatch, color, alpha = self.getColour(y, column)
             alpha = 1.0 / (len(plts)+1)
 
-            if self.bottom_value != None:
+            if self.bottom_value is not None:
                 bottom = float(self.bottom_value)
             else:
                 bottom = None
@@ -1572,7 +1603,7 @@ class BarPlot(TableMatrix, Plotter):
                                      )[0])
 
 
-            if self.label and self.label_matrix != None:
+            if self.label and self.label_matrix is not None:
                 self.addLabels(xvals, vals, self.label_matrix[:,column])
 
             y += 1
@@ -1580,6 +1611,7 @@ class BarPlot(TableMatrix, Plotter):
         self.addTicks(xvals)
 
         return self.endPlot(plts, self.columns, path)
+
 
 class InterleavedBarPlot(BarPlot):
     """A plot with interleaved bars.
@@ -1604,41 +1636,44 @@ class InterleavedBarPlot(BarPlot):
 
         # plot by row
         row = 0
-        for column,header in enumerate(self.columns):
+        for column, header in enumerate(self.columns):
 
-            vals = self.data_matrix[:,column]
-            if self.error: error = self.error_matrix[:,column]
+            vals = self.data_matrix[:, column]
+            if self.error:
+                error = self.error_matrix[:, column]
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
             if numpy.isnan(vals[0]) or numpy.isinf(vals[0]):
                 vals[0] = 0
-
             hatch, color, alpha = self.getColour(row, column)
 
-            if self.bottom_value != None:
+            if self.bottom_value is not None:
                 bottom = float(self.bottom_value)
             else:
                 bottom = None
 
             kwargs = {}
-            if self.orientation == 'vertical': kwargs['bottom'] = bottom
-            else: kwargs['left'] = bottom
+            if self.orientation == 'vertical':
+                kwargs['bottom'] = bottom
+            else:
+                kwargs['left'] = bottom
 
             plts.append(self.plotf(xvals + offset,
-                                     vals,
-                                     width,
-                                     yerr = error,
-                                     align = "edge",
-                                     ecolor = "black",
-                                     color = color,
-                                     hatch = hatch,
-                                     alpha = alpha,
-                                     **kwargs
-                                     )[0])
+                                   vals,
+                                   width,
+                                   yerr=error,
+                                   align="edge",
+                                   ecolor="black",
+                                   color=color,
+                                   hatch=hatch,
+                                   alpha=alpha,
+                                   **kwargs)[0])
 
-            if self.label and self.label_matrix != None:
-                self.addLabels(xvals+offset, vals, self.label_matrix[:,column])
+            if self.label and self.label_matrix is not None:
+                self.addLabels(xvals + offset,
+                               vals,
+                               self.label_matrix[:, column])
 
             offset += width
             row += 1
@@ -1701,17 +1736,17 @@ class StackedBarPlot(BarPlot):
             hatch, color, alpha = self.getColour(y, column - colour_offset)
 
             plts.append(self.plotf(xvals,
-                                     vals,
-                                     self.bar_width,
-                                     yerr = error,
-                                     color = color,
-                                     hatch = hatch,
-                                     alpha = alpha,
-                                     ecolor = "black",
-                                     **kwargs) [0])
+                                   vals,
+                                   self.bar_width,
+                                   yerr=error,
+                                   color=color,
+                                   hatch=hatch,
+                                   alpha=alpha,
+                                   ecolor="black",
+                                   **kwargs)[0])
 
-            if self.label and self.label_matrix != None:
-                self.addLabels(xvals, vals, self.label_matrix[:,column])
+            if self.label and self.label_matrix is not None:
+                self.addLabels(xvals, vals, self.label_matrix[:, column])
 
             legend.append(header)
             sums += vals
@@ -1720,6 +1755,7 @@ class StackedBarPlot(BarPlot):
         self.addTicks(xvals)
 
         return self.endPlot(plts, legend, path)
+
 
 class DataSeriesPlot(Renderer, Plotter):
     """Plot one or more data series within a single plot.
@@ -1739,10 +1775,9 @@ class DataSeriesPlot(Renderer, Plotter):
     def render(self, dataframe, path):
 
         plts, legend = [], []
-        all_data = []
 
         self.startPlot()
-        plts.extend(self.plotData(dataframe, legend) )
+        plts.extend(self.plotData(dataframe, legend))
         self.updatePlot(dataframe.columns)
 
         return self.endPlot(plts, None, path)
@@ -1872,9 +1907,10 @@ class PiePlot(MultipleSeriesPlot):
                                       (sorted_vals[0]+ sum(sorted_vals[1:]), sum(sorted_vals[1:])) )
             labels[0] = self.mFirstIsTotal
 
-        return self.endPlot(plt.pie(sorted_vals, labels = labels),
-                             None,
-                             path)
+        return self.endPlot(plt.pie(sorted_vals, labels=labels),
+                            None,
+                            path)
+
 
 class TableMatrixPlot(TableMatrix, PlotterMatrix):
     """Render a matrix as a matrix plot.
@@ -1895,6 +1931,7 @@ class TableMatrixPlot(TableMatrix, PlotterMatrix):
 
 # for compatibility
 MatrixPlot = TableMatrixPlot
+
 
 class NumpyMatrixPlot(NumpyMatrix, PlotterMatrix):
     """Render a matrix as a matrix plot.
@@ -2215,19 +2252,23 @@ class ScatterPlotWithColor(ScatterPlot):
     """
     options = Renderer.options + Plotter.options +\
         (('palette', directives.unchanged),
-          ('reverse-palette', directives.flag),
-          ('colorbar-format', directives.unchanged))
+         ('reverse-palette', directives.flag),
+         ('colorbar-format', directives.unchanged))
 
     nlevels = 2
 
     def __init__(self, *args, **kwargs):
         ScatterPlot.__init__(self, *args, **kwargs)
 
-        try: self.mBarFormat = kwargs["colorbar-format"]
-        except KeyError: self.mBarFormat = "%1.1f"
+        try:
+            self.mBarFormat = kwargs["colorbar-format"]
+        except KeyError:
+            self.mBarFormat = "%1.1f"
 
-        try: self.mPalette = kwargs["palette"]
-        except KeyError: self.mPalette = "jet"
+        try:
+            self.mPalette = kwargs["palette"]
+        except KeyError:
+            self.mPalette = "jet"
 
         self.mReversePalette = "reverse-palette" in kwargs
 
@@ -2250,7 +2291,8 @@ class ScatterPlotWithColor(ScatterPlot):
         plts, legend = [], []
         xlabels, ylabels = [], []
 
-        assert len(dataframe.columns) >= 3, "expected at least three columns, got %i: %s" % (dataframe.columns)
+        assert len(dataframe.columns) >= 3, \
+            "expected at least three columns, got %i: %s" % (dataframe.columns)
 
         xcolumn, ycolumn, zcolumn = dataframe.columns[:3]
 
@@ -2265,8 +2307,8 @@ class ScatterPlotWithColor(ScatterPlot):
         if self.zrange:
             vmin, vmax = self.zrange
             zvals = numpy.array(zvals)
-            zvals[ zvals < vmin ] = vmin
-            zvals[ zvals > vmax ] = vmax
+            zvals[zvals < vmin] = vmin
+            zvals[zvals > vmax] = vmax
         else:
             vmin, vmax = None, None
 
@@ -2275,24 +2317,24 @@ class ScatterPlotWithColor(ScatterPlot):
         # plt.scatter does not permitting setting
         # options in rcParams, so all is explict
         plts.append(plt.scatter(xvalues,
-                                 yvalues,
-                                 marker = marker,
-                                 s = self.markersize,
-                                 c = zvalues,
-                                 linewidths = self.markeredgewidth,
-                                 cmap = color_scheme,
-                                 vmax = vmax,
-                                 vmin = vmin) )
+                                yvalues,
+                                marker=marker,
+                                s=self.markersize,
+                                c=zvalues,
+                                linewidths=self.markeredgewidth,
+                                cmap=color_scheme,
+                                vmax=vmax,
+                                vmin=vmin))
 
         nplotted += 1
 
         xlabels.append(xcolumn)
         ylabels.append(ycolumn)
-        cb = plt.colorbar(format = self.mBarFormat)
+        cb = plt.colorbar(format=self.mBarFormat)
         cb.ax.set_xlabel(zcolumn)
 
-        plt.xlabel(":".join(set(xlabels)) )
-        plt.ylabel(":".join(set(ylabels)) )
+        plt.xlabel(":".join(set(xlabels)))
+        plt.ylabel(":".join(set(ylabels)))
 
         return self.endPlot(plts, None, path)
 
@@ -2310,7 +2352,8 @@ class VennPlot(MultipleSeriesPlot):
 
     The dictionary should contain the elements
     * ('10', '01', and '11') for a two-circle Venn diagram.
-    * ('100', '010', '110', '001', '101', '011', '111') for a three-circle Venn diagram.
+    * ('100', '010', '110', '001', '101', '011', '111')
+      for a three-circle Venn diagram.
 
     When plotting, the function looks for the first 3 or 7 element dictionary
     and the first 3 or 7 element list.
@@ -2328,7 +2371,7 @@ class VennPlot(MultipleSeriesPlot):
 
     def plot(self, dataseries, path):
 
-        if matplotlib_venn == None:
+        if matplotlib_venn is None:
             raise ValueError("library matplotlib_venn not available")
 
         plts = []
@@ -2343,7 +2386,7 @@ class VennPlot(MultipleSeriesPlot):
             setlabels = subsets["labels"]
             del subsets["labels"]
 
-        if subsets == None:
+        if subsets is None:
             self.warn("no suitable data for Venn diagram at %s" % str(path))
             return self.endPlot(plts, None, path)
 
@@ -2353,21 +2396,26 @@ class VennPlot(MultipleSeriesPlot):
                 return self.endPlot(plts, None, path)
 
             if setlabels:
-                if len(setlabels) != 2: raise ValueError("require two labels, got %i" % len(setlabels))
+                if len(setlabels) != 2:
+                    raise ValueError("require two labels, got %i" %
+                                     len(setlabels))
             plts.append(matplotlib_venn.venn2(subsets,
-                                                set_labels = setlabels) )
+                                              set_labels=setlabels))
         elif len(subsets) == 7:
             if 0 in (subsets['100'], subsets['010'], subsets['001']):
                 self.warn("empty sets for Venn diagram at %s" % str(path))
                 return self.endPlot(plts, None, path)
 
             if setlabels:
-                if len(setlabels) != 3: raise ValueError("require three labels, got %i" % len(setlabels))
+                if len(setlabels) != 3:
+                    raise ValueError("require three labels, got %i" %
+                                     len(setlabels))
             plts.append(matplotlib_venn.venn3(subsets,
-                                                set_labels = setlabels) )
+                                              set_labels=setlabels))
         else:
-            raise ValueError("require 3 or 7 values for a Venn diagramm, got %i" % len(subsets))
+            raise ValueError(
+                "require 3 or 7 values for a Venn diagramm, got %i" %
+                len(subsets))
 
         return self.endPlot(plts, None, path)
-
 
