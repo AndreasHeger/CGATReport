@@ -123,13 +123,21 @@ if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
    source cgat-venv/bin/activate
 
    # Install Python prerequisites
+   echo "installing cython"
    pip -q install cython
+   echo "installing numpy"
    pip -q install numpy
+   echo "installing matplotlib"
    pip -q install matplotlib
+   echo "installing scipy"
    pip -q install scipy
+   echo "installing patsy"
    pip -q install patsy
+   echo "installing pandas"
    pip -q install pandas
-   pip -q install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
+   echo "installing remaining dependencies"
+   pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
+   echo "upgrading setuptools"
    pip -q install --upgrade setuptools ;
 
    # Print help message
@@ -151,13 +159,21 @@ elif [ "$OS" == "travis" ] ; then
    echo
 
    # Install Python prerequisites
+   echo "installing cython"
    pip -q install cython
+   echo "installing numpy"
    pip -q install numpy
+   echo "installing matplotlib"
    pip -q install matplotlib
+   echo "installing scipy"
    pip -q install scipy
+   echo "installing patsy"
    pip -q install patsy
+   echo "installing pandas"
    pip -q install pandas
-   pip -q install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
+   echo "installing remaining dependencies"
+   pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
+   echo "upgrading setuptools"
    pip -q install --upgrade setuptools ;
 
 else
