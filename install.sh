@@ -123,13 +123,14 @@ if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
    source cgat-venv/bin/activate
 
    # Install Python prerequisites
-   pip install cython
-   pip install numpy
-   pip install matplotlib
-   pip install scipy
-   pip install patsy
-   pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
-   pip install --upgrade setuptools ;
+   pip -q install cython
+   pip -q install numpy
+   pip -q install matplotlib
+   pip -q install scipy
+   pip -q install patsy
+   pip -q install pandas
+   pip -q install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
+   pip -q install --upgrade setuptools ;
 
    # Print help message
    echo
@@ -150,13 +151,14 @@ elif [ "$OS" == "travis" ] ; then
    echo
 
    # Install Python prerequisites
-   pip install cython
-   pip install numpy
-   pip install matplotlib
-   pip install scipy
-   pip install patsy
-   pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
-   pip install --upgrade setuptools ;
+   pip -q install cython
+   pip -q install numpy
+   pip -q install matplotlib
+   pip -q install scipy
+   pip -q install patsy
+   pip -q install pandas
+   pip -q install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
+   pip -q install --upgrade setuptools ;
 
 else
 
@@ -169,13 +171,6 @@ fi # if-OS
 run_tests() {
 
 if [ "$OS" == "travis" ] ; then
-
-   # installation where CGAT code collection is cloned
-   INIT_DIR=`pwd`
-
-   # Set up other environment variables
-   cd $INIT_DIR
-   export PYTHONPATH=$PYTHONPATH:$INIT_DIR
 
    python setup.py install
    cd doc
