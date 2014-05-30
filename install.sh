@@ -143,6 +143,8 @@ if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
    echo "installing ipython"
    pip install ipython
 
+   Rscript install.R
+
    # Print help message
    echo
    echo
@@ -184,6 +186,9 @@ elif [ "$OS" == "travis" ] ; then
    pip install --upgrade setuptools ;
    echo "installing ipython"
    pip install ipython
+
+   Rscript install.R
+
 
 else
 
