@@ -1830,7 +1830,10 @@ class StackedBarPlot(BarPlot):
 
         for column, header in enumerate(self.columns):
 
-            vals = self.data_matrix[:, column]
+            # cast to float, otherwise numpy complains
+            # about unsafe casting
+            vals = numpy.array(self.data_matrix[:, column],
+                               dtype=float)
             if self.error:
                 error = self.error_matrix[:, column]
 

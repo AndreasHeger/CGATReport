@@ -74,15 +74,25 @@ Glossary
    data frames
        is a generic data container used in R. 
 
+   labeled values
+      Labeled values are the most basic type of data in the data tree.
+      Values are atomic and can be numbers or strings.
+
+            car/wheels/4
+            car/colour/blue
+	    bike/wheels/4
+	    bike/color/red
+
    labeled values with errors
-      :term:`labeled values` can be extended with labels or errors.
+      :term:`labeled values` can be extended with errors or labels
+      using the words ``error`` and ``label``, respectively.
 
             blue/car/wheels/data=4
-            blue/car/wheels/data=4
-
-
-      Here, ``blue`` and ``red`` are a :term:`track`, ``car`` and
-      ``bike`` are a :term:`slice` and ``weels=4`` is a ``label,value`` pair.
+            blue/car/wheels/error=1
+            blue/car/wheels/label=mycar
+            red/bike/wheels/data=4
+            red/bike/wheels/error=0
+            red/bike/wheels/label=mybike
 
    source directory
       The directory which, including its subdirectories, contains all source
