@@ -8,8 +8,8 @@ The :class:`SphinxReportPlugins.Renderer.Table` renders :term:`labeled
 values` as a table.
 
 Tables are built from columns and rows. By default, each :term:`slice`
-creates a new table with each :term:`track` displayed in a row in a table.
-Columns are created from entries in the nested dictionary
+creates a new table with each :term:`track` displayed in a row in a
+table.  Columns are created from entries in the nested dictionary
 returned by the tracker.
 
 .. report:: Trackers.LabeledDataExample

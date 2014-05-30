@@ -5,17 +5,28 @@ Building reports
 =================
 
 Building a restructured text document that includes the :term:`report`
-directive is an iterative process that involves usually the following steps:
+directive is an iterative process that involves usually the following
+steps:
 
-0. Setting up a new sphinxreport project using :ref:`sphinxreport-quickstart`.
+0. Setting up a new sphinxreport project using
+   :ref:`sphinxreport-quickstart`.
+
 1. Writing some text and realizing that you need to add a figure to
-support the text.
+   support the text.
+
 2. Adding the python code for the :term:`tracker` as a data source
-that provides the data for the figure.
-3. Testing the :term:`tracker` and customizing the plot using :ref:`sphinxreport-test`.
+   that provides the data for the figure.
+
+3. Testing the :term:`tracker` and customizing the plot using
+   :ref:`sphinxreport-test`.
+
 4. Inserting the :term:``report` directive into the text.
-5. Optionally, removing existing cached data of this :term:`tracker` using :ref:`sphinxreport-clean`.
-6. Building the full document using :ref:`sphinxreport-build` or the :ref:`Makefile`.
+
+5. Optionally, removing existing cached data of this :term:`tracker`
+   using :ref:`sphinxreport-clean`.
+
+6. Building the full document using :ref:`sphinxreport-build` or the
+   :ref:`Makefile`.
 
 Steps 1-6 are repeated until the document is finished.
 

@@ -32,7 +32,6 @@ Modules documentation
    Server.rst
    Tracker.rst
    DataTypes.rst
-   Component.rst
 
 Contributions
 =============

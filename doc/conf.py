@@ -70,6 +70,7 @@ rst_epilog='''
 .. _samtools: http://samtools.sourceforge.net/
 .. _tabix: http://samtools.sourceforge.net/tabix.shtml/
 .. _Galaxy: https://main.g2.bx.psu.edu/
+.. _numpy: http://www.numpy.org/
 .. _cython: http://cython.org/
 .. _pyximport: http://www.prescod.net/pyximport/
 .. _sphinx: http://sphinx-doc.org/

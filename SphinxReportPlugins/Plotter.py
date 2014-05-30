@@ -1818,8 +1818,11 @@ class StackedBarPlot(BarPlot):
         self.startPlot()
         plts = []
 
-        xvals = numpy.arange((1.0 - self.bar_width) / 2., len(self.rows))
-        sums = numpy.zeros(len(self.rows), numpy.float)
+        xvals = numpy.arange((1.0 - self.bar_width) / 2.,
+                             len(self.rows),
+                             dtype=numpy.float)
+        sums = numpy.zeros(len(self.rows),
+                           dtype=numpy.float)
 
         y, error, is_first = 0, None, True
         legend = []

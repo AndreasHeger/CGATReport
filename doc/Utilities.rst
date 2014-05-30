@@ -11,6 +11,10 @@ in detail.
 
 .. automodule:: SphinxReport.build
 
+.. _sphinxreport-quickstart:
+
+.. automodule:: SphinxReport.quickstart
+
 .. _sphinxreport-clean:
 
 .. automodule:: SphinxReport.clean
@@ -31,7 +35,7 @@ in detail.
 
 .. automodule:: SphinxReport.serve
 
-.. _sphinxreport-build:
+.. _sphinxreport-gallery:
 
 .. automodule:: SphinxReport.gallery
 

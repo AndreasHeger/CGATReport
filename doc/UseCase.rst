@@ -476,7 +476,15 @@ Using this use case, try to implement the following analyses:
    .. note::
       Think about ordering the table.
 
+.. glossary::
 
+   bam
+      a genomic file format
+
+
+.. _bowtie: http://bowtie-bio.sourceforge.net/index.shtml
+.. _tophat: http://tophat.cbcb.umd.edu/index.shtml
+.. _star: http://code.google.com/p/rna-star/
 
 
 

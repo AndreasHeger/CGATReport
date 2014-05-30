@@ -140,6 +140,8 @@ if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
    pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
    echo "upgrading setuptools"
    pip -q install --upgrade setuptools ;
+   echo "installing ipython"
+   pip install ipython
 
    # Print help message
    echo
@@ -180,6 +182,8 @@ elif [ "$OS" == "travis" ] ; then
    pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
    echo "upgrading setuptools"
    pip install --upgrade setuptools ;
+   echo "installing ipython"
+   pip install ipython
 
 else
 

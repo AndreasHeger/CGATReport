@@ -9,40 +9,37 @@ Glossary
       The restructured text directive supplied by the SphinxSqlPlot extension.
 
    track
+   tracks
       A data set, for example species like "frog", "mouse", and "dog".
 
-   tracks
-      see :term:`track`      
-
    slice
+   slices
       A measurement of a data set, for example 'height', 'weight', but also
       a slice of subset of data, for example gender like "male" and
       "female" 
 
-   slices
-      see :term:`slice`      
-
    tracker
+   trackers
       A python function or functor returning data, see
       :class:`SphinxReport.Tracker.Tracker`.
 
    transformer
+   transformers
       A python class transforming data before rendering. 
 
    renderer
+   renderers
       An object displaying data returned from a :term:`Tracker`.
 
    path
       Data is stored hierarchically in a nested dictionary. The sequence of keys to 
       access a data item is called the path.
 
-   functor
-      A python object that can be used as a function. Functors define a ``__call__`` method. 
-
-   labeled values
-      ``label, value`` pairs in a nested dictionary. This
-      data structure is understood by many renderers. An example of
-      labeled data is::
+   functor 
+      A python object that can be used as a function. Functors
+      define a ``__call__`` method.  labeled values ``label, value``
+      pairs in a nested dictionary. This data structure is understood
+      by many renderers. An example of labeled data is::
 
             blue/car/wheels=4
       	    blue/car/doors=3
@@ -62,6 +59,7 @@ Glossary
          red/car/tankfillings=(30,30,35,30,20)
          red/car/pumpprices=(30,32,30,32,21)
 
+   matrix
    matrices
       matrices are represented as a dictionary with the three mandatory
       entries: ``matrix``, ``rows``, ``columns``. The matrix field
@@ -72,6 +70,7 @@ Glossary
 	 rows=["row1", "row2"]
 	 columns=["column1", "column2", "column3"]
    
+   data frame
    data frames
        is a generic data container used in R. 
 
@@ -99,3 +98,4 @@ Glossary
 
    data path
       path towards some data in a :term:`data tree`.
+
