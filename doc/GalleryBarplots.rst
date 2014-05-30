@@ -4,8 +4,8 @@
 bar-plot
 ========
 
-The :class:`SphinxReportPlugins.Plotter.BarPlot` class presents :term:`labeled values`
-as overlapping bars.
+The :class:`SphinxReportPlugins.Plotter.BarPlot` class presents
+:term:`labeled values` as overlapping bars.
 
 .. report:: Trackers.LabeledDataExample
    :render: bar-plot

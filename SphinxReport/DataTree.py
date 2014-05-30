@@ -7,7 +7,6 @@ import pandas
 from SphinxReport import Utils
 
 
-
 def unique(iterables):
     s = set()
     for x in iterables:
@@ -28,14 +27,15 @@ def path2str(path):
         return str(path)
 
 
-## This module needs to be properly refactored to use
-## proper tree traversal algorithms. It currently is
-## a collection of not very efficient hacks.
+# This module needs to be properly refactored to use
+# proper tree traversal algorithms. It currently is
+# a collection of not very efficient hacks.
 
-## The DataTree data structure is discontinued
-## - a nested dictionary was more general from a user
-##   point of view.
+# The DataTree data structure is discontinued
+# - a nested dictionary was more general from a user
+# point of view.
 class DataTree(object):
+
     '''a DataTree.
 
     A data tree is a nested dictionary. A branch or
@@ -410,36 +410,40 @@ def getPaths(work):
 
     return labels
 
-def getNodes(work, level = 0):
+
+def getNodes(work, level=0):
     '''iterate over all nodes at a certain depth.
     in nested dictionary work.
 
     yields path, value items
     '''
 
-    stack = collections.deque([ ((), 0, x) for x in work.items()])
+    stack = collections.deque([((), 0, x) for x in work.items()])
 
     # BFS
     while stack:
         p, l, kv = stack.popleft()
         k, v = kv
         n = p + (k,)
-        if l == level: yield (n,v)
+        if l == level:
+            yield (n, v)
         if isinstance(v, dict):
-            stack.extend([ (n, l + 1, x) for x in v.iteritems()])
+            stack.extend([(n, l + 1, x) for x in v.iteritems()])
+
 
 def getDepths(work):
     '''return a list of depth of leaves.'''
-    stack = [ (0, x) for x in work.values() ]
+    stack = [(0, x) for x in work.values()]
 
     levels = []
     while stack:
         level, v = stack.pop()
-        if isinstance(v,dict):
-            stack.extend([ (level + 1,x) for x in v.values() ])
+        if isinstance(v, dict):
+            stack.extend([(level + 1, x) for x in v.values()])
         else:
             levels.append(level)
     return levels
+
 
 def getLeaf(work, path):
     '''get leaf/branch at *path*.'''
@@ -455,6 +459,7 @@ def getLeaf(work, path):
 
     return work
 
+
 def setLeaf(work, path, data):
     '''set leaf/branch at *path* to *data*.'''
     for x in path[:-1]:
@@ -465,10 +470,12 @@ def setLeaf(work, path, data):
             work = work[x]
     work[path[-1]] = data
 
+
 def getPrefixes(work, level):
     '''get all possible paths up to *level*.'''
     paths = getPaths(work)
     return list(itertools.product(*paths[:level]))
+
 
 def removeLevel(work, level):
     '''remove *level* in *work*.'''
@@ -476,7 +483,8 @@ def removeLevel(work, level):
     for path in prefixes:
         leaf = getLeaf(work, path)
         # skip truncated branches
-        if leaf == None: continue
+        if leaf == None:
+            continue
 
         # delete all in leaf
         keys = list(leaf.keys())
@@ -490,6 +498,7 @@ def removeLevel(work, level):
             except AttributeError:
                 # for items that are not dict
                 setLeaf(work, path, d)
+
 
 def swop(work, level1, level2):
     '''swop two levels *level1* and *level2*.
@@ -508,38 +517,46 @@ def swop(work, level1, level2):
         raise IndexError("level out of range: %i >= %i" % (level1, nlevels))
     if nlevels <= level2:
         raise IndexError("level out of range: %i >= %i" % (level2, nlevels))
-    if level1 == level2: return
+    if level1 == level2:
+        return
     if level1 > level2:
         level1, level2 = level2, level1
 
     prefixes = paths[:level1]
-    infixes = paths[level1+1:level2]
-    suffixes = paths[level2+1:]
+    infixes = paths[level1 + 1:level2]
+    suffixes = paths[level2 + 1:]
 
-    if prefixes: prefixes = list(itertools.product(*prefixes))
-    else: prefixes = [(None,)]
+    if prefixes:
+        prefixes = list(itertools.product(*prefixes))
+    else:
+        prefixes = [(None,)]
 
-    if infixes: infixes = list(itertools.product(*infixes))
-    else: infixes = [(None,)]
+    if infixes:
+        infixes = list(itertools.product(*infixes))
+    else:
+        infixes = [(None,)]
 
-    if suffixes: suffixes = list(itertools.product(*suffixes))
-    else: suffixes = [(None,)]
+    if suffixes:
+        suffixes = list(itertools.product(*suffixes))
+    else:
+        suffixes = [(None,)]
 
     # write to new tree in order to ensure that labels
     # that exist in both level1 and level2 are not
     # overwritten.
     newtree = odict()
 
-    def _f(p): return tuple([x for x in p if x != None])
+    def _f(p):
+        return tuple([x for x in p if x is not None])
 
     for p1, p2 in itertools.product(paths[level1], paths[level2]):
 
         for prefix, infix in itertools.product(prefixes, infixes):
 
-            w = getLeaf(work, _f(prefix + (p1,) + infix + (p2,)) )
+            w = getLeaf(work, _f(prefix + (p1,) + infix + (p2,)))
             subpaths = getPaths(w)
             if subpaths:
-                suffixes = list(itertools.product(subpaths[0]) )
+                suffixes = list(itertools.product(subpaths[0]))
             else:
                 suffixes = [(None,)]
 
@@ -550,10 +567,12 @@ def swop(work, level1, level2):
                 # note: getLeaf, setLeaf are inefficient in this
                 # context as they traverse the tree again
                 data = getLeaf(work, oldpath)
-                if data == None: continue
+                if data is None:
+                    continue
                 setLeaf(newtree, newpath, data)
 
     return newtree
+
 
 def removeLeaf(work, path):
     '''remove leaf/branch at *path*.
@@ -569,6 +588,7 @@ def removeLeaf(work, path):
         del work[path[-1]]
     return work
 
+
 def removeEmptyLeaves(work):
     '''traverse data tree in DFS order and remove empty
     leaves.
@@ -578,7 +598,8 @@ def removeEmptyLeaves(work):
     try:
         for label, w in work.items():
             keep = removeEmptyLeaves(w)
-            if not keep: to_delete.append(label)
+            if not keep:
+                to_delete.append(label)
 
         for label in to_delete:
             del work[label]
@@ -602,10 +623,14 @@ def removeEmptyLeaves(work):
         # for numpy arrays
         return len(work) > 0
 
+
 def prettyprint(work):
     paths = work.getPaths()
-    if len(paths) == 0: return "NA"
-    else: return "< datatree: %s >" % str(paths)
+    if len(paths) == 0:
+        return "NA"
+    else:
+        return "< datatree: %s >" % str(paths)
+
 
 def flatten(l, ltypes=(list, tuple)):
     '''flatten a nested list/tuple.'''
@@ -624,6 +649,7 @@ def flatten(l, ltypes=(list, tuple)):
         i += 1
     return ltype(l)
 
+
 def count_levels(labels):
     '''count number of levels for each level in labels'''
     counts = []
@@ -634,7 +660,8 @@ def count_levels(labels):
             counts.append(1)
     return counts
 
-def tree2table(data, transpose = False, head = None):
+
+def tree2table(data, transpose=False, head=None):
     """build table from data.
 
     The table will be multi-level (main-rows and sub-rows), if:
@@ -653,8 +680,8 @@ def tree2table(data, transpose = False, head = None):
     labels = getPaths(data)
 
     if len(labels) < 2:
-        raise ValueError("expected at least two levels for building table, got %i: %s" %\
-                              (len(labels), str(labels)))
+        raise ValueError("expected at least two levels for building table, got %i: %s" %
+                         (len(labels), str(labels)))
 
     effective_labels = count_levels(labels)
     # subtract last level (will be expanded) and 1 for row header
@@ -667,10 +694,11 @@ def tree2table(data, transpose = False, head = None):
     header_offset = effective_cols
     matrix = []
 
-    debug("Datatree.buildTable: creating table with %i columns" % (len(col_headers)))
+    debug("Datatree.buildTable: creating table with %i columns" %
+          (len(col_headers)))
 
-    ## the following can be made more efficient
-    ## by better use of indices
+    # the following can be made more efficient
+    # by better use of indices
     row_offset = 0
     row_headers = []
 
@@ -683,9 +711,11 @@ def tree2table(data, transpose = False, head = None):
             # get data - skip if there is None
             work = getLeaf(data, (row,) + path)
             if isinstance(work, pandas.DataFrame):
-                if work.empty: continue
+                if work.empty:
+                    continue
             else:
-                if not work: continue
+                if not work:
+                    continue
 
             row_data = [""] * ncols
 
@@ -709,15 +739,16 @@ def tree2table(data, transpose = False, head = None):
             is_container = True
             max_rows = None
             for y, column in enumerate(labels[-1]):
-                if column not in work: continue
+                if column not in work:
+                    continue
                 if type(work[column]) not in Utils.ContainerTypes:
                     is_container = False
                     break
                 if max_rows == None:
                     max_rows = len(work[column])
                 elif max_rows != len(work[column]):
-                    raise ValueError("multi-level rows - unequal lengths: %i != %i" % \
-                                         (max_rows, len(work[column])))
+                    raise ValueError("multi-level rows - unequal lengths: %i != %i" %
+                                     (max_rows, len(work[column])))
 
             # add sub-rows
             if is_container:
@@ -725,11 +756,12 @@ def tree2table(data, transpose = False, head = None):
                 for z in range(max_rows):
                     for y, column in enumerate(labels[-1]):
                         try:
-                            row_data[y+header_offset] = Utils.quote_rst(work[column][z])
+                            row_data[
+                                y + header_offset] = Utils.quote_rst(work[column][z])
                         except KeyError:
                             pass
 
-                    if z < max_rows-1:
+                    if z < max_rows - 1:
                         matrix.append(row_data)
                         row_headers.append("")
                         row_data = [""] * ncols
@@ -737,7 +769,8 @@ def tree2table(data, transpose = False, head = None):
                 # single level row
                 for y, column in enumerate(labels[-1]):
                     try:
-                        row_data[y+header_offset] = Utils.quote_rst(work[column])
+                        row_data[
+                            y + header_offset] = Utils.quote_rst(work[column])
                     except KeyError:
                         pass
 
@@ -756,42 +789,48 @@ def tree2table(data, transpose = False, head = None):
 
     return matrix, row_headers, col_headers
 
+
 def fromCache(cache,
-               tracks = None,
-               slices = None,
-               groupby = "slice"):
+              tracks=None,
+              slices=None,
+              groupby="slice"):
     '''return a data tree from cache'''
 
     data = DataTree()
-    keys = [ x.split("/") for x in list(cache.keys())]
+    keys = [x.split("/") for x in list(cache.keys())]
 
-    if tracks == None: tracks = set([ x[0] for x in keys])
-    else: tracks = tracks.split(",")
+    if tracks == None:
+        tracks = set([x[0] for x in keys])
+    else:
+        tracks = tracks.split(",")
 
-    if slices == None: slices = set([ x[1] for x in keys if len(x) > 1])
-    else: slices = slices.split(",")
+    if slices == None:
+        slices = set([x[1] for x in keys if len(x) > 1])
+    else:
+        slices = slices.split(",")
 
     def tokey(track, slice):
-        return "/".join((track,slice))
+        return "/".join((track, slice))
 
     if not slices:
         for track in tracks:
             data[track] = cache[track]
     elif groupby == "slice" or groupby == "all":
         for slice in slices:
-            data[slice]=odict()
+            data[slice] = odict()
             for track in tracks:
-                data[slice][track] = cache[tokey(track,slice)]
+                data[slice][track] = cache[tokey(track, slice)]
     elif groupby == "track":
         for track in tracks:
-            data[track]=odict()
+            data[track] = odict()
             for slice in slices:
-                data[track][slice] = cache[tokey(track,slice)]
+                data[track][slice] = cache[tokey(track, slice)]
     return data
 
+
 def prune(data,
-           ignore = [],
-           method = 'bottom-up'):
+          ignore=[],
+          method='bottom-up'):
     '''prune data tree.
 
     Remove all empty leaves.
@@ -822,16 +861,19 @@ def prune(data,
         # check for single label in level
         if len(data_paths[level]) == 1:
             label = data_paths[level][0]
-            if label in ignore: continue
+            if label in ignore:
+                continue
             prefixes = getPrefixes(data, level)
             keep = False
             for prefix in prefixes:
                 leaves = getLeaf(data, prefix)
-                if leaves is None: continue
+                if leaves is None:
+                    continue
                 if len(leaves) > 1 or label not in leaves:
                     keep = True
                     break
-            if not keep: levels_to_prune.append((level, label))
+            if not keep:
+                levels_to_prune.append((level, label))
 
     levels_to_prune.reverse()
 
@@ -839,10 +881,12 @@ def prune(data,
 
     for level, label in levels_to_prune:
         # do not prune top-level, if it is the only level
-        if level == 0 and nlevels == 1: continue
+        if level == 0 and nlevels == 1:
+            continue
         if method == 'bottom-up':
             # stop pruning if not on deepest level
-            if level != nlevels-1: break
+            if level != nlevels - 1:
+                break
 
         pruned.append((level, label))
         removeLevel(data, level)

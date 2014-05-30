@@ -12,6 +12,4 @@ __all__ = [
     'Dispatcher',
     'DataTree',
     "only_directive",
-    "report_directive" ]
-
-
+    "report_directive"]

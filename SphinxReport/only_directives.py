@@ -11,11 +11,14 @@ except ImportError:
     from sphinx.latexwriter import LaTeXTranslator
 from docutils.parsers.rst import directives
 
+
 class html_only(Body, Element):
     pass
 
+
 class latex_only(Body, Element):
     pass
+
 
 def run(content, node_class, state, content_offset):
     text = '\n'.join(content)
@@ -65,6 +68,7 @@ else:
     directives.register_directive('htmlonly', HtmlOnlyDirective)
     directives.register_directive('latexonly', LatexOnlyDirective)
 
+
 def setup(app):
     app.add_node(html_only)
     app.add_node(latex_only)
@@ -72,10 +76,13 @@ def setup(app):
     # Add visit/depart methods to HTML-Translator:
     def visit_perform(self, node):
         pass
+
     def depart_perform(self, node):
         pass
+
     def visit_ignore(self, node):
         node.children = []
+
     def depart_ignore(self, node):
         node.children = []
 

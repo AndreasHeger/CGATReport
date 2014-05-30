@@ -1,27 +1,30 @@
 #!/bin/env python
-import sys, re, os
+import sys
+import re
+import os
 import optparse
 
 from SphinxReport import Utils
 
-USAGE="""%s [OPTIONS]
+USAGE = """%s [OPTIONS]
 
 set up an new sphinxreport in the current directory.
 """ % sys.argv[0]
 
-def main(argv = None):
 
-    if argv == None: argv = sys.argv
+def main(argv=None):
 
-    parser = optparse.OptionParser(version = "%prog version: $Id$", usage = USAGE)
+    if argv == None:
+        argv = sys.argv
+
+    parser = optparse.OptionParser(version="%prog version: $Id$", usage=USAGE)
 
     parser.add_option("-d", "--dest", dest="destination", type="string",
                       help="destination directory.")
 
-
     parser.set_defaults(
-        destination = ".",
-        )
+        destination=".",
+    )
 
     (options, args) = parser.parse_args()
 
@@ -30,7 +33,8 @@ def main(argv = None):
     # create directories
     for d in ("", "_templates", "labbook", "labbook/static", "analysis", "pipeline", "trackers", "templates"):
         dd = os.path.join(dest, d)
-        if not os.path.exists(dd): os.makedirs(dd)
+        if not os.path.exists(dd):
+            os.makedirs(dd)
 
     # copy files
     def copy(src, dst):
@@ -82,7 +86,6 @@ def main(argv = None):
 
     for f in ("Trackers.py", "Trackers.rst"):
         copy(f, "trackers")
-
 
     print("""
 Welcome to SphinxReport.

@@ -1,8 +1,11 @@
-import os, re
+import os
+import re
 from SphinxReport.Component import *
 from SphinxReport import Config
 
+
 class RSTPlugin(Component):
+
     '''collect rst text.
 
     This plugin looks for image/figure directives in
@@ -25,19 +28,19 @@ class RSTPlugin(Component):
     rx_link = re.compile("\.\. _([^ |+,:]+)\s*:\s*([^ |+,:]+)[ ]*")
 
     def __init__(self, *args, **kwargs):
-        Component.__init__(self,*args,**kwargs)
+        Component.__init__(self, *args, **kwargs)
 
     def collect(self,
-                 blocks,
-                 template_name,
-                 outdir,
-                 rstdir,
-                 builddir,
-                 srcdir,
-                 content,
-                 display_options,
-                 tracker_id,
-                 links = {}):
+                blocks,
+                template_name,
+                outdir,
+                rstdir,
+                builddir,
+                srcdir,
+                content,
+                display_options,
+                tracker_id,
+                links={}):
         '''collect rst output from result blocks.
 
         '''
@@ -58,7 +61,8 @@ class RSTPlugin(Component):
 
         for xblocks in blocks:
             for block in xblocks:
-                if not hasattr(block, "text"): continue
+                if not hasattr(block, "text"):
+                    continue
                 lines = block.text.split("\n")
                 n = []
                 for l in lines:
@@ -66,13 +70,15 @@ class RSTPlugin(Component):
 
                     for x in self.rx_img.finditer(ll):
                         directive, filename = x.groups()
-                        relpath = os.path.relpath(filename.strip(), os.path.abspath(rstdir))
+                        relpath = os.path.relpath(
+                            filename.strip(), os.path.abspath(rstdir))
                         newpath = re.sub("\\\\", "/", relpath)
                         l = replace_and_pad(l, filename, newpath)
 
                     for x in self.rx_link.finditer(ll):
                         directive, filename = x.groups()
-                        newpath = re.sub("\\\\", "/", os.path.abspath(filename.strip()))
+                        newpath = re.sub(
+                            "\\\\", "/", os.path.abspath(filename.strip()))
                         # pad with spaces to keep table alignment
                         l = replace_and_pad(l, filename, newpath)
 

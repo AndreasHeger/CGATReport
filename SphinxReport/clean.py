@@ -51,7 +51,15 @@ documents containing trackers matching the word ``OldData``::
 
 """
 
-import sys, os, imp, io, re, types, glob, optparse, shutil
+import sys
+import os
+import imp
+import io
+import re
+import types
+import glob
+import optparse
+import shutil
 
 USAGE = """python %s [OPTIONS] target
 
@@ -63,7 +71,7 @@ Targets can contain wild cards.
 
 from SphinxReport.Tracker import Tracker
 
-SEPARATOR="@"
+SEPARATOR = "@"
 
 # import conf.py for source_suffix
 source_suffix = ".rst"
@@ -77,7 +85,8 @@ RSTDIR = "."
 if "docsdir" in locals():
     RSTDIR = docsdir
 
-def deleteFiles(test_f, dirs_to_check = (".",), dry_run = False):
+
+def deleteFiles(test_f, dirs_to_check=(".",), dry_run = False):
     """remove all files that test_f returns True for.
     """
     removed = []
@@ -87,16 +96,18 @@ def deleteFiles(test_f, dirs_to_check = (".",), dry_run = False):
                 if test_f(f):
                     try:
                         ff = os.path.join(root, f)
-                        if not dry_run: os.remove(ff)
+                        if not dry_run:
+                            os.remove(ff)
                         removed.append(ff)
                     except OSError as msg:
                         pass
 
     return removed
 
+
 def removeTracker(tracker,
-                   dry_run = False,
-                   builddir = "report"):
+                  dry_run=False,
+                  builddir="report"):
     """remove all files created by:class:Renderer objects
     that use tracker.
     """
@@ -106,22 +117,24 @@ def removeTracker(tracker,
 
     pattern = ".*%s.*" % tracker
     # image and text files
-    rx1 = re.compile("_%s%s" % (pattern,SEPARATOR))
+    rx1 = re.compile("_%s%s" % (pattern, SEPARATOR))
     # files in cache
     rx2 = re.compile("_%s$" % (pattern))
     # .code files
-    rx3 = re.compile("_%s%s" % (pattern,".code"))
+    rx3 = re.compile("_%s%s" % (pattern, ".code"))
     # .html files
-    rx4 = re.compile("_%s%s" % (pattern,".html"))
-    test_f = lambda x: rx1.search(x) or rx2.search(x) or rx3.search(x) or rx4.search(x)
+    rx4 = re.compile("_%s%s" % (pattern, ".html"))
+    test_f = lambda x: rx1.search(x) or rx2.search(
+        x) or rx3.search(x) or rx4.search(x)
 
-    return deleteFiles(test_f, dirs_to_check, dry_run = dry_run)
+    return deleteFiles(test_f, dirs_to_check, dry_run=dry_run)
+
 
 def removeText(pattern,
-                dry_run = False,
-                sourcedir = ".",
-                builddir = "report",
-                suffix = ".rst"):
+               dry_run=False,
+               sourcedir=".",
+               builddir="report",
+               suffix=".rst"):
     """remove all files that contain the ``pattern``."""
 
     # find all .rst files that reference tracker
@@ -133,7 +146,7 @@ def removeText(pattern,
             if f.endswith(suffix):
                 fn = os.path.join(root, f)
                 try:
-                    data = "".join(open(fn,"r").readlines())
+                    data = "".join(open(fn, "r").readlines())
                 except IOError:
                     continue
 
@@ -147,42 +160,44 @@ def removeText(pattern,
     for f in files_to_check:
         p = f[:-len(suffix)]
         for s in suffixes:
-            patterns.append(re.compile("%s%s$" % (p, s) ))
+            patterns.append(re.compile("%s%s$" % (p, s)))
 
     def test_f(x):
         for p in patterns:
-            if p.search(x): return True
+            if p.search(x):
+                return True
         return False
 
     dirs_to_check = (builddir,)
 
-    return deleteFiles(test_f, dirs_to_check, dry_run = dry_run)
+    return deleteFiles(test_f, dirs_to_check, dry_run=dry_run)
+
 
 def main():
 
-    parser = optparse.OptionParser(version = "%prog version: $Id$", usage = USAGE)
+    parser = optparse.OptionParser(version="%prog version: $Id$", usage=USAGE)
 
     parser.add_option("-v", "--verbose", dest="loglevel", type="int",
-                       help="loglevel. The higher, the more output [default=%default]")
+                      help="loglevel. The higher, the more output [default=%default]")
 
     parser.add_option("-s", "--section", dest="sections", type="choice", action="append",
-                       choices=("tracker", "text", "doctree"),
-                       help="only clean from certain sections [default=%default]")
+                      choices=("tracker", "text", "doctree"),
+                      help="only clean from certain sections [default=%default]")
 
     parser.add_option("-p", "--path", dest="path", type="string",
-                       help="path to rst source [default=%default]")
+                      help="path to rst source [default=%default]")
 
     parser.add_option("-b", "--build", dest="builddir", type="string",
-                       help="path to build dir [default=%default]")
+                      help="path to build dir [default=%default]")
 
     parser.add_option("-n", "--dry-run", dest="dry_run", action="store_true",
-                       help="only show what is about to be deleted, but do not delete [default=%default]")
+                      help="only show what is about to be deleted, but do not delete [default=%default]")
 
-    parser.set_defaults(loglevel = 2,
-                         dry_run = False,
-                         path = RSTDIR,
-                         builddir = ".",
-                         sections = [])
+    parser.set_defaults(loglevel=2,
+                        dry_run=False,
+                        path=RSTDIR,
+                        builddir=".",
+                        sections=[])
 
     (options, args) = parser.parse_args()
 
@@ -218,24 +233,27 @@ def main():
             print("cleaning up %s ..." % tracker)
             removed = []
             if not options.sections or "tracker" in options.sections:
-                if options.loglevel >= 2: print("removing trackers")
-                removed.extend(removeTracker(tracker, dry_run = options.dry_run) )
+                if options.loglevel >= 2:
+                    print("removing trackers")
+                removed.extend(removeTracker(tracker, dry_run=options.dry_run))
             if not options.sections or "doctree" in options.sections:
-                if options.loglevel >= 2: print("removing doctrees")
+                if options.loglevel >= 2:
+                    print("removing doctrees")
                 removed.extend(removeText(tracker,
-                                            dry_run = options.dry_run,
-                                            sourcedir = options.builddir,
-                                            builddir = options.builddir,
-                                            suffix = ".doctree"))
+                                          dry_run=options.dry_run,
+                                          sourcedir=options.builddir,
+                                          builddir=options.builddir,
+                                          suffix=".doctree"))
             if not options.sections or "text" in options.sections:
-                if options.loglevel >= 2: print("removing rst")
+                if options.loglevel >= 2:
+                    print("removing rst")
                 if options.loglevel >= 2:
                     print("sourcedir=%s" % options.path)
                 removed.extend(removeText(tracker,
-                                            dry_run = options.dry_run,
-                                            sourcedir = options.path,
-                                            builddir = options.builddir,
-                                            suffix = source_suffix) )
+                                          dry_run=options.dry_run,
+                                          sourcedir=options.path,
+                                          builddir=options.builddir,
+                                          suffix=source_suffix))
             print("%i files (done)" % len(removed))
             if options.loglevel >= 3:
                 print("\n".join(removed))

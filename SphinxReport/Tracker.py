@@ -1,11 +1,22 @@
-import os, sys, re, types, copy, warnings, inspect, logging, glob, gzip
+import os
+import sys
+import re
+import types
+import copy
+import warnings
+import inspect
+import logging
+import glob
+import gzip
 
 from collections import OrderedDict as odict
 import collections
 
 # Python 2/3 Compatibility
-try: import ConfigParser as configparser
-except: import configparser
+try:
+    import ConfigParser as configparser
+except:
+    import configparser
 
 import numpy
 import pandas
@@ -22,13 +33,16 @@ except ImportError:
 
 from SphinxReport import Utils
 
+
 class SQLError(Exception):
     pass
 
 ###########################################################################
 ###########################################################################
 ###########################################################################
-def prettyFloat(val, format = "%5.2f"):
+
+
+def prettyFloat(val, format="%5.2f"):
     """output a float or "na" if not defined"""
     try:
         x = format % val
@@ -39,7 +53,9 @@ def prettyFloat(val, format = "%5.2f"):
 ###########################################################################
 ###########################################################################
 ###########################################################################
-def prettyPercent(numerator, denominator, format = "%5.2f"):
+
+
+def prettyPercent(numerator, denominator, format="%5.2f"):
     """output a percent value or "na" if not defined"""
     try:
         x = format % (100.0 * numerator / denominator)
@@ -50,16 +66,19 @@ def prettyPercent(numerator, denominator, format = "%5.2f"):
 ###########################################################################
 ###########################################################################
 ###########################################################################
-def getCallerLocals(level = 3, decorators = 0):
+
+
+def getCallerLocals(level=3, decorators=0):
     '''returns locals of caller using frame.
 
     optional pass number of decorators
 
     from http://pylab.blogspot.com/2009/02/python-accessing-caller-locals-from.html
     '''
-    f = sys._getframe(level+decorators)
+    f = sys._getframe(level + decorators)
     args = inspect.getargvalues(f)
     return args[3]
+
 
 def quoteField(s):
     '''returns a quoted version of s for inclusion in SQL statements.'''
@@ -79,6 +98,8 @@ def getTableNames(db):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+
+
 def getTableColumns(db, tablename):
     '''return a list of columns for table *tablename*.'''
     inspector = sqlalchemy.engine.reflection.Inspector.from_engine(db)
@@ -90,7 +111,10 @@ def getTableColumns(db, tablename):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+
+
 class Tracker(object):
+
     """
     Base class for trackers. User trackers should be derived from this class.
 
@@ -149,16 +173,18 @@ class Tracker(object):
         """
         try:
             for line in self.__doc__.split("\n"):
-                if line.strip(): return line.strip()
+                if line.strip():
+                    return line.strip()
         except AttributeError:
             return ""
         return ""
 
-    def __call__(self, track, slice = None):
+    def __call__(self, track, slice=None):
         """return a data structure for track:param: track and slice:slice:"""
-        raise NotImplementedError("Tracker not fully implemented -> __call__ missing")
+        raise NotImplementedError(
+            "Tracker not fully implemented -> __call__ missing")
 
-    def members(self, locals = None):
+    def members(self, locals=None):
         '''function similar to locals() but returning member variables of this tracker.
 
         Convenience function for string substitution. If *locals* is given (and a dictionary),
@@ -175,31 +201,41 @@ class Tracker(object):
         # todo: do this for the general case
         # 1. subtract property attributes, or
         # 2. subtract members of Tracker()
-        l = dict([(attr,getattr(self,attr)) for attr in dir(self) \
-                      if not isinstance(attr, collections.Callable) and not attr.startswith("__") and attr != "tracks" and attr != "slices"])
+        l = dict([(attr, getattr(self, attr)) for attr in dir(self)
+                  if not isinstance(attr, collections.Callable) and not attr.startswith("__") and attr != "tracks" and attr != "slices"])
 
-        if locals: return dict(l, **locals)
-        else: return l
+        if locals:
+            return dict(l, **locals)
+        else:
+            return l
 
 ###########################################################################
 ###########################################################################
 ###########################################################################
+
+
 class TrackerSingleFile(Tracker):
+
     '''base class for tracker obtaining data from a single file.
 
     Tracks and slices are defined by the file contents.
     '''
+
     def __init__(self, *args, **kwargs):
         Tracker.__init__(self, *args, **kwargs)
         if "filename" not in kwargs:
-            raise ValueError("TrackerSingleFile requires a:filename: parameter")
+            raise ValueError(
+                "TrackerSingleFile requires a:filename: parameter")
 
         self.filename = kwargs['filename'].strip()
 
 #######################################################
 #######################################################
 #######################################################
+
+
 class TrackerMultipleFiles(Tracker):
+
     '''base class for trackers obtaining data from a multilpe files.
 
     Tracks are names derived from filenames via a
@@ -218,14 +254,16 @@ class TrackerMultipleFiles(Tracker):
         path is used.
 
     '''
-    def getTracks(self, subset = None):
+
+    def getTracks(self, subset=None):
         files = glob.glob(self.glob)
         self.mapTrack2File = {}
         for f in files:
             try:
                 track = self.regex.search(f).groups()[0]
             except AttributeError:
-                raise ValueError("filename %s does not match regular expression" % f)
+                raise ValueError(
+                    "filename %s does not match regular expression" % f)
 
             self.mapTrack2File[track] = f
         return self.mapTrack2File.keys()
@@ -239,7 +277,8 @@ class TrackerMultipleFiles(Tracker):
         self.regex = kwargs.get('regex', '(.*)')
 
         if '(' not in self.regex:
-            raise ValueError("regular expression requires exactly one group enclosed in ()")
+            raise ValueError(
+                "regular expression requires exactly one group enclosed in ()")
         self.regex = re.compile(self.regex)
 
     def openFile(self, track):
@@ -254,7 +293,10 @@ class TrackerMultipleFiles(Tracker):
 #######################################################
 #######################################################
 #######################################################
+
+
 class TrackerTSV(TrackerSingleFile):
+
     """Base class for trackers that fetch data from an CSV file.
 
     Each track is a column in the file.
@@ -266,14 +308,15 @@ class TrackerTSV(TrackerSingleFile):
         self._data = None
         self._tracks = None
 
-    def getTracks(self, subset = None):
+    def getTracks(self, subset=None):
         if self.filename.endswith(".gz"):
             inf = gzip.open(self.filename, "r")
         else:
             inf = open(self.filename, "r")
 
         for line in inf:
-            if line.startswith("#"): continue
+            if line.startswith("#"):
+                continue
             tracks = line[:-1].split("\t")
             break
         inf.close()
@@ -287,7 +330,8 @@ class TrackerTSV(TrackerSingleFile):
             else:
                 inf = open(self.filename, "r")
 
-            data = [ x.split() for x in inf.readlines() if not x.startswith("#")]
+            data = [x.split()
+                    for x in inf.readlines() if not x.startswith("#")]
             inf.close()
 
             self.data = dict(list(zip(data[0], list(zip(*data[1:])))))
@@ -299,6 +343,7 @@ class TrackerTSV(TrackerSingleFile):
 
 
 class TrackerMatrices(TrackerMultipleFiles):
+
     """Return matrix data from multiple files.
     """
 
@@ -309,33 +354,34 @@ class TrackerMatrices(TrackerMultipleFiles):
 
         dtype = numpy.float
 
-        lines = [ l for l in infile.readlines() if not l.startswith("#") ]
+        lines = [l for l in infile.readlines() if not l.startswith("#")]
         infile.close()
         nrows = len(lines) - 1
         col_headers = lines[0][:-1].split("\t")[1:]
         ncols = len(col_headers)
-        matrix = numpy.zeros((nrows, ncols), dtype = dtype)
+        matrix = numpy.zeros((nrows, ncols), dtype=dtype)
         row_headers = []
 
         for row, l in enumerate(lines[1:]):
             data = l.split("\t")
             row_headers.append(data[0])
-            matrix[row] = numpy.array(data[1:], dtype = dtype)
+            matrix[row] = numpy.array(data[1:],
+                                      dtype=dtype)
 
-        return odict(( ('matrix', matrix),
-                        ('rows', row_headers),
-                        ('columns', col_headers)) )
+        return odict((('matrix', matrix),
+                      ('rows', row_headers),
+                      ('columns', col_headers)))
 
-#######################################################
-#######################################################
-#######################################################
+
 class TrackerDataframes(TrackerMultipleFiles):
+
     '''return dataframe from files.
 
     By default, the dataframe has no row names.
     If self.index_column is set, the specified column
     will be used as row names.
     '''
+
     def __init__(self, *args, **kwargs):
         TrackerMultipleFiles.__init__(self, *args, **kwargs)
         self.index_column = kwargs.get('index_column', None)
@@ -343,13 +389,12 @@ class TrackerDataframes(TrackerMultipleFiles):
     def __call__(self, track, **kwargs):
 
         df = pandas.read_csv(self.openFile(track), sep='\t', header=0,
-                              index_col=self.index_column)
+                             index_col=self.index_column)
         return df
 
-###########################################################################
-###########################################################################
-###########################################################################
+
 class TrackerImages(Tracker):
+
     '''Collect image files and arrange them in a gallery.
     '''
 
@@ -359,17 +404,16 @@ class TrackerImages(Tracker):
             raise ValueError("TrackerImages requires a:glob: parameter")
         self.glob = kwargs["glob"]
 
-    def getTracks(self, subset = None):
+    def getTracks(self, subset=None):
         return glob.glob(self.glob)
 
     def __call__(self, track, **kwargs):
         """return a data structure for track:param: track and slice:slice:"""
-        return odict(( ('name', track), ('filename', track)) )
+        return odict((('name', track), ('filename', track)))
 
-###########################################################################
-###########################################################################
-###########################################################################
+
 class TrackerSQL(Tracker):
+
     """Base class for trackers that fetch data from an SQL database.
 
     The basic tracker identifies tracks as tables that match a
@@ -388,7 +432,7 @@ class TrackerSQL(Tracker):
     pattern = None
     as_tables = False
 
-    def __init__(self, backend = None, attach = [], *args, **kwargs):
+    def __init__(self, backend=None, attach=[], *args, **kwargs):
         Tracker.__init__(self, *args, **kwargs)
 
         # connection within python
@@ -410,13 +454,15 @@ class TrackerSQL(Tracker):
 
         # patch for mPattern and mAsTables for backwards-compatibility
         if hasattr(self, "mPattern"):
-            warnings.warn("mPattern is deprecated, use pattern instead", DeprecationWarning)
+            warnings.warn(
+                "mPattern is deprecated, use pattern instead", DeprecationWarning)
             self.pattern = "(.*)%s" % self.mPattern
         if hasattr(self, "mAsTables"):
-            warnings.warn("mAsTables is deprecated, use as_tables instead", DeprecationWarning)
+            warnings.warn(
+                "mAsTables is deprecated, use as_tables instead", DeprecationWarning)
             self.as_tables = self.mAsTables
 
-    def connect(self, creator = None):
+    def connect(self, creator=None):
         """lazy connection function."""
 
         if not self.db:
@@ -427,35 +473,39 @@ class TrackerSQL(Tracker):
             if self.attach:
 
                 if creator is not None:
-                    raise NotImplementedError('attach not implemented if creator is set')
+                    raise NotImplementedError(
+                        'attach not implemented if creator is set')
 
                 if not self.backend.startswith('sqlite'):
-                    raise NotImplementedError('attach only implemented for sqlite backend')
+                    raise NotImplementedError(
+                        'attach only implemented for sqlite backend')
 
                 def _my_creator():
                     # issuing the ATTACH DATABASE into the sqlalchemy ORM (self.db.execute(...))
                     # does not work. The database is attached, but tables are not accessible in later
                     # SELECT statements.
                     import sqlite3
-                    conn = sqlite3.connect(re.sub("sqlite:///", "", self.backend))
+                    conn = sqlite3.connect(
+                        re.sub("sqlite:///", "", self.backend))
                     for filename, name in self.attach:
-                        conn.execute("ATTACH DATABASE '%s' AS %s" % \
-                                          (os.path.abspath(filename),
-                                           name))
+                        conn.execute("ATTACH DATABASE '%s' AS %s" %
+                                     (os.path.abspath(filename),
+                                      name))
                     return conn
                 creator = _my_creator
 
             # creator can not be None.
             if creator:
                 db = sqlalchemy.create_engine(self.backend,
-                                               echo = False,
-                                               creator = creator)
+                                              echo=False,
+                                              creator=creator)
             else:
                 db = sqlalchemy.create_engine(self.backend,
-                                               echo = False)
+                                              echo=False)
 
             if not db:
-                raise ValueError("could not connect to database %s" % self.backend)
+                raise ValueError(
+                    "could not connect to database %s" % self.backend)
 
             db.echo = False
 
@@ -466,15 +516,15 @@ class TrackerSQL(Tracker):
                 try:
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
-                        self.metadata = sqlalchemy.MetaData(db, reflect = True)
+                        self.metadata = sqlalchemy.MetaData(db, reflect=True)
                 except AttributeError:
-                    self.metadata = sqlalchemy.MetaData(db, reflect = True)
+                    self.metadata = sqlalchemy.MetaData(db, reflect=True)
 
             self.db = db
 
             logging.debug("connected to %s" % self.backend)
 
-    def rconnect(self, creator = None):
+    def rconnect(self, creator=None):
         '''open connection within R to database.'''
 
         if not self.rdb:
@@ -486,9 +536,11 @@ class TrackerSQL(Tracker):
 
             else:
                 if self.backend.startswith('sqlite'):
-                    self.rdb = R.dbConnect(R.SQLite(), dbname=re.sub("sqlite:///./", "", self.backend) )
+                    self.rdb = R.dbConnect(
+                        R.SQLite(), dbname=re.sub("sqlite:///./", "", self.backend))
                 else:
-                    raise NotImplementedError("can not connect to %s in R" % self.backend)
+                    raise NotImplementedError(
+                        "can not connect to %s in R" % self.backend)
 
     def getTables(self, pattern=None):
         """return a list of tables matching a *pattern*.
@@ -502,11 +554,11 @@ class TrackerSQL(Tracker):
 
         if pattern:
             rx = re.compile(pattern)
-            return [ x for x in sorted_tables if rx.search(x) ]
+            return [x for x in sorted_tables if rx.search(x)]
         else:
             return sorted_tables
 
-    def getTableNames(self, pattern = None):
+    def getTableNames(self, pattern=None):
         '''return a list of tablenames matching a *pattern*.
         '''
         return self.getTables(pattern)
@@ -521,7 +573,7 @@ class TrackerSQL(Tracker):
 
         self.connect()
         columns = getTableColumns(self.db, tablename)
-        return [ re.sub("%s[.]" % tablename, "", x['name']) for x in columns ]
+        return [re.sub("%s[.]" % tablename, "", x['name']) for x in columns]
 
     def execute(self, stmt):
         self.connect()
@@ -565,8 +617,10 @@ class TrackerSQL(Tracker):
         Returns None if result is empty.
         """
         e = self.execute(self.buildStatement(stmt)).fetchone()
-        if e: return list(e)
-        else: return None
+        if e:
+            return list(e)
+        else:
+            return None
 
     def getRow(self, stmt):
         """return a row of values from an SQL statement as dictionary.
@@ -578,8 +632,10 @@ class TrackerSQL(Tracker):
         """
         e = self.execute(self.buildStatement(stmt)).fetchone()
         # assumes that values are sorted in ResultProxy.keys()
-        if e: return odict([x,e[x]] for x in list(e.keys()))
-        else: return None
+        if e:
+            return odict([x, e[x]] for x in list(e.keys()))
+        else:
+            return None
 
     def getValues(self, stmt):
         """return values from SQL statement *stmt* as a list.
@@ -590,7 +646,8 @@ class TrackerSQL(Tracker):
         Returns an empty list if there is no result.
         """
         e = self.execute(self.buildStatement(stmt)).fetchall()
-        if e: return [x[0] for x in e]
+        if e:
+            return [x[0] for x in e]
         return []
 
     def getAll(self, stmt):
@@ -652,13 +709,13 @@ class TrackerSQL(Tracker):
         """
         if self.pattern:
             rx = re.compile(self.pattern)
-            tables = self.getTables(pattern = self.pattern)
+            tables = self.getTables(pattern=self.pattern)
             if self.as_tables:
-                return sorted([ x for x in tables ])
+                return sorted([x for x in tables])
             else:
                 return sorted([rx.search(x).groups()[0] for x in tables])
         else:
-            return [ "all" ]
+            return ["all"]
 
     # def getDataFrame(self, stmt):
     #     '''return an R data frame as rpy2 object.
@@ -674,23 +731,24 @@ class TrackerSQL(Tracker):
         return df
 
     def getPaths(self):
-         """return all paths this tracker provides.
+        """return all paths this tracker provides.
 
-         Tracks are defined as tables matching the attribute
+        Tracks are defined as tables matching the attribute
 :attr:`pattern`.
 
-         """
-         if self.pattern:
+        """
+        if self.pattern:
             rx = re.compile(self.pattern)
             # let getTracks handle a single group
-            if rx.groups < 2: return None
-            tables = self.getTables(pattern = self.pattern)
+            if rx.groups < 2:
+                return None
+            tables = self.getTables(pattern=self.pattern)
             parts = [rx.search(x).groups() for x in tables]
             result = []
             for x in range(rx.groups):
-                result.append(sorted(set([ part[x] for part in parts ]) ))
+                result.append(sorted(set([part[x] for part in parts])))
             return result
-         return None
+        return None
 
 
 ###########################################################################
@@ -698,6 +756,7 @@ class TrackerSQL(Tracker):
 ###########################################################################
 
 class TrackerSQLCheckTables(TrackerSQL):
+
     """Tracker that examines the presence/absence of a certain
     field in a list of tables.
 
@@ -708,7 +767,7 @@ class TrackerSQLCheckTables(TrackerSQL):
 :attr:`pattern`: pattern to define tracks (see:class:`TrackerSql`)
     """
 
-    mFields = ["id",]
+    mFields = ["id", ]
     mExcludePattern = None
     pattern = "_annotations$"
     mIncludePattern = "^%s_"
@@ -716,36 +775,41 @@ class TrackerSQLCheckTables(TrackerSQL):
     def __init__(self, *args, **kwargs):
         TrackerSQL.__init__(self, *args, **kwargs)
 
-    def getSlices(self, subset = None):
+    def getSlices(self, subset=None):
         return self.mFields
 
     def getTablesOfInterest(self, track):
 
         if self.mExcludePattern:
-            keep = lambda x: not re.search(self.mExcludePattern, x) and re.search(self.mIncludePattern % track, x)
+            keep = lambda x: not re.search(self.mExcludePattern, x) and re.search(
+                self.mIncludePattern % track, x)
         else:
             keep = lambda x: re.search(self.mIncludePattern % track, x)
 
-        return [ x for x in self.getTables() if keep(x.name) ]
+        return [x for x in self.getTables() if keep(x.name)]
 
-    def __call__(self, track, slice = None):
+    def __call__(self, track, slice=None):
         """count number of unique occurances of field *slice* in tables matching *track*."""
 
         tables = self.getTablesOfInterest(track)
         data = []
         for table in tables:
-            if slice not in [x.name for x in table.columns]: continue
+            if slice not in [x.name for x in table.columns]:
+                continue
             # remove the table name and strip offensive characters
-            field = re.sub(self.mIncludePattern % track, "", table.name).strip("._:@$!?#")
+            field = re.sub(self.mIncludePattern %
+                           track, "", table.name).strip("._:@$!?#")
             data.append((field,
-                          self.getValue("SELECT COUNT(DISTINCT %s) FROM %s" % (slice, table.name)) ))
+                         self.getValue("SELECT COUNT(DISTINCT %s) FROM %s" % (slice, table.name))))
         return odict(data)
 
 ###########################################################################
 ###########################################################################
 ###########################################################################
 
+
 class TrackerSQLCheckTable(TrackerSQL):
+
     """Tracker that counts existing entries in a table.
 
     Define the following attributes:
@@ -774,15 +838,19 @@ class TrackerSQLCheckTable(TrackerSQL):
         data = []
 
         for column in columns:
-            if fskip(column): continue
-            data.append((column, self.getValue(statement % (column, tablename, column)) ))
+            if fskip(column):
+                continue
+            data.append(
+                (column, self.getValue(statement % (column, tablename, column))))
         return odict(data)
 
 ###########################################################################
 ###########################################################################
 ###########################################################################
 
+
 class Config(Tracker):
+
     '''Tracker providing config values of ini files.
 
     The .ini files need to be located in the directory
@@ -799,7 +867,7 @@ class Config(Tracker):
         """count number of entries in a table."""
 
         config = configparser.ConfigParser()
-        config.readfp(open(track),"r")
+        config.readfp(open(track), "r")
 
         result = odict()
 
@@ -808,7 +876,8 @@ class Config(Tracker):
             rx_int = re.compile("^\s*[+-]*[0-9]+\s*$")
             rx_float = re.compile("^\s*[+-]*[0-9.]+[.+\-eE][+-]*[0-9.]*\s*$")
 
-            if value == None: return value
+            if value == None:
+                return value
 
             if rx_int.match(value):
                 return int(value), "int"
@@ -818,7 +887,7 @@ class Config(Tracker):
 
         for section in config.sections():
             x = odict()
-            for key,value in config.items(section):
+            for key, value in config.items(section):
                 x[key] = odict(list(zip(("value", "type"), convert(value))))
             result[section] = x
 
@@ -828,13 +897,15 @@ class Config(Tracker):
 ###########################################################################
 ###########################################################################
 
+
 class Empty(Tracker):
+
     '''Empty tracker
 
     This tracker servers as placeholder for plots that require no input from a tracker.
     '''
 
-    def getTracks(self, subset = None):
+    def getTracks(self, subset=None):
         """return a list of all tracks that this tracker provides."""
         return ["empty"]
 
@@ -844,7 +915,10 @@ class Empty(Tracker):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+
+
 class Status(TrackerSQL):
+
     '''Tracker returning status information.
 
     Define tracks and slices. Slices will be translated into
@@ -860,8 +934,8 @@ class Status(TrackerSQL):
     The docstring of the test function is used as description.
     '''
 
-    def getSlices(self, subset = None):
-        return [ x[4:] for x in dir(self) if x.startswith("test")]
+    def getSlices(self, subset=None):
+        return [x[4:] for x in dir(self) if x.startswith("test")]
 
     def __call__(self, track, slice):
         if not hasattr(self, "test%s" % slice):
@@ -881,6 +955,7 @@ class Status(TrackerSQL):
 ###########################################################################
 ###########################################################################
 class SingleTableTrackerRows(TrackerSQL):
+
     '''Tracker representing a table with multiple tracks.
 
     Returns a dictionary of values.
@@ -986,7 +1061,10 @@ class SingleTableTrackerRows(TrackerSQL):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+
+
 class SingleTableTrackerColumns(TrackerSQL):
+
     '''Tracker representing a table with multiple tracks.
 
     Returns a dictionary of two sets of data, one given
@@ -1022,9 +1100,10 @@ class SingleTableTrackerColumns(TrackerSQL):
 
     @property
     def tracks(self):
-        if not self.hasTable(self.table): return []
+        if not self.hasTable(self.table):
+            return []
         columns = self.getColumns(self.table)
-        return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
+        return [x for x in columns if x not in self.exclude_columns and x != self.column]
 
     @property
     def slices(self):
@@ -1033,9 +1112,10 @@ class SingleTableTrackerColumns(TrackerSQL):
         else:
             return []
 
-    def __call__(self, track, slice = None):
+    def __call__(self, track, slice=None):
         if slice != None:
-            data = self.getValue("SELECT %(track)s FROM %(table)s WHERE %(column)s = '%(slice)s'")
+            data = self.getValue(
+                "SELECT %(track)s FROM %(table)s WHERE %(column)s = '%(slice)s'")
         else:
             data = self.getValues("SELECT %(track)s FROM %(table)s")
         return data
@@ -1043,7 +1123,10 @@ class SingleTableTrackerColumns(TrackerSQL):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+
+
 class SingleTableTrackerEdgeList(TrackerSQL):
+
     '''Tracker representing a table with matrix type data.
 
     Returns a dictionary of values.
@@ -1079,12 +1162,14 @@ class SingleTableTrackerEdgeList(TrackerSQL):
 
     @property
     def tracks(self):
-        if self.table == None: raise NotImplementedError("table not defined")
-        if not self.hasTable(self.table): raise ValueError("unknown table %s" % self.table)
+        if self.table == None:
+            raise NotImplementedError("table not defined")
+        if not self.hasTable(self.table):
+            raise ValueError("unknown table %s" % self.table)
 
         if self.value2 != None:
-            return sorted(set(self.getValues("SELECT DISTINCT %(row)s FROM %(table)s") +\
-                                    self.getValues("SELECT DISTINCT %(column)s FROM %(table)s")) )
+            return sorted(set(self.getValues("SELECT DISTINCT %(row)s FROM %(table)s") +
+                              self.getValues("SELECT DISTINCT %(column)s FROM %(table)s")))
         else:
             return self.getValues("SELECT DISTINCT %(row)s FROM %(table)s")
 
@@ -1095,7 +1180,7 @@ class SingleTableTrackerEdgeList(TrackerSQL):
         else:
             return self.getValues("SELECT DISTINCT %(column)s FROM %(table)s")
 
-    def __call__(self, track, slice = None):
+    def __call__(self, track, slice=None):
 
         try:
             val = self.getValue("""SELECT %(value)s FROM %(table)s
@@ -1110,15 +1195,20 @@ class SingleTableTrackerEdgeList(TrackerSQL):
             except exc.SQLAlchemyError:
                 val = None
 
-        if val == None: return val
+        if val == None:
+            return val
 
-        if self.transform: return self.transform(val)
+        if self.transform:
+            return self.transform(val)
         return val
 
 ###########################################################################
 ###########################################################################
 ###########################################################################
+
+
 class MultipleTableTrackerEdgeList(TrackerSQL):
+
     '''Tracker representing multiple tables with matrix type data.
 
     Returns a dictionary of values.
@@ -1133,7 +1223,7 @@ class MultipleTableTrackerEdgeList(TrackerSQL):
     def __init__(self, *args, **kwargs):
         TrackerSQL.__init__(self, *args, **kwargs)
 
-    def __call__(self, track, slice = None):
+    def __call__(self, track, slice=None):
 
         if self.column == None:
             raise ValueError('MultipleTrackerEdgeList requires a column field')
@@ -1158,7 +1248,10 @@ class MultipleTableTrackerEdgeList(TrackerSQL):
 ###########################################################################
 ###########################################################################
 ###########################################################################
+
+
 class SingleTableTrackerHistogram(TrackerSQL):
+
     '''Tracker representing a table with multiple tracks.
 
     Returns a dictionary of two sets of data, one given
@@ -1193,19 +1286,27 @@ class SingleTableTrackerHistogram(TrackerSQL):
 
     @property
     def tracks(self):
-        if self.column == None: raise NotImplementedError("column not set - Tracker not fully implemented")
-        if not self.hasTable(self.table): return []
+        if self.column == None:
+            raise NotImplementedError(
+                "column not set - Tracker not fully implemented")
+        if not self.hasTable(self.table):
+            return []
         columns = self.getColumns(self.table)
-        return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
+        return [x for x in columns if x not in self.exclude_columns and x != self.column]
 
-    def __call__(self, track, slice = None):
-        if self.column == None: raise NotImplementedError("column not set - Tracker not fully implemented")
+    def __call__(self, track, slice=None):
+        if self.column == None:
+            raise NotImplementedError(
+                "column not set - Tracker not fully implemented")
         # labels need to be consistent in order
         # so rename track to value.
-        data = self.getAll("SELECT %(column)s, %(track)s AS %(value)s FROM %(table)s")
+        data = self.getAll(
+            "SELECT %(column)s, %(track)s AS %(value)s FROM %(table)s")
         return data
 
+
 class MultipleTableTrackerHistogram(TrackerSQL):
+
     '''Tracker representing multiple table with multiple slices.
 
     Returns a dictionary of two sets of data, one given
@@ -1239,11 +1340,13 @@ class MultipleTableTrackerHistogram(TrackerSQL):
 
     @property
     def slices(self):
-        if self.column == None: raise NotImplementedError("column not set - Tracker not fully implemented")
+        if self.column == None:
+            raise NotImplementedError(
+                "column not set - Tracker not fully implemented")
         columns = set()
         for table in self.getTableNames(self.pattern):
-            columns.update(self.getColumns(table) )
-        return [ x for x in columns if x not in self.exclude_columns and x != self.column ]
+            columns.update(self.getColumns(table))
+        return [x for x in columns if x not in self.exclude_columns and x != self.column]
 
     def __call__(self, track, slice):
         # check if column exists in particular table - if not, return no data
@@ -1255,13 +1358,15 @@ class MultipleTableTrackerHistogram(TrackerSQL):
     # def __call__(self, track):
 
     #     if self.column == None: raise NotImplementedError("column not set - Tracker not fully implemented")
-    #     # get columns in the alphabetical order
+    # get columns in the alphabetical order
     #     columns = sorted(self.getColumns(track) )
     #     if self.column not in columns: raise ValueError("column '%s' missing from '%s'" % (self.column, track))
     #     columns = ",".join([ x for x in columns if x not in self.exclude_columns and x != self.column ])
-    #     return self.getAll("""SELECT %(column)s, %(columns)s FROM %(track)s""")
+    # return self.getAll("""SELECT %(column)s, %(columns)s FROM %(track)s""")
+
 
 class TrackerSQLMulti(TrackerSQL):
+
     '''An SQL tracker spanning multiple databases.
 
     '''
@@ -1275,8 +1380,8 @@ class TrackerSQLMulti(TrackerSQL):
         if len(self.tracks) == 0:
             raise ValueError("no tracks specified in TrackerSQLMulti")
         if (len(self.tracks) != len(self.databases)):
-            raise ValueError("TrackerSQLMulti requires an equal number of tracks (%i) and databases (%i)" \
-                                 % (len(self.tracks), len(self.databases)))
+            raise ValueError("TrackerSQLMulti requires an equal number of tracks (%i) and databases (%i)"
+                             % (len(self.tracks), len(self.databases)))
         if not self.backend.startswith("sqlite"):
             raise ValueError("TrackerSQLMulti only works for sqlite database")
 
@@ -1288,14 +1393,16 @@ class TrackerSQLMulti(TrackerSQL):
                 import sqlite3
                 conn = sqlite3.connect(re.sub("sqlite:///", "", self.backend))
                 for track, name in zip(self.databases, self.tracks):
-                    conn.execute("ATTACH DATABASE '%s/csvdb' AS %s" % \
-                                      (os.path.abspath(track),
-                                       name))
+                    conn.execute("ATTACH DATABASE '%s/csvdb' AS %s" %
+                                 (os.path.abspath(track),
+                                  name))
                 return conn
 
-            self.connect(creator = _my_creator)
+            self.connect(creator=_my_creator)
+
 
 class TrackerMultipleLists(TrackerSQL):
+
     ''' A class to retrieve multiple columns across one or more tables.
     Returns a dictionary of lists.
 
@@ -1344,7 +1451,8 @@ class TrackerMultipleLists(TrackerSQL):
 
         statements = odict()
 
-        if self.statements: return self.statements
+        if self.statements:
+            return self.statements
 
         if self.ListA:
             if self.labels:
@@ -1376,13 +1484,15 @@ class TrackerMultipleLists(TrackerSQL):
 
         return statements
 
-    def __call__(self, track, slice = None):
+    def __call__(self, track, slice=None):
 
         statements = self.getStatements()
         # track and slice will be substituted in the statements
-        return odict([(x,self.getValues(statements[x])) for x in statements])
+        return odict([(x, self.getValues(statements[x])) for x in statements])
+
 
 class MeltedTableTracker(TrackerSQL):
+
     '''Tracker representing multiple tables with the same columns.
 
     The tables are melted - a column called ``track`` is added
@@ -1404,18 +1514,22 @@ class MeltedTableTracker(TrackerSQL):
         for table in tables:
             columns = self.getColumns(table)
             if columns != ref_columns:
-                E.warn("incompatible column names in table %s - skipped" % table)
+                E.warn(
+                    "incompatible column names in table %s - skipped" % table)
                 continue
 
             track = re.search(self.pattern, table).groups()[0]
 
-            results.extend(self.get("SELECT '%(track)s' as track, %(fields)s FROM %(table)s") )
+            results.extend(
+                self.get("SELECT '%(track)s' as track, %(fields)s FROM %(table)s"))
 
         ref_columns.insert(0, "track")
 
         return odict(zip(ref_columns, zip(*results)))
 
+
 class MeltedTableTrackerDataframe(MeltedTableTracker):
+
     '''Tracker representing multiple tables with the same columns.
 
     The tables are melted - a column called ``track`` is added

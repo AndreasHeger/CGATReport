@@ -22,10 +22,9 @@ except ImportError:
 # ignore numpy histogram warnings in versions 1.3
 import warnings
 
-########################################################################
-########################################################################
-########################################################################
+
 class Transformer(Component):
+
     '''Base class for transformers.
 
     Implements the basic __call__ method that iterates over a:term:`data tree`
@@ -41,16 +40,19 @@ class Transformer(Component):
 
     nlevels = None
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         pass
 
     def __call__(self, data):
 
-        if self.nlevels == None: raise NotImplementedError("incomplete implementation of %s" % str(self))
+        if self.nlevels is None:
+            raise NotImplementedError(
+                "incomplete implementation of %s" % str(self))
 
         labels = DataTree.getPaths(data)
         debug("transform: started with paths: %s" % labels)
-        assert len(labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
+        assert len(
+            labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
         if self.nlevels:
             paths = list(itertools.product(*labels[:-self.nlevels]))
         else:
@@ -58,7 +60,8 @@ class Transformer(Component):
 
         for path in paths:
             work = DataTree.getLeaf(data, path)
-            if not work: continue
+            if not work:
+                continue
             new_data = self.transform(work, path)
             if new_data is not None:
                 if path is not None and len(path) > 0:
@@ -74,12 +77,14 @@ class Transformer(Component):
 
         return data
 
+
 ########################################################################
 ########################################################################
-## Conversion transformers
+# Conversion transformers
 ########################################################################
 ########################################################################
 class TransformerToLabels(Transformer):
+
     '''convert:term:`numerical arrays` to:term:`labeled data`.
 
     By default, the items are labeled numerically. If `tf-labels`
@@ -99,7 +104,7 @@ class TransformerToLabels(Transformer):
     options = Transformer.options +\
         (('tf-labels', directives.unchanged),)
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
         self.labels = kwargs.get("tf-labels", None)
@@ -107,7 +112,8 @@ class TransformerToLabels(Transformer):
     def transform(self, data, path):
         debug("%s: called" % str(self))
 
-        if len(data) == 0: return data
+        if len(data) == 0:
+            return data
 
         keys = list(data.keys())
 
@@ -115,9 +121,11 @@ class TransformerToLabels(Transformer):
             labels = data[self.labels]
             del keys[keys.index(self.labels)]
             if len(keys) < 1:
-                raise ValueError("TransformerToLabels requires at least two arrays, got only 1, if tf-labels is set")
+                raise ValueError("TransformerToLabels requires at "
+                                 "least two arrays, got only 1, "
+                                 "if tf-labels is set")
         else:
-            max_nkeys = max([len(x) for x in list(data.values()) ])
+            max_nkeys = max([len(x) for x in list(data.values())])
             labels = list(range(1, max_nkeys + 1))
 
         labels = list(map(str, labels))
@@ -131,10 +139,9 @@ class TransformerToLabels(Transformer):
 
         return new_data
 
-########################################################################
-########################################################################
-########################################################################
+
 class TransformerToList(Transformer):
+
     '''transform categorized data into lists.
 
     Example::
@@ -150,7 +157,7 @@ class TransformerToList(Transformer):
     '''
     nlevels = 2
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
     def transform(self, data, path):
@@ -165,16 +172,19 @@ class TransformerToList(Transformer):
                 else:
                     lists[minor_key] = [value]
 
-        sizes = [ len(x) for x in list(lists.values()) ]
+        sizes = [len(x) for x in list(lists.values())]
         if max(sizes) != min(sizes):
-            warn("%s: list of unequal sizes: min=%i, max=%i" %\
-                      (self, min(sizes), max(sizes)))
+            warn("%s: list of unequal sizes: min=%i, max=%i" %
+                 (self, min(sizes), max(sizes)))
         return lists
 
 ########################################################################
 ########################################################################
 ########################################################################
+
+
 class TransformerToRDataFrame(Transformer):
+
     '''transform data into one or more data frames.
 
     Example::
@@ -188,7 +198,7 @@ class TransformerToRDataFrame(Transformer):
     '''
     nlevels = 1
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
     def transform(self, data, path):
@@ -196,8 +206,11 @@ class TransformerToRDataFrame(Transformer):
 
         t = odict()
         for minor_key, values in data.items():
-            if not Utils.isArray(values): raise ValueError("expected a list for data frame creation, got %s", type(data))
-            if len(values) == 0: raise ValueError("empty list for %s" % (minor_key))
+            if not Utils.isArray(values):
+                raise ValueError("expected a list for data frame "
+                                 "creation, got %s", type(data))
+            if len(values) == 0:
+                raise ValueError("empty list for %s" % (minor_key))
             v = values[0]
             if Utils.isInt(v):
                 t[minor_key] = rpy2.robjects.IntVector(values)
@@ -208,7 +221,9 @@ class TransformerToRDataFrame(Transformer):
 
         return rpy2.robjects.DataFrame(t)
 
+
 class TransformerToDataFrame(Transformer):
+
     '''transform data into one or more data frames.
 
     Example::
@@ -221,18 +236,17 @@ class TransformerToDataFrame(Transformer):
 
     '''
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
     def __call__(self, data):
 
         result = DataTree.asDataFrame(data)
-        return odict(( ('all', result),))
+        return odict((('all', result),))
 
-########################################################################
-########################################################################
-########################################################################
+
 class TransformerIndicator(Transformer):
+
     '''take a field from the lowest level and
     build an absent/present indicator out of it.
     '''
@@ -242,19 +256,22 @@ class TransformerIndicator(Transformer):
 
     options = Transformer.options +\
         (('tf-fields', directives.unchanged),
-          ('tf-level', directives.length_or_unitless))
+         ('tf-level', directives.length_or_unitless))
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
         raise NotImplementedError('transformer indicator is not implemented')
         try:
             self.filter = kwargs["tf-fields"]
         except KeyError:
-            raise KeyError("TransformerIndicator requires the `tf-fields` option to be set.")
+            raise KeyError("TransformerIndicator requires the "
+                           "`tf-fields` option to be set.")
 
-        try: self.nlevels = int(kwargs["tf-level"])
-        except KeyError: pass
+        try:
+            self.nlevels = int(kwargs["tf-level"])
+        except KeyError:
+            pass
 
     def transform(self, data, path):
         debug("%s: called" % str(self))
@@ -262,10 +279,9 @@ class TransformerIndicator(Transformer):
         vals = data[self.filter]
         return odict(list(zip(vals, [1] * len(vals))))
 
-########################################################################
-########################################################################
-########################################################################
+
 class TransformerCount(Transformer):
+
     '''compute counts of values in the hierarchy.
 
     Displaying a table of counts can often be useful to
@@ -287,11 +303,13 @@ class TransformerCount(Transformer):
     options = Transformer.options +\
         (('tf-level', directives.length_or_unitless),)
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        try: self.nlevels = int(kwargs["tf-level"])
-        except KeyError: pass
+        try:
+            self.nlevels = int(kwargs["tf-level"])
+        except KeyError:
+            pass
 
     def transform(self, data, path):
         debug("%s: called" % str(self))
@@ -303,20 +321,18 @@ class TransformerCount(Transformer):
 
 ########################################################################
 ########################################################################
-## Filtering transformers
+# Filtering transformers
 ########################################################################
 ########################################################################
 
-########################################################################
-########################################################################
-########################################################################
-########################################################################
+
 class TransformerFilter(Transformer):
+
     '''select fields from the deepest level in the hierarchy.
 
-    This transformer removes all branches in a:term:`data tree`
-    on level:term:`tf-level` that do not match the
-:term:`tf-fields` option.
+    This transformer removes all branches in a:term:`data tree` on
+    level:term:`tf-level` that do not match the :term:`tf-fields`
+    option.
 
     Level is counted from the deepest branch. By default,
     leaves (level = 1) are removed.
@@ -336,14 +352,16 @@ class TransformerFilter(Transformer):
 
     options = Transformer.options +\
         (('tf-fields', directives.unchanged),
-          ('tf-level', directives.length_or_unitless))
+         ('tf-level', directives.length_or_unitless))
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        try: self.filter = set(kwargs["tf-fields"].split(","))
+        try:
+            self.filter = set(kwargs["tf-fields"].split(","))
         except KeyError:
-            raise KeyError("TransformerFilter requires the `tf-fields` option to be set.")
+            raise KeyError("TransformerFilter requires the "
+                           "`tf-fields` option to be set.")
 
         self.nlevels = int(kwargs.get("tf-level", self.nlevels))
 
@@ -356,15 +374,14 @@ class TransformerFilter(Transformer):
 
         return data
 
-########################################################################
-########################################################################
-########################################################################
+
 class TransformerSelect(Transformer):
+
     '''replace the lowest hierarchy with a single value.
 
-    This transformer removes all branches in a:term:`data tree`
-    on level:term:`tf-level` that do not match the
-:term:`tf-fields` option.
+    This transformer removes all branches in a:term:`data tree` on
+    level:term:`tf-level` that do not match the :term:`tf-fields`
+    option.
 
     The following operations are perform when:term:`tf-fields` is set
     to ``x``::
@@ -383,13 +400,14 @@ class TransformerSelect(Transformer):
     options = Transformer.options +\
         (('tf-fields', directives.unchanged),)
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        try: self.fields = kwargs["tf-fields"].split(",")
+        try:
+            self.fields = kwargs["tf-fields"].split(",")
         except KeyError:
-            raise KeyError("TransformerSelect requires the `tf-fields` option to be set.")
-
+            raise KeyError("TransformerSelect requires the "
+                           "`tf-fields` option to be set.")
 
     def transform(self, data, path):
         debug("%s: called" % str(self))
@@ -407,14 +425,51 @@ class TransformerSelect(Transformer):
                 data[v] = self.default
 
         if nfound == 0:
-            raise ValueError("could not find any field from `%s` in %s" % (str(self.fields), path))
+            raise ValueError("could not find any field "
+                             "from `%s` in %s" %
+                             (str(self.fields), path))
 
         return data
 
-########################################################################
-########################################################################
-########################################################################
+
+class TransformerSwop(Transformer):
+
+    '''swop two levels in the data tree.
+
+    For example:
+
+    track1/gene_id=1, track1/gene_name=1
+    track2/gene_id=1, track2/gene_name=2
+
+    with tf-swop=0,1
+
+    will become:
+
+    '''
+    options = Transformer.options +\
+        (('tf-fields', directives.unchanged),)
+
+    def __init__(self, *args, **kwargs):
+        Transformer.__init__(self, *args, **kwargs)
+
+        try:
+            self.fields = kwargs["tf-fields"].split(",")
+        except KeyError:
+            raise KeyError("TransformerGroup requires the "
+                           "`tf-fields` option to be set.")
+
+        if len(self.fields) != 2:
+            raise ValueError("`tf-fields` requires exactly "
+                             "two fields for swapping")
+
+        self.fields = map(int, self.fields)
+
+    def __call__(self, data):
+        return DataTree.swop(data, self.fields[0], self.fields[1])
+
+
 class TransformerGroup(Transformer):
+
     '''group second-to-last level by lowest level.
 
     For example:
@@ -429,7 +484,8 @@ class TransformerGroup(Transformer):
     gene_id1/gene_name=1
     gene_id1/tracks = [track1,track2]
 
-    Note that other fields not in the group field will take the value of the first row.
+    Note that other fields not in the group field will take the value
+    of the first row.
 
     For example::
 
@@ -439,7 +495,6 @@ class TransformerGroup(Transformer):
        b/x=1
        b/y=2
 
-
     '''
 
     nlevels = 2
@@ -448,28 +503,32 @@ class TransformerGroup(Transformer):
     options = Transformer.options +\
         (('tf-fields', directives.unchanged),)
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        try: self.fields = kwargs["tf-fields"].split(",")
+        try:
+            self.fields = kwargs["tf-fields"].split(",")
         except KeyError:
-            raise KeyError("TransformerGroup requires the `tf-fields` option to be set.")
+            raise KeyError("TransformerGroup requires the "
+                           "`tf-fields` option to be set.")
 
         if len(self.fields) != 1:
-            raise ValueError("`tf-fields` requires exactly one field for grouping function")
+            raise ValueError("`tf-fields` requires exactly "
+                             "one field for grouping function")
 
         self.field = self.fields[0]
 
     def transform(self, data, path):
         debug("%s: called" % str(self))
 
-        nfound = 0
         new_data = odict()
 
         for v in list(data.keys()):
-            other_fields = [ x for x in list(data[v].keys()) if x != self.field ]
+            other_fields = [x for x in list(data[v].keys())
+                            if x != self.field]
             for pos, val in enumerate(data[v][self.field]):
-                if val not in new_data: new_data[val] = odict()
+                if val not in new_data:
+                    new_data[val] = odict()
                 if "group" not in new_data[val]:
                     for o in other_fields:
                         new_data[val][o] = data[v][o][pos]
@@ -478,10 +537,9 @@ class TransformerGroup(Transformer):
 
         return new_data
 
-########################################################################
-########################################################################
-########################################################################
+
 class TransformerCombinations(Transformer):
+
     '''build combinations.
 
     Level=2 can be used for labeled data::
@@ -513,12 +571,13 @@ class TransformerCombinations(Transformer):
 
     options = Transformer.options +\
         (('tf-level', directives.length_or_unitless),
-          ('tf-fields', directives.unchanged),)
+         ('tf-fields', directives.unchanged),)
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        try: self.fields = set(kwargs["tf-fields"].split(","))
+        try:
+            self.fields = set(kwargs["tf-fields"].split(","))
         except KeyError:
             self.fields = None
 
@@ -527,10 +586,10 @@ class TransformerCombinations(Transformer):
     def transform(self, data, path):
         debug("%s: called" % str(self))
 
-        vals =  list(data.keys())
+        vals = list(data.keys())
         new_data = odict()
 
-        for x1 in range(len(vals)-1):
+        for x1 in range(len(vals) - 1):
             n1 = vals[x1]
             # find the first field that fits
             if self.fields:
@@ -539,11 +598,14 @@ class TransformerCombinations(Transformer):
                         d1 = data[n1][field]
                         break
                 else:
-                    raise KeyError("could not find any match from '%s' in '%s'" % (str(list(data[n1].keys())), str(self.fields)))
+                    raise KeyError("could not find any match "
+                                   "from '%s' in '%s'" %
+                                   (str(list(data[n1].keys())),
+                                    str(self.fields)))
             else:
                 d1 = data[n1]
 
-            for x2 in range(x1+1, len(vals)):
+            for x2 in range(x1 + 1, len(vals)):
                 n2 = vals[x2]
                 if self.fields:
                     try:
@@ -553,22 +615,19 @@ class TransformerCombinations(Transformer):
                 else:
                     d2 = data[n2]
 
-                ## check if array?
-                #if len(d1) != len(d2):
-                #    raise ValueError("length of elements not equal: %i != %i" % (len(d1), len(d2)))
+                DataTree.setLeaf(new_data,
+                                 (("%s x %s" % (n1, n2)), n1),
+                                 d1)
 
-                DataTree.setLeaf(new_data, (("%s x %s" % (n1, n2)), n1),
-                                  d1)
-
-                DataTree.setLeaf(new_data, (("%s x %s" % (n1, n2)), n2),
-                                  d2)
+                DataTree.setLeaf(new_data,
+                                 (("%s x %s" % (n1, n2)), n2),
+                                 d2)
 
         return new_data
 
-########################################################################
-########################################################################
-########################################################################
+
 class TransformerStats(Transformer):
+
     '''Compute summary statistics
 
     For example::
@@ -589,7 +648,7 @@ class TransformerStats(Transformer):
     '''
     nlevels = 0
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
     def transform(self, data, path):
@@ -603,7 +662,10 @@ class TransformerStats(Transformer):
 ########################################################################
 ########################################################################
 ########################################################################
+
+
 class TransformerPairwise(Transformer):
+
     '''for each pair of columns on the lowest level compute
     the pearson correlation coefficient and other stats.
     '''
@@ -612,31 +674,39 @@ class TransformerPairwise(Transformer):
     method = None
     paired = False
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
     def transform(self, data, path):
         debug("%s: called" % str(self))
 
         if len(list(data.keys())) < 2:
-            raise ValueError("expected at least two arrays, got only %s." % str(list(data.keys())))
+            raise ValueError("expected at least two arrays, "
+                             "got only %s." %
+                             str(list(data.keys())))
 
         pairs = itertools.combinations(list(data.keys()), 2)
 
         new_data = odict()
 
-        for x in list(data.keys()): new_data[x] = odict()
+        for x in list(data.keys()):
+            new_data[x] = odict()
 
-        for x,y in pairs:
+        for x, y in pairs:
             xvals, yvals = data[x], data[y]
             if self.paired:
                 if len(xvals) != len(yvals):
-                    raise ValueError("expected to arrays of the same length, %i != %i" % (len(xvals),
-                                                                                          len(yvals)))
-                take = [i for i in range(len(xvals)) if xvals[i] != None and yvals[i] != None \
-                            and type(xvals[i]) in (float,int,int) and type(yvals[i]) in (float,int,int) ]
-                xvals = [xvals[i] for i in take ]
-                yvals = [yvals[i] for i in take ]
+                    raise ValueError("expected to arrays of the "
+                                     "same length, %i != %i" %
+                                     (len(xvals),
+                                      len(yvals)))
+
+                take = [i for i in range(len(xvals))
+                        if xvals[i] is not None and yvals[i] is not None
+                        and type(xvals[i]) in (float, int)
+                        and type(yvals[i]) in (float, int)]
+                xvals = [xvals[i] for i in take]
+                yvals = [yvals[i] for i in take]
 
             try:
                 result = self.apply(xvals, yvals)
@@ -648,7 +718,9 @@ class TransformerPairwise(Transformer):
 
         return new_data
 
+
 class TransformerCorrelation(TransformerPairwise):
+
     '''compute correlation test
 
     Example::
@@ -669,11 +741,14 @@ class TransformerCorrelation(TransformerPairwise):
     '''
 
     paired = True
+
     def apply(self, xvals, yvals):
-        r = Stats.doCorrelationTest(xvals, yvals, method = self.method)
-        return Stats.doCorrelationTest(xvals, yvals, method = self.method)
+        return Stats.doCorrelationTest(xvals, yvals,
+                                       method=self.method)
+
 
 class TransformerCorrelationPearson(TransformerCorrelation):
+
     '''for each pair of columns on the lowest level compute
     the pearson correlation coefficient and other stats.
 
@@ -700,7 +775,9 @@ class TransformerCorrelationPearson(TransformerCorrelation):
     '''
     method = "pearson"
 
+
 class TransformerCorrelationSpearman(TransformerCorrelation):
+
     '''for each pair of columns on the lowest level compute
     the spearman correlation coefficient and other stats.
 
@@ -732,7 +809,9 @@ class TransformerCorrelationSpearman(TransformerCorrelation):
     '''
     method = "spearman"
 
+
 class TransformerMannWhitneyU(TransformerPairwise):
+
     '''apply the Mann-Whitney U test to test for
     the difference of medians.
 
@@ -749,12 +828,13 @@ class TransformerMannWhitneyU(TransformerPairwise):
     '''
 
     def apply(self, xvals, yvals):
-        xx = numpy.array([ x for x in xvals if x != None ])
-        yy = numpy.array([ y for y in yvals if y != None ])
-        r = Stats.doMannWhitneyUTest(xx, yy)
+        xx = numpy.array([x for x in xvals if x is not None])
+        yy = numpy.array([y for y in yvals if y is not None])
         return Stats.doMannWhitneyUTest(xx, yy)
 
+
 class TransformerContingency(TransformerPairwise):
+
     '''return number of identical entries
 
     Example::
@@ -778,10 +858,9 @@ class TransformerContingency(TransformerPairwise):
     def apply(self, xvals, yvals):
         return len(set(xvals).intersection(set(yvals)))
 
-########################################################################
-########################################################################
-########################################################################
+
 class TransformerAggregate(Transformer):
+
     '''aggregate histogram like data.
 
     Example::
@@ -832,26 +911,30 @@ class TransformerAggregate(Transformer):
             "cumulative": self.cumulate,
             "reverse-cumulative": self.reverse_cumulate,
             "relevel-with-first": self.relevel_with_first,
-            }
+        }
 
         if "tf-aggregate" in kwargs:
             for x in kwargs["tf-aggregate"].split(","):
                 try:
-                    self.mConverters.append(self.mMapKeyword[x ])
+                    self.mConverters.append(self.mMapKeyword[x])
                 except KeyError:
                     raise KeyError("unknown keyword `%s`" % x)
 
         if self.normalize_total in self.mConverters or self.normalize_max in self.mConverters:
-           self.mFormat = "%6.4f"
+            self.mFormat = "%6.4f"
 
         self.mBins = kwargs.get("tf-bins", "100")
         self.mRange = kwargs.get("tf-range", None)
 
         f = []
-        if self.normalize_total in self.mConverters: f.append("relative")
-        else: f.append("absolute")
-        if self.cumulate in self.mConverters: f.append("cumulative")
-        if self.reverse_cumulate in self.mConverters: f.append("cumulative")
+        if self.normalize_total in self.mConverters:
+            f.append("relative")
+        else:
+            f.append("absolute")
+        if self.cumulate in self.mConverters:
+            f.append("cumulative")
+        if self.reverse_cumulate in self.mConverters:
+            f.append("cumulative")
         f.append("frequency")
 
         self.mYLabel = " ".join(f)
@@ -859,7 +942,8 @@ class TransformerAggregate(Transformer):
     def normalize_max(self, data):
         """normalize a data vector by maximum.
         """
-        if data == None or len(data) == 0: return data
+        if data == None or len(data) == 0:
+            return data
         m = max(data)
         data = data.astype(numpy.float)
         # numpy does not throw at division by zero, but sets values to Inf
@@ -869,7 +953,8 @@ class TransformerAggregate(Transformer):
         """re-level data - add value of first bin to all other bins
         and set first bin to 0.
         """
-        if data == None or len(data) == 0: return data
+        if data == None or len(data) == 0:
+            return data
         v = data[0]
         data += v
         data[0] -= v
@@ -877,7 +962,8 @@ class TransformerAggregate(Transformer):
 
     def normalize_total(self, data):
         """normalize a data vector by the total"""
-        if data == None or len(data) == 0: return data
+        if data == None or len(data) == 0:
+            return data
         try:
             m = sum(data)
         except TypeError:
@@ -903,8 +989,9 @@ class TransformerAggregate(Transformer):
                 first = False
                 continue
 
-            values = numpy.array(values, dtype = numpy.float)
-            for converter in self.mConverters: values = converter(values)
+            values = numpy.array(values, dtype=numpy.float)
+            for converter in self.mConverters:
+                values = converter(values)
             data[key] = values
 
         return data
@@ -912,7 +999,10 @@ class TransformerAggregate(Transformer):
 ########################################################################
 ########################################################################
 ########################################################################
+
+
 class TransformerHistogram(TransformerAggregate):
+
     '''compute a histograms of:term:`numerical arrays`.
 
     Example::
@@ -930,9 +1020,9 @@ class TransformerHistogram(TransformerAggregate):
 
     options = Transformer.options +\
         (('tf-bins', directives.unchanged),
-          ('tf-range', directives.unchanged),
-          ('tf-max-bins', directives.unchanged),
-          )
+         ('tf-range', directives.unchanged),
+         ('tf-max-bins', directives.unchanged),
+         )
 
     def __init__(self, *args, **kwargs):
         TransformerAggregate.__init__(self, *args, **kwargs)
@@ -945,24 +1035,30 @@ class TransformerHistogram(TransformerAggregate):
         self.max_bins = int(kwargs.get("max-bins", "1000"))
 
         f = []
-        if self.normalize_total in self.mConverters: f.append("relative")
-        else: f.append("absolute")
-        if self.cumulate in self.mConverters: f.append("cumulative")
-        if self.reverse_cumulate in self.mConverters: f.append("cumulative")
+        if self.normalize_total in self.mConverters:
+            f.append("relative")
+        else:
+            f.append("absolute")
+        if self.cumulate in self.mConverters:
+            f.append("cumulative")
+        if self.reverse_cumulate in self.mConverters:
+            f.append("cumulative")
         f.append("frequency")
 
         self.mYLabel = " ".join(f)
 
     def binToX(self, bins):
         """convert bins to x-values."""
-        if self.mBinMarker == "left": return bins[:-1]
+        if self.mBinMarker == "left":
+            return bins[:-1]
         elif self.mBinMarker == "mean":
-            return [ (bins[x] - bins[x-1]) / 2.0 for x in range(1,len(bins)) ]
-        elif self.mBbinMarker == "right": return bins[1:]
+            return [(bins[x] - bins[x - 1]) / 2.0 for x in range(1, len(bins))]
+        elif self.mBbinMarker == "right":
+            return bins[1:]
 
     def toHistogram(self, data):
         '''compute the histogram.'''
-        ndata = [ x for x in data if x != None and x != 'None' ]
+        ndata = [x for x in data if x != None and x != 'None']
         nremoved = len(data) - len(ndata)
         if nremoved:
             warn("removed %i None values" % nremoved)
@@ -976,41 +1072,53 @@ class TransformerHistogram(TransformerAggregate):
         binsize = None
 
         if self.mRange != None:
-            vals = [ x.strip() for x in self.mRange.split(",") ]
-            if len(vals) == 3: mi, ma, binsize = vals[0], vals[1], float(vals[2])
-            elif len(vals) == 2: mi, ma, binsize = vals[0], vals[1], None
-            elif len(vals) == 1: mi, ma, binsize = vals[0], None, None
-            if mi == None or mi == "": mi = min(data)
-            else: mi = float(mi)
-            if ma == None or ma == "": ma = max(data)
-            else: ma = float(ma)
+            vals = [x.strip() for x in self.mRange.split(",")]
+            if len(vals) == 3:
+                mi, ma, binsize = vals[0], vals[1], float(vals[2])
+            elif len(vals) == 2:
+                mi, ma, binsize = vals[0], vals[1], None
+            elif len(vals) == 1:
+                mi, ma, binsize = vals[0], None, None
+            if mi == None or mi == "":
+                mi = min(data)
+            else:
+                mi = float(mi)
+            if ma == None or ma == "":
+                ma = max(data)
+            else:
+                ma = float(ma)
         else:
-            mi, ma= min(data), max(data)
+            mi, ma = min(data), max(data)
 
         if self.mBins.startswith("dict"):
             h = collections.defaultdict(int)
-            for x in data: h[x] += 1
+            for x in data:
+                h[x] += 1
             bin_edges = sorted(h.keys())
             hist = numpy.zeros(len(bin_edges), numpy.int)
-            for x in range(len(bin_edges)): hist[x] = h[bin_edges[x]]
+            for x in range(len(bin_edges)):
+                hist[x] = h[bin_edges[x]]
             bin_edges.append(bin_edges[-1] + 1)
         else:
             if self.mBins.startswith("log"):
 
                 try:
-                    a,b = self.mBins.split("-")
+                    a, b = self.mBins.split("-")
                 except ValueError:
                     raise SyntaxError("expected log-xxx, got %s" % self.mBins)
                 nbins = float(b)
-                if ma < 0 or mi < 0: raise ValueError("can not bin logarithmically for negative values.")
-                if mi == 0: mi = numpy.MachAr().epsneg
+                if ma < 0 or mi < 0:
+                    raise ValueError(
+                        "can not bin logarithmically for negative values.")
+                if mi == 0:
+                    mi = numpy.MachAr().epsneg
                 ma = numpy.log10(ma)
                 mi = numpy.log10(mi)
                 try:
-                    bins = [ 10 ** x for x in numpy.arange(mi, ma, ma / nbins) ]
+                    bins = [10 ** x for x in numpy.arange(mi, ma, ma / nbins)]
                 except ValueError as msg:
-                    raise ValueError("can not compute %i bins for %f-%f: %s" % \
-                                         (nbins, mi, ma, msg) )
+                    raise ValueError("can not compute %i bins for %f-%f: %s" %
+                                     (nbins, mi, ma, msg))
             elif binsize != None:
                 # AH: why this sort statement? Removed
                 # data.sort()
@@ -1021,9 +1129,8 @@ class TransformerHistogram(TransformerAggregate):
                 try:
                     bins = eval(self.mBins)
                 except SyntaxError as msg:
-                    raise SyntaxError("could not evaluate bins from `%s`, error=`%s`" \
-                                           % (self.mBins, msg))
-
+                    raise SyntaxError("could not evaluate bins from `%s`, error=`%s`"
+                                      % (self.mBins, msg))
 
             if hasattr(bins, "__iter__"):
                 if len(bins) == 0:
@@ -1031,32 +1138,38 @@ class TransformerHistogram(TransformerAggregate):
                     return None, None
                 if self.max_bins > 0 and len(bins) > self.max_bins:
                     # truncate number of bins
-                    warn("too many bins (%i) - truncated to (%i)" % (len(bins), self.max_bins))
+                    warn("too many bins (%i) - truncated to (%i)" %
+                         (len(bins), self.max_bins))
                     bins = self.max_bins
 
             # ignore histogram semantics warning
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                hist, bin_edges = numpy.histogram(data, bins=bins, range=(mi,ma))
+                hist, bin_edges = numpy.histogram(
+                    data, bins=bins, range=(mi, ma))
 
         return self.binToX(bin_edges), hist
 
     def transform(self, data, path):
         debug("%s: called for path %s" % (str(self), str(path)))
 
-        if not Utils.isArray(data): return None
+        if not Utils.isArray(data):
+            return None
 
         bins, values = self.toHistogram(data)
         if bins != None:
-            for converter in self.mConverters: values = converter(values)
+            for converter in self.mConverters:
+                values = converter(values)
 
         debug("%s: completed for path %s" % (str(self), str(path)))
         header = "bins"
         #if len(path) > 1: header = path[-1]
-        #else: header = "bins"
+        # else: header = "bins"
         return odict(((header, bins), ("frequency", values)))
 
+
 class TransformerMelt(Transformer):
+
     ''' Create a melted table
 
     Example::
@@ -1097,25 +1210,22 @@ class TransformerMelt(Transformer):
 
         return final
 
-    def __call__(self,data):
+    def __call__(self, data):
 
-        titles = ["Data","Slice","Track"]
+        titles = ["Data", "Slice", "Track"]
 
         lol = self.melt(data)
 
         ntitles = len(lol)
 
-
-
-        if ntitles-len(titles) < 0:
-            titles = titles[:ntitles-1]
+        if ntitles - len(titles) < 0:
+            titles = titles[:ntitles - 1]
         else:
-            titles += ["Variable%i" % x for x in range((ntitles-len(titles)),0,-1)]
+            titles += ["Variable%i" %
+                       x for x in range((ntitles - len(titles)), 0, -1)]
 
         titles.reverse()
 
-
         dol = {titles[i]: lol[i] for i in range(len(lol))}
-
 
         return dol

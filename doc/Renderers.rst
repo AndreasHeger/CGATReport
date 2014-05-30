@@ -30,3 +30,4 @@ that are included in sphinxreport.
    GalleryDebug.rst
    GalleryLegends.rst
    GalleryOptions.rst
+   GalleryBokeh.rst

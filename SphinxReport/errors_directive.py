@@ -15,10 +15,17 @@ from sphinx.locale import _
 from sphinx.environment import NoUri
 from sphinx.util.compat import Directive, make_admonition
 
-class sphinxreporterror_node(nodes.warning, nodes.Element): pass
-class sphinxreporterrorlist(nodes.General, nodes.Element): pass
+
+class sphinxreporterror_node(nodes.warning, nodes.Element):
+    pass
+
+
+class sphinxreporterrorlist(nodes.General, nodes.Element):
+    pass
+
 
 class SphinxreportError(Directive):
+
     """
     A sphinxreporterror entry, displayed (if configured) in the form of an admonition.
     """
@@ -31,7 +38,8 @@ class SphinxreportError(Directive):
 
     def run(self):
         env = self.state.document.settings.env
-        targetid = "sphinxreporterror-%s" % env.new_serialno('sphinxreporterror')
+        targetid = "sphinxreporterror-%s" % env.new_serialno(
+            'sphinxreporterror')
         # env.index_num += 1
         targetnode = nodes.target('', '', ids=[targetid])
 
@@ -51,7 +59,8 @@ class SphinxreportError(Directive):
                              self.block_text, self.state, self.state_machine)
 
         # Attach a list of all sphinxreporterrors to the environment,
-        # the sphinxreporterrorlist works with the collected sphinxreporterror nodes
+        # the sphinxreporterrorlist works with the collected sphinxreporterror
+        # nodes
         if not hasattr(env, 'sphinxreporterror_all_sphinxreporterrors'):
             env.sphinxreporterror_all_sphinxreporterrors = []
         env.sphinxreporterror_all_sphinxreporterrors.append({
@@ -66,6 +75,7 @@ class SphinxreportError(Directive):
 
 
 class SphinxreportErrorList(Directive):
+
     """
     A list of all sphinxreporterror entries.
     """
@@ -103,7 +113,8 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
         nerrors = 0
 
         para = nodes.paragraph()
-        para += nodes.Text("There are %i errors" % len(env.sphinxreporterror_all_sphinxreporterrors))
+        para += nodes.Text("There are %i errors" %
+                           len(env.sphinxreporterror_all_sphinxreporterrors))
         content.append(para)
 
         #table = nodes.enumerated_list()
@@ -113,10 +124,12 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
 
             para = nodes.paragraph()
 
-            filename = env.doc2path(sphinxreporterror_info['docname'], base=None)
+            filename = env.doc2path(
+                sphinxreporterror_info['docname'], base=None)
 
             nerrors += 1
-            location_str = '%s:%d ' % (filename, sphinxreporterror_info['lineno'])
+            location_str = '%s:%d ' % (
+                filename, sphinxreporterror_info['lineno'])
             try:
                 description_str = sphinxreporterror_info['errorclass']
             except KeyError:
@@ -129,7 +142,8 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
             try:
                 newnode['refuri'] = app.builder.get_relative_uri(
                     fromdocname, sphinxreporterror_info['docname'])
-                newnode['refuri'] += '#' + sphinxreporterror_info['target']['refid']
+                newnode['refuri'] += '#' + \
+                    sphinxreporterror_info['target']['refid']
             except NoUri:
                 # ignore if no URI can be determined, e.g. for LaTeX output
                 pass
@@ -145,7 +159,8 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
             # i= nodes.list_item("sthtsnh")
 
             # (Recursively) resolve references in the sphinxreporterror content
-            sphinxreporterror_entry = sphinxreporterror_info['sphinxreporterror']
+            sphinxreporterror_entry = sphinxreporterror_info[
+                'sphinxreporterror']
             env.resolve_references(sphinxreporterror_entry, sphinxreporterror_info['docname'],
                                    app.builder)
 
@@ -153,7 +168,7 @@ def process_sphinxreporterror_nodes(app, doctree, fromdocname):
             # table += i
             content.append(para)
 
-        #content.append(table)
+        # content.append(table)
 
         node.replace_self(content)
 
@@ -162,26 +177,29 @@ def purge_sphinxreporterrors(app, env, docname):
     if not hasattr(env, 'sphinxreporterror_all_sphinxreporterrors'):
         return
     env.sphinxreporterror_all_sphinxreporterrors = [sphinxreporterror for sphinxreporterror in env.sphinxreporterror_all_sphinxreporterrors
-                          if sphinxreporterror['docname'] != docname]
+                                                    if sphinxreporterror['docname'] != docname]
 
 
 def visit_sphinxreporterror_node(self, node):
     self.visit_admonition(node)
 
+
 def depart_sphinxreporterror_node(self, node):
     self.depart_admonition(node)
+
 
 def setup(app):
     app.add_config_value('sphinxreport_show_errors', True, False)
 
     app.add_node(sphinxreporterrorlist)
     app.add_node(sphinxreporterror_node,
-                 html=(visit_sphinxreporterror_node, depart_sphinxreporterror_node),
-                 latex=(visit_sphinxreporterror_node, depart_sphinxreporterror_node),
+                 html=(
+                     visit_sphinxreporterror_node, depart_sphinxreporterror_node),
+                 latex=(
+                     visit_sphinxreporterror_node, depart_sphinxreporterror_node),
                  text=(visit_sphinxreporterror_node, depart_sphinxreporterror_node))
 
     app.add_directive('error', SphinxreportError)
     app.add_directive('errorlist', SphinxreportErrorList)
     app.connect('doctree-resolved', process_sphinxreporterror_nodes)
     app.connect('env-purge-doc', purge_sphinxreporterrors)
-

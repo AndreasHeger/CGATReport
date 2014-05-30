@@ -6,10 +6,13 @@ import scipy
 from functools import reduce
 # See http://projects.scipy.org/scipy/ticket/1739
 # scipy 0.11 for python3 broken, should be fixed for scipy 0.12
-try: import scipy.stats
-except ValueError: scipy.stats = None
+try:
+    import scipy.stats
+except ValueError:
+    scipy.stats = None
 
-import collections, itertools
+import collections
+import itertools
 
 try:
     from rpy2.robjects import r as R
@@ -20,64 +23,88 @@ except ImportError:
 
 from collections import OrderedDict as odict
 
+
 def getSignificance(pvalue, thresholds=[0.05, 0.01, 0.001]):
     """return cartoon of significance of a p-Value."""
     n = 0
     for x in thresholds:
-        if pvalue > x: return "*" * n
+        if pvalue > x:
+            return "*" * n
         n += 1
     return "*" * n
 
+
 class Result(object):
+
     '''allow both member and dictionary access.'''
-    slots=("_data")
+    slots = ("_data")
+
     def __init__(self):
         object.__setattr__(self, "_data", odict())
+
     def fromR(self, take, r_result):
         '''convert from an *r_result* dictionary using map *take*.
 
         *take* is a list of tuples mapping a field to the corresponding
         field in *r_result*.
         '''
-        for x,y in take:
+        for x, y in take:
             if y:
                 self._data[x] = r_result.rx(y)[0][0]
             else:
                 self._data[x] = r_result.rx(x)[0][0]
 
         return self
-    def __len__(self): return self._data.__len__()
+
+    def __len__(self):
+        return self._data.__len__()
+
     def __getattr__(self, key):
         if not key.startswith("_"):
-            try: return object.__getattribute__(self,"_data")[key]
-            except KeyError: pass
+            try:
+                return object.__getattribute__(self, "_data")[key]
+            except KeyError:
+                pass
         return getattr(self._data, key)
+
     def asDict(self):
         return self._data
 
-    def keys(self): return list(self._data.keys())
-    def values(self): return list(self._data.values())
-    def __iter__(self): return self._data.__iter__()
+    def keys(self):
+        return list(self._data.keys())
+
+    def values(self):
+        return list(self._data.values())
+
+    def __iter__(self):
+        return self._data.__iter__()
+
     def __str__(self):
         return str(self._data)
-    def __contains__(self,key):
+
+    def __contains__(self, key):
         return key in self._data
+
     def __getitem__(self, key):
         return self._data[key]
+
     def __delitem__(self, key):
         del self._data[key]
+
     def __setitem__(self, key, value):
         self._data[key] = value
+
     def __setattr__(self, key, value):
         if not key.startswith("_"):
             self._data[key] = value
         else:
-            object.__setattr__(self,key,value)
+            object.__setattr__(self, key, value)
+
     def __getstate__(self):
         # required for correct pickling/unpickling
-        return object.__getattribute__(self,"_data")
+        return object.__getattribute__(self, "_data")
 
-    def __setstate__(self,d):
+    def __setstate__(self, d):
         # required for correct unpickling, otherwise
         # maximum recursion threshold will be reached
         object.__setattr__(self, "_data", d)
@@ -85,19 +112,23 @@ class Result(object):
 #################################################################
 #################################################################
 #################################################################
-## Perform log likelihood test
+# Perform log likelihood test
+
+
 class LogLikelihoodTest(Result):
 
     def __init__(self):
         pass
 
+
 def doLogLikelihoodTest(complex_ll, complex_np,
-                         simple_ll, simple_np,
-                         significance_threshold = 0.05):
+                        simple_ll, simple_np,
+                        significance_threshold=0.05):
     """perform log-likelihood test between model1 and model2.
     """
 
-    assert complex_ll >= simple_ll, "log likelihood of complex model smaller than for simple model: %f > %f" % (complex_ll, simple_ll)
+    assert complex_ll >= simple_ll, "log likelihood of complex model smaller than for simple model: %f > %f" % (
+        complex_ll, simple_ll)
 
     chi = 2 * (complex_ll - simple_ll)
     df = complex_np - simple_np
@@ -128,11 +159,15 @@ def doLogLikelihoodTest(complex_ll, complex_np,
 #################################################################
 #################################################################
 #################################################################
+
+
 class BinomialTest:
+
     def __init__(self):
         pass
 
-def doBinomialTest(p, sample_size, observed, significance_threshold = 0.05):
+
+def doBinomialTest(p, sample_size, observed, significance_threshold=0.05):
     """perform a binomial test.
 
     Given are p: the probability of the NULL hypothesis, the sample_size
@@ -143,28 +178,33 @@ def doBinomialTest(p, sample_size, observed, significance_threshold = 0.05):
 #################################################################
 #################################################################
 #################################################################
+
+
 class ChiSquaredTest:
+
     def __init__(self):
         pass
 
-def doChiSquaredTest(matrix, significance_threshold = 0.05):
+
+def doChiSquaredTest(matrix, significance_threshold=0.05):
     """perform chi-squared test on a matrix.
     """
     nrows, ncols = matrix.shape
     if nrows != 2 or ncols != 2:
-        raise ValueError("chi-square currently only implemented for 2x2 tables.")
+        raise ValueError(
+            "chi-square currently only implemented for 2x2 tables.")
 
-    df = (nrows - 1) * (ncols -1)
+    df = (nrows - 1) * (ncols - 1)
 
-    row_sums = [ matrix[x,:].sum() for x in range(nrows) ]
-    col_sums = [ matrix[:,x].sum() for x in range(ncols) ]
+    row_sums = [matrix[x, :].sum() for x in range(nrows)]
+    col_sums = [matrix[:, x].sum() for x in range(ncols)]
     sample_size = float(sum(row_sums))
 
     chi = 0.0
     for x in range(nrows):
         for y in range(ncols):
             expected = row_sums[x] * col_sums[y] / sample_size
-            d = matrix[x,y] - expected
+            d = matrix[x, y] - expected
             chi += d * d / expected
 
     result = ChiSquaredTest()
@@ -178,7 +218,8 @@ def doChiSquaredTest(matrix, significance_threshold = 0.05):
     result.mPhi = math.sqrt(result.mChiSquaredValue / result.mSampleSize)
     return result
 
-def doPearsonChiSquaredTest(p, sample_size, observed, significance_threshold = 0.05):
+
+def doPearsonChiSquaredTest(p, sample_size, observed, significance_threshold=0.05):
     """perform a pearson chi squared test.
 
     Given are p: the probability of the NULL hypothesis, the sample_size
@@ -208,25 +249,28 @@ def doPearsonChiSquaredTest(p, sample_size, observed, significance_threshold = 0
 #################################################################
 #################################################################
 #################################################################
-## Convenience functions and objects for statistical analysis
+# Convenience functions and objects for statistical analysis
+
 
 class Summary(Result):
+
     """a collection of distributional parameters. Available properties
     are:
 
     mean, median, min, max, samplestd, sum, counts
     """
-    def __init__(self, values = None, format = "%6.4f", mode="float"):
+
+    def __init__(self, values=None, format="%6.4f", mode="float"):
         Result.__init__(self)
         self._format = format
         self._mode = mode
         # note that this determintes the order of the fields at output
         self.counts, self.min, self.max, self.mean, self.median, self.samplestd, self.sum, self.q1, self.q3 = \
-                    (0, 0, 0, 0, 0, 0, 0, 0, 0)
+            (0, 0, 0, 0, 0, 0, 0, 0, 0)
 
         if values != None:
 
-            values = [x for x in values if x != None ]
+            values = [x for x in values if x != None]
 
             if len(values) == 0:
                 raise ValueError("no data for statistics")
@@ -246,7 +290,7 @@ class Summary(Result):
             if len(n) == 0:
                 raise ValueError("no data for statistics")
 
-            ## use a non-sort algorithm later.
+            # use a non-sort algorithm later.
             n.sort()
             self.q1 = n[len(n) / 4]
             self.q3 = n[len(n) * 3 / 4]
@@ -257,7 +301,7 @@ class Summary(Result):
             self.mean = numpy.mean(n)
             self.median = numpy.median(n)
             self.samplestd = numpy.std(n)
-            self.sum = reduce(lambda x, y: x+y, n)
+            self.sum = reduce(lambda x, y: x + y, n)
 
     def getHeaders(self):
         """returns header of column separated values."""
@@ -277,22 +321,24 @@ class Summary(Result):
             format_vals = self._format
             format_median = self._format
 
-        return "\t".join(( "%i" % self.counts,
-                            format_vals % self.min,
-                            format_vals % self.max,
-                            self._format % self.mean,
-                            format_median % self.median,
-                            self._format % self.samplestd,
-                            format_vals % self.sum,
-                            format_vals % self.q1,
-                            format_vals % self.q3,
-                            ))
+        return "\t".join(("%i" % self.counts,
+                          format_vals % self.min,
+                          format_vals % self.max,
+                          self._format % self.mean,
+                          format_median % self.median,
+                          self._format % self.samplestd,
+                          format_vals % self.sum,
+                          format_vals % self.q1,
+                          format_vals % self.q3,
+                          ))
+
 
 class FDRResult:
+
     def __init__(self):
         pass
 
-    def plot(self, hardcopy = None):
+    def plot(self, hardcopy=None):
 
         if hardcopy:
             R.png(hardcopy, width=1024, height=768, type="cairo")
@@ -312,13 +358,14 @@ class FDRResult:
         if hardcopy:
             R.dev_off()
 
+
 def doFDR(pvalues,
-          vlambda=numpy.arange(0,0.95,0.05),
+          vlambda=numpy.arange(0, 0.95, 0.05),
           pi0_method="smoother",
           fdr_level=None,
           robust=False,
-          smooth_df = 3,
-          smooth_log_pi0 = False):
+          smooth_df=3,
+          smooth_log_pi0=False):
     """modeled after code taken from http://genomics.princeton.edu/storeylab/qvalue/linux.html.
 
     I did not like the error handling so I translated most to python.
@@ -328,32 +375,34 @@ def doFDR(pvalues,
         raise ValueError("p-values out of range")
 
     if len(vlambda) > 1 and len(vlambda) < 4:
-        raise ValueError(" If length of vlambda greater than 1, you need at least 4 values.")
+        raise ValueError(
+            " If length of vlambda greater than 1, you need at least 4 values.")
 
     if len(vlambda) > 1 and (min(vlambda) < 0 or max(vlambda) >= 1):
         raise ValueError("vlambda must be within [0, 1).")
 
     m = len(pvalues)
 
-     # these next few functions are the various ways to estimate pi0
-    if len(vlambda)==1:
+    # these next few functions are the various ways to estimate pi0
+    if len(vlambda) == 1:
         vlambda = vlambda[0]
-        if  vlambda < 0 or vlambda >=1:
+        if vlambda < 0 or vlambda >= 1:
             raise ValueError("vlambda must be within [0, 1).")
 
-        pi0 = numpy.mean([ x >= vlambda for x in pvalues ]) / (1.0 - vlambda)
+        pi0 = numpy.mean([x >= vlambda for x in pvalues]) / (1.0 - vlambda)
         pi0 = min(pi0, 1.0)
         R.assign("pi0", pi0)
     else:
         pi0 = numpy.zeros(len(vlambda), numpy.float)
 
         for i in range(len(vlambda)):
-            pi0[i] = numpy.mean([x >= vlambda[i] for x in pvalues ]) / (1.0 -vlambda[i])
+            pi0[i] = numpy.mean([x >= vlambda[i]
+                                 for x in pvalues]) / (1.0 - vlambda[i])
 
         R.assign("pi0", pi0)
         R.assign("vlambda", vlambda)
 
-        if pi0_method=="smoother":
+        if pi0_method == "smoother":
             if smooth_log_pi0:
                 pi0 = math.log(pi0)
 
@@ -365,7 +414,7 @@ def doFDR(pvalues,
             if smooth_log_pi0:
                 pi0 = math.exp(pi0)
 
-        elif pi0_method=="bootstrap":
+        elif pi0_method == "bootstrap":
 
             minpi0 = min(pi0)
 
@@ -389,12 +438,14 @@ def doFDR(pvalues,
             }
             pi0 <- min(pi0[mse==min(mse)])""")
         else:
-            raise ValueError("'pi0_method' must be one of 'smoother' or 'bootstrap'.")
+            raise ValueError(
+                "'pi0_method' must be one of 'smoother' or 'bootstrap'.")
 
-        pi0 = min(pi0,1.0)
+        pi0 = min(pi0, 1.0)
 
     if pi0 <= 0:
-        raise ValueError("The estimated pi0 <= 0. Check that you have valid p-values or use another vlambda method.")
+        raise ValueError(
+            "The estimated pi0 <= 0. Check that you have valid p-values or use another vlambda method.")
 
     if fdr_level != None and (fdr_level <= 0 or fdr_level > 1):
         raise ValueError("'fdr_level' must be within (0, 1].")
@@ -443,7 +494,7 @@ qvalues
     result.mQValues = qvalues
 
     if fdr_level != None:
-        result.mPassed = [ x <= fdr_level for x in result.mQValues ]
+        result.mPassed = [x <= fdr_level for x in result.mQValues]
 
     result.mPValues = pvalues
     result.mPi0 = pi0
@@ -454,12 +505,15 @@ qvalues
 #################################################################
 #################################################################
 #################################################################
+
+
 class CorrelationTest(Result):
+
     def __init__(self,
-                 r_result = None,
-                 s_result = None,
-                 method = None,
-                 nobservations = 0):
+                 r_result=None,
+                 s_result=None,
+                 method=None,
+                 nobservations=0):
         Result.__init__(self)
 
         self.pvalue = None
@@ -492,17 +546,19 @@ class CorrelationTest(Result):
             self.significance,
             "%i" % self.nobservations,
             self.method,
-            self.alternative) )
+            self.alternative))
 
-def filterMasked(xvals, yvals, missing = ("na", "Nan", None, ""), dtype = numpy.float):
+
+def filterMasked(xvals, yvals, missing=("na", "Nan", None, ""), dtype = numpy.float):
     """convert xvals and yvals to numpy array skipping pairs with
     one or more missing values."""
-    xmask = [ i in missing for i in xvals ]
-    ymask = [ i in missing for i in yvals ]
-    return (numpy.array([xvals[i] for i in range(len(xvals)) if not xmask[i]], dtype = dtype),
-            numpy.array([yvals[i] for i in range(len(yvals)) if not ymask[i]], dtype = dtype))
+    xmask = [i in missing for i in xvals]
+    ymask = [i in missing for i in yvals]
+    return (numpy.array([xvals[i] for i in range(len(xvals)) if not xmask[i]], dtype=dtype),
+            numpy.array([yvals[i] for i in range(len(yvals)) if not ymask[i]], dtype=dtype))
 
-def filterNone(args, missing = ("na", "Nan", None, "", 'None', 'none'), dtype = numpy.float):
+
+def filterNone(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype = numpy.float):
     '''convert arrays in 'args' to numpy arrays of 'dtype', skipping where any of
     the columns have a value of missing.
 
@@ -515,26 +571,31 @@ def filterNone(args, missing = ("na", "Nan", None, "", 'None', 'none'), dtype = 
     '''
     mi = min([len(x) for x in args])
     ma = max([len(x) for x in args])
-    assert mi == ma, "arrays have unequal length to start with: min=%i, max=%i." % (mi,ma)
+    assert mi == ma, "arrays have unequal length to start with: min=%i, max=%i." % (
+        mi, ma)
 
-    mask = [ sum([z in missing for z in x]) for x in zip(*args) ]
+    mask = [sum([z in missing for z in x]) for x in zip(*args)]
 
-    return [ numpy.array([x[i] for i in range(len(x)) if not mask[i]], dtype = dtype) for x in args ]
+    return [numpy.array([x[i] for i in range(len(x)) if not mask[i]], dtype=dtype) for x in args]
 
-def filterMissing(args, missing = ("na", "Nan", None, "", 'None', 'none'), dtype = numpy.float):
+
+def filterMissing(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype = numpy.float):
     '''remove rows in args where at least one of the columns have a
        missing value.'''
 
     mi = min([len(x) for x in args])
     ma = max([len(x) for x in args])
-    assert mi == ma, "arrays have unequal length to start with: min=%i, max=%i." % (mi,ma)
+    assert mi == ma, "arrays have unequal length to start with: min=%i, max=%i." % (
+        mi, ma)
 
     keep = numpy.array([True] * ma)
-    for values in args: keep &= values.notnull()
+    for values in args:
+        keep &= values.notnull()
 
-    return [ x[keep] for x in args ]
+    return [x[keep] for x in args]
 
-def doCorrelationTest(xvals, yvals, method = "pearson"):
+
+def doCorrelationTest(xvals, yvals, method="pearson"):
     """compute correlation between x and y.
 
     Raises a value-error if there are not enough observations.
@@ -555,7 +616,6 @@ def doCorrelationTest(xvals, yvals, method = "pearson"):
 
     x, y = filterMasked(xvals, yvals)
 
-
     if method == "pearson":
         s_result = scipy.stats.pearsonr(x, y)
     elif method == "spearman":
@@ -563,9 +623,9 @@ def doCorrelationTest(xvals, yvals, method = "pearson"):
     else:
         raise ValueError("unknown method %s" % (method))
 
-    result = CorrelationTest(s_result = s_result,
-                              method = method,
-                              nobservations = len(x))
+    result = CorrelationTest(s_result=s_result,
+                             method=method,
+                             nobservations=len(x))
 
     return result.asDict()
 
@@ -573,7 +633,7 @@ def doCorrelationTest(xvals, yvals, method = "pearson"):
 ###################################################################
 ###################################################################
 ###################################################################
-## compute ROC curves from sorted values
+# compute ROC curves from sorted values
 ###################################################################
 def computeROC(values):
     '''return a roc curve for *values*.
@@ -582,7 +642,7 @@ def computeROC(values):
     '''
     roc = []
 
-    npositives = len([x for x in values if x[1] ])
+    npositives = len([x for x in values if x[1]])
     if npositives == 0:
         raise ValueError("no positives among values")
 
@@ -613,7 +673,7 @@ def computeROC(values):
                 fpr = 0
 
             if last_fpr != fpr:
-                roc.append((fpr,tpr))
+                roc.append((fpr, tpr))
                 last_fpr = fpr
 
         last_values = value
@@ -625,6 +685,8 @@ def computeROC(values):
 ###################################################################
 ##
 ###################################################################
+
+
 def getAreaUnderCurve(xvalues, yvalues):
     '''compute area under curve from a set of discrete x,y coordinates
     using trapezoids.
@@ -635,7 +697,7 @@ def getAreaUnderCurve(xvalues, yvalues):
     assert len(xvalues) == len(yvalues)
     last_x, last_y = xvalues[0], yvalues[0]
     auc = 0
-    for x,y in zip(xvalues, yvalues)[1:]:
+    for x, y in zip(xvalues, yvalues)[1:]:
         dx = x - last_x
         assert not dx < 0, "x not increasing: %f >= %f" % (last_x, x)
         dy = abs(last_y - y)
@@ -651,6 +713,8 @@ def getAreaUnderCurve(xvalues, yvalues):
 ###################################################################
 ##
 ###################################################################
+
+
 def getSensitivityRecall(values):
     '''return sensitivity/selectivity.
 
@@ -664,12 +728,13 @@ def getSensitivityRecall(values):
     total = float(len(values))
     for value, is_positive in values:
         npredicted += 1.0
-        if is_positive > 0: npositives += 1.0
+        if is_positive > 0:
+            npositives += 1.0
         if value != l:
-            result.append((value, npositives / npredicted, npredicted / total) )
+            result.append((value, npositives / npredicted, npredicted / total))
         l = value
     if l:
-        result.append((l, npositives / npredicted, npredicted/total) )
+        result.append((l, npositives / npredicted, npredicted / total))
 
     return result.asDict()
 
@@ -678,17 +743,17 @@ def getSensitivityRecall(values):
 ###################################################################
 ##
 ###################################################################
+
+
 def doMannWhitneyUTest(xvals, yvals):
     '''apply the Mann-Whitney U test to test for the difference of medians.'''
 
-
-    r_result = R['wilcox.test'](xvals, yvals, paired = False)
+    r_result = R['wilcox.test'](xvals, yvals, paired=False)
 
     result = Result().fromR(
         (("pvalue", 'p.value'),
-          ('alternative', None),
-          ('method', None) ),
+         ('alternative', None),
+         ('method', None)),
         r_result)
 
     return result.asDict()
-

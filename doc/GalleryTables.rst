@@ -159,8 +159,8 @@ Alternatives can be
 rst-table
 =========
 
-The :class:`SphinxReportPlugins.Renderer.RSTTable` renders :term:`labeled
-values` as a table in rst format
+The :class:`SphinxReportPlugins.Renderer.RSTTable` renders
+:term:`labeled values` as a table in rst format
 
 .. report:: Trackers.LabeledDataExample
    :render: rst-table
@@ -182,7 +182,7 @@ values` as a table in xls format to download
 The following is an example of XLS tables with a hierarchical
 index
 
-.. report:: Trackers.LabeledDataHierarchialExample
+.. report:: Trackers.HierarchicalLabeledDataExample
    :render: xls-table
 
    XLS Tables
@@ -191,8 +191,8 @@ index
 html-table
 ==========
 
-The :class:`SphinxReportPlugins.Renderer.HtmlTable` renders :term:`labeled
-values` as a table in html format to download
+The :class:`SphinxReportPlugins.Renderer.HtmlTable` renders
+:term:`labeled values` as a table in html format to download
 
 .. report:: Trackers.LabeledDataExample
    :render: html-table

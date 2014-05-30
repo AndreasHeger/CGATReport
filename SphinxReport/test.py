@@ -180,9 +180,9 @@ def writeRST(outfile, options, kwargs,
     options_rst = []
 
     for key, val in list(kwargs.items()) +\
-        list(renderer_options.items()) +\
-        list(transformer_options.items()) +\
-        list(display_options.items()):
+            list(renderer_options.items()) +\
+            list(transformer_options.items()) +\
+            list(display_options.items()):
 
         if val is None:
             options_rst.append(":%s:" % key)
@@ -200,6 +200,7 @@ def writeRST(outfile, options, kwargs,
 
     outfile.write(RST_TEMPLATE % params)
 
+
 def writeNotebook(outfile, options, kwargs,
                   renderer_options,
                   transformer_options,
@@ -213,11 +214,11 @@ def writeNotebook(outfile, options, kwargs,
         'tracker="%s"' % options.tracker,
         'renderer="%s"' % options.renderer,
         'trackerdir="%s"' % options.trackerdir,
-        'workdir="%s"' % os.getcwd() ]
+        'workdir="%s"' % os.getcwd()]
 
     for key, val in list(kwargs.items()) +\
-        list(renderer_options.items()) +\
-        list(transformer_options.items()):
+            list(renderer_options.items()) +\
+            list(transformer_options.items()):
         if val is None:
             cmd_options.append("%s" % key)
         else:
@@ -250,82 +251,96 @@ def main(argv=None, **kwargs):
 
     If argv is not None, command line parsing will be performed.
     '''
-    parser = optparse.OptionParser(version = "%prog version: $Id$",
-                                   usage = globals()["__doc__"])
+    parser = optparse.OptionParser(version="%prog version: $Id$",
+                                   usage=globals()["__doc__"])
 
     parser.add_option("-t", "--tracker", dest="tracker", type="string",
-                          help="tracker to use [default=%default]")
+                      help="tracker to use [default=%default]")
 
     parser.add_option("-p", "--page", dest="page", type="string",
-                          help="render an rst page [default=%default]")
+                      help="render an rst page [default=%default]")
 
     parser.add_option("-a", "--tracks", dest="tracks", type="string",
-                          help="tracks to use [default=%default]")
+                      help="tracks to use [default=%default]")
 
-    parser.add_option("-m", "--transformer", dest="transformers", type="string", action="append",
-                          help="add transformation [default=%default]")
+    parser.add_option("-m", "--transformer", dest="transformers",
+                      type="string", action="append",
+                      help="add transformation [default=%default]")
 
     parser.add_option("-s", "--slices", dest="slices", type="string",
-                          help="slices to use [default=%default]")
+                      help="slices to use [default=%default]")
 
     parser.add_option("-r", "--renderer", dest="renderer", type="string",
-                       help="renderer to use [default=%default]")
+                      help="renderer to use [default=%default]")
 
-    parser.add_option("-w", "--path", "--trackerdir", dest="trackerdir", type="string",
-                          help="path to trackers [default=%default]")
+    parser.add_option("-w", "--path", "--trackerdir",
+                      dest="trackerdir", type="string",
+                      help="path to trackers [default=%default]")
 
     parser.add_option("-f", "--force", dest="force", action="store_true",
-                          help="force recomputation of data by deleting cached results [default=%default]")
+                      help="force recomputation of data by deleting cached "
+                      "results [default=%default]")
 
-    parser.add_option("-o", "--option", dest="options", type="string", action="append",
-                       help="renderer options - supply as key=value pairs (without spaces). [default=%default]")
+    parser.add_option("-o", "--option", dest="options", type="string",
+                      action="append",
+                      help="renderer options - supply as key=value pairs "
+                      "(without spaces). [default=%default]")
 
     parser.add_option("-l", "--language", dest="language", type="choice",
-                       choices = ("rst", "notebook"),
-                       help="output language for snippet. Use ``rst`` to create a snippet to paste "
-                       "into a sphinxreport document. Use ``notebook`` to create a snippet to paste "
-                       "into an ipython notebook [default=%default]")
+                      choices=("rst", "notebook"),
+                      help="output language for snippet. Use ``rst`` "
+                      "to create a snippet to paste "
+                      "into a sphinxreport document. Use ``notebook`` to "
+                      "create a snippet to paste "
+                      "into an ipython notebook [default=%default]")
 
     parser.add_option("--no-print", dest="do_print", action="store_false",
-                       help = "do not print an rst text element to create the displayed plots [default=%default].")
+                      help="do not print an rst text element to create "
+                      "the displayed plots [default=%default].")
 
     parser.add_option("--no-show", dest="do_show", action="store_false",
-                       help = "do not show a plot [default=%default].")
+                      help="do not show a plot [default=%default].")
 
-    parser.add_option("-i", "--start-interpreter", dest="start_interpreter", action="store_true",
-                       help = "do not render, but start python interpreter [default=%default].")
+    parser.add_option("-i", "--start-interpreter", dest="start_interpreter",
+                      action="store_true",
+                      help="do not render, but start python interpreter "
+                      "[default=%default].")
 
-    parser.add_option("-I", "--ii", "--start-ipython", dest="start_ipython", action="store_true",
-                       help = "do not render, start ipython interpreter [default=%default].")
+    parser.add_option("-I", "--ii", "--start-ipython", dest="start_ipython",
+                      action="store_true",
+                      help="do not render, start ipython interpreter "
+                      "[default=%default].")
 
     parser.add_option("--workdir", dest="workdir", type="string",
-                          help="working directory - change to this directory before executing "
-                          " [default=%default]")
+                      help="working directory - change to this directory "
+                      "before executing "
+                      "[default=%default]")
 
     parser.add_option("--hardcopy", dest="hardcopy", type="string",
-                       help = "output images of plots. The parameter should contain one or more %s "
-                       " The suffix determines the type of plot. "
-                       " [default=%default].")
+                      help="output images of plots. The parameter should "
+                      "contain one or more %s "
+                      "The suffix determines the type of plot. "
+                      "[default=%default].")
 
     parser.set_defaults(
-        loglevel = 1,
+        loglevel=1,
         tracker=None,
-        transformers = [],
+        transformers=[],
         tracks=None,
         slices=None,
-        options = [],
-        renderer = "table",
-        do_show = True,
-        do_print = True,
-        force = False,
-        trackerdir = TRACKERDIR,
-        label = "GenericLabel",
-        caption = "add caption here",
-        start_interpreter = False,
-        start_ipython = False,
-        language = "rst",
-        workdir = None,
-        dpi = 100)
+        options=[],
+        renderer="table",
+        do_show=True,
+        do_print=True,
+        force=False,
+        trackerdir=TRACKERDIR,
+        label="GenericLabel",
+        caption="add caption here",
+        start_interpreter=False,
+        start_ipython=False,
+        language="rst",
+        workdir=None,
+        dpi=100)
 
     if argv is None and len(kwargs) == 0:
         argv = sys.argv
@@ -354,7 +369,8 @@ def main(argv=None, **kwargs):
 
     ######################################################
     # configure options
-    options.trackerdir = os.path.abspath(os.path.expanduser(options.trackerdir) )
+    options.trackerdir = os.path.abspath(
+        os.path.expanduser(options.trackerdir))
     if not os.path.exists(options.trackerdir):
         raise IOError("directory %s does not exist" % options.trackerdir)
 
@@ -365,20 +381,25 @@ def main(argv=None, **kwargs):
     for x in options.options:
         if "=" in x:
             data = x.split("=")
-            key,val = [ y.strip() for y in (data[0], "=".join(data[1:])) ]
+            key, val = [y.strip() for y in (data[0], "=".join(data[1:]))]
         else:
             key, val = x.strip(), None
         kwargs[key] = val
 
-    if options.tracks: kwargs["tracks"] = options.tracks
-    if options.slices: kwargs["slices"] = options.slices
+    if options.tracks:
+        kwargs["tracks"] = options.tracks
+    if options.slices:
+        kwargs["slices"] = options.slices
 
     kwargs = Utils.updateOptions(kwargs)
 
     option_map = getOptionMap()
-    renderer_options = Utils.selectAndDeleteOptions(kwargs, option_map["render"])
-    transformer_options = Utils.selectAndDeleteOptions(kwargs, option_map["transform"])
-    display_options = Utils.selectAndDeleteOptions(kwargs, option_map["display"])
+    renderer_options = Utils.selectAndDeleteOptions(
+        kwargs, option_map["render"])
+    transformer_options = Utils.selectAndDeleteOptions(
+        kwargs, option_map["transform"])
+    display_options = Utils.selectAndDeleteOptions(
+        kwargs, option_map["display"])
 
     ######################################################
     # decide whether to render or not
@@ -388,31 +409,33 @@ def main(argv=None, **kwargs):
     else:
         renderer = Utils.getRenderer(options.renderer, renderer_options)
 
-    transformers = Utils.getTransformers(options.transformers, transformer_options)
+    transformers = Utils.getTransformers(
+        options.transformers, transformer_options)
 
     exclude = set(("Tracker",
-                    "TrackerSQL",
-                    "returnLabeledData",
-                    "returnMultipleColumnData",
-                    "returnMultipleColumns",
-                    "returnSingleColumn",
-                    "returnSingleColumnData",
-                    "SQLError",
-                    "MultipleColumns",
-                    "MultipleColumnData",
-                    "LabeledData",
-                    "DataSimple",
-                    "Data") )
+                   "TrackerSQL",
+                   "returnLabeledData",
+                   "returnMultipleColumnData",
+                   "returnMultipleColumns",
+                   "returnSingleColumn",
+                   "returnSingleColumnData",
+                   "SQLError",
+                   "MultipleColumns",
+                   "MultipleColumnData",
+                   "LabeledData",
+                   "DataSimple",
+                   "Data"))
 
     ######################################################
-    ## build from tracker
+    # build from tracker
     if options.tracker:
 
         trackers = []
 
         for filename in glob.glob(os.path.join(options.trackerdir, "*.py")):
             modulename = os.path.basename(filename)
-            trackers.extend([ x for x in getTrackers(modulename) if x[0] not in exclude ])
+            trackers.extend(
+                [x for x in getTrackers(modulename) if x[0] not in exclude])
 
         if "." in options.tracker:
             parts = options.tracker.split(".")
@@ -422,7 +445,7 @@ def main(argv=None, **kwargs):
             tracker_modulename = None
             tracker_name = options.tracker
 
-        for name, tracker, modulename, is_derived  in trackers:
+        for name, tracker, modulename, is_derived in trackers:
             if name == tracker_name:
                 if tracker_modulename is not None:
                     if modulename == tracker_modulename:
@@ -430,20 +453,24 @@ def main(argv=None, **kwargs):
                 else:
                     break
         else:
-            available_trackers = set([ x[0] for x in trackers if x[3] ])
-            print("unknown tracker '%s': possible trackers are\n  %s" % (options.tracker, "\n  ".join(sorted(available_trackers))))
+            available_trackers = set([x[0] for x in trackers if x[3]])
+            print("unknown tracker '%s': possible trackers are\n  %s" %
+                  (options.tracker, "\n  ".join(sorted(available_trackers))))
             print("(the list above does not contain functions).")
             sys.exit(1)
 
-        ## remove everything related to that tracker for a clean slate
+        # remove everything related to that tracker for a clean slate
         if options.force:
             removed = SphinxReport.clean.removeTracker(name)
-            print("removed all data for tracker %s: %i files" % (name, len(removed)))
+            print("removed all data for tracker %s: %i files" %
+                  (name, len(removed)))
 
         # instantiate functors
-        if is_derived: t = tracker(**kwargs)
+        if is_derived:
+            t = tracker(**kwargs)
         # but not functions
-        else: t = tracker
+        else:
+            t = tracker
 
         dispatcher = Dispatcher(t, renderer, transformers)
 
@@ -478,8 +505,8 @@ def main(argv=None, **kwargs):
                               transformer_options,
                               display_options,
                               modulename, name)
-                
-            sys.stdout.write ("\n.. Template end\n")
+
+            sys.stdout.write("\n.. Template end\n")
 
         if result and renderer != None:
             for r in result:
@@ -516,7 +543,8 @@ def main(argv=None, **kwargs):
                                           R('''colnames(rframe)'''))
 
                 print("press Ctrl-c to stop")
-                while 1: pass
+                while 1:
+                    pass
 
             elif len(_pylab_helpers.Gcf.get_all_fig_managers()) > 0:
                 plt.show()
@@ -525,13 +553,17 @@ def main(argv=None, **kwargs):
                 for rr in result:
                     for r in rr:
                         if hasattr(r, 'xls'):
-                            tmpfile, outpath = tempfile.mkstemp(dir ='.', suffix = '.xlsx')
+                            tmpfile, outpath = tempfile.mkstemp(
+                                dir='.', suffix='.xlsx')
                             os.close(tmpfile)
                             print ('saving xlsx to %s' % outpath)
                             r.xls.save(outpath)
+                        elif hasattr(r, 'bokeh'):
+                            import bokeh.plotting as bk
+                            bk.show()
 
     ######################################################
-    ## build page
+    # build page
     elif options.page:
 
         from SphinxReport import build
@@ -543,23 +575,27 @@ def main(argv=None, **kwargs):
 
         options.num_jobs = 1
 
-        build.buildPlots([ options.page, ], options, [], os.path.dirname(options.page) )
+        build.buildPlots(
+            [options.page, ], options, [], os.path.dirname(options.page))
 
         if options.do_show:
             if options.renderer.startswith("r-"):
                 print("press Ctrl-c to stop")
-                while 1: pass
+                while 1:
+                    pass
 
             elif _pylab_helpers.Gcf.get_all_fig_managers() > 0:
                 plt.show()
 
     else:
-        raise ValueError("please specify either a tracker (-t/--tracker) or a page (-p/--page) to test")
+        raise ValueError(
+            "please specify either a tracker "
+            "(-t/--tracker) or a page (-p/--page) to test")
 
     if savedir is not None:
         os.chdir(savedir)
 
-    if renderer == None:
+    if renderer is None:
         dataframe = asDataFrame(result)
 
         print ("--> sphinxreport - available data structures <--")
@@ -577,7 +613,8 @@ def main(argv=None, **kwargs):
         # print ("----------------------------------------")
 
         if options.start_interpreter:
-            interpreter = code.InteractiveConsole(dict(globals().items() + locals().items()))
+            interpreter = code.InteractiveConsole(
+                dict(globals().items() + locals().items()))
             interpreter.interact()
             return dataframe
         elif options.start_ipython:
@@ -588,5 +625,4 @@ def main(argv=None, **kwargs):
         return dataframe
 
 if __name__ == "__main__":
-    sys.exit(main(argv = sys.argv))
-
+    sys.exit(main(argv=sys.argv))

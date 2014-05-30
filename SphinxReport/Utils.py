@@ -5,10 +5,11 @@ import imp
 import io
 import types
 import traceback
-import logging
 import math
 import glob
 import pkgutil
+
+from logging import debug, warn
 
 # Python 2/3 Compatibility
 try:
@@ -21,7 +22,7 @@ import pandas
 
 import SphinxReport
 from SphinxReport.ResultBlock import ResultBlocks, ResultBlock
-from SphinxReport.Component import *
+import SphinxReport.Component as Component
 import SphinxReport.Config
 
 from collections import OrderedDict as odict
@@ -245,12 +246,14 @@ def getImageFormats(display_options=None):
         elif len(data) == 3:
             return (data[0], data[1], int(data[2]))
         else:
-            raise ValueError(":format: option expects one to three params, not %s" % data)
+            raise ValueError(
+                ":format: option expects one to three params, not %s" % data)
 
     if "display" in display_options:
         all_data = [x.strip() for x in display_options["display"].split(";")]
         if len(all_data) > 1:
-            warn(":display: only expects one format, additional ignored at %s" % display_options["display"])
+            warn(":display: only expects one format, additional ignored at %s" %
+                 display_options["display"])
         data = asList(all_data[0])
         default_format = _toFormat(data)
     else:
@@ -261,11 +264,12 @@ def getImageFormats(display_options=None):
     if "report_images" in PARAMS:
         data = asList(PARAMS["report_images"])
         if len(data) % 3 != 0:
-            raise ValueError("need multiple of 3 number of arguments to report_images option")
+            raise ValueError(
+                "need multiple of 3 number of arguments to report_images option")
         for x in range(0, len(data), 3):
             additional_formats.append((data[x], data[x + 1], int(data[x + 2])))
     else:
-            additional_formats.extend(SphinxReport.Config.ADDITIONAL_FORMATS)
+        additional_formats.extend(SphinxReport.Config.ADDITIONAL_FORMATS)
 
     # add formats specified in the document
     if "extra-formats" in display_options:
@@ -291,32 +295,34 @@ def getImageOptions(display_options=None):
         return ''
 
 
-## read placeholders from config file in current directory
-## It would be nice to read default values, but the location
-## of the documentation source files are not known to this module.
+# read placeholders from config file in current directory
+# It would be nice to read default values, but the location
+# of the documentation source files are not known to this module.
 class memoized(object):
-   """Decorator that caches a function's return value each time it is called.
-   If called later with the same arguments, the cached value is returned, and
-   not re-evaluated.
-   """
-   def __init__(self, func):
-      self.func = func
-      self.cache = {}
 
-   def __call__(self, *args):
-      try:
-          return self.cache[args]
-      except KeyError:
-          self.cache[args] = value = self.func(*args)
-          return value
-      except TypeError:
-          # uncachable -- for instance, passing a list as an argument.
-          # Better to not cache than to blow up entirely.
-          return self.func(*args)
+    """Decorator that caches a function's return value each time it is called.
+    If called later with the same arguments, the cached value is returned, and
+    not re-evaluated.
+    """
 
-   def __repr__(self):
-       """Return the function's docstring."""
-       return self.func.__doc__
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+
+    def __call__(self, *args):
+        try:
+            return self.cache[args]
+        except KeyError:
+            self.cache[args] = value = self.func(*args)
+            return value
+        except TypeError:
+            # uncachable -- for instance, passing a list as an argument.
+            # Better to not cache than to blow up entirely.
+            return self.func(*args)
+
+    def __repr__(self):
+        """Return the function's docstring."""
+        return self.func.__doc__
 
 
 @memoized
@@ -324,7 +330,7 @@ def getModule(name):
     """load module in fullpat
     """
     # remove leading '.'
-    logging.debug("entered getModule with `%s`" % name)
+    debug("entered getModule with `%s`" % name)
 
     parts = name.split(".")
     if parts[0] == "Tracker":
@@ -342,7 +348,7 @@ def getModule(name):
             warn("could not find module %s: msg=%s" % (name, msg))
             raise ImportError("could not find module %s: msg=%s" % (name, msg))
 
-        path = [ os.path.join(pathname, *parts[1:-1]) ]
+        path = [os.path.join(pathname, *parts[1:-1])]
         name = parts[-1]
     else:
         path = None
@@ -486,6 +492,7 @@ def makeRenderer(path, args=(), kwargs={}):
     obj, module, pathname, cls = makeObject(path, args, kwargs)
     return obj
 
+
 @memoized
 def makeTransformer(path, args=(), kwargs={}):
     """retrieve an instantiated Transformer.
@@ -577,8 +584,8 @@ def getTransformers(transformers, kwargs={}):
     result = []
     for transformer in transformers:
         k = "transform-%s" % transformer
-        if k in getPlugins()["transform"]:
-            cls = getPlugins()["transform"][k]
+        if k in Component.getPlugins()["transform"]:
+            cls = Component.getPlugins()["transform"][k]
             instance = cls(**kwargs)
         else:
             instance = makeTransformer(transformer, (), kwargs)
@@ -624,7 +631,7 @@ def getRenderer(renderer_name, kwargs={}):
     renderer = None
 
     try:
-        cls = getPlugins()["render"]["render-%s" % renderer_name]
+        cls = Component.getPlugins()["render"]["render-%s" % renderer_name]
         renderer = cls(**kwargs)
     except KeyError:
         # This was uncommented to fix one bug
@@ -633,11 +640,14 @@ def getRenderer(renderer_name, kwargs={}):
         renderer = makeRenderer(renderer_name, kwargs)
 
     if not renderer:
-        raise KeyError("could not find renderer '%s'. Available renderers:\n  %s" %
-                       (renderer_name,
-                        "\n  ".join(sorted(getPlugins()["render"].keys()))))
+        raise KeyError(
+            "could not find renderer '%s'. Available renderers:\n  %s" %
+            (renderer_name,
+             "\n  ".join(
+                 sorted(Component.getPlugins()["render"].keys()))))
 
     return renderer
+
 
 def my_get_data(package, resource):
     """Get a resource from a package.
@@ -676,7 +686,7 @@ def my_get_data(package, resource):
     resource_name = os.path.join(*parts)
     return loader.get_data(resource_name)
 
-## get_data only available in python >2.6
+# get_data only available in python >2.6
 try:
     from pkgutil import get_data
 except ImportError:
@@ -688,7 +698,7 @@ def getTemplatesDir():
     return os.path.join(os.path.dirname(__file__), "templates")
 
 
-def layoutBlocks(blocks, layout = "column"):
+def layoutBlocks(blocks, layout="column"):
     """layout blocks of rst text.
 
     layout can be one of "column", "row", or "grid".
@@ -718,7 +728,7 @@ def layoutBlocks(blocks, layout = "column"):
                 lines.extend(block.title.split("\n"))
                 lines.append("")
             else:
-                logging.warn("report_directive.layoutBlocks: missing title")
+                warn("report_directive.layoutBlocks: missing title")
 
             lines.extend(block.text.split("\n"))
         lines.extend(["", ])
@@ -741,7 +751,7 @@ def layoutBlocks(blocks, layout = "column"):
         raise ValueError("unknown layout %s " % layout)
 
     if ncols == 0:
-        logging.warn("no columns")
+        warn("no columns")
         return lines
 
     # compute column widths
@@ -756,13 +766,13 @@ def layoutBlocks(blocks, layout = "column"):
 
     separator = "+%s+" % "+".join(["-" * x for x in columnwidths])
 
-    ## add empty blocks
+    # add empty blocks
     if len(blocks) % ncols:
         blocks.extend([ResultBlock("", "")] * (ncols - len(blocks) % ncols))
 
     for nblock in range(0, len(blocks), ncols):
 
-        ## add text
+        # add text
         lines.append(separator)
         max_height = max(text_heights[nblock:nblock + ncols])
         new_blocks = ResultBlocks()
@@ -782,7 +792,7 @@ def layoutBlocks(blocks, layout = "column"):
         for l in zip(*new_blocks):
             lines.append("|%s|" % "|".join(l))
 
-        ## add subtitles
+        # add subtitles
         max_height = max(title_heights[nblock:nblock + ncols])
 
         if max_height > 0:
@@ -827,6 +837,7 @@ import SphinxReport.test
 result = SphinxReport.test.main(%(options)s)
 """
 
+
 def writeNoteBookEntry(outfile, tracker, renderer, transformers, options):
     '''output text for pasting into an ipython notebook into *outfile*
     '''
@@ -856,14 +867,15 @@ def writeNoteBookEntry(outfile, tracker, renderer, transformers, options):
     outfile.write(NOTEBOOK_TEMPLATE % params)
 
 
-def buildRstWithImage(outname, outdir, rstdir, builddir, srcdir,
+def buildRstWithImage(outname,
+                      outdir, rstdir, builddir, srcdir,
                       additional_formats,
                       tracker_id,
                       links,
-                      display_options, 
-                      default_format=None):
+                      display_options,
+                      default_format=None,
+                      is_html=False):
     '''output rst text for inserting an image.'''
-
     rst_output = ""
 
     # path to build directory from rst directory
@@ -874,13 +886,17 @@ def buildRstWithImage(outname, outdir, rstdir, builddir, srcdir,
     rst2srcdir = os.path.join(os.path.relpath(srcdir,
                                               start=rstdir), outdir)
 
-    # for image diretive - image path is relative from rst file to
+    # for image directive - image path is relative from rst file to
     # external build dir
-    imagepath = re.sub("\\\\", "/", os.path.join(rst2builddir,
-                                                 outname))
+    imagepath = re.sub("\\\\", "/",
+                       os.path.join(rst2builddir,
+                                    outname))
+
     # for links - path is from rst file to internal root dir
-    relative_imagepath = re.sub("\\\\", "/", os.path.join(rst2srcdir,
-                                                          outname))
+    relative_imagepath = re.sub("\\\\", "/",
+                                os.path.join(
+                                    rst2srcdir,
+                                    outname))
 
     linked_text = relative_imagepath + ".txt"
 
@@ -895,7 +911,21 @@ def buildRstWithImage(outname, outdir, rstdir, builddir, srcdir,
         else:
             id, format, dpi = SphinxReport.Config.HTML_IMAGE_FORMAT
 
-        template = '''
+        if is_html:
+            # put in html
+            template = '''
+.. htmlonly::
+
+   .. raw:: html
+      :file: %(outname)s
+
+   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
+'''
+            # use absolute path for html file
+            outname = os.path.abspath(os.path.join(outdir, outname)) + ".html"
+        else:
+            # put in image directive
+            template = '''
 .. htmlonly::
 
    .. image:: %(linked_image)s
@@ -903,13 +933,13 @@ def buildRstWithImage(outname, outdir, rstdir, builddir, srcdir,
 
    [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
 '''
-
-        linked_image = imagepath + ".%s" % format
+            linked_image = imagepath + ".%s" % format
 
         extra_images = []
         for id, format, dpi in additional_formats:
-            extra_images.append("`%(id)s <%(relative_imagepath)s.%(format)s>`__" %
-                                locals())
+            extra_images.append(
+                "`%(id)s <%(relative_imagepath)s.%(format)s>`__" %
+                locals())
         if extra_images:
             extra_images = " " + " ".join(extra_images)
         else:

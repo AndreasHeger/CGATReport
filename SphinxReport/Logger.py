@@ -1,16 +1,29 @@
-import multiprocessing, logging, sys, re, os, io, threading, time, collections
+import multiprocessing
+import logging
+import sys
+import re
+import os
+import io
+import threading
+import time
+import collections
 
 # Python 2/3 Compatibility
-try: import queue
-except ImportError: import Queue as queue
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 
 from logging import Logger
 
+
 class MultiProcessingLogHandler(logging.Handler):
+
     """taken from http://stackoverflow.com/questions/641420/how-should-i-log-while-using-multiprocessing-in-python
 
     added counting of log messages.
     """
+
     def __init__(self, handler, queue, child=False):
         logging.Handler.__init__(self)
 
@@ -53,7 +66,8 @@ class MultiProcessingLogHandler(logging.Handler):
     def _format_record(self, record):
         ei = record.exc_info
         if ei:
-            dummy = self.format(record) # just to get traceback text into record.exc_text
+            # just to get traceback text into record.exc_text
+            dummy = self.format(record)
             record.exc_info = None  # to avoid Unpickleable error
 
         return record
@@ -68,28 +82,35 @@ class MultiProcessingLogHandler(logging.Handler):
             self.handleError(record)
 
     def close(self):
-        time.sleep(self.polltime+1) # give some time for messages to enter the queue.
+        # give some time for messages to enter the queue.
+        time.sleep(self.polltime + 1)
         self.shutdown = True
-        time.sleep(self.polltime+1) # give some time for the server to time out and see the shutdown
+        # give some time for the server to time out and see the shutdown
+        time.sleep(self.polltime + 1)
 
     def __del__(self):
-        self.close() # hopefully this aids in orderly shutdown when things are going poorly.
+        # hopefully this aids in orderly shutdown when things are going poorly.
+        self.close()
 
     def getCounts(self):
         return self.counts
 
+
 def f(x):
     # just a logging command...
     logging.critical('function number: ' + str(x))
-    # to make some calls take longer than others, so the output is "jumbled" as real MP programs are.
+    # to make some calls take longer than others, so the output is "jumbled"
+    # as real MP programs are.
     time.sleep(x % 3)
+
 
 def initPool(queue, level):
     """
     This causes the logging module to be initialized with the necessary info
     in pool threads to work correctly.
     """
-    logging.getLogger('').addHandler(MultiProcessingLogHandler(logging.StreamHandler(), queue, child=True))
+    logging.getLogger('').addHandler(
+        MultiProcessingLogHandler(logging.StreamHandler(), queue, child=True))
     logging.getLogger('').setLevel(level)
 
 if __name__ == '__main__':
@@ -99,15 +120,18 @@ if __name__ == '__main__':
     if use_stream:
         stream = io.StringIO()
         logQueue = multiprocessing.Queue(100)
-        handler= MultiProcessingLogHandler(logging.StreamHandler(stream), logQueue)
+        handler = MultiProcessingLogHandler(
+            logging.StreamHandler(stream), logQueue)
         logging.getLogger('').addHandler(handler)
         logging.getLogger('').setLevel(logging.DEBUG)
 
         logging.debug('starting main')
 
-        # when bulding the pool on a Windows machine we also have to init the logger in all the instances with the queue and the level of logging.
-        pool = multiprocessing.Pool(processes=10, initializer=initPool, initargs=[logQueue, logging.getLogger('').getEffectiveLevel()]) # start worker processes
-        pool.map(f, list(range(0,50)))
+        # when bulding the pool on a Windows machine we also have to init the
+        # logger in all the instances with the queue and the level of logging.
+        pool = multiprocessing.Pool(processes=10, initializer=initPool, initargs=[
+                                    logQueue, logging.getLogger('').getEffectiveLevel()])  # start worker processes
+        pool.map(f, list(range(0, 50)))
         pool.close()
 
         logging.debug('done')
@@ -116,23 +140,25 @@ if __name__ == '__main__':
         print(stream.getvalue())
     else:
         logQueue = multiprocessing.Queue(100)
-        handler= MultiProcessingLogHandler(logging.FileHandler("test.log", "w"), logQueue)
-        #logging.setLoggerClass(CountedLogger)
+        handler = MultiProcessingLogHandler(
+            logging.FileHandler("test.log", "w"), logQueue)
+        # logging.setLoggerClass(CountedLogger)
         #logging.root = CountedLogger("")
-        #print dir(logging.getLogger(''))
-        #print logging.getLogger("").getCounts()
+        # print dir(logging.getLogger(''))
+        # print logging.getLogger("").getCounts()
         logging.getLogger('').addHandler(handler)
         logging.getLogger('').setLevel(logging.DEBUG)
 
         logging.debug('starting main')
 
-        # when bulding the pool on a Windows machine we also have to init the logger in all the instances with the queue and the level of logging.
-        pool = multiprocessing.Pool(processes=10, initializer=initPool, initargs=[logQueue, logging.getLogger('').getEffectiveLevel()]) # start worker processes
-        pool.map(f, list(range(0,10)))
+        # when bulding the pool on a Windows machine we also have to init the
+        # logger in all the instances with the queue and the level of logging.
+        pool = multiprocessing.Pool(processes=10, initializer=initPool, initargs=[
+                                    logQueue, logging.getLogger('').getEffectiveLevel()])  # start worker processes
+        pool.map(f, list(range(0, 10)))
         pool.close()
 
         logging.debug('done')
         logging.shutdown()
 
         print(handler.getCounts())
-

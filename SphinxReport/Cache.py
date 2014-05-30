@@ -1,4 +1,11 @@
-import os, sys, re, shelve, traceback, pickle, types, itertools
+import os
+import sys
+import re
+import shelve
+import traceback
+import pickle
+import types
+import itertools
 import sqlalchemy
 
 from SphinxReport.Component import *
@@ -6,6 +13,7 @@ from SphinxReport import Utils
 
 # Python 3 - bsddb.db not available
 # import bsddb.db
+
 
 def tracker2key(tracker):
     '''derive cache filename from a tracker.'''
@@ -18,12 +26,14 @@ def tracker2key(tracker):
         # works for functors (class)
         name = tracker.__class__.__name__
 
-    return Utils.quote_filename(".".join((modulename,name)))
+    return Utils.quote_filename(".".join((modulename, name)))
+
 
 class Cache(Component):
+
     '''persistent storage for tracker results.'''
 
-    def __init__(self, cache_name, mode = "a"):
+    def __init__(self, cache_name, mode="a"):
 
         self.cache_filename = None
         self._cache = None
@@ -41,36 +51,40 @@ class Cache(Component):
                 pass
 
             if not os.path.exists(self.cache_dir):
-                raise OSError("could not create directory %s: %s" % (self.cache_dir, msg))
+                raise OSError("could not create directory %s: %s" %
+                              (self.cache_dir, msg))
 
             self.cache_filename = os.path.join(self.cache_dir, cache_name)
 
             if mode == "r":
                 if not os.path.exists(self.cache_filename):
-                    raise ValueError("cache %s does not exist at %s" % \
-                                          (self.cache_name,
-                                           self.cache_filename))
+                    raise ValueError("cache %s does not exist at %s" %
+                                     (self.cache_name,
+                                      self.cache_filename))
 
             # on Windows XP, the shelve does not work, work without cache
             try:
-                self._cache = shelve.open(self.cache_filename,"c", writeback = False)
-                debug("disp%s: using cache %s" % (id(self), self.cache_filename))
-                debug("disp%s: keys in cache: %s" % (id(self,), str(list(self._cache.keys())) ))
+                self._cache = shelve.open(
+                    self.cache_filename, "c", writeback=False)
+                debug("disp%s: using cache %s" %
+                      (id(self), self.cache_filename))
+                debug("disp%s: keys in cache: %s" %
+                      (id(self,), str(list(self._cache.keys()))))
             # except bsddb.db.DBFileExistsError as msg:
             except OSError as msg:
-                warn("disp%s: could not open cache %s - continuing without. Error = %s" %\
+                warn("disp%s: could not open cache %s - continuing without. Error = %s" %
                      (id(self), self.cache_filename, msg))
                 self.cache_filename = None
                 self._cache = None
         else:
-            debug("disp%s: not using cache"% (id(self),))
+            debug("disp%s: not using cache" % (id(self),))
 
     def __del__(self):
 
         if self._cache != None:
             return
         self.debug("closing cache %s" % self.cache_filename)
-        self.debug("keys in cache %s" % (str(list(self._cache.keys())) ))
+        self.debug("keys in cache %s" % (str(list(self._cache.keys()))))
         self._cache.close()
         self._cache = None
 
@@ -92,18 +106,21 @@ class Cache(Component):
             if key in self._cache:
                 result = self._cache[key]
                 if result is not None:
-                    self.debug("retrieved data for key '%s' from cache" % (key))
+                    self.debug(
+                        "retrieved data for key '%s' from cache" % (key))
                 else:
-                    self.warn("retrieved None data for key '%s' from cache" % (key))
+                    self.warn(
+                        "retrieved None data for key '%s' from cache" % (key))
             else:
                 self.debug("key '%s' not found in cache" % key)
                 raise KeyError("cache does not contain %s" % str(key))
 
-        # except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError, pickle.UnpicklingError, ValueError, EOFError) as msg:
+        # except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError,
+        # pickle.UnpicklingError, ValueError, EOFError) as msg:
         except (pickle.UnpicklingError, ValueError, EOFError) as msg:
             self.warn("could not get key '%s' or value for key in '%s': msg=%s" % (key,
-                                                                                    self.cache_filename,
-                                                                                    msg))
+                                                                                   self.cache_filename,
+                                                                                   msg))
             raise KeyError("cache could not retrieve %s" % str(key))
 
         return result
@@ -118,14 +135,14 @@ class Cache(Component):
             try:
                 self._cache[key] = data
                 self.debug("saved data for key '%s' in cache" % key)
-            # except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as msg:
+            # except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as
+            # msg:
             except (OSError) as msg:
                 self.warn("could not save key '%s' from '%s': msg=%s" % (key,
-                                                                          self.cache_filename,
-                                                                          msg))
+                                                                         self.cache_filename,
+                                                                         msg))
             # The following sync call is absolutely necessary when using
             # the multiprocessing library (python 2.6.1). Otherwise the cache is emptied somewhere
-            # before the final call to close(). Even necessary, if writeback = False
+            # before the final call to close(). Even necessary, if writeback =
+            # False
             self._cache.sync()
-
-

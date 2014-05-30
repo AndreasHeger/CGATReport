@@ -15,7 +15,11 @@ Calling:file:`sphinxreport-gallery` is usually not necessary if:file:`sphinxrepo
 is used.
 """
 
-import os, glob, re, collections, sys
+import os
+import glob
+import re
+import collections
+import sys
 
 template = """\
 {%% extends "layout.html" %%}
@@ -66,7 +70,7 @@ if not os.path.exists(os.path.dirname(dest)):
 # number of columns in gallery
 columns = 5
 
-SEPARATOR="@"
+SEPARATOR = "@"
 
 # images we want to skip for the gallery because they are an unusual
 # size that doesn't layout well in a table, or because they may be
@@ -76,7 +80,7 @@ skips = set([
     'matshow_02',
     'matshow_03',
     'matplotlib_icon',
-    ])
+])
 
 # build map of images to html files
 rx = re.compile("_images/(\S+).png")
@@ -84,7 +88,8 @@ map_image2file = collections.defaultdict(set)
 
 basedir = '_build/html'
 
-def main(argv = sys.argv):
+
+def main(argv=sys.argv):
 
     for root, dirs, files in os.walk(basedir):
         for f in files:
@@ -93,17 +98,20 @@ def main(argv = sys.argv):
                 infile = open(fn, "r")
                 for l in infile:
                     x = rx.search(l)
-                    if x: map_image2file[x.groups()[0]].add(fn[len(basedir)+1:])
+                    if x:
+                        map_image2file[x.groups()[0]].add(
+                            fn[len(basedir) + 1:])
 
     data = []
     for subdir in ('',):
-        thisdir = os.path.join(rootdir,subdir)
+        thisdir = os.path.join(rootdir, subdir)
         if not os.path.exists(thisdir):
             print("no directory '%s' - no gallery created" % thisdir)
             return
         thumbdir = os.path.join(thisdir, 'thumbnails')
         if not os.path.exists(thumbdir):
-            print("no thumbnail directory '%s' - no gallery created" % thumbdir)
+            print("no thumbnail directory '%s' - no gallery created" %
+                  thumbdir)
             return 0
 
         print("SphinxReport: collecting thumbnails from %s" % thumbdir)
@@ -116,14 +124,17 @@ def main(argv = sys.argv):
             basename, ext = os.path.splitext(filename)
             # print 'generating', subdir, basename
 
-            if basename in skips: continue
+            if basename in skips:
+                continue
 
             pdffile = os.path.join(thisdir, '%s.pdf' % basename)
             pngfile = os.path.join(thisdir, '%s.png' % basename)
             thumbfile = os.path.join(thumbdir, '%s.png' % basename)
             # captionfile = os.path.join(thumbdir, '%s.txt' % basename)
-            if not os.path.exists(pngfile): pngfile = None
-            if not os.path.exists(thumbfile): thumbfile = None
+            if not os.path.exists(pngfile):
+                pngfile = None
+            if not os.path.exists(thumbfile):
+                thumbfile = None
 
             try:
                 datasource, renderer, options = basename.split(SEPARATOR)
@@ -131,9 +142,10 @@ def main(argv = sys.argv):
                 print("could not parse %s into three components" % basename)
                 continue
 
-            #print 'datasource=', datasource, "renderer=", renderer, "filename=",filename, "basename=",basename, "ext=",ext
-            #print 'pngfile', pngfile, "thumbfile", thumbfile
-            data.append((datasource, subdir, thisdir, renderer, basename, pngfile, thumbfile, captionfile))
+            # print 'datasource=', datasource, "renderer=", renderer, "filename=",filename, "basename=",basename, "ext=",ext
+            # print 'pngfile', pngfile, "thumbfile", thumbfile
+            data.append(
+                (datasource, subdir, thisdir, renderer, basename, pngfile, thumbfile, captionfile))
     link_template = """
     <td>
     <table>
@@ -178,7 +190,7 @@ def main(argv = sys.argv):
             pdf = os.path.join(thisdir, basename) + ".pdf"
 
             if os.path.exists(captionfile):
-                caption = "".join(open(captionfile,"r").readlines())
+                caption = "".join(open(captionfile, "r").readlines())
             else:
                 caption = "no caption"
 
@@ -187,7 +199,7 @@ def main(argv = sys.argv):
             b = re.sub(SEPARATOR, "&#64;", basename)
             if b in map_image2file:
                 rows.append("<tr><td>")
-                for x,link in enumerate(map_image2file[b]):
+                for x, link in enumerate(map_image2file[b]):
                     rows.append("""<a href="%s">[%i]</a> """ % (link, x))
                 rows.append("</td></tr>")
 
@@ -198,7 +210,7 @@ def main(argv = sys.argv):
     rows.append("</tr></table>")
 
     fh = file(dest, 'w')
-    fh.write(template%'\n'.join(rows))
+    fh.write(template % '\n'.join(rows))
     fh.close()
 
 if __name__ == "__main__":

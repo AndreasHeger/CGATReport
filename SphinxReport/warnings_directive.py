@@ -15,10 +15,17 @@ from sphinx.locale import _
 from sphinx.environment import NoUri
 from sphinx.util.compat import Directive, make_admonition
 
-class sphinxreportwarning_node(nodes.warning, nodes.Element): pass
-class sphinxreportwarninglist(nodes.General, nodes.Element): pass
+
+class sphinxreportwarning_node(nodes.warning, nodes.Element):
+    pass
+
+
+class sphinxreportwarninglist(nodes.General, nodes.Element):
+    pass
+
 
 class SphinxreportWarning(Directive):
+
     """
     A sphinxreportwarning entry, displayed (if configured) in the form of an admonition.
     """
@@ -31,7 +38,8 @@ class SphinxreportWarning(Directive):
 
     def run(self):
         env = self.state.document.settings.env
-        targetid = "sphinxreportwarning-%s" % env.new_serialno('sphinxreportwarning')
+        targetid = "sphinxreportwarning-%s" % env.new_serialno(
+            'sphinxreportwarning')
         # env.index_num += 1
         targetnode = nodes.target('', '', ids=[targetid])
 
@@ -51,7 +59,8 @@ class SphinxreportWarning(Directive):
                              self.block_text, self.state, self.state_machine)
 
         # Attach a list of all sphinxreportwarnings to the environment,
-        # the sphinxreportwarninglist works with the collected sphinxreportwarning nodes
+        # the sphinxreportwarninglist works with the collected
+        # sphinxreportwarning nodes
         if not hasattr(env, 'sphinxreportwarning_all_sphinxreportwarnings'):
             env.sphinxreportwarning_all_sphinxreportwarnings = []
         env.sphinxreportwarning_all_sphinxreportwarnings.append({
@@ -66,6 +75,7 @@ class SphinxreportWarning(Directive):
 
 
 class SphinxreportWarningList(Directive):
+
     """
     A list of all sphinxreportwarning entries.
     """
@@ -88,7 +98,8 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
             node.parent.remove(node)
 
     # Replace all sphinxreportwarninglist nodes with a list of the collected sphinxreportwarnings.
-    # Augment each sphinxreportwarning with a backlink to the original location.
+    # Augment each sphinxreportwarning with a backlink to the original
+    # location.
     env = app.builder.env
 
     if not hasattr(env, 'sphinxreportwarning_all_sphinxreportwarnings'):
@@ -103,7 +114,8 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
         nwarnings = 0
 
         para = nodes.paragraph()
-        para += nodes.Text("There are %i warnings" % len(env.sphinxreportwarning_all_sphinxreportwarnings))
+        para += nodes.Text("There are %i warnings" %
+                           len(env.sphinxreportwarning_all_sphinxreportwarnings))
         content.append(para)
 
         #table = nodes.enumerated_list()
@@ -113,10 +125,12 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
 
             para = nodes.paragraph()
 
-            filename = env.doc2path(sphinxreportwarning_info['docname'], base=None)
+            filename = env.doc2path(
+                sphinxreportwarning_info['docname'], base=None)
 
             nwarnings += 1
-            location_str = '%s:%d ' % (filename, sphinxreportwarning_info['lineno'])
+            location_str = '%s:%d ' % (
+                filename, sphinxreportwarning_info['lineno'])
             try:
                 description_str = sphinxreportwarning_info['warningclass']
             except KeyError:
@@ -129,7 +143,8 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
             try:
                 newnode['refuri'] = app.builder.get_relative_uri(
                     fromdocname, sphinxreportwarning_info['docname'])
-                newnode['refuri'] += '#' + sphinxreportwarning_info['target']['refid']
+                newnode['refuri'] += '#' + \
+                    sphinxreportwarning_info['target']['refid']
             except NoUri:
                 # ignore if no URI can be determined, e.g. for LaTeX output
                 pass
@@ -145,7 +160,8 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
             # i= nodes.list_item("sthtsnh")
 
             # (Recursively) resolve references in the sphinxreportwarning content
-            sphinxreportwarning_entry = sphinxreportwarning_info['sphinxreportwarning']
+            sphinxreportwarning_entry = sphinxreportwarning_info[
+                'sphinxreportwarning']
             env.resolve_references(sphinxreportwarning_entry, sphinxreportwarning_info['docname'],
                                    app.builder)
 
@@ -153,7 +169,7 @@ def process_sphinxreportwarning_nodes(app, doctree, fromdocname):
             # table += i
             content.append(para)
 
-        #content.append(table)
+        # content.append(table)
 
         node.replace_self(content)
 
@@ -162,26 +178,29 @@ def purge_sphinxreportwarnings(app, env, docname):
     if not hasattr(env, 'sphinxreportwarning_all_sphinxreportwarnings'):
         return
     env.sphinxreportwarning_all_sphinxreportwarnings = [sphinxreportwarning for sphinxreportwarning in env.sphinxreportwarning_all_sphinxreportwarnings
-                          if sphinxreportwarning['docname'] != docname]
+                                                        if sphinxreportwarning['docname'] != docname]
 
 
 def visit_sphinxreportwarning_node(self, node):
     self.visit_admonition(node)
 
+
 def depart_sphinxreportwarning_node(self, node):
     self.depart_admonition(node)
+
 
 def setup(app):
     app.add_config_value('sphinxreport_show_warnings', True, False)
 
     app.add_node(sphinxreportwarninglist)
     app.add_node(sphinxreportwarning_node,
-                 html=(visit_sphinxreportwarning_node, depart_sphinxreportwarning_node),
-                 latex=(visit_sphinxreportwarning_node, depart_sphinxreportwarning_node),
+                 html=(visit_sphinxreportwarning_node,
+                       depart_sphinxreportwarning_node),
+                 latex=(
+                     visit_sphinxreportwarning_node, depart_sphinxreportwarning_node),
                  text=(visit_sphinxreportwarning_node, depart_sphinxreportwarning_node))
 
     app.add_directive('warning', SphinxreportWarning)
     app.add_directive('warninglist', SphinxreportWarningList)
     app.connect('doctree-resolved', process_sphinxreportwarning_nodes)
     app.connect('env-purge-doc', purge_sphinxreportwarnings)
-

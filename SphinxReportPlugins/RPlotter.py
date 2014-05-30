@@ -1,15 +1,17 @@
 """Mixin classes for Renderers that plot.
 """
 
-import os, sys, re, math, tempfile
+import os
+import sys
+import re
+import math
+import tempfile
 import itertools
 import numpy
 
 from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix
 from SphinxReport.DataTree import path2str
-from collections import OrderedDict as odict
-from SphinxReport import Utils
 from SphinxReport import Stats
 
 import pandas.rpy.common
@@ -25,6 +27,7 @@ except ImportError:
 
 from docutils.parsers.rst import directives
 
+
 def parseRanges(r):
     '''given a string in the format "x,y",
     return a tuple of values (x,y).
@@ -32,21 +35,29 @@ def parseRanges(r):
     missing values are set to None.
     '''
 
-    if not r: return r
-    r = [ x.strip() for x in r.split(",")]
-    if r[0] == "": r[0] = None
-    else: r[0] = float(r[0])
-    if r[1] == "": r[1] = None
-    else: r[1] = float(r[1])
+    if not r:
+        return r
+    r = [x.strip() for x in r.split(",")]
+    if r[0] == "":
+        r[0] = None
+    else:
+        r[0] = float(r[0])
+    if r[1] == "":
+        r[1] = None
+    else:
+        r[1] = float(r[1])
     return r
+
 
 def getCurrentRDevice():
     '''return the numerical device id of the current device.'''
-    #R.dev_off()
-    #return R.dev_cur().values()[0]
+    # R.dev_off()
+    # return R.dev_cur().values()[0]
     return R["dev.cur"]()[0]
 
+
 class Plotter(object):
+
     """Base class for Renderers that do simple 2D plotting.
 
     This mixin class provides convenience function for:class:`Renderer.Renderer`
@@ -102,8 +113,8 @@ class Plotter(object):
     # number of chars to use to reduce legend font size
     mMaxLegendSize = 100
 
-    ## maximum number of rows per column. If there are more,
-    ## the legend is split into multiple columns
+    # maximum number of rows per column. If there are more,
+    # the legend is split into multiple columns
     mLegendMaxRowsPerColumn = 30
 
     options = (
@@ -121,14 +132,15 @@ class Plotter(object):
         ('mpl-rc',  directives.unchanged),
         ('as-lines', directives.flag),
         ('legend-location',  directives.unchanged),
-        )
+    )
 
     def __init__(self, *args, **kwargs):
         """parse option arguments."""
 
         self.mFigure = 0
         self.mColors = "bgrcmk"
-        self.mSymbols = ["g-D","b-h","r-+","c-+","m-+","y-+","k-o","g-^","b-<","r->","c-D","m-h"]
+        self.mSymbols = ["g-D", "b-h", "r-+", "c-+", "m-+",
+                         "y-+", "k-o", "g-^", "b-<", "r->", "c-D", "m-h"]
         self.mMarkers = "so^>dph8+x"
 
         self.logscale = kwargs.get("logscale", None)
@@ -138,7 +150,8 @@ class Plotter(object):
         self.ylabel = kwargs.get("ytitle", None)
 
         # substitute '-' in SphinxReport-speak for ' ' in matplotlib speak
-        self.legend_location = re.sub("-", " ", kwargs.get("legend-location", "outer-top"))
+        self.legend_location = re.sub(
+            "-", " ", kwargs.get("legend-location", "outer-top"))
 
         self.width = kwargs.get("width", 0.50)
         self.mAsLines = "as-lines" in kwargs
@@ -148,10 +161,9 @@ class Plotter(object):
 
         if self.mAsLines:
             self.mSymbols = []
-            for y in ("-",":","--"):
+            for y in ("-", ":", "--"):
                 for x in "gbrcmyk":
-                    self.mSymbols.append(y+x)
-
+                    self.mSymbols.append(y + x)
 
     def startPlot(self):
         R.x11()
@@ -160,10 +172,12 @@ class Plotter(object):
         # currently: collects only single plots.
         figid = getCurrentRDevice()
         blocks = ResultBlocks(ResultBlock("\n".join(("#$rpl %i$#" % (figid), "")),
-                                            title = "/".join(map(str, path))) )
+                                          title="/".join(map(str, path))))
         return blocks
 
+
 class LinePlot(Renderer, Plotter):
+
     '''create a line plot.
 
     This:class:`Renderer` requires at least three levels:
@@ -202,16 +216,16 @@ class LinePlot(Renderer, Plotter):
         self.ylabels = []
 
     def addData(self,
-                 line, label,
-                 xlabel, ylabel,
-                 xvals, yvals,
-                 nplotted):
+                line, label,
+                xlabel, ylabel,
+                xvals, yvals,
+                nplotted):
 
         s = self.mSymbols[nplotted % len(self.mSymbols)]
 
         self.plots.append(plt.plot(xvals,
-                                     yvals,
-                                     s) )
+                                   yvals,
+                                   s))
 
         self.ylabels.append(ylabel)
         self.xlabels.append(xlabel)
@@ -231,7 +245,7 @@ class LinePlot(Renderer, Plotter):
 
         labels = dataframe.index.levels
 
-        paths = list(itertools.product(*labels) )
+        paths = list(itertools.product(*labels))
 
         self.initPlot(fig, dataseries, path)
 
@@ -242,13 +256,13 @@ class LinePlot(Renderer, Plotter):
             self.initLine(path, dataseries)
 
             xpath = paths[idx]
-            ypath = paths[idx+1]
+            ypath = paths[idx + 1]
 
             xvalues, yvalues = dataseries.ix[xpath], dataseries.ix[ypath]
 
             if len(xvalues) != len(yvalues):
-                raise ValueError("length of x,y tuples not consistent: %i != %i" % \
-                                      len(xvalues), len(yvalues))
+                raise ValueError("length of x,y tuples not consistent: %i != %i" %
+                                 len(xvalues), len(yvalues))
 
             R.plot(xvalues, yvalues)
             self.initCoords(xvalues, yvalues)
@@ -259,11 +273,13 @@ class LinePlot(Renderer, Plotter):
 
         figid = getCurrentRDevice()
         blocks = ResultBlocks(ResultBlock("\n".join(("#$rpl %i$#" % (figid), "")),
-                                            title = "/".join(path)) )
+                                          title="/".join(path)))
 
         return blocks
 
+
 class BoxPlot(Renderer, Plotter):
+
     """Write a set of box plots.
 
     This:class:`Renderer` requires two levels.
@@ -287,7 +303,9 @@ class BoxPlot(Renderer, Plotter):
 
         return self.endPlot(dataframe, path)
 
+
 class SmoothScatterPlot(Renderer, Plotter):
+
     """A smoothed scatter plot.
 
     See R.smoothScatter.
@@ -307,13 +325,16 @@ class SmoothScatterPlot(Renderer, Plotter):
 
         self.nbins = kwargs.get("nbins", "128")
         if self.nbins:
-            if "," in self.nbins: self.nbins=list(map(int, self.nbins.split(",")))
-            else: self.nbins=int(self.nbins)
+            if "," in self.nbins:
+                self.nbins = list(map(int, self.nbins.split(",")))
+            else:
+                self.nbins = int(self.nbins)
 
     def render(self, dataframe, path):
 
         if len(dataframe.columns) < 2:
-            raise ValueError("requiring two coordinates, only got %s" % str(dataframe.columns))
+            raise ValueError(
+                "requiring two coordinates, only got %s" % str(dataframe.columns))
 
         plts, legend = [], []
         blocks = ResultBlocks()
@@ -321,7 +342,8 @@ class SmoothScatterPlot(Renderer, Plotter):
         for xcolumn, ycolumn in itertools.combinations(dataframe.columns, 2):
 
             # remove missing data points
-            xvalues, yvalues = Stats.filterMissing((dataframe[xcolumn], dataframe[ycolumn]))
+            xvalues, yvalues = Stats.filterMissing(
+                (dataframe[xcolumn], dataframe[ycolumn]))
 
             # remove columns with all NaN
             if len(xvalues) == 0 or len(yvalues) == 0:
@@ -338,15 +360,17 @@ class SmoothScatterPlot(Renderer, Plotter):
             # wrap, as pandas series can not
             # passed through rpy2.
             R.smoothScatter(numpy.array(xvalues, dtype=numpy.float),
-                             numpy.array(yvalues, dtype=numpy.float),
-                             xlab=xcolumn,
-                             ylab=ycolumn,
-                             nbin = self.nbins)
-            blocks.extend(self.endPlot(dataframe, path) )
+                            numpy.array(yvalues, dtype=numpy.float),
+                            xlab=xcolumn,
+                            ylab=ycolumn,
+                            nbin=self.nbins)
+            blocks.extend(self.endPlot(dataframe, path))
 
         return blocks
 
+
 class HeatmapPlot(NumpyMatrix, Plotter):
+
     """A heatmap plot
 
     See R.heatmap.2 in the gplots package
@@ -376,17 +400,17 @@ class HeatmapPlot(NumpyMatrix, Plotter):
         R.library('gplots')
 
         R["heatmap.2"](matrix,
-                        trace = 'none',
-                        dendrogram = 'none',
-                        col=R.bluered(75),
-                        symbreaks = True,
-                        symkey = True,
-                        cexCol = 0.5,
-                        cexRow = 0.5,
-                        labRow = row_headers,
-                        labCol = col_headers,
-                        mar = ro.IntVector((10,10)),
-                        keysize = 1)
+                       trace='none',
+                       dendrogram='none',
+                       col=R.bluered(75),
+                       symbreaks=True,
+                       symkey=True,
+                       cexCol=0.5,
+                       cexRow=0.5,
+                       labRow=row_headers,
+                       labCol=col_headers,
+                       mar=ro.IntVector((10, 10)),
+                       keysize=1)
 
         self.debug("HeatmapPlot finished")
 
@@ -400,7 +424,9 @@ class HeatmapPlot(NumpyMatrix, Plotter):
 
         return self.plot(matrix, rows, columns, path)
 
+
 class GGPlot(Renderer, Plotter):
+
     """Write a set of box plots.
 
     This:class:`Renderer` requires two levels.
@@ -409,7 +435,7 @@ class GGPlot(Renderer, Plotter):
     """
     options = (
         ('statement',  directives.unchanged),
-        ) + Renderer.options + Plotter.options
+    ) + Renderer.options + Plotter.options
 
     nlevels = 1
 
@@ -441,7 +467,7 @@ class GGPlot(Renderer, Plotter):
                          else {
                              return(x) } }''')
 
-        rframe = R["as.data.frame"](R.lapply(rframe,unAsIs))
+        rframe = R["as.data.frame"](R.lapply(rframe, unAsIs))
 
         R.assign("rframe", rframe)
         # start plot
@@ -451,11 +477,13 @@ class GGPlot(Renderer, Plotter):
         try:
             pp = R('''gp + %s ''' % self.statement)
         except ValueError as msg:
-            raise ValueError("could not interprete R statement: gp + %s; msg=%s" % (self.statement, msg))
+            raise ValueError(
+                "could not interprete R statement: "
+                "gp + %s; msg=%s" % (self.statement, msg))
 
         figname = re.sub('/', '_', path2str(path))
         r = ResultBlock('#$ggplot %s$#' % figname,
-                         title = path2str(path))
+                        title=path2str(path))
         r.rggplot = pp
         r.figname = figname
 

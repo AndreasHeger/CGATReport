@@ -1,23 +1,26 @@
 import os
-import re
 import warnings
 
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.image as image
 from matplotlib import _pylab_helpers
-from matplotlib.cbook import exception_to_str
-import seaborn
 
-from SphinxReport.Component import *
-from SphinxReport import Config, Utils
+from SphinxReport.Component import Component
+from SphinxReport import Utils
+
+try:
+    import mpld3
+    HAS_MPLD3 = True
+except ImportError:
+    HAS_MPLD3 = False
+
 
 class MatplotlibPlugin(Component):
 
     capabilities = ['collect']
 
     def __init__(self, *args, **kwargs):
-        Component.__init__(self,*args,**kwargs)
+        Component.__init__(self, *args, **kwargs)
 
         plt.close('all')
         # matplotlib.rcdefaults()
@@ -25,16 +28,16 @@ class MatplotlibPlugin(Component):
         matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
 
     def collect(self,
-                 blocks,
-                 template_name,
-                 outdir,
-                 rstdir,
-                 builddir,
-                 srcdir,
-                 content,
-                 display_options,
-                 tracker_id,
-                 links = {}):
+                blocks,
+                template_name,
+                outdir,
+                rstdir,
+                builddir,
+                srcdir,
+                content,
+                display_options,
+                tracker_id,
+                links={}):
         '''collect one or more matplotlib figures and
 
         1. save as png, hires-png and pdf
@@ -48,11 +51,11 @@ class MatplotlibPlugin(Component):
         map_figure2text = {}
 
         # determine the image formats to create
-        default_format, additional_formats = Utils.getImageFormats(display_options)
-        all_formats = [default_format,] + additional_formats
+        default_format, additional_formats = Utils.getImageFormats(
+            display_options)
+        all_formats = [default_format, ] + additional_formats
 
-
-        # create all the images
+        # create all required images
         for figman in fig_managers:
 
             # create all images
@@ -66,41 +69,39 @@ class MatplotlibPlugin(Component):
                 try:
                     figman.canvas.figure.savefig(outpath, dpi=dpi)
                 except:
-                    s = Utils.collectExceptionAsString("Exception running plot %s" % outpath)
+                    s = Utils.collectExceptionAsString(
+                        "Exception running plot %s" % outpath)
                     warnings.warn(s)
                     return []
 
-                # if format=='png':
-                #     thumbdir = os.path.join(outdir, 'thumbnails')
-                #     try:
-                #         os.makedirs(thumbdir)
-                #     except OSError:
-                #         pass
-                #     thumbfile = str('%s.png' % os.path.join(thumbdir, outname))
-                #     captionfile = str('%s.txt' % os.path.join(thumbdir, outname))
-                #     if not os.path.exists(thumbfile):
-                #         # thumbnail only available in matplotlib >= 0.98.4
-                #         try:
-                #             figthumb = image.thumbnail(str(outpath), str(thumbfile), scale=0.3)
-                #         except AttributeError:
-                #             pass
-                #     outfile = open(captionfile,"w")
-                #     outfile.write("\n".join(content) + "\n")
-                #     outfile.close()
+            is_html = False
+            if HAS_MPLD3:
+                outpath = os.path.join(
+                    outdir,
+                    '%s.html' % (outname))
+
+                # select the correct figure
+                figure = plt.figure(figid)
+                # plt.legend()
+                # write to file
+                with open(outpath, "w") as outf:
+                    outf.write(mpld3.fig_to_html(figure))
+                is_html = True
 
             # create the text element
-            rst_output = Utils.buildRstWithImage(outname,
-                                                  outdir,
-                                                  rstdir,
-                                                  builddir,
-                                                  srcdir,
-                                                  additional_formats,
-                                                  tracker_id,
-                                                  links,
-                                                  display_options,
-                                                  default_format)
+            rst_output = Utils.buildRstWithImage(
+                outname,
+                outdir,
+                rstdir,
+                builddir,
+                srcdir,
+                additional_formats,
+                tracker_id,
+                links,
+                display_options,
+                default_format,
+                is_html=is_html)
 
-            map_figure2text[ "#$mpl %i$#" % figid] = rst_output
+            map_figure2text["#$mpl %i$#" % figid] = rst_output
 
         return map_figure2text
-

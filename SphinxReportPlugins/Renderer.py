@@ -24,6 +24,7 @@ from SphinxReport import CorrespondenceAnalysis
 
 
 class Renderer(Component):
+
     """Base class of renderers that render data into restructured text.
 
     The subclasses define how to render the data by overloading the
@@ -98,8 +99,8 @@ class Renderer(Component):
 
         result = ResultBlocks()
 
-        #print len(labels), self.nlevels
-        #print 'dataframe=', dataframe
+        # print len(labels), self.nlevels
+        # print 'dataframe=', dataframe
 
         if self.nlevels != -1 and len(labels) != self.nlevels:
             raise ValueError("at path %s: expected %i levels - got %i: %s" %
@@ -163,6 +164,7 @@ class Renderer(Component):
 
 
 class TableBase(Renderer):
+
     '''base classes for tables and matrices.'''
 
     options = Renderer.options +\
@@ -336,6 +338,7 @@ class TableBase(Renderer):
 
                     # set column values
                     dataseries = dataframe[column_name]
+
                     if dataseries.dtype == object:
                         for row, value in enumerate(dataseries):
                             c = ws.cell(row=row + 1,
@@ -349,7 +352,7 @@ class TableBase(Renderer):
                     else:
                         for row, value in enumerate(dataseries):
                             c = ws.cell(row=row + 1,
-                                        column=column)
+                                        column=column + 1)
                             c.value = value
                 # patch: maximum title length seems to be 31
                 ws.title = re.sub("/", "_", title)[:30]
@@ -406,6 +409,7 @@ class TableBase(Renderer):
 
 
 class Table(TableBase):
+
     '''a basic table.
 
     Values are either text or converted to text.
@@ -521,7 +525,7 @@ class Table(TableBase):
                 raise NotImplementedError('preview not implemented')
                 row_headers = row_headers[:self.max_rows]
                 col_headers = col_headers[:self.max_cols]
-                #matrix = [x[:self.max_cols] for x in
+                # matrix = [x[:self.max_cols] for x in
                 #          matrix[:self.max_rows]]
             else:
                 return results
@@ -532,6 +536,7 @@ class Table(TableBase):
 
 
 class HTMLTable(Table):
+
     '''a table in html format to download.
     '''
 
@@ -552,6 +557,7 @@ class HTMLTable(Table):
 
 
 class XlsTable(Table):
+
     '''a table in xls format to download.
     '''
 
@@ -571,6 +577,7 @@ class XlsTable(Table):
 
 
 class RstTable(Table):
+
     '''an rst formatted table.
     '''
 
@@ -603,6 +610,7 @@ class RstTable(Table):
 
 
 class GlossaryTable(Table):
+
     """output a table in the form of a glossary."""
 
     def __call__(self, dataframe, path):
@@ -631,6 +639,7 @@ class GlossaryTable(Table):
 
 
 class MatrixBase:
+
     '''base class for matrices.
 
     This base class provides utility functions for rectangular 2D matrices.
@@ -1017,6 +1026,7 @@ class MatrixBase:
 
 
 class TableMatrix(TableBase, MatrixBase):
+
     """A table with numerical columns.
 
        rows[dict] / columns[dict] / value
@@ -1036,7 +1046,6 @@ class TableMatrix(TableBase, MatrixBase):
 
         TableBase.__init__(self, *args, **kwargs)
         MatrixBase.__init__(self, *args, **kwargs)
-
 
     def buildMatrix(self,
                     dataframe,
@@ -1083,14 +1092,17 @@ Matrix = TableMatrix
 
 
 class NumpyMatrix(TableMatrix, MatrixBase):
+
     """Deprecated - not needed any more as equivalent to TableMatrix
     """
+
     def __init__(self, *args, **kwargs):
         TableMatrix.__init__(self, *args, **kwargs)
         MatrixBase.__init__(self, *args, **kwargs)
 
 
 class Debug(Renderer):
+
     '''a simple renderer, returning the type of data
     and the number of items at each path.'''
 
@@ -1111,6 +1123,7 @@ class Debug(Renderer):
 
 
 class User(Renderer):
+
     """Renderer for user-implemented rendering.
 
     The renderer itself creates no output, but returns the results
@@ -1143,6 +1156,7 @@ class User(Renderer):
 
 
 class Status(Renderer):
+
     '''Renders a status report.
 
     A status report is a two element table containing

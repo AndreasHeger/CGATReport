@@ -22,8 +22,16 @@ on the command line.
 
 """
 
-import sys, os, re, types, glob, optparse, traceback, hashlib
-import subprocess, logging, time, collections
+import sys
+import os
+import re
+import optparse
+import traceback
+import hashlib
+import subprocess
+import logging
+import time
+import collections
 USAGE = """python %s [OPTIONS] args
 
 build a sphinx report.
@@ -64,15 +72,18 @@ RST_TEMPLATE = """.. _%(label)s:
 #     format='%(asctime)s %(levelname)s %(message)s',
 #     stream = open(Component.LOGFILE, "a") )
 
+
 class ReportBlock:
+
     '''quick and dirty parsing of rst of a report block.'''
+
     def __init__(self):
         self.mLines = []
         self.mOptions = {}
         self.mArguments = None
         self.mCaption = []
 
-    def append(self,v):
+    def append(self, v):
         s = v.strip()
         if s.startswith(".. report::"):
             self.mArguments = re.match(".. report::\s+(\S+)", s).groups()
@@ -85,6 +96,7 @@ class ReportBlock:
                 self.mCaption.append(v)
         self.mLines.append(v)
 
+
 def run(work):
     """run a set of worker jobs.
     """
@@ -95,23 +107,25 @@ def run(work):
             debug("build.run: profile: started: rst: %s:%i" % (ff, lineno))
 
             report_directive.run(b.mArguments,
-                                   b.mOptions,
-                                   lineno = lineno,
-                                   content = b.mCaption,
-                                   state_machine = None,
-                                   document = ff,
-                                   srcdir = srcdir,
-                                   builddir = builddir)
+                                 b.mOptions,
+                                 lineno=lineno,
+                                 content=b.mCaption,
+                                 state_machine=None,
+                                 document=ff,
+                                 srcdir=srcdir,
+                                 builddir=builddir)
 
-            debug("build.run: profile: finished: rst: %s:%i" % (ff,lineno))
+            debug("build.run: profile: finished: rst: %s:%i" % (ff, lineno))
 
         return None
     except:
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
-        exception_stack  = traceback.format_exc(exceptionTraceback)
-        exception_name   = exceptionType.__module__ + '.' + exceptionType.__name__
-        exception_value  = str(exceptionValue)
+        exception_stack = traceback.format_exc(exceptionTraceback)
+        exception_name = exceptionType.__module__ + \
+            '.' + exceptionType.__name__
+        exception_value = str(exceptionValue)
         return (exception_name, exception_value, exception_stack)
+
 
 def rst_reader(infile):
     """parse infile and extract the:render: block."""
@@ -122,7 +136,8 @@ def rst_reader(infile):
     for line in infile:
         lineno += 1
         if line.startswith(".. report::"):
-            if result: yield lineno, result
+            if result:
+                yield lineno, result
             keep = True
             result = ReportBlock()
             result.append(line)
@@ -133,7 +148,9 @@ def rst_reader(infile):
                 else:
                     result.append(line)
 
-    if result: yield lineno, result
+    if result:
+        yield lineno, result
+
 
 def getBlocksFromRstFile(rst_file):
 
@@ -149,8 +166,11 @@ def getBlocksFromRstFile(rst_file):
     infile.close()
     return blocks
 
+
 class timeit:
+
     """simple timing+logging decorator"""
+
     def __init__(self, stage):
         self.mStage = stage
 
@@ -159,9 +179,11 @@ class timeit:
             start = time.time()
             print("SphinxReport: phase %s started" % (self.mStage))
             result = func(*args, **kwargs)
-            print("SphinxReport: phase %s finished in %i seconds" % (self.mStage, time.time() - start))
+            print("SphinxReport: phase %s finished in %i seconds" %
+                  (self.mStage, time.time() - start))
             return result
         return wrapped
+
 
 @timeit("getDirectives")
 def getDirectives(options, args, sourcedir):
@@ -173,6 +195,7 @@ def getDirectives(options, args, sourcedir):
             if f.endswith(source_suffix):
                 rst_files.append(os.path.join(root, f))
     return rst_files
+
 
 @timeit("buildPlots")
 def buildPlots(rst_files, options, args, sourcedir):
@@ -189,25 +212,27 @@ def buildPlots(rst_files, options, args, sourcedir):
     for f in rst_files:
         for lineno, b in getBlocksFromRstFile(f):
             work_per_tracker[b.mArguments].append((f,
-                                                    lineno,
-                                                    b,
-                                                    sourcedir,
-                                                    ".") )
+                                                   lineno,
+                                                   b,
+                                                   sourcedir,
+                                                   "."))
 
     work = []
-    for tracker,vals in work_per_tracker.items():
+    for tracker, vals in work_per_tracker.items():
         work.append(vals)
 
-    if len(work) == 0: return
+    if len(work) == 0:
+        return
 
     if options.num_jobs > 1:
         logQueue = Queue(100)
-        handler= Logger.MultiProcessingLogHandler(logging.FileHandler(os.path.abspath(LOGFILE), "w"), logQueue)
+        handler = Logger.MultiProcessingLogHandler(
+            logging.FileHandler(os.path.abspath(LOGFILE), "w"), logQueue)
     else:
-        handler= logging.FileHandler(os.path.abspath(LOGFILE), "w")
+        handler = logging.FileHandler(os.path.abspath(LOGFILE), "w")
 
     handler.setFormatter(
-        logging.Formatter(LOGGING_FORMAT) )
+        logging.Formatter(LOGGING_FORMAT))
 
     logging.getLogger('').addHandler(handler)
     logging.getLogger('').setLevel(options.loglevel)
@@ -218,15 +243,16 @@ def buildPlots(rst_files, options, args, sourcedir):
     if options.num_jobs > 1:
         pool = Pool(options.num_jobs)
         # todo: async execution with timeouts
-        #res = pool.map_async(run, work)
+        # res = pool.map_async(run, work)
         errors = pool.map(run, work)
         pool.close()
         pool.join()
     else:
         errors = []
-        for w in work: errors.append(run(w) )
+        for w in work:
+            errors.append(run(w))
 
-    errors = [ e for e in errors if e ]
+    errors = [e for e in errors if e]
 
     if errors:
         print("SphinxReport caught %i exceptions" % (len(errors)))
@@ -239,14 +265,16 @@ def buildPlots(rst_files, options, args, sourcedir):
     if options.num_jobs > 1:
         counts = handler.getCounts()
 
-        print("SphinxReport: messages: %i critical, %i errors, %i warnings, %i info, %i debug" \
-            % (counts["CRITICAL"],
+        print(("SphinxReport: messages: %i critical, %i errors, "
+               "%i warnings, %i info, %i debug") %
+              (counts["CRITICAL"],
                counts["ERROR"],
                counts["WARNING"],
                counts["INFO"],
                counts["DEBUG"]))
 
     logging.shutdown()
+
 
 @timeit("cleanTrackers")
 def cleanTrackers(rst_files, options, args):
@@ -267,34 +295,42 @@ def cleanTrackers(rst_files, options, args):
             continue
 
         new_codehash = hashlib.md5("".join(code)).hexdigest()
-        basedir, fname, basename, ext, outdir, codename, notebookname = report_directive.buildPaths(reference)
+        (basedir, fname, basename, ext,
+         outdir, codename, notebookname) = report_directive.buildPaths(
+             reference)
         codefilename = os.path.join(outdir, codename)
         ntested += 1
         if not os.path.exists(codefilename):
             nskipped += 1
             continue
-        old_codehash = hashlib.md5("".join(open(codefilename, "r").readlines())).hexdigest()
+        old_codehash = hashlib.md5(
+            "".join(open(codefilename, "r").readlines())).hexdigest()
         if new_codehash != old_codehash:
             removed = clean.removeTracker(reference)
             removed.extend(clean.removeText(reference))
-            print("code has changed for %s: %i files removed" % (reference, len(removed)))
+            print("code has changed for %s: %i files removed" %
+                  (reference, len(removed)))
             ncleaned += 1
-    print("SphinxReport: %i Trackers changed (%i tested, %i skipped)" % (ncleaned, ntested, nskipped))
+    print("SphinxReport: %i Trackers changed (%i tested, %i skipped)" %
+          (ncleaned, ntested, nskipped))
+
 
 def runCommand(command):
     try:
         retcode = subprocess.call(command, shell=True)
         if retcode < 0:
             warn("child was terminated by signal %i" % -retcode)
-    except OSError as e:
-        fail("execution of %s failed" % cmd)
+    except OSError(msg):
+        fail("execution of %s failed: %s" % (cmd, msg))
         raise
+
 
 @timeit("buildGallery")
 def buildGallery(options, args):
     """construct the gallery page.
     """
     gallery.main()
+
 
 @timeit("buildDocument")
 def buildDocument(options, args):
@@ -303,6 +339,7 @@ def buildDocument(options, args):
     """
     runCommand("%s" % " ".join(args))
 
+
 @timeit("buildLog")
 def buildLog(options, args):
     """construct pages with the error log, stats
@@ -310,54 +347,55 @@ def buildLog(options, args):
     """
     runCommand("%s" % " ".join(args))
 
-def main(argv = None):
 
-    if argv == None: argv = sys.argv
+def main(argv=None):
+
+    if argv is None:
+        argv = sys.argv
 
     print("SphinxReport: version %s started" % str("$Id$"))
     t = time.time()
 
-    parser = optparse.OptionParser(version = "%prog version: $Id$", usage = USAGE)
+    parser = optparse.OptionParser(version="%prog version: $Id$", usage=USAGE)
 
     parser.add_option("-a", "--num-jobs", dest="num_jobs", type="int",
-                       help="number of parallel jobs to run [default=%default]")
+                      help="number of parallel jobs to run [default=%default]")
 
     parser.add_option("-v", "--verbose", dest="loglevel", type="int",
-                       help="loglevel. The higher, the more output [default=%default]")
+                      help="loglevel. The higher, the more output "
+                      "[default=%default]")
 
-    parser.set_defaults(num_jobs = 2,
-                         loglevel = 10,)
+    parser.set_defaults(num_jobs=2,
+                        loglevel=10,)
 
     parser.disable_interspersed_args()
 
     (options, args) = parser.parse_args()
 
-    assert args[0].endswith("sphinx-build"), "command line should contain sphinx-build"
+    assert args[0].endswith(
+        "sphinx-build"), "command line should contain sphinx-build"
 
-    sphinx_parser = optparse.OptionParser(version = "%prog version: $Id$", usage = USAGE)
-    sphinx_parser.add_option("-b", type = "string")
+    sphinx_parser = optparse.OptionParser(
+        version="%prog version: $Id$", usage=USAGE)
+    sphinx_parser.add_option("-b", type="string")
     sphinx_parser.add_option("-a")
     sphinx_parser.add_option("-E")
-    sphinx_parser.add_option("-t", type = "string")
-    sphinx_parser.add_option("-d", type = "string")
-    sphinx_parser.add_option("-c", type = "string")
+    sphinx_parser.add_option("-t", type="string")
+    sphinx_parser.add_option("-d", type="string")
+    sphinx_parser.add_option("-c", type="string")
     sphinx_parser.add_option("-C")
-    sphinx_parser.add_option("-D", type = "string")
-    sphinx_parser.add_option("-A", type = "string")
+    sphinx_parser.add_option("-D", type="string")
+    sphinx_parser.add_option("-A", type="string")
     sphinx_parser.add_option("-n")
     sphinx_parser.add_option("-Q")
     sphinx_parser.add_option("-q")
-    sphinx_parser.add_option("-w", type = "string")
+    sphinx_parser.add_option("-w", type="string")
     sphinx_parser.add_option("-W")
     sphinx_parser.add_option("-P")
 
     (sphinx_options, sphinx_args) = sphinx_parser.parse_args(args[1:])
 
     sourcedir = sphinx_args[0]
-    if len(sphinx_args) > 1:
-        destdir = sphinx_args[1]
-    else:
-        destdir = "."
 
     rst_files = getDirectives(options, args, sourcedir)
 

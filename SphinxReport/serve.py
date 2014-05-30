@@ -40,7 +40,15 @@ The options are:
    actions are ``stop`` to stop and ``restart`` to restart the server.
 """
 
-import sys, os, imp, io, re, types, glob, optparse, shutil
+import sys
+import os
+import imp
+import io
+import re
+import types
+import glob
+import optparse
+import shutil
 
 USAGE = """python %s [OPTIONS]
 
@@ -58,55 +66,60 @@ from collections import OrderedDict as odict
 
 
 urls = ('/data/(.*)', 'DataTable',
-         '/index/(.*)', 'Index')
+        '/index/(.*)', 'Index')
 
 # expose zip within templates
-global_vars = {'zip': zip }
+global_vars = {'zip': zip}
 
-render = web.template.render('%s/' % Utils.getTemplatesDir(), globals = global_vars)
+render = web.template.render(
+    '%s/' % Utils.getTemplatesDir(), globals=global_vars)
 
 app = web.application(urls, globals())
 
+
 class DataTable:
+
     '''render data retrieved from cache as a table.'''
 
     def GET(self, tracker):
 
-        cache = Cache.Cache(tracker, mode = "r")
+        cache = Cache.Cache(tracker, mode="r")
         data = DataTree.fromCache(cache)
         table, row_headers, col_headers = DataTree.tree2table(data)
 
         return render.data_table(table, row_headers, col_headers)
 
+
 def main():
 
-    parser = optparse.OptionParser(version = "%prog version: $Id$", usage = USAGE)
+    parser = optparse.OptionParser(version="%prog version: $Id$", usage=USAGE)
 
     parser.add_option("-p", "--port", dest="port", type="int",
-                       help="the port to use [default=%default]")
+                      help="the port to use [default=%default]")
 
     parser.add_option("-t", "--html", dest="htmldir", type="string",
-                       help="html directory [default=%default]")
+                      help="html directory [default=%default]")
 
     parser.add_option("-a", "--action", dest="action", type="choice",
-                       choices=("start", "stop", "restart"),
-                       help="action to perform [default=%default]")
-
+                      choices=("start", "stop", "restart"),
+                      help="action to perform [default=%default]")
 
     parser.set_defaults(
-        htmldir = "_build/html",
-        port = 8080,
-        action = "start",
-        )
+        htmldir="_build/html",
+        port=8080,
+        action="start",
+    )
 
     (options, args) = parser.parse_args()
 
     if options.action == "start":
         # create static link
         if not os.path.exists(options.htmldir):
-            raise IOError("html directory %s does not exist, use --html option" % options.htmldir)
+            raise IOError(
+                "html directory %s does not exist, use --html option" % options.htmldir)
         if not os.path.exists(os.path.join(options.htmldir, "index.html")):
-            raise IOError("html directory %s has no 'index.html'" % options.htmldir)
+            raise IOError(
+                "html directory %s has no 'index.html'" % options.htmldir)
 
         if not os.path.exists("static"):
             os.symlink(options.htmldir, "static")

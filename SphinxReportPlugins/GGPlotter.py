@@ -9,7 +9,9 @@ import pandas
 
 from ggplot import *
 
+
 class GGPlot(Renderer, Plotter):
+
     """Write a set of box plots.
 
     This:class:`Renderer` requires two levels.
@@ -19,7 +21,7 @@ class GGPlot(Renderer, Plotter):
     options = (
         ('aes',  directives.unchanged),
         ('geom', directives.unchanged),
-        ) + Renderer.options + Plotter.options
+    ) + Renderer.options + Plotter.options
 
     nlevels = -1
 
@@ -40,14 +42,14 @@ class GGPlot(Renderer, Plotter):
 
         # the index in the dataframe is reset in order
         # to add the first level in the index as a column.
-        dataframe.reset_index(0, inplace = True)
+        dataframe.reset_index(0, inplace=True)
 
         s = "p = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
         exec s in globals(), locals()
 
         # p.draw() calls figure() command, so do not call self.startPlot()
-        self.mFigure +=1
-        if self.title:  plt.title(self.title)
+        self.mFigure += 1
+        if self.title:
+            plt.title(self.title)
         plts = [p.draw()]
         return self.endPlot(plts, None, path)
-
