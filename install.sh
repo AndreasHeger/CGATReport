@@ -130,6 +130,7 @@ if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
    echo "installing matplotlib"
    pip -q install matplotlib
    echo "installing scipy"
+   # do not go quiet, as it takes too long and travis aborts
    pip -q install scipy
    echo "installing patsy"
    pip -q install patsy
@@ -158,23 +159,27 @@ elif [ "$OS" == "travis" ] ; then
    echo " Installing Python dependencies in travis "
    echo
 
+   # do not go quiet, as travis aborts if no output from script
+   # for 10 mins.
+
    # Install Python prerequisites
    echo "installing cython"
-   pip -q install cython
+   pip install cython
    echo "installing numpy"
-   pip -q install numpy
+   pip install numpy
    echo "installing matplotlib"
-   pip -q install matplotlib
+   pip install matplotlib
    echo "installing scipy"
-   pip -q install scipy
+
+   pip install scipy
    echo "installing patsy"
-   pip -q install patsy
+   pip install patsy
    echo "installing pandas"
-   pip -q install pandas
+   pip install pandas
    echo "installing remaining dependencies"
    pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
    echo "upgrading setuptools"
-   pip -q install --upgrade setuptools ;
+   pip install --upgrade setuptools ;
 
 else
 
