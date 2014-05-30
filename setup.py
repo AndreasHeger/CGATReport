@@ -109,7 +109,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='SphinxReport',
-      version='2.3',
+      version='2.4',
       description='SphinxReport : a report generator in python based on Sphinx and matplotlib',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',
