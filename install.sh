@@ -204,7 +204,7 @@ if [ "$OS" == "travis" ] ; then
 
    python setup.py install
    cd doc
-   make html	
+   # make html	
 
 elif [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
 
@@ -216,7 +216,7 @@ elif [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
 
    python setup.py install
    cd doc
-   make html
+   # make html
 
 else
 
