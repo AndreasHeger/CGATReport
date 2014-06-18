@@ -36,6 +36,17 @@ optional pdf support
 Release Notes
 =============
 
+Version 2.4.1
+=============
+
+   * Add javascript interactivity to plots using mpld3
+   * installation bugfix
+
+Version 2.4.0
+=============
+
+   * ?
+
 Version 2.3
 ============
 

@@ -107,12 +107,13 @@ class Renderer(Component):
                              (str(path), self.nlevels,
                               len(labels), str(labels)))
 
+
         if not self.split_at:
-            # print without splitting
             result.extend(self.render(dataframe, path))
         else:
             # split dataframe at first index
             first_level_labels = dataframe.index.get_level_values(0).unique()
+        
             if len(first_level_labels) < self.split_at:
                 result.extend(self.render(dataframe, path))
             else:
@@ -1051,17 +1052,8 @@ class TableMatrix(TableBase, MatrixBase):
                     dataframe,
                     missing_value=0,
                     apply_transformations=True,
-                    take=None,
-                    ignore=None,
                     dtype=numpy.float):
         """build a matrix from work, a two-level nested dictionary.
-
-        If *take* is given, then the matrix will be built from
-        level 3, taking *take* from the deepest level only.
-
-        If *ignore* is given, columns in ignore will be ignore. If the
-        matrix is built from level 3 and no *take* is specified, ignore
-        will also applied to level 3 and the first remaining field is taken.
 
         This method will also apply conversions if apply_transformations
         is set.
@@ -1069,9 +1061,7 @@ class TableMatrix(TableBase, MatrixBase):
 
         rows = list(dataframe.index)
         columns = list(dataframe.columns)
-
         matrix = dataframe.as_matrix()
-
         if self.converters and apply_transformations:
             # convert to float for conversions
             if self.tofloat:

@@ -9,7 +9,7 @@ include INSTALL
 include README.txt
 include KNOWN_BUGS
 include THANKS.txt
-include distribute_setup.py
+include requires.txt
 include doc/Makefile
 include doc/images
 include doc/*.py

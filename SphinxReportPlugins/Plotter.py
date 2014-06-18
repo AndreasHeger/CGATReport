@@ -2,7 +2,6 @@
 """
 
 import os
-import sys
 import re
 import math
 import itertools
@@ -12,7 +11,7 @@ from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
 from SphinxReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
 from SphinxReport.DataTree import path2str
 from collections import OrderedDict as odict
-from SphinxReport import Utils, DataTree, Stats
+from SphinxReport import DataTree, Stats
 
 from docutils.parsers.rst import directives
 
@@ -39,15 +38,10 @@ except ImportError:
     matplotlib_venn = None
 
 import numpy
-try:
-    import scipy.stats
-except ImportError:
-    scipy.stats = None
 
 # For Rstyle plotting, previously used the snippets from:
 # see http://messymind.net/2012/07/making-matplotlib-look-like-ggplot/
 # now using seaborn
-
 
 def parseRanges(r):
     '''given a string in the format "x,y",
@@ -669,7 +663,7 @@ class PlotterMatrix(Plotter):
 
         # turn off any grid lines
         plt.grid(False)
-
+        
         self.debug("plot matrix finished")
 
         return plot
@@ -2084,6 +2078,7 @@ class NumpyMatrixPlot(NumpyMatrix, PlotterMatrix):
 
         self.debug("building matrix started")
         matrix, rows, columns = self.buildMatrix(work)
+
         self.debug("building matrix finished")
         return self.plot(matrix, rows, columns, path)
 

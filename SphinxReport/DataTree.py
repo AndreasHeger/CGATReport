@@ -346,7 +346,6 @@ def asDataFrame(data):
             dataframes.append(dataframe)
         df = pandas.concat(dataframes, keys=index_tuples)
     else:
-
         if len(labels) == 1:
             # { 'x': 1, 'y': 2 } -> DF with one row and two columns (x, y)
             df = pandas.DataFrame(data.values(), index=data.keys())
