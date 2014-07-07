@@ -31,6 +31,7 @@ try:
 except ImportError:
     HAS_SEABORN = False
 
+
 # Python 3 Compatibility
 try:
     import matplotlib_venn
@@ -635,11 +636,17 @@ class PlotterMatrix(Plotter):
             w, h = self.mCurrentFigure.get_size_inches() * 0.5
             self.mCurrentFigure.set_size_inches(w * r, h)
 
+        if "z" in self.logscale:
+            norm = matplotlib.colors.LogNorm(vmin, vmax)
+        else:
+            norm = None
+        
         plot = plt.imshow(matrix,
                           cmap=color_scheme,
                           origin='lower',
                           vmax=vmax,
                           vmin=vmin,
+                          norm=norm,
                           interpolation='nearest')
 
         # offset=0: x=center,y=center
@@ -1397,13 +1404,13 @@ class HistogramGradientPlot(LinePlot):
                     continue
 
                 xvals = coords[keys[0]]
-                if self.xvals == None:
+                if self.xvals is None:
                     self.xvals = xvals
                 elif not numpy.all(self.xvals == xvals):
                     raise ValueError(
                         "Gradient-Histogram-Plot requires the same x values.")
 
-                if xmin == None:
+                if xmin is None:
                     xmin, xmax = min(xvals), max(xvals)
                 else:
                     xmin = min(xmin, min(xvals))
@@ -1411,7 +1418,7 @@ class HistogramGradientPlot(LinePlot):
 
                 for ylabel in keys[1:]:
                     yvals = coords[ylabel]
-                    if ymin == None:
+                    if ymin is None:
                         ymin, ymax = min(yvals), max(yvals)
                     else:
                         ymin = min(ymin, min(yvals))
@@ -1546,9 +1553,19 @@ class BarPlot(TableMatrix, Plotter):
         if 'bar-width' in kwargs:
             self.bar_width = float(kwargs.get('bar-width'))
 
+        self.barlog = False
         if self.orientation == 'vertical':
+            # bar functions require log parameter
+            if "y" in self.logscale:
+                self.barlog = True
+            # erase other log transformations
+            self.logscale = None
             self.plotf = plt.bar
+
         else:
+            if "x" in self.logscale:
+                self.barlog = True
+            self.logscale = None
             self.plotf = plt.barh
 
         if self.error or self.label:
@@ -1711,6 +1728,7 @@ class BarPlot(TableMatrix, Plotter):
                                    color=color,
                                    hatch=hatch,
                                    alpha=alpha,
+                                   log=self.barlog,
                                    )[0])
 
             if self.label and self.label_matrix is not None:
@@ -1779,6 +1797,7 @@ class InterleavedBarPlot(BarPlot):
                                    color=color,
                                    hatch=hatch,
                                    alpha=alpha,
+                                   log=self.barlog,
                                    **kwargs)[0])
 
             if self.label and self.label_matrix is not None:
@@ -1866,6 +1885,7 @@ class StackedBarPlot(BarPlot):
                                    hatch=hatch,
                                    alpha=alpha,
                                    ecolor="black",
+                                   log=self.barlog,
                                    **kwargs)[0])
 
             if self.label and self.label_matrix is not None:

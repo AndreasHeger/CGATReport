@@ -899,10 +899,11 @@ class Config(Tracker):
 
 
 class Empty(Tracker):
-
     '''Empty tracker
 
-    This tracker servers as placeholder for plots that require no input from a tracker.
+    This tracker servers as placeholder for plots that require no
+    input from a tracker.
+
     '''
 
     def getTracks(self, subset=None):
@@ -1070,9 +1071,10 @@ class SingleTableTrackerColumns(TrackerSQL):
     Returns a dictionary of two sets of data, one given
     by:py:attr:`column` and one for a track.
 
-    The tracks are derived from all columns in table:py:attr:`table`. By default,
-    all columns are taken as tracks apart from:py:attr:`column` and those
-    listed in:py:attr:`exclude_columns`.
+    The tracks are derived from all columns in
+    table:py:attr:`table`. By default, all columns are taken as tracks
+    apart from:py:attr:`column` and those listed
+    in:py:attr:`exclude_columns`.
 
     An example for a table using this tracker would be::
 
@@ -1081,8 +1083,8 @@ class SingleTableTrackerColumns(TrackerSQL):
        200   20              15
        300   10              4
 
-    In the example above, the tracks will be ``mouse_counts`` and ``human_counts``. The slices
-    will be ``100``, ``200``, ``300``
+    In the example above, the tracks will be ``mouse_counts`` and
+    ``human_counts``. The slices will be ``100``, ``200``, ``300``
 
     Tracker could be defined as::
 
@@ -1103,7 +1105,8 @@ class SingleTableTrackerColumns(TrackerSQL):
         if not self.hasTable(self.table):
             return []
         columns = self.getColumns(self.table)
-        return [x for x in columns if x not in self.exclude_columns and x != self.column]
+        return [x for x in columns
+                if x not in self.exclude_columns and x != self.column]
 
     @property
     def slices(self):
@@ -1113,7 +1116,7 @@ class SingleTableTrackerColumns(TrackerSQL):
             return []
 
     def __call__(self, track, slice=None):
-        if slice != None:
+        if slice is not None:
             data = self.getValue(
                 "SELECT %(track)s FROM %(table)s WHERE %(column)s = '%(slice)s'")
         else:
@@ -1162,20 +1165,21 @@ class SingleTableTrackerEdgeList(TrackerSQL):
 
     @property
     def tracks(self):
-        if self.table == None:
+        if self.table is None:
             raise NotImplementedError("table not defined")
         if not self.hasTable(self.table):
             raise ValueError("unknown table %s" % self.table)
 
-        if self.value2 != None:
-            return sorted(set(self.getValues("SELECT DISTINCT %(row)s FROM %(table)s") +
-                              self.getValues("SELECT DISTINCT %(column)s FROM %(table)s")))
+        if self.value2 is not None:
+            return sorted(set(
+                self.getValues("SELECT DISTINCT %(row)s FROM %(table)s") +
+                self.getValues("SELECT DISTINCT %(column)s FROM %(table)s")))
         else:
             return self.getValues("SELECT DISTINCT %(row)s FROM %(table)s")
 
     @property
     def slices(self):
-        if self.value2 != None:
+        if self.value2 is not None:
             return self.tracks
         else:
             return self.getValues("SELECT DISTINCT %(column)s FROM %(table)s")
@@ -1184,18 +1188,21 @@ class SingleTableTrackerEdgeList(TrackerSQL):
 
         try:
             val = self.getValue("""SELECT %(value)s FROM %(table)s
-                               WHERE %(row)s = '%(track)s' AND %(column)s = '%(slice)s' AND %(where)s""")
+            WHERE %(row)s = '%(track)s' AND
+            %(column)s = '%(slice)s' AND %(where)s""")
         except exc.SQLAlchemyError:
             val = None
 
-        if val == None and self.value2:
+        if val is None and self.value2:
             try:
-                val = self.getValue("""SELECT %(value2)s FROM %(table)s
-                                WHERE %(row)s = '%(slice)s' AND %(column)s = '%(track)s' AND %(where)s""")
+                val = self.getValue(
+                    """SELECT %(value2)s FROM %(table)s
+                    WHERE %(row)s = '%(slice)s' AND
+                    %(column)s = '%(track)s' AND %(where)s""")
             except exc.SQLAlchemyError:
                 val = None
 
-        if val == None:
+        if val is None:
             return val
 
         if self.transform:
@@ -1225,11 +1232,11 @@ class MultipleTableTrackerEdgeList(TrackerSQL):
 
     def __call__(self, track, slice=None):
 
-        if self.column == None:
+        if self.column is None:
             raise ValueError('MultipleTrackerEdgeList requires a column field')
-        if self.row == None:
+        if self.row is None:
             raise ValueError('MultipleTrackerEdgeList requires a row field')
-        if self.value == None:
+        if self.value is None:
             raise ValueError('MultipleTrackerEdgeList requires a value field')
 
         data = self.get("""SELECT %(row)s, %(column)s, %(value)s
@@ -1257,9 +1264,10 @@ class SingleTableTrackerHistogram(TrackerSQL):
     Returns a dictionary of two sets of data, one given
     by:py:attr:`column` and one for a track.
 
-    The tracks are derived from all columns in table:py:attr:`table`. By default,
-    all columns are taken as tracks apart from:py:attr:`column` and those
-    listed in:py:attr:`exclude_columns`.
+    The tracks are derived from all columns in
+    table:py:attr:`table`. By default, all columns are taken as tracks
+    apart from:py:attr:`column` and those listed
+    in:py:attr:`exclude_columns`.
 
     An example for a table using this tracker would be::
 
@@ -1268,8 +1276,8 @@ class SingleTableTrackerHistogram(TrackerSQL):
        200   20              15
        300   10              4
 
-    In the example above, the tracks will be ``mouse_counts`` and ``human_counts``. The
-    Tracker could be defined as::
+    In the example above, the tracks will be ``mouse_counts`` and
+    ``human_counts``. The Tracker could be defined as::
 
        class MyTracker(SingleTableTrackerHistogram):
           table = 'mytable'
@@ -1286,16 +1294,17 @@ class SingleTableTrackerHistogram(TrackerSQL):
 
     @property
     def tracks(self):
-        if self.column == None:
+        if self.column is None:
             raise NotImplementedError(
                 "column not set - Tracker not fully implemented")
         if not self.hasTable(self.table):
             return []
         columns = self.getColumns(self.table)
-        return [x for x in columns if x not in self.exclude_columns and x != self.column]
+        return [x for x in columns
+                if x not in self.exclude_columns and x != self.column]
 
     def __call__(self, track, slice=None):
-        if self.column == None:
+        if self.column is None:
             raise NotImplementedError(
                 "column not set - Tracker not fully implemented")
         # labels need to be consistent in order
@@ -1312,9 +1321,10 @@ class MultipleTableTrackerHistogram(TrackerSQL):
     Returns a dictionary of two sets of data, one given
     by:py:attr:`column` and one for a track.
 
-    The tracks are derived from all columns in table:py:attr:`table`. By default,
-    all columns are taken as tracks apart from:py:attr:`column` and those
-    listed in:py:attr:`exclude_columns`.
+    The tracks are derived from all columns in
+    table:py:attr:`table`. By default, all columns are taken as tracks
+    apart from:py:attr:`column` and those listed
+    in:py:attr:`exclude_columns`.
 
     An example for a table using this tracker would be::
 
@@ -1323,8 +1333,8 @@ class MultipleTableTrackerHistogram(TrackerSQL):
        200   20              15
        300   10              4
 
-    In the example above, the tracks will be ``mouse_counts`` and ``human_counts``. The
-    Tracker could be defined as::
+    In the example above, the tracks will be ``mouse_counts`` and
+    ``human_counts``. The Tracker could be defined as::
 
        class MyTracker(ManyTableTrackerHistogram):
           pattern = '(.*)_table'
@@ -1380,15 +1390,18 @@ class TrackerSQLMulti(TrackerSQL):
         if len(self.tracks) == 0:
             raise ValueError("no tracks specified in TrackerSQLMulti")
         if (len(self.tracks) != len(self.databases)):
-            raise ValueError("TrackerSQLMulti requires an equal number of tracks (%i) and databases (%i)"
-                             % (len(self.tracks), len(self.databases)))
+            raise ValueError(
+                "TrackerSQLMulti requires an equal number of "
+                "tracks (%i) and databases (%i)"
+                % (len(self.tracks), len(self.databases)))
         if not self.backend.startswith("sqlite"):
             raise ValueError("TrackerSQLMulti only works for sqlite database")
 
         if not self.db:
             def _my_creator():
-                # issuing the ATTACH DATABASE into the sqlalchemy ORM (self.db.execute(...))
-                # does not work. The database is attached, but tables are not accessible in later
+                # issuing the ATTACH DATABASE into the sqlalchemy ORM
+                # (self.db.execute(...))  does not work. The database
+                # is attached, but tables are not accessible in later
                 # SELECT statements.
                 import sqlite3
                 conn = sqlite3.connect(re.sub("sqlite:///", "", self.backend))
@@ -1403,14 +1416,14 @@ class TrackerSQLMulti(TrackerSQL):
 
 class TrackerMultipleLists(TrackerSQL):
 
-    ''' A class to retrieve multiple columns across one or more tables.
+    '''A class to retrieve multiple columns across one or more tables.
     Returns a dictionary of lists.
 
-    TrackerMultipleLists can be used in conjunction with venn and hypergeometric
-    transformers and the venn render.
+    TrackerMultipleLists can be used in conjunction with venn and
+    hypergeometric transformers and the venn render.
 
-    The items in each list are specified by an SQL statement. The statements can be specified
-    in 3 different ways:
+    The items in each list are specified by an SQL statement. The
+    statements can be specified in 3 different ways:
 
 :attr:`statements` dictionary
         If the tracker contains a statements attribute then the statments
@@ -1422,9 +1435,10 @@ class TrackerMultipleLists(TrackerSQL):
 
 :attr:`listA`,:attr:`listB`,:attr:`listC` and:attr:`background` attributes
 
-        If the tracker does not contain a statements dictionary
-        then the statements can be specifed using these attributes. An optional list
-        of labels can be specified for the names of these lists. For example::
+        If the tracker does not contain a statements dictionary then
+        the statements can be specifed using these attributes. An
+        optional list of labels can be specified for the names of
+        these lists. For example::
 
             class TrackerOverlapTest2(TrackerOverlappingSets):
                listA = "SELECT gene_id FROM table_a"
@@ -1433,11 +1447,14 @@ class TrackerMultipleLists(TrackerSQL):
                labels = ["FirstList","SecondList"]
 
 :meth:`getStatements` method
-         The:meth:`getStatements` method can be overridden to allow full control over
-         where the statements come from. It should return a dictionary of SQL statements.
 
-    Because TrackerMultipleLists is derived from:class:`TrackerSQL`, tracks and slices can be
-    specified in the usual way.
+         The:meth:`getStatements` method can be overridden to allow
+         full control over where the statements come from. It should
+         return a dictionary of SQL statements.
+
+    Because TrackerMultipleLists is derived from:class:`TrackerSQL`,
+    tracks and slices can be specified in the usual way.
+
     '''
 
     statements = None
@@ -1496,17 +1513,22 @@ class MeltedTableTracker(TrackerSQL):
     '''Tracker representing multiple tables with the same columns.
 
     The tables are melted - a column called ``track`` is added
-    that contains the table name.
+    that contains the table name (see :py:attr:`column_name`)
+
     '''
     tracks = "all"
     pattern = None
+    column_name = 'track'
 
     def __init__(self, *args, **kwargs):
         TrackerSQL.__init__(self, *args, **kwargs)
 
     def __call__(self, track):
-        assert(self.pattern != None)
+        assert(self.pattern is not None)
         tables = self.getTables(self.pattern)
+
+        if len(tables) == 0:
+            return None
 
         ref_columns = self.getColumns(tables[0])
         fields = ",".join(ref_columns)
@@ -1514,16 +1536,17 @@ class MeltedTableTracker(TrackerSQL):
         for table in tables:
             columns = self.getColumns(table)
             if columns != ref_columns:
-                E.warn(
+                warnings.warn(
                     "incompatible column names in table %s - skipped" % table)
                 continue
 
             track = re.search(self.pattern, table).groups()[0]
 
             results.extend(
-                self.get("SELECT '%(track)s' as track, %(fields)s FROM %(table)s"))
+                self.get(
+                    "SELECT '%(track)s' as track, %(fields)s FROM %(table)s"))
 
-        ref_columns.insert(0, "track")
+        ref_columns.insert(0, self.column_name)
 
         return odict(zip(ref_columns, zip(*results)))
 
@@ -1535,7 +1558,7 @@ class MeltedTableTrackerDataframe(MeltedTableTracker):
     The tables are melted - a column called ``track`` is added
     that contains the table name.
 
-    This tracker returns a dataframe diretly.
+    This tracker returns a dataframe directly.
     '''
     tracks = "all"
     pattern = None
