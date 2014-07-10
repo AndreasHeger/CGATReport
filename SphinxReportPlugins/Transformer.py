@@ -51,8 +51,9 @@ class Transformer(Component):
 
         labels = DataTree.getPaths(data)
         debug("transform: started with paths: %s" % labels)
-        assert len(
-            labels) >= self.nlevels, "expected at least %i levels - got %i" % (self.nlevels, len(labels))
+        assert len(labels) >= self.nlevels,\
+            "expected at least %i levels - got %i" % (self.nlevels,
+                                                      len(labels))
         if self.nlevels:
             paths = list(itertools.product(*labels[:-self.nlevels]))
         else:
@@ -97,6 +98,12 @@ class TransformerToLabels(Transformer):
        a/values/[4,5,6]       a/y/2
                               a/z/3
 
+    Or::
+       Input:                       Returns:
+       a/contigs/['chr1','chr2']    a/chr1/10
+       a/lengths/[10,20]            a/chr2/20
+
+    Note that the outcome is equivalent to a pivot.
 
     '''
     nlevels = 1
@@ -116,6 +123,9 @@ class TransformerToLabels(Transformer):
             return data
 
         keys = list(data.keys())
+        # pairs of data, see use case 2
+        if len(keys) == 2:
+            return odict(zip(*data.values()))
 
         if self.labels:
             labels = data[self.labels]
