@@ -322,13 +322,15 @@ def asDataFrame(data):
         for path, leaves in branches:
             dataframe = pandas.DataFrame(leaves)
             dataframes.append(dataframe)
-            if len(path) == 1:
-                # if only one level, do not use tuple
-                index_tuples.append(path)
-            else:
-                index_tuples.append(path)
+            index_tuples.append(path)
 
         df = pandas.concat(dataframes, keys=index_tuples)
+        # the above statement adds row numbers in the
+        # hierarchical index. The following statement removes
+        # the relevant level in the index
+        r = len(index_tuples[0])
+        # Note that this might convert the index into an Index.
+        df.reset_index(level=r, inplace=True)
 
     elif Utils.isDataFrame(leaf):
         # build dataframe from list of dataframes
