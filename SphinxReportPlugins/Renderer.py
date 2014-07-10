@@ -107,7 +107,6 @@ class Renderer(Component):
                              (str(path), self.nlevels,
                               len(labels), str(labels)))
 
-
         if not self.split_at:
             result.extend(self.render(dataframe, path))
         else:

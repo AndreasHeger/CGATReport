@@ -15,6 +15,7 @@ from SphinxReport import DataTree, Stats
 
 from docutils.parsers.rst import directives
 
+import numpy
 import matplotlib
 matplotlib.use('Agg', warn=False)
 # This does not work:
@@ -25,6 +26,9 @@ matplotlib.use('Agg', warn=False)
 import matplotlib.colors
 import matplotlib.pyplot as plt
 
+# For Rstyle plotting, previously used the snippets from:
+# see http://messymind.net/2012/07/making-matplotlib-look-like-ggplot/
+# now using seaborn
 try:
     import seaborn
     HAS_SEABORN = True
@@ -38,11 +42,6 @@ try:
 except ImportError:
     matplotlib_venn = None
 
-import numpy
-
-# For Rstyle plotting, previously used the snippets from:
-# see http://messymind.net/2012/07/making-matplotlib-look-like-ggplot/
-# now using seaborn
 
 def parseRanges(r):
     '''given a string in the format "x,y",
@@ -69,8 +68,8 @@ class Plotter(object):
 
     """Base class for Renderers that do simple 2D plotting.
 
-    This mixin class provides convenience function for:class:`Renderer.Renderer`
-    classes that do 2D plotting.
+    This mixin class provides convenience function for
+    :class:`Renderer.Renderer` classes that do 2D plotting.
 
     The base class takes care of counting the plots created,
     provided that the methods:meth:`startPlot` and:meth:`endPlot`
@@ -104,7 +103,8 @@ class Plotter(object):
 
 :term:`yformat`: label for Y axis
 
-:term:`no-tight`: do not attempt a tight layout (see ``matplotlib.pyplot.tight_layout()``)
+:term:`no-tight`: do not attempt a tight layout
+    (see ``matplotlib.pyplot.tight_layout()``)
 
     With some plots default layout options will result in plots
     that are misaligned (legends truncated, etc.). To fix this it might
@@ -235,8 +235,8 @@ class Plotter(object):
         #     self.debug("extra plot options: %s" % str(self.mMPLRC))
         #     matplotlib.rcParams.update(self.mMPLRC)
 
-        self.mCurrentFigure = plt.figure(num=self.mFigure)
-        # , **self.mMPLFigureOptions)
+        self.mCurrentFigure = plt.figure(num=self.mFigure,
+                                         **self.mMPLFigureOptions)
 
         if self.title:
             plt.title(self.title)
@@ -559,8 +559,8 @@ class PlotterMatrix(Plotter):
 
         self.mBarFormat = kwargs.get("colorbar-format", "%1.1f")
         self.mPalette = kwargs.get("palette", "jet")
-        self.mMaxRows = int(kwargs.get("max-rows", 20))
-        self.mMaxCols = int(kwargs.get("max-cols", 20))
+        self.mMaxRows = int(kwargs.get("max-rows", 0))
+        self.mMaxCols = int(kwargs.get("max-cols", 0))
 
         self.mReversePalette = "reverse-palette" in kwargs
         self.label_rows = "nolabel-rows" not in kwargs
@@ -636,11 +636,11 @@ class PlotterMatrix(Plotter):
             w, h = self.mCurrentFigure.get_size_inches() * 0.5
             self.mCurrentFigure.set_size_inches(w * r, h)
 
-        if "z" in self.logscale:
+        if self.logscale is not None and "z" in self.logscale:
             norm = matplotlib.colors.LogNorm(vmin, vmax)
         else:
             norm = None
-        
+
         plot = plt.imshow(matrix,
                           cmap=color_scheme,
                           origin='lower',
@@ -670,12 +670,11 @@ class PlotterMatrix(Plotter):
 
         # turn off any grid lines
         plt.grid(False)
-        
         self.debug("plot matrix finished")
 
         return plot
 
-    def plot(self,  matrix, row_headers, col_headers, path):
+    def plot(self, matrix, row_headers, col_headers, path):
         '''plot matrix.
 
         Large matrices are split into several plots.
@@ -723,12 +722,11 @@ class PlotterMatrix(Plotter):
             # plots, labels = None, None
             self.rescaleForVerticalLabels(col_headers, cliplen=12)
             self.addColourBar()
-
             if False:
                 plot_nrows = int(math.ceil(float(nrows) / self.mMaxRows))
                 plot_ncols = int(math.ceil(float(ncols) / self.mMaxCols))
-                #new_row_headers = ["R%s" % (x + 1) for x in range(len(row_headers))]
-                #new_col_headers = ["C%s" % (x + 1) for x in range(len(col_headers))]
+                # new_row_headers = ["R%s" % (x + 1) for x in range(len(row_headers))]
+                # new_col_headers = ["C%s" % (x + 1) for x in range(len(col_headers))]
                 new_row_headers = row_headers
                 new_col_headers = col_headers
                 nplot = 1
@@ -754,8 +752,6 @@ class PlotterMatrix(Plotter):
         elif split_row:
             self.debug("splitting matrix at row")
 
-            if not self.zrange:
-                vmin, vmax = matrix.min(), matrix.max()
             nplots = int(math.ceil(float(nrows) / self.mMaxRows))
             # not sure why this switch to numbers - disable
             # new_headers = ["%s" % (x + 1) for x in range(len(row_headers))]
@@ -778,8 +774,6 @@ class PlotterMatrix(Plotter):
 
         elif split_col:
             self.debug("splitting matrix at column")
-            if not self.zrange:
-                vmin, vmax = matrix.min(), matrix.max()
             nplots = int(math.ceil(float(ncols) / self.mMaxCols))
             # not sure why this switch to numbers - disable
             # new_headers = ["%s" % (x + 1) for x in range(len(col_headers))]
@@ -841,20 +835,22 @@ class PlotterHinton(PlotterMatrix):
             # select label to take
             labels = DataTree.getPaths(work)
             label = list(set(labels[-1]).difference(set((self.colour,))))[0]
-            self.matrix, self.rows, self.columns = TableMatrix.buildMatrix(self,
-                                                                           work,
-                                                                           apply_transformations=True,
-                                                                           take=label,
-                                                                           **kwargs
-                                                                           )
+            self.matrix, self.rows, self.columns = TableMatrix.buildMatrix(
+                self,
+                work,
+                apply_transformations=True,
+                take=label,
+                **kwargs
+            )
 
             if self.colour and self.colour in labels[-1]:
-                self.colour_matrix, rows, colums = TableMatrix.buildMatrix(self,
-                                                                           work,
-                                                                           apply_transformations=False,
-                                                                           take=self.colour,
-                                                                           **kwargs
-                                                                           )
+                self.colour_matrix, rows, colums = TableMatrix.buildMatrix(
+                    self,
+                    work,
+                    apply_transformations=False,
+                    take=self.colour,
+                    **kwargs
+                )
 
         else:
             self.matrix, self.rows, self.columns = TableMatrix.buildMatrix(
@@ -1390,7 +1386,7 @@ class HistogramGradientPlot(LinePlot):
         nrows = 0
         self.xvals = None
 
-        dataframe = dataseries.unstack()
+        work = dataseries.unstack()
 
         for line, data in work.items():
 
@@ -1438,9 +1434,9 @@ class HistogramGradientPlot(LinePlot):
 
         if self.zrange:
             vmin, vmax = self.zrange
-            if vmin == None:
+            if vmin is None:
                 vmin = yvals.min()
-            if vmax == None:
+            if vmax is None:
                 vmax = yvals.max()
             yvals[yvals < vmin] = vmin
             yvals[yvals > vmax] = vmax
@@ -1556,14 +1552,14 @@ class BarPlot(TableMatrix, Plotter):
         self.barlog = False
         if self.orientation == 'vertical':
             # bar functions require log parameter
-            if "y" in self.logscale:
+            if self.logscale and "y" in self.logscale:
                 self.barlog = True
             # erase other log transformations
             self.logscale = None
             self.plotf = plt.bar
 
         else:
-            if "x" in self.logscale:
+            if self.logscale and "x" in self.logscale:
                 self.barlog = True
             self.logscale = None
             self.plotf = plt.barh
