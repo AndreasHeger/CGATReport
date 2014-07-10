@@ -9,10 +9,11 @@ from SphinxReport.Component import Component
 from SphinxReport import Utils
 
 try:
-    import mpld3
+    # import mpld3
     HAS_MPLD3 = True
 except ImportError:
     HAS_MPLD3 = False
+HAS_MPLD3 = False
 
 
 class MatplotlibPlugin(Component):
