@@ -202,7 +202,7 @@ class TableBase(Renderer):
         if self.add_rowindex:
             raise NotImplemnetedError('add-rowindex not implemented')
             lines.append('   :header: "row", "", "%s" ' %
-                         '","'.join(map(str, col_headers)))
+                         '", "'.join(map(str, col_headers)))
             lines.append('')
 
             x = 0
@@ -210,7 +210,7 @@ class TableBase(Renderer):
                 x += 1
                 lines.append('   %i,"%s","%s"' %
                              (x, str(header),
-                              '","'.join(map(str, line))))
+                              '", "'.join(map(str, line))))
 
         else:
             l = out.getvalue().split("\n")
@@ -327,13 +327,15 @@ class TableBase(Renderer):
                 regex_link = re.compile('`(.*) <(.*)>`_')
                 # write row names
                 for row, row_name in enumerate(dataframe.index):
-                    c = ws.cell(row=row + 1, column=0)
+                    # rows and columns start at 1
+                    c = ws.cell(row=row + 2, column=1)
                     c.value = row_name
 
                 # write columns
                 for column, column_name in enumerate(dataframe.columns):
                     # set column title
-                    c = ws.cell(row=0, column=column + 1)
+                    # rows and columns start at 1
+                    c = ws.cell(row=1, column=column + 2)
                     c.value = column_name
 
                     # set column values
@@ -341,8 +343,8 @@ class TableBase(Renderer):
 
                     if dataseries.dtype == object:
                         for row, value in enumerate(dataseries):
-                            c = ws.cell(row=row + 1,
-                                        column=column + 1)
+                            c = ws.cell(row=row + 2,
+                                        column=column + 2)
                             value = str(value)
                             if value.startswith('`'):
                                 c.value, c.hyperlink =\
@@ -351,8 +353,8 @@ class TableBase(Renderer):
                                 c.value = value
                     else:
                         for row, value in enumerate(dataseries):
-                            c = ws.cell(row=row + 1,
-                                        column=column + 1)
+                            c = ws.cell(row=row + 2,
+                                        column=column + 2)
                             c.value = value
                 # patch: maximum title length seems to be 31
                 ws.title = re.sub("/", "_", title)[:30]
