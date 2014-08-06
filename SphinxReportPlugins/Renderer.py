@@ -1184,7 +1184,7 @@ class Status(Renderer):
 
         # add header
         lines.append(".. csv-table:: %s" % "table")
-        lines.append('   :header: "Track", "Test", "", "Status", "Info" ')
+        lines.append('   :header: "Track", "Test", "", "Status", "Info"')
         lines.append('')
 
         for index, values in dataframe.iterrows():
@@ -1203,7 +1203,7 @@ class Status(Renderer):
                 image = ""
 
             lines.append(
-                '   "%(track)s",":term:`%(testname)s`","%(image)s","%(status)s","%(info)s"' %
+                '   "%(track)s", ":term:`%(testname)s`", "%(image)s", "%(status)s", "%(info)s"' %
                 locals())
 
         lines.append("")
