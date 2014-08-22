@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 # message to display when the OS is not correct
 sanity_check_os() {
    echo
@@ -96,7 +95,7 @@ if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
    # Go to CGAT_HOME to continue with installation
    if [ -z "$CGAT_HOME" ] ; then
       # install in default location
-      CGAT_HOME=$HOME/SPHINXREPORT
+      CGAT_HOME=$HOME/CGATREPORT
    fi
 
    # Build Python 2.7.5

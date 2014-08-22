@@ -2,7 +2,7 @@
 density-plot
 ============
 
-The :class:`SphinxReportPlugins.Plotter.DensityPlot` displays
+The :class:`CGATReportPlugins.Plotter.DensityPlot` displays
 :term:`numerical arrays` as a density using the kdeplot 
 function from the seaborn_ package.
 
@@ -17,7 +17,7 @@ function from the seaborn_ package.
 Options
 -------
 
-:class:`SphinxReportPlugins.Plotter.DensityPlot` understands the
+:class:`CGATReportPlugins.Plotter.DensityPlot` understands the
 following options, for more information, see the documentation of
 the seaborn package.
 

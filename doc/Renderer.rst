@@ -5,7 +5,7 @@ Renderer
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReportPlugins.Renderer
+.. inheritance-diagram:: CGATReportPlugins.Renderer
    :parts: 1
 
 Writing your own renderer
@@ -52,7 +52,7 @@ The example below creates a simple renderer::
 Renderer
 ========
 
-.. automodule:: SphinxReportPlugins.Renderer
+.. automodule:: CGATReportPlugins.Renderer
    :members:
    :inherited-members:
    :show-inheritance:

@@ -2,7 +2,7 @@
 violin-plot
 ===========
 
-The :class:`SphinxReportPlugins.Plotter.ViolinPlot` displays
+The :class:`CGATReportPlugins.Plotter.ViolinPlot` displays
 :term:`numerical arrays` as boxplots.
 
 .. report:: Trackers.SingleColumnDataExample
@@ -15,6 +15,6 @@ The :class:`SphinxReportPlugins.Plotter.ViolinPlot` displays
 Options
 -------
 
-:class:`SphinxReportPlugins.Plotter.ViolinPlot` has no additional
+:class:`CGATReportPlugins.Plotter.ViolinPlot` has no additional
 options apart from :ref:`common plot options`. 
 

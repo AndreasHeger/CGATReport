@@ -52,28 +52,28 @@ Add the following code to :file:`Tutorial3.py`::
 
 This counter again counts word sizes in ``.py`` and ``.rst`` files, but collects counts separately
 for words starting with vocals and consonants. What is counted is determined by the ``slice`` option.
-sphinxreport will query the :attr:`slices` attribute and then call the Tracker with all combinations
+cgatreport will query the :attr:`slices` attribute and then call the Tracker with all combinations
 of :term:`tracks` and :term:`slices`.
 
 Testing the data source::
 
-   sphinxreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5
+   cgatreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5
 
 will now produce three plots, one for each slice. Per default, plots are grouped by ``slice``, but the grouping
 can be changed using the option ``groupby=track``::
 
-   sphinxreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o groubpy=track
+   cgatreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o groubpy=track
 
 Again, three plots are created, but this time there is one plot per ``track``. 
 
 Which :term:`tracks` and :term:`slices` are plotted can be controlled through options, too. To select only
 one or more :term:`tracks`, use the ``-o tracks=track[,...[,...]]`` option::
 
-   sphinxreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o tracks=.py
+   cgatreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o tracks=.py
 
 To select one or more :term:`slices`, use the ``-o slices=slice[,...[,...]]`` option::
 
-   sphinxreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o slices=vocals,consonants
+   cgatreport-test -t WordCounterWithSlices -r line-plot -m histogram -o range=0,100,5 -o slices=vocals,consonants
 
 ****************************************************
 Inserting the graphs in a restructured text document

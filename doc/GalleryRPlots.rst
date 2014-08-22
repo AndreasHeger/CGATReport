@@ -4,7 +4,7 @@
 r-box-plot
 ==========
 
-The :class:`SphinxReportPlugins.RPlotter.BoxPlot` class presents
+The :class:`CGATReportPlugins.RPlotter.BoxPlot` class presents
 :term:`numerical arrays` as box plots:
 
 .. report:: Trackers.SingleColumnDataExample
@@ -17,7 +17,7 @@ The :class:`SphinxReportPlugins.RPlotter.BoxPlot` class presents
 Options
 =======
 
-:class:`SphinxReportPlugins.RPlotter.BoxPlot` has no additional
+:class:`CGATReportPlugins.RPlotter.BoxPlot` has no additional
 options apart from :ref:`common plot options`. 
 
 .. _r-smooth-scatter-plot:
@@ -26,7 +26,7 @@ options apart from :ref:`common plot options`.
 r-smooth-scatter-plot
 =====================
 
-The :class:`SphinxReportPlugins.RPlotter.SmoothScatterPlot` class presents
+The :class:`CGATReportPlugins.RPlotter.SmoothScatterPlot` class presents
 :term:`numerical arrays` as smoothed scatter plots:
 
 .. report:: Trackers.MultipleColumnDataExample
@@ -39,7 +39,7 @@ The :class:`SphinxReportPlugins.RPlotter.SmoothScatterPlot` class presents
 Options
 =======
 
-:class:`SphinxReportPlugins.RPlotter.SmoothScatterPlot` understands
+:class:`CGATReportPlugins.RPlotter.SmoothScatterPlot` understands
 the :ref:`common plot options` plus:
 
 .. glossary::
@@ -56,7 +56,7 @@ the :ref:`common plot options` plus:
 r-heatmap-plot
 ==============
 
-The :class:`SphinxReportPlugins.RPlotter.HeatmapPlot` class presents
+The :class:`CGATReportPlugins.RPlotter.HeatmapPlot` class presents
 :term:`matrices` as box plots:
 
 .. report:: Trackers.MatrixTracker
@@ -69,7 +69,7 @@ The :class:`SphinxReportPlugins.RPlotter.HeatmapPlot` class presents
 Options
 =======
 
-:class:`SphinxReportPlugins.RPlotter.HeatmapPlot` has no additional
+:class:`CGATReportPlugins.RPlotter.HeatmapPlot` has no additional
 options apart from :ref:`common plot options`. 
 
 .. _r-ggplot:
@@ -78,7 +78,7 @@ options apart from :ref:`common plot options`.
 r-ggplot
 =====================================
 
-The :class:`SphinxReportPlugins.GGPlot.` class permits plotting 
+The :class:`CGATReportPlugins.GGPlot.` class permits plotting 
 :term:`data frames` using the ggplot2_ library:
 
 .. report:: Tutorial9.ExpressionLevels
@@ -90,7 +90,7 @@ The :class:`SphinxReportPlugins.GGPlot.` class permits plotting
 Options
 =======
 
-:class:`SphinxReportPlugins.RPlotter.GGPlot` has the following options
+:class:`CGATReportPlugins.RPlotter.GGPlot` has the following options
 in addition to :ref:`common plot options`. 
 
 .. glossary::

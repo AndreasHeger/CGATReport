@@ -7,15 +7,20 @@ Tutorial 11: Plotting Venn diagrams
 A simple example
 ----------------
 
-To find the overlap between two transcription factors we define a TrackerMultipleLists tracker, plot the venns and calculate the p-values::
+To find the overlap between two transcription factors we define a
+TrackerMultipleLists tracker, plot the venns and calculate the
+p-values::
 
-    class SimpleOverlap( TrackerMultipleLists ):
+    class SimpleOverlap(TrackerMultipleLists):
 
        statements = {"AR": "SELECT gene_id FROM Promoters_with_ar",
                      "ERG": "SELECT gene_id FROM Promoters_with_erg",
                      "background":"SELECT gene_id FROM all_genes"}
 
-And then we can render it as a venn diagram using the ``venn`` transformer and ``venn-plot`` renderer, or test the statistical significance of the overlap using the ``hypergeometric`` transformer and the ``table`` renderer.
+And then we can render it as a venn diagram using the ``venn``
+transformer and ``venn-plot`` renderer, or test the statistical
+significance of the overlap using the ``hypergeometric`` transformer
+and the ``table`` renderer.
 
 As a venn:
 
@@ -85,7 +90,7 @@ Defining a tracker
 
 The first thing we must do is define the tracker that will return our results. First import the tracker::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
 
 Now we must define the tracker that will return our results. There are
 lots of comparisons here and we must decide what are tracks and slices
@@ -95,7 +100,7 @@ the Up and down regulated genes. The `tracks` can be sepcified using a
 pattern on the database (the different tracks appear in the names of
 the tables). The `slices` will have to be specified manually::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
     class OverlapTracker( TrackerOverlappingLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
@@ -113,7 +118,7 @@ genes:
 
 The easiest way to do this is to specify the `ListA`, `ListB` and  `ListC` attributes to the tracker::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
@@ -141,7 +146,7 @@ here didn't test genes that arn't expressed in either sample, so there
 is no way they could be in the differential set. So our background set
 is all genes that appear in the differential table::
     
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
@@ -169,7 +174,7 @@ is all genes in the differential table. But there could be genes in
 the Bound genes lists that arn't in the background, so we need to
 limit these::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]

@@ -18,7 +18,7 @@ the counts separately in ``.py`` and ``.rst`` files.
 Create the file :file:`Tutorial3.py` in the :file:`python` subdirectory and add 
 the following code::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
 
     import os
 
@@ -52,25 +52,25 @@ Note that the tracker again returns a dictionary. The dictionary contains one en
 
 Testing this data source::
 
-   sphinxreport-test -t WordCounter -r debug
+   cgatreport-test -t WordCounter -r debug
 
-This output is not very informative. Sphinxreport contains methods (objects of the type :class:`Tranformer`) 
+This output is not very informative. CGATReport contains methods (objects of the type :class:`Tranformer`) 
 modify data before display. For example, the :class:`TransformerHistogram` computes a histogram (``-m histogram`` or
 ``--transformer=histogram``)::
 
-   sphinxreport-test -t WordCounter -r table -m histogram
+   cgatreport-test -t WordCounter -r table -m histogram
 
 The array of word length is replaced with two arrays for bins and values. Again, the tabular output is not very informative. 
 However, the histogram is easily plotted choosing a different :class:`Renderer`::
 
-   sphinxreport-test -t WordCounter -r line-plot -m histogram
+   cgatreport-test -t WordCounter -r line-plot -m histogram
 
 Most objects of type :class:`Renderer` or :class:`Transformer` accept options. Options are passed
-with :file:`sphinxreport-test` with the ``-o arg=value`` or ``--option=arg=value`` syntax.
+with :file:`cgatreport-test` with the ``-o arg=value`` or ``--option=arg=value`` syntax.
 For example to compute the histogram in the range from 0 to 100 in steps of size 5 and to display the histogram 
 as lines, we can specify::
 
-   sphinxreport-test -t WordCounter -r line-plot -m histogram -o range=0,100,5 -o as-lines
+   cgatreport-test -t WordCounter -r line-plot -m histogram -o range=0,100,5 -o as-lines
 
 
 ****************************************************

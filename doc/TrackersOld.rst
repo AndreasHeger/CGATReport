@@ -4,7 +4,7 @@
 Background
 ==========
 
-To create dynamic text, SphinxReport requires the interaction of two components,
+To create dynamic text, CGATReport requires the interaction of two components,
 a :class:`Tracker` and a :class:`Renderer`. The former supplies the data, while the
 latter renders it by creating a plot or building a table.
 
@@ -13,12 +13,12 @@ latter renders it by creating a plot or building a table.
    a :class:`Tracker` and a :class:`Renderer`. A :class:`Transformer` applies transformations
    to data such as filtering, computing means, etc.
 
-the understanding of sphinxreport's data model is central to understanding sphinxreport.
+the understanding of cgatreport's data model is central to understanding cgatreport.
 
 Data
 ====
 
-Data in sphinxreport is represented by ordered python dictionaries. 
+Data in cgatreport is represented by ordered python dictionaries. 
 
 The key denotes a data label, while the value in a dictionary can be any of the python data types 
 such as numbers, strings,  tuples, lists. Different renderes will require different data types. 
@@ -184,7 +184,7 @@ Renderer
 Behind the scenes
 =================
 
-The :class:`Dispatcher` is the central actor behind the scenes in sphinxreport.
+The :class:`Dispatcher` is the central actor behind the scenes in cgatreport.
 To resolve a :term:`report` directive, it will first assemble all components
 in place (a :term:`Renderer`, a :term:`Tracker` and optionally a :term:`Transformer`).
 Conceptually, it then proceeds as follows.

@@ -97,15 +97,15 @@ rpy integration
 
 plugin architecture
     A plugin architecture has been added to allow easy
-    extension of sphinxreport with additional renderes,
+    extension of cgatreport with additional renderes,
     transformers and plotting engines.
 
 data download
-   data from cache can be retrieved via the sphinxreport-get
+   data from cache can be retrieved via the cgatreport-get
    utility
 
 web server
-   sphinxreport-server has been added to serve a report 
+   cgatreport-server has been added to serve a report 
    and add interactive components.
 
 refactoring
@@ -133,7 +133,7 @@ load balancing
     how long it will take.
 
 logging
-    added summary of logging messages to ``sphinxreport-build``.
+    added summary of logging messages to ``cgatreport-build``.
 
 multi-figure layout
    implemented multi-figure layout using option
@@ -170,7 +170,7 @@ add hinton plot
    added hinton plot (see http://www.scipy.org/Cookbook/Matplotlib)
 
 --force option
-   add --clean or --force option to sphinxreport-test or build
+   add --clean or --force option to cgatreport-test or build
    automatically force a new build. See also the corresponding
    sphinx-build options.
 

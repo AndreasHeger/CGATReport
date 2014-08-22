@@ -4,7 +4,7 @@
 Overview
 ********
 
-This section explains the main features of sphinxreport and demonstrates its usage.
+This section explains the main features of cgatreport and demonstrates its usage.
 
 .. _Features:
 
@@ -12,15 +12,15 @@ Features
 ********
 
 
-sphinxreport is a report generator that is implemented as an extension
-to sphinxreport`Sphinx`. It is easy to use and powerful enough to give all the flexibility 
+cgatreport is a report generator that is implemented as an extension
+to cgatreport`Sphinx`. It is easy to use and powerful enough to give all the flexibility 
 needed during the development of computational pipelines and robustness during the
 production use of a pipeline.
 
 It is intended for developers and computational scientists with ``python`` scripting experience.
 
-Briefly, the sphinxreport is a report generator that is implemented as an extension
-to sphinxreport`Sphinx`. It
+Briefly, the cgatreport is a report generator that is implemented as an extension
+to cgatreport`Sphinx`. It
 
 * uses simple markup in the form of restructured text
 * supports both automated and narrative analysis
@@ -32,7 +32,7 @@ to sphinxreport`Sphinx`. It
 Usage
 *****
 
-You can think of sphinxreport as providing a
+You can think of cgatreport as providing a
 *macro* ability to restructured text documents. These macros will be evaluated every time a restructured text
 document is rebuilt.
 
@@ -45,13 +45,13 @@ Data sources are provided by the user and implemented as python classes
 (more specifically, as objects derived of subclasses of the class
 :class:`Tracker`). As data sources are implemented by the user,
 almost any type of data source can be used: flat files, SQL database,
-etc. Data could even be obtained remotely. sphinxreport
+etc. Data could even be obtained remotely. cgatreport
 provides some utility functions for interaction with SQL databases.
 
-sphinxreport comes with a collection of pre-defined renderers
+cgatreport comes with a collection of pre-defined renderers
 covering most basic and common plotting needs.
 
-The following minimal example illustrates how sphinxreport
+The following minimal example illustrates how cgatreport
 works. On inserting a ``:report:`` directive like the following into a
 restructured text document::
 
@@ -60,7 +60,7 @@ restructured text document::
 
       A bar plot.
 
-will insert a barplot (:class:`SphinxReportPlugins.Renderer.BarPlot`) at 
+will insert a barplot (:class:`CGATReportPlugins.Renderer.BarPlot`) at 
 the current location. The :term:`renderer` will obtain the data from a
 python class or function called *BarData* in the python module 
 :file:`Trackers.py` that should be somewhere in the python search path 
@@ -72,7 +72,7 @@ The :file:`Trackers.py` should contain a function *BarData*, that might look lik
 
 Instead of plain functions, function objects can be used as well. 
 
-Finally, the document is built using the usual sphinxreport`Sphinx` process::
+Finally, the document is built using the usual cgatreport`Sphinx` process::
 
    sphinx-build -b html -d _build/doctrees   . _build/html
 
@@ -139,7 +139,7 @@ static documents, but are designed to be run often and on different datasets.
 These are powerful, but often have a steep learning curve. We also found them
 lacking in plotting capabilities. 
 
-We thought the combination of sphinxreport``Sphinx`` and :mod:``matplotlib``
+We thought the combination of cgatreport``Sphinx`` and :mod:``matplotlib``
 and ideal combination and extended the ``matplotlib`` ``:plot:`` directive
 to interactively collect data. We are heavily indebted to these two
 projects. 

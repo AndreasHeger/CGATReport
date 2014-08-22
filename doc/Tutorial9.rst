@@ -4,11 +4,11 @@
 Tutorial 9: Plotting with R
 ==================================
 
-The principal plotting engine in SphinxReport is matplotlib. However,
+The principal plotting engine in CGATReport is matplotlib. However,
 it is just as easy to create plots with R. There are several ways
 to use R for plotting: 
 
-* :ref:`Via Plugins` extending the in-built plotting capabilities of SphinxReport,
+* :ref:`Via Plugins` extending the in-built plotting capabilities of CGATReport,
 * :ref:`Via Tracker` involving writing a :term:`Tracker` that both
   collects data and plots
 * :ref:`Via ggplot2` involving a data frame and the R ggplot library.
@@ -20,7 +20,7 @@ Note that plotting with R makes use of rpy2, the python interface to R.
 Via Plugins
 ===========
 
-Sphinxreport contains a few renderers that make use of the standard R plotting
+CGATReport contains a few renderers that make use of the standard R plotting
 library, for example :ref:`r-box-plot` or
 :ref:`r-smooth-scatter-plot` (see :ref:`Renderers` for a complete list).
 
@@ -104,7 +104,7 @@ we want to create a plot with the correlation of expression values
 between two experiments. We implement the following :term:`tracker`
 that returns a :term:`data frame` ::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
 
     class ExpressionLevels(TrackerSQL):
 	"""Expression level measurements."""
@@ -168,7 +168,7 @@ The data is now in a single melted data frame with a column called
     Plot of gene expression densities
 
 
-See options in :ref:`sphinxreport-test` for ways to do interactive 
+See options in :ref:`cgatreport-test` for ways to do interactive 
 refinement of such plots.
 
 .. note:: 

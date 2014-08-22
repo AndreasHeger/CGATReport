@@ -4,8 +4,8 @@
 gallery
 =======
 
-:class:`SphinxReportPlugins.Renderer.Gallery` renders a collection of image
-files as returned by :class:`SphinxReport.Tracker.TrackerImages`.
+:class:`CGATReportPlugins.Renderer.Gallery` renders a collection of image
+files as returned by :class:`CGATReport.Tracker.TrackerImages`.
 
 .. report:: Tracker.TrackerImages
    :render: gallery-plot
@@ -16,5 +16,5 @@ files as returned by :class:`SphinxReport.Tracker.TrackerImages`.
 Options
 -------
 
-:class:`SphinxReportPlugins.Renderer.Gallery` has no additional
+:class:`CGATReportPlugins.Renderer.Gallery` has no additional
 options.

@@ -1,6 +1,6 @@
 # Makefile for Sphinx documentation
 #
-BINDIR=python ../SphinxReport/
+BINDIR=python ../CGATReport/
 XVFB=xvfb-run -a
 
 # You can set these variables from the command line.
@@ -10,7 +10,9 @@ SPHINXCLEAN   = $(BINDIR)clean.py
 PAPER         =
 
 DIR_PUBLISH       = ~/public_html/documentation/sphinx-report
-URL_SUB="s/\/ifs\/devel\/SphinxReport\/doc\/doc/http:\/\/www.cgat.org\/~andreas\/documentation\/sphinx-report/"
+
+DIR_PUBLISH = ~/public_html/documentation/cgat-report-test
+URL_SUB="s/\/ifs\/devel\/CGATReport\/doc\/doc/http:\/\/www.cgat.org\/~andreas\/documentation\/cgat-report/"
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -51,7 +53,7 @@ csvdb: csvdb_data.txt.gz
 
 html: csvdb
 	@echo 'building notebooks' 
-	ipython nbconvert --to html notebooks/SphinxReportTutorial14.ipynb
+	ipython nbconvert --to html notebooks/CGATReportTutorial14.ipynb
 	$(XVFB) $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."

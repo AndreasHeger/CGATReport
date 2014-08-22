@@ -3,7 +3,7 @@ Working with Genelists
 ======================
 
 Examining the overlaps between gene lists is something we do
-frequently. To make this easier SphinxReport contains a set of tools
+frequently. To make this easier CGATReport contains a set of tools
 to make it easier. 
 
 Overview 
@@ -11,7 +11,7 @@ Overview
 
 The tools you need to work with gene lists are a tracker and three renders.
 
-* :class:`SphinxReport.Tracker.TrackerMultipleLists`: This tracker takes a set of SQL queries and
+* :class:`CGATReport.Tracker.TrackerMultipleLists`: This tracker takes a set of SQL queries and
   returns a dictionary of lists, where each list is of items, such as
   gene names.
 
@@ -72,7 +72,7 @@ this case the names are taken from the dictionary keys. e.g.::
         "Experiment Two": "SELECT gene_id FROM experiment_two_genes"}
 
 3. Finally, if you want more flexibility you can overwrite the
-:meth:`SphinxReport.Tracker.TrackerMultipleLists.getStatements`
+:meth:`CGATReport.Tracker.TrackerMultipleLists.getStatements`
 method. In this you can do whatever you like as long as
 you return a dictionary of SQL statements.
 

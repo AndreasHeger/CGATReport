@@ -4,7 +4,7 @@
 status
 ======
 
-:class:`SphinxReportPlugins.Renderer.Status` outputs a concise table 
+:class:`CGATReportPlugins.Renderer.Status` outputs a concise table 
 that aggregates a various quality control indices and illustrates them
 with icons:
 
@@ -15,7 +15,7 @@ with icons:
    A simple status report
 
 A tracker for status reports need to be derived from
-:class:`SphinxReport.Tracker.Status`. Each test is implemented
+:class:`CGATReport.Tracker.Status`. Each test is implemented
 as a method in the tracker starting with the prefix ``test``. The test
 method should return a tuple of ``status,information``. The example
 below defines two tests::
@@ -49,5 +49,5 @@ NA
 Options
 -------
 
-:class:`SphinxReportPlugins.Renderer.Status` has no additional
+:class:`CGATReportPlugins.Renderer.Status` has no additional
 options.

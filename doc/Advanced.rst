@@ -4,22 +4,22 @@
 Advanced topics
 ===============
 
-This page collects a few advanced techniques for working with sphinxreport.
+This page collects a few advanced techniques for working with cgatreport.
 
 User generated plots
 ====================
 
-If the basic plots included in SphinxReport are not enough (and there
+If the basic plots included in CGATReport are not enough (and there
 is no reason why they shouldn't), plotting can be done within a tracker
 while skipping the rendering step. See the :ref:`user` directive on
 examples of using this.
 
-Parameterizing sphinxreport documents
+Parameterizing cgatreport documents
 =====================================
 
-Sphinxreport documents can access configuration parameters in the
-:file:`sphinxreport.ini` file. For example, if
-:file:`sphinxreport.ini` contains the following section::
+CGATReport documents can access configuration parameters in the
+:file:`cgatreport.ini` file. For example, if
+:file:`cgatreport.ini` contains the following section::
 
    [geneset]
    # genesets to report in the summary pages
@@ -39,11 +39,11 @@ Conditional content
 The ifconfig_ extension allows to include content depending on configuration
 values. To use this extension you will need to modify :file:`conf.py`.
 
-Referring to other sphinxreport documents
+Referring to other cgatreport documents
 =========================================
 
 The intersphinx_ extension permits referring to other
-sphinxreport documents. To use this extension, add the following to
+cgatreport documents. To use this extension, add the following to
 your :file:`conf.py` configuration file::
 
     extensions = [ ..., 'sphinx.ext.intersphinx', ...]
@@ -62,26 +62,26 @@ To refer to the other documentation, type::
 
 Where ``label`` needs to be a valid identifier in the referred to document.
 
-Using macros from another sphinxreport document
+Using macros from another cgatreport document
 ===============================================
 
-Using macros from another sphinxreport document is possible if the
-``linked-to`` sphinxreport document follows certain coding conventions. Basically,
-the ``linked-to`` sphinxreport document needs to encapsulate all the configuration
+Using macros from another cgatreport document is possible if the
+``linked-to`` cgatreport document follows certain coding conventions. Basically,
+the ``linked-to`` cgatreport document needs to encapsulate all the configuration
 information that is specific to a project, in particular the location of data and database.
 Here is an example of how it works.
 
 Let's say we have a ``master`` document that wants to refer to the document created by an automated
 generic rnaseq pipeline and a generic chipseq pipeline.
 
-The ``linked-to`` rnaseq document reads all its configuration from the ``rnaseq`` section in the :file:``sphinxreport.ini``::
+The ``linked-to`` rnaseq document reads all its configuration from the ``rnaseq`` section in the :file:``cgatreport.ini``::
 
    [rnaseq]
    exportdir=export
    datadir=.
    backend=sqlite:///./csvdb
 
-Similarly, the ``linked-to`` chipseq document has a ``chipseq`` section in the :file:`sphinxreport.ini`::
+Similarly, the ``linked-to`` chipseq document has a ``chipseq`` section in the :file:`cgatreport.ini`::
 
    [chipseq]
    exportdir=export
@@ -121,15 +121,15 @@ adding it to the :file:`conf.py` configuration file of the ``master`` documentat
 Implementation issues
 ---------------------
 
-If you want that other sphinxreport documents can refer to your trackers, you need to make sure that
+If you want that other cgatreport documents can refer to your trackers, you need to make sure that
 you encapsulate all configuration information into a single configuration section. Thus you should
 refrain from using and of the generic sections like ``[report]`` or ``[general]``.
 
 The best way to do this is to create a base tracker that all trackers within a project are derived from.
 In the example below, the trackers are all derived from the :class:`RnaseqTracker` class::
 
-   from SphinxReport.Tracker import *
-   from SphinxReport.Utils import PARAMS as P
+   from CGATReport.Tracker import *
+   from CGATReport.Utils import PARAMS as P
 
    EXPORTDIR=P['rnaseq_exportdir']
    DATADIR=P['rnaseq_datadir']
@@ -150,7 +150,7 @@ In the example below, the trackers are all derived from the :class:`RnaseqTracke
            data = self.getValues( """SELECT coverage_pcovered FROM %(track)s_transcript_counts""" )
            return odict( (("covered", data ) ,) )
 
-The mixing of RnaseqTracker and :class:`SingleTableTrackerRows` illustrates how classes provided by sphinxreport
+The mixing of RnaseqTracker and :class:`SingleTableTrackerRows` illustrates how classes provided by cgatreport
 can be parameterized. Note that the order is important, RnaseqTracker needs to appear first to make sure that
 its constructor is called first.
 

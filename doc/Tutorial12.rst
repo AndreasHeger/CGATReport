@@ -4,7 +4,7 @@
 Tutorial 12: Plotting with ggplot
 =================================
 
-The :class:`SphinxReportPlugins.GGPlotter.GGPlot` displays
+The :class:`CGATReportPlugins.GGPlotter.GGPlot` displays
 a dataframe using the python port (ggplot_) of the ggplot2_ package.
 
 ggplot2_ is a plotting system for R, based on the grammar of
@@ -75,7 +75,7 @@ we want to create a plot with the correlation of expression values
 between two experiments. We implement the following :term:`tracker`
 that returns a :term:`data frame` ::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
 
     class ExpressionLevels(TrackerSQL):
 	"""Expression level measurements."""
@@ -122,6 +122,6 @@ More interesting is to colour the different expression values by gene_function::
 
    Correlation with expression values coloured by factor gene_function
 
-See options in :ref:`sphinxreport-test` for ways to do interactive 
+See options in :ref:`cgatreport-test` for ways to do interactive 
 refinement of such plots.
 

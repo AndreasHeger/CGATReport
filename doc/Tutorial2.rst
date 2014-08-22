@@ -22,7 +22,7 @@ Adding a data source
 Create the file :file:`Tutorial2.py` in the :file:`trackers` subdirectory and add 
 the following code::
 
-  from SphinxReport.Tracker import *
+  from CGATReport.Tracker import *
 
   class MyDataOneTrack(Tracker):
       """My one-tracked data."""
@@ -32,7 +32,7 @@ the following code::
       def __call__(self, track, slice = None ):
 	  return dict( (("header1", 10), ("header2", 20)),)
 
-The module sphinxreport`Trackers` is imported and the data source ``MyDataOneTrack`` is derived from it::
+The module cgatreport`Trackers` is imported and the data source ``MyDataOneTrack`` is derived from it::
    
    class MyDataOneTrack(Tracker):
 
@@ -61,7 +61,7 @@ Testing the data source
 
 Testing the current implementation::
 
-   sphinxreport-test -t MyDataOneTrack -r interleaved-bar-plot
+   cgatreport-test -t MyDataOneTrack -r interleaved-bar-plot
 
 will show a familiar plot - the functor returns the data as the funtion in :file:`Tutorial2.py`.
 
@@ -96,11 +96,11 @@ Testing the data source
 
 Testing the current implementation::
 
-   sphinxreport-test -t MyDataTwoTracks -r interleaved-bar-plot
+   cgatreport-test -t MyDataTwoTracks -r interleaved-bar-plot
 
 will now show two bars side-by-side. Try out::
 
-   sphinxreport-test -t MyDataTwoTracks -r stacked-bar-plot
+   cgatreport-test -t MyDataTwoTracks -r stacked-bar-plot
 
 Creating a restructured text document
 *************************************

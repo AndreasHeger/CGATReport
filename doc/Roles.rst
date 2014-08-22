@@ -2,7 +2,7 @@
 Roles
 =====
 
-In addition to the ``:report:`` directive, sphinxreport provides some roles 
+In addition to the ``:report:`` directive, cgatreport provides some roles 
 for inline text.
 
 pmid

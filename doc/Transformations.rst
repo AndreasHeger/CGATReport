@@ -13,7 +13,7 @@ separated list.
 stats
 =====
 
-The :class:`SphinxReportPlugins.Transformer.Stats` class computes
+The :class:`CGATReportPlugins.Transformer.Stats` class computes
 summary statistics of a :term:`numerical array`::
 
   .. report:: Trackers.SingleColumnDataExample
@@ -40,7 +40,7 @@ synonymous to :ref:`pearson`.
 pearson
 =======
 
-The :class:`SphinxReportPlugins.Transformer.TransformerCorrelationPearson` class computes
+The :class:`CGATReportPlugins.Transformer.TransformerCorrelationPearson` class computes
 Pearson correlation statistics between two or more :term:`numerical
 arrays`. 
 Each possible combination of arrays is tested and for each
@@ -63,7 +63,7 @@ comparison a new dictionary is inserted with the result of the test.
 spearman
 ========
 
-The :class:`SphinxReportPlugins.Transformer.TransformerCorrelationPearson` class computes
+The :class:`CGATReportPlugins.Transformer.TransformerCorrelationPearson` class computes
 Spearman correlation statistics between two or more :term:`numerical
 arrays`. Each possible combination of arrays is tested and for each
 comparison a new dictionary is inserted with the result of the test.
@@ -85,7 +85,7 @@ comparison a new dictionary is inserted with the result of the test.
 test-mwu
 ========
 
-The :class:`SphinxReportPlugins.Transformer.TransformerMannWhitneyU`
+The :class:`CGATReportPlugins.Transformer.TransformerMannWhitneyU`
 class computes Mann-Whitney U test to test for the difference of medians
 between two or more :term:`numerical
 arrays`. Each possible combination of arrays is tested and for each
@@ -108,7 +108,7 @@ comparison a new dictionary is inserted with the result of the test.
 select
 ======
 
-The :class:`SphinxReportPlugins.Transformer.TransformerSelect` selects
+The :class:`CGATReportPlugins.Transformer.TransformerSelect` selects
 one field from a :term:`data tree`.
 
   .. report:: Trackers.SingleColumnDataExample
@@ -128,7 +128,7 @@ one field from a :term:`data tree`.
 Options
 -------
 
-The :class:`SphinxReportPlugins.Transformer.TransformerSelect` understands the
+The :class:`CGATReportPlugins.Transformer.TransformerSelect` understands the
 following options:
 
 .. glossary::
@@ -165,7 +165,7 @@ Compute correlation statistics between all columns.
 filter
 ======
 
-The :class:`SphinxReportPlugins.Transformer.TransformerFilter` removes
+The :class:`CGATReportPlugins.Transformer.TransformerFilter` removes
 one or more fields from a :term:`data tree`.
 
   .. report:: Trackers.MultipleColumnDataExample
@@ -193,7 +193,7 @@ one or more fields from a :term:`data tree`.
 Options
 -------
 
-The :class:`SphinxReportPlugins.Transformer.TransformerFilter` understands the
+The :class:`CGATReportPlugins.Transformer.TransformerFilter` understands the
 following options:
 
 .. glossary::
@@ -213,7 +213,7 @@ following options:
 histogram
 =========
 
-The :class:`SphinxReportPlugins.Transformer.Histogram` class computes a histogram
+The :class:`CGATReportPlugins.Transformer.Histogram` class computes a histogram
 of ``numerical array` and inserts it as a table::
 
    .. report:: Trackers.SingleColumnDataExample
@@ -235,7 +235,7 @@ of ``numerical array` and inserts it as a table::
 Options
 -------
 
-The :class:`SphinxReportPlugins.Transformer.Histogram` understands the
+The :class:`CGATReportPlugins.Transformer.Histogram` understands the
 following options:
 
 .. glossary::
@@ -260,7 +260,7 @@ following options:
       bins in the given range (10, by default). If `bins` is a sequence,
       it defines the bin edges, including the rightmost edge, allowing
       for non-uniform bin widths.
-      (From the sphinxreport`numpy` documentation)
+      (From the cgatreport`numpy` documentation)
       If bins is of the format ''log-X'' with X an integer number, X 
       logarithmig bins will be used. 
       If bins is ''dict'', then the histogram will be computed using a
@@ -310,7 +310,7 @@ Working with multiple columns
 aggregate
 =========
 
-The :class:`SphinxReportPlugins.Transformer.Aggregate` takes
+The :class:`CGATReportPlugins.Transformer.Aggregate` takes
 histogrammed data and performs various aggregation or normalization
 tasks.
 
@@ -336,7 +336,7 @@ The first list is assumed to be bins and not transformed.
 toList
 ======
 
-The :class:`SphinxReportPlugins.Transformer.List` takes
+The :class:`CGATReportPlugins.Transformer.List` takes
 labeled data and converts it into lists. For example,
 if you have the following data::
 
@@ -368,7 +368,7 @@ indicator
 tolabels
 ========
 
-The :class:`SphinxReportPlugins.Transformer.TransformerToLabels` converts
+The :class:`CGATReportPlugins.Transformer.TransformerToLabels` converts
 :term:`numerical arrays` to :term:`labeled data`. Imagine you have the following
 data::
    
@@ -402,7 +402,7 @@ the transformation would result in::
 Options
 -------
 
-The :class:`SphinxReportPlugins.Transformer.TransformerFilter` understands the
+The :class:`CGATReportPlugins.Transformer.TransformerFilter` understands the
 following options:
 
 .. glossary::
@@ -422,7 +422,7 @@ following options:
 melt
 ====
 
-The :class:`SphinxReportPlugins.Transformer.TransformerMelt` creates a melted table. See
+The :class:`CGATReportPlugins.Transformer.TransformerMelt` creates a melted table. See
 `<http://scienceoss.com/restructure-or-reformat-dataframes-in-r-with-melt>
 here`_ for an example.
 
@@ -434,14 +434,14 @@ For example::
         experiment2/Sample1 = [1]              Data =  [1,3,1,3]
         experiment2/Sample2 = [3]
 
-:class:`SphinxReportPlugins.Transformer.TransformerMelt` has no options.
+:class:`CGATReportPlugins.Transformer.TransformerMelt` has no options.
 
 .. _venn:
 
 venn
 ====
 
-The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerVenn`
+The :class:`CGATReportPlugins.TransformersGeneLists.TransformerVenn`
 takes a dictionary of lists and transforms the data so that it is in
 the correct format for plotting a venn diagram of the overlaps between
 the lists. This :term:`Transformer` understand the following options:
@@ -459,7 +459,7 @@ the lists. This :term:`Transformer` understand the following options:
 hypergeometric
 ==============
 
-The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerHypergeometric`
+The :class:`CGATReportPlugins.TransformersGeneLists.TransformerHypergeometric`
 takes a dictionary of lists and calculates the enrichements and
 p-values for the overlaps using the hypergeometric distribution. If
 there are more than two lists, all pairwise combinations will be
@@ -470,7 +470,7 @@ computed. This :term:`Transformer` has no options.
 p-adjust
 ========
 
-The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerMultiTest`
+The :class:`CGATReportPlugins.TransformersGeneLists.TransformerMultiTest`
 looks for a P-value column in a table and computes multiple testing
 corrected p-values and adds these as a new column to the table. 
 
@@ -507,7 +507,7 @@ This :term:`Transformer` has the following options:
 count
 =====
 
-The :class:`SphinxReportPlugins.Transformer.TransformerCount` computes
+The :class:`CGATReportPlugins.Transformer.TransformerCount` computes
 the numbers of values in a data tree. Displaying a table of counts can often be useful to
 summarize the number of entries in a list prior to plotting.
 

@@ -4,9 +4,9 @@
 debug
 ======
 
-:class:`SphinxReportPlugins.Renderer.Debug` is for useful for
+:class:`CGATReportPlugins.Renderer.Debug` is for useful for
 debugging purposes and will most often be used with the
-:ref:`sphinxreport-test` utility.
+:ref:`cgatreport-test` utility.
 
 .. report:: Trackers.LabeledDataExample
    :render: debug

@@ -4,7 +4,7 @@
 Tutorial 7: Adding active content
 =================================
 
-Per default, sphinxreport`Sphinx` builds static documents. If the document
+Per default, cgatreport`Sphinx` builds static documents. If the document
 is rendered as html, active content can be added by running a 
 web server.
 
@@ -13,7 +13,7 @@ web server.
    run a web server if you know what you are doing. Also, do
    not assume that I know what I am doing.
 
-sphinxreport uses `web.py <http://webpy.org>`_ as a server.
+cgatreport uses `web.py <http://webpy.org>`_ as a server.
 Make sure it is installed. To test if it is, run::
 
    import web
@@ -26,7 +26,7 @@ root directory. Already available applications are
    * :class:`DataTable`
 
 See :ref:`Configuration`, in particular the variable
-:term:`sphinxreport_urls` on how to enable these applications.
+:term:`cgatreport_urls` on how to enable these applications.
 
 In order to start the web server, run::
 
@@ -39,6 +39,6 @@ The document should now be accessible at ``http://localhost:8080/static/index.ht
 
 .. note::
 
-   Contents of the cache can also be retrieved with the :ref:`sphinxreport-get`
+   Contents of the cache can also be retrieved with the :ref:`cgatreport-get`
    command line utility.
 

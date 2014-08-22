@@ -4,7 +4,7 @@
 user
 ====
 
-The :class:`SphinxReportPlugins.Renderer.User` does not render.
+The :class:`CGATReportPlugins.Renderer.User` does not render.
 This renderer can be used to do some plotting within a
 :term:`tracker`.
 

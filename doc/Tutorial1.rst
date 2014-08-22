@@ -13,7 +13,7 @@ Creating the skeleton project
 
 First, we create a skeleton report in the directory tutorial::
 
-   sphinxreport-quickstart -d tutorial
+   cgatreport-quickstart -d tutorial
 
 This will create a skeleton report layout in the directory :file:`tutorial`.
 Enter this directory and build the report as html::
@@ -48,16 +48,16 @@ This function returns a dictionary as all data sources do.
 Testing the data source
 =======================
 
-The utility :file:`sphinxreport-test` can be used to check if a
+The utility :file:`cgatreport-test` can be used to check if a
 data source works. To test your data source, type::
 
-   sphinxreport-test -t MyDataFunction -r bar-plot
+   cgatreport-test -t MyDataFunction -r bar-plot
 
 on the command prompt in the root directory. This should create a 
 bar plot (``-r bar-plot`` or ``--renderer=bar-plot`` ) of your data source
 (``-t MyDataFunction`` or ``--tracker=MyDataFunction``).
 
-:file:`sphinxreport-test` will also produce the restructured text
+:file:`cgatreport-test` will also produce the restructured text
 required to render this graph within a restructured text document.
 This utility is very useful for fine-tuning the appearance
 of a plot before inserting it into the main document.
@@ -79,8 +79,8 @@ Create the following rst file:`Tutorial1.rst`::
        My first bar plot.
 
 The :term:`report` directive is used to insert the graph into 
-the restructured text document. Behind the scenes, sphinxreport`sphinx` will call 
-the sphinxreport extension and request a barplot. The sphinxreport in 
+the restructured text document. Behind the scenes, cgatreport`sphinx` will call 
+the cgatreport extension and request a barplot. The cgatreport in 
 turn will look for a data source :meth:`MyDataFunction` in the module :file:`Tutorial1.py` 
 that should be somewhere in your :env:`PYTHONPATH` or added in :file:`conf.py`.
 The default location for these is in the :file:`python` subdirectory under the main installation

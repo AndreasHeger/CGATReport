@@ -356,15 +356,21 @@ class DataWithImagesExample(Tracker):
 class VennTracker(Tracker):
 
     tracks = ('two-circle', 'three-circle')
+    slices = ('data1', 'data2')
 
-    def __call__(self, track):
+    def __call__(self, track, slice):
+
+        if slice == 'data1':
+            f = 10
+        else:
+            f = 1
 
         if track == 'two-circle':
-            return {'01': 10, '10': 20, '11': 5,
+            return {'01': 10, '10': 20 * f, '11': 5 * f,
                     'labels': ("SetA", "SetB")}
 
         elif track == 'three-circle':
-            return {'001': 10, '010': 20, '100': 5,
-                    '011': 10, '110': 20, '101': 5,
+            return {'001': 10, '010': 20 * f, '100': 5 * f,
+                    '011': 10, '110': 20 * f, '101': 5 * f,
                     '111': 10,
                     'labels': ("SetA", "SetB", "SetC")}

@@ -2,7 +2,7 @@
 line-plot
 =========
 
-A :class:`SphinxReportPlugins.Plotter.LinePlot` displays :term:`numerical arrays`
+A :class:`CGATReportPlugins.Plotter.LinePlot` displays :term:`numerical arrays`
 as lines.
 
 .. report:: Trackers.ArrayDataExample
@@ -15,7 +15,7 @@ as lines.
 Options
 =======
 
-:class:`SphinxReportPlugins.Plotter.LinePlot` understands the
+:class:`CGATReportPlugins.Plotter.LinePlot` understands the
 :ref:`common plot options` and the following options:
 
 .. glossary::

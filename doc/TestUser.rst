@@ -6,7 +6,7 @@ User created plots
 
 This page demonstrates usage of the :term:`user` renderer
 in order to include custom generated plots or images into
-a sphinxreport document.
+a cgatreport document.
 
 Plotting with matplotlib
 ========================

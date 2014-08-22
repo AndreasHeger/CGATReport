@@ -7,7 +7,7 @@ Matrices are tables that contain only numeric values. Because of this,
 additional transformations are possible for matrices, for example, 
 computing totals, row or column maxima, normalization.
 
-The :class:`SphinxReportPlugins.Renderer.Matrix` presents
+The :class:`CGATReportPlugins.Renderer.Matrix` presents
 :term:`labeled values` as a table.
 
 .. report:: Trackers.LabeledDataExample
@@ -18,7 +18,7 @@ The :class:`SphinxReportPlugins.Renderer.Matrix` presents
 Options
 -------
 
-:class:`SphinxReportPlugins.Renderer.Matrix` understands the
+:class:`CGATReportPlugins.Renderer.Matrix` understands the
 following options:
 
 .. glossary::
@@ -56,7 +56,7 @@ following options:
 matrix-plot
 ===========
 
-The :class:`SphinxReportPlugins.Plotter.MatrixPlot` class plots labeled data
+The :class:`CGATReportPlugins.Plotter.MatrixPlot` class plots labeled data
 in a matrix plot.
 
 .. report:: Trackers.LabeledDataExample
@@ -69,7 +69,7 @@ in a matrix plot.
 Options
 -------
 
-:class:`SphinxReportPlugins.Plotter.MatrixPlot` understands the
+:class:`CGATReportPlugins.Plotter.MatrixPlot` understands the
 :ref:`common plot options` and the following options:
 
 .. glossary::
@@ -83,7 +83,7 @@ Options
    palette  
       choice
 
-      select color palette for plotting a matrix. See sphinxreport`matplotlib` for a list of 
+      select color palette for plotting a matrix. See cgatreport`matplotlib` for a list of 
       available color palettes.
 
    reverse-palette
@@ -153,7 +153,7 @@ A large matrix in both rows and columns:
 hinton-plot
 ===========
 
-The :class:`SphinxReportPlugins.Plotter.HintonPlot` plots labeled data as a
+The :class:`CGATReportPlugins.Plotter.HintonPlot` plots labeled data as a
 weight matrix. The width and colour of each box shows the weight. 
 
 .. report:: Trackers.LabeledDataExample

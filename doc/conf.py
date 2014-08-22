@@ -16,30 +16,30 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.extend( [os.path.join('..', 'SphinxReport'), 
+sys.path.extend( [os.path.join('..', 'CGATReport'), 
                   os.path.abspath('trackers'), 
                   os.path.abspath('.') ] )
 
 
 # The cachedir holding the data from the Trackers. If not defined, no cache will 
 # be used.
-sphinxreport_cachedir=os.path.abspath("_cache")
+cgatreport_cachedir=os.path.abspath("_cache")
 
 # urls to include within the annotation of an image
-sphinxreport_urls=("code", "rst", "data")
+cgatreport_urls=("code", "rst", "data")
 
 # The Database backend. Possible values are mysql, psql and sqlite
-sphinxreport_sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
+cgatreport_sql_backend="sqlite:///%s/csvdb" % os.path.abspath(".")
 
 # add errors into the document
-sphinxreport_show_errors = True
+cgatreport_show_errors = True
 
 # add warnings into the document
-sphinxreport_show_warnings = True
+cgatreport_show_warnings = True
 
 # static images to create for each plot
 # a tuple of (id, format, dpi).
-sphinxreport_images=( ( "hires", "hires.png", 200),
+cgatreport_images=( ( "hires", "hires.png", 200),
                       # ( "eps", "eps", 50 ),
                       ( "svg", "svg", 50 ) )
 
@@ -53,11 +53,11 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.pngmath', 
               'sphinx.ext.ifconfig', 
               'sphinx.ext.todo', 
-              'SphinxReport.only_directives', 
-              'SphinxReport.roles', 
-              'SphinxReport.errors_directive', 
-	      'SphinxReport.warnings_directive',
-              'SphinxReport.report_directive' ]
+              'CGATReport.only_directives', 
+              'CGATReport.roles', 
+              'CGATReport.errors_directive', 
+	      'CGATReport.warnings_directive',
+              'CGATReport.report_directive' ]
 
 # inheritance_diagram broken in python3
 if sys.version_info[0] == 2:
@@ -75,7 +75,7 @@ rst_epilog='''
 .. _pyximport: http://www.prescod.net/pyximport/
 .. _sphinx: http://sphinx-doc.org/
 .. _ruffus: http://www.ruffus.org.uk/
-.. _sphinxreport: http://code.google.com/p/sphinx-report/
+.. _cgatreport: http://code.google.com/p/sphinx-report/
 .. _sqlite: http://www.sqlite.org/
 .. _make: http://www.gnu.org/software/make
 .. _UCSC: http://genome.ucsc.edu
@@ -103,7 +103,7 @@ source_suffix = '.rst'
 master_doc = 'contents'
 
 # General information about the project.
-project = u'SphinxReport'
+project = u'CGATReport'
 copyright = u'2009, Andreas Heger'
 
 # The version info for the project you're documenting, acts as replacement for

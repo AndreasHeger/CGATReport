@@ -2,7 +2,7 @@
 box-plot
 ========
 
-The :class:`SphinxReportPlugins.Plotter.BoxPlot` displays
+The :class:`CGATReportPlugins.Plotter.BoxPlot` displays
 :term:`numerical arrays` as boxplots.
 
 .. report:: Trackers.SingleColumnDataExample
@@ -12,9 +12,16 @@ The :class:`SphinxReportPlugins.Plotter.BoxPlot` displays
 
    A box-plot.
 
+.. report:: Trackers.ArrayDataExample
+   :render: box-plot
+   :layout: row
+   :width: 200
+
+   A box-plot.
+
 Options
 -------
 
-:class:`SphinxReportPlugins.Plotter.BoxPlot` has no additional
+:class:`CGATReportPlugins.Plotter.BoxPlot` has no additional
 options apart from :ref:`common plot options`. 
 

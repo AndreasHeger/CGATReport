@@ -1,23 +1,23 @@
-.. SphinxReport documentation master file, created by
+.. CGATReport documentation master file, created by
    sphinx-quickstart on Mon Mar 23 15:27:57 2009.
 
-SphinxReport documentation
+CGATReport documentation
 ============================
 
-The sphinxreport module is an extension for sphinx
+The cgatreport module is an extension for sphinx
 that provides facilities for data retrieval and data rendering
 within reStructured text. 
 
-See :ref:`Installation` on how to build and test sphinxreport. The
-section :ref:`Overview` introduces the features of sphinxreport. The
+See :ref:`Installation` on how to build and test cgatreport. The
+section :ref:`Overview` introduces the features of cgatreport. The
 section :ref:`Background` contains required reading for anyone using
-sphinxreport.
+cgatreport.
 
-If you are new to sphinxreport, the :ref:`Tutorials` give you
+If you are new to cgatreport, the :ref:`Tutorials` give you
 step-by-step explanations. After completing the tutorial, the
-:ref:`Reference` section lists all that comes with sphinxreport.
+:ref:`Reference` section lists all that comes with cgatreport.
 
-The sphinxreport module comes with additional utilities for to aid debugging
+The cgatreport module comes with additional utilities for to aid debugging
 and the building of large documents. See :ref:`Utilities` for a full
 list.
 

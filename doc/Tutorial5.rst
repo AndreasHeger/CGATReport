@@ -7,7 +7,7 @@ Tutorial 5: Using SQL
 Trackers allow you to use all the flexibility of python to generate
 data sources. In the previous Tutorial :ref:`Tutorial4` the data
 was computed directly by the Tracker. More often, the data is computed
-elsewhere and stored in a database. sphinxreport provides a
+elsewhere and stored in a database. cgatreport provides a
 tracker :class:`Tracker.TrackerSQL` that facilitates obtaining data
 from an SQL database.
 
@@ -16,7 +16,7 @@ Configuration
 
 In order to use SQL connectivity, the option ``sql_backend`` needs to be set.
 in the file :file:`conf.py`. ``sql_backend`` is passed ot the 
-sphinxreport`sql_alchemy` :meth:`create_engine` method to connect to an SQL database. 
+cgatreport`sql_alchemy` :meth:`create_engine` method to connect to an SQL database. 
 For more information see the `sqlalchemy documentation <http://www.sqlalchemy.org/docs/04/dbengine.html>`_.
 
 The tutorial assumes that `sqlite <http://www.sqlite.org/>`_ has been installed. 
@@ -68,7 +68,7 @@ Building a tracker
 Create the file :file:`Tutorial5.py` in the :file:`python` subdirectory and add 
 the following code::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
 
     class ExpressionLevel(TrackerSQL):
 	"""Expression level measurements."""
@@ -88,7 +88,7 @@ values and converts these to a python list.
 
 Testing this data source you should see one plot::
 
-   sphinxreport-test -t ExpressionLevel -m histogram -o range=0,100,4 -r line-plot
+   cgatreport-test -t ExpressionLevel -m histogram -o range=0,100,4 -r line-plot
 
 The plots show a bi-modal distribution in the two experiments.
 
@@ -113,7 +113,7 @@ following data source::
 
 Testing this data source you should now see two plots by function::
 
-   sphinxreport-test -t ExpressionLevelWithSlices -m histogram -o range=0,100,4 -r line-plot
+   cgatreport-test -t ExpressionLevelWithSlices -m histogram -o range=0,100,4 -r line-plot
 
 The plot is concorporated into a restructured text document as usual::
 

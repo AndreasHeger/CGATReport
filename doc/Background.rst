@@ -1,36 +1,133 @@
 .. _Background:
 
-==========
+=====================
 Background
-==========
+=====================
 
-This section introduces the concepts of sphinxreport. This section is
-required reading in order to be able to use sphinxreport effectively.
+This section introduces the concepts of cgatreport. This section is
+required reading in order to be able to use cgatreport effectively.
 
-To create dynamic figures, sphinxreport requires two components, a
+To create dynamic figures, cgatreport combines two components, a
 :term:`tracker` and a :term:`renderer`. A :term:`tracker` provides
 data. Trackers are written by the user and are project specific.
 
-Renderers take data and render them within a report. A renderer might
+Renderers take data and present them within a report. A renderer might
 create one or several plots, some text, a table or some combination of
-these. sphinxreport provides a collection of renderers for the most
+these. cgatreport provides a collection of renderers for the most
 commont plotting needs (see :ref:`Renderers`). Additional renderers
-can be added as plugins (see :ref:`Extending sphinxReport`).
+can be added as plugins (see :ref:`Extending CGATReport`).
+
+The central data structure in cgatreport is a pandas_
+:term:`dataframe`. After data collection through a :term:`Tracker`,
+CGATReport assembles a :term:`dataframe` that is then passed to a
+:term:`Renderer` for representation.
 
 There is an optional third component, a :term:`transformer`, that can
 be inserted between a :term:`tracker` and a :term:`renderer`. A
 :term:`transformer` applies transformations to data such as filtering,
-computing means, etc., before rendering. sphinxreport supplies a few
+computing means, etc., before rendering. cgatreport supplies a few
 transformers, (see :ref:`Transformers`) and more can be added as
-plugins (see :ref:`Extending sphinxReport`).
+plugins (see :ref:`Extending CGATReport`).
 
-This section discusses data representation within sphinxreport and
-Trackers.
+The remainder of this section elaborates on the roles of these
+components of CGATReport.
 
-Data representation
-===================
+The data frame
+==============
 
-Data in sphinxreport is represented by ordered python dictionaries. 
+The central data structure within CGATReport is a pandas_
+:term:`DataFrame`. A :term:`DataFrame` is a table. Each
+value in the table is identified by two labels, a row
+label and a column label. Labels can have multiple
+levels. For example::
+                           
+                       *Colour* *Number* <- Column labels
+   *Vehicle*  *Item*  +----------------  <- Row label names
+   Car        Door    |  Blue     4
+   Car        Roof    |  Red      1
+   Bycicle    Frame   |  Pink     1
+   Bycicle    Wheel   |  Black    2 
+     ^        ^
+     |        |
+     Row labels
+
+The :term:`DataFrame` above has two columns (``Colour`` and
+``Number``) and four rows. Each row is identified by two labels.
+These labels can be given names, here ``Vehicle`` and ``Item``.
+In pandas_ terminology, this is a :term:`hierarchical index`
+or multi-index index.
+
+Building the data frame
+=======================
+
+Data collection in CGATReport is through a :term:`Tracker`.  Trackers
+are written by the user and return data. A :term:`Tracker` is
+basically a data collector or producer and in its simplest instance it
+is a function returning some data::
+
+   def getData():
+       return [1,2,3,4,5]
+
+More complex trackers are classes that are derived from 
+:class:`CGATReport.Tracker.Tracker`. Using these trackers
+allows CGATReport to control data collection more flexibly
+and to parameterize data collection.
+
+Conceptually, the :term:`Tracker` provides a view onto a complex
+dataset which can be sliced in many different ways. For example,
+imagine a set of gene expression level measurements in different
+tissues and time points. Interesting subsets could thus be tissue
+and time point. In practice, this would look like this::
+
+   def GeneExpressionValues(Tracker):
+       tracks = ('heart', 'kidney')
+       slices = ('0h', '2h', '4h')
+       def __call__(self, track, slice):
+           # dependent on track and slice
+           return {'apoe': 1.2, 'dhfr': 2.4}
+
+Slices through data are called :term:`tracks` and :term:`slices`.
+CGATReport will query the :term:`Tracker` for permissable values and
+then call the :term:`Tracker` for each combination of :term:`track`
+and :term:`slice`.
+
+The returned data is then assembled into a dataframe.
+
+                       *gene_id*  *fpkm*  
+   *Track*  *Slice*  +--------------------
+   heart    0h       |  apoe       1.2
+   heart    0h       |  dhfr       2.4       
+   heart    2h       |  apoe       1.4
+   heart    2h       |  dhfr       1.1       
+   heart    4h       |  apoe       1.2
+   heart    4h       |  dhfr       3.4       
+   kidney    0h      |  apoe       1.2
+   kidney    0h      |  dhfr       2.4       
+   kidney    2h      |  apoe       5.2
+   kidney    2h      |  dhfr       2.4       
+   kidney    4h      |  apoe       1.2
+   kidney    4h      |  dhfr       3.1       
+
+Note how the :term:`tracks` and :term:`slices` constitute the
+:term:`hierarchical index` of the data frame.
+
+The type of data returned by a :term:`tracker` is flexible, the
+only requirement is that the data returned needs to be consistent.
+The section on :ref:`Data mapping` explains the warious conversions.
+
+   
+
+
+
+.. note::
+
+   Note that the data returned from a :term:`tracker` needs to
+   be consistent - a mixture will break the transformation into
+   a data frame.
+
+
+
+in cgatreport is represented by ordered python dictionaries. 
 
 The key in the dictionary denotes a data label, while the associated
 value can be any of the python data types such as numbers, strings,
@@ -118,7 +215,7 @@ Trackers are written by the user and return data.
 A :term:`tracker` can be either a python function or a function class
 (:term:`functor`).  The former will simply return data (see
 :ref:`Tutorial1`). More flexibility can be gained from a functor that
-is derived from :class:`SphinxReport.Tracker.Tracker`.
+is derived from :class:`CGATReport.Tracker.Tracker`.
 
 A :term:`tracker` needs to provide two things, a ``__call__`` method
 to obtain the data and the data hierarchy. The data hierarchy is
@@ -163,7 +260,7 @@ a one-line statement is not enough::
           paths = ResultOfSomeSeriousComputation
           return paths
 
-:term:`tracks` and :term:`slices` are sphinxreport terminology. An
+:term:`tracks` and :term:`slices` are cgatreport terminology. An
 alternative labeling would be as ``track=dataset`` and
 ``slice=measurement``. For example, :term:`tracks` or data sets could
 be ``mouse``, ``human``, ``rabbit`` and :term:`slices` or measurements
@@ -230,8 +327,8 @@ More information on Trackers is at the documentation of the
 Behind the scenes
 =================
 
-The :class:`SphinxReport.Dispatcher` is the central actor behind the
-scenes in sphinxreport.  To resolve a :term:`report` directive, it
+The :class:`CGATReport.Dispatcher` is the central actor behind the
+scenes in cgatreport.  To resolve a :term:`report` directive, it
 will first assemble all components in place (a :term:`renderer`, a
 :term:`tracker` and optionally a :term:`transformer`).  Conceptually,
 it then proceeds as follows.
@@ -240,7 +337,7 @@ it then proceeds as follows.
 
 2. Build the complete :term:`data tree`. For each :term:`data path`,
    call the ``__call__`` method of the :class:`Tracker`.  If caching
-   is enabled, the :class:`SphinxReport.Dispatcher` will first check
+   is enabled, the :class:`CGATReport.Dispatcher` will first check
    if the data is already present in the cache.  If it is, the data
    will be retrieved from the cache instead of calling the
    :class:`Tracker`.

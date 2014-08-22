@@ -4,7 +4,7 @@
 table
 =====
 
-The :class:`SphinxReportPlugins.Renderer.Table` renders :term:`labeled
+The :class:`CGATReportPlugins.Renderer.Table` renders :term:`labeled
 values` as a table.
 
 Tables are built from columns and rows. By default, each :term:`slice`
@@ -23,7 +23,7 @@ of all renderers.
 Options
 -------
 
-:class:`SphinxReportPlugions.Renderer.Table` permits the following options:
+:class:`CGATReportPlugions.Renderer.Table` permits the following options:
 
 .. glossary::
 
@@ -159,7 +159,7 @@ Alternatives can be
 rst-table
 =========
 
-The :class:`SphinxReportPlugins.Renderer.RSTTable` renders
+The :class:`CGATReportPlugins.Renderer.RSTTable` renders
 :term:`labeled values` as a table in rst format
 
 .. report:: Trackers.LabeledDataExample
@@ -171,7 +171,7 @@ The :class:`SphinxReportPlugins.Renderer.RSTTable` renders
 xls-table
 =========
 
-The :class:`SphinxReportPlugins.Renderer.XlsTable` renders :term:`labeled
+The :class:`CGATReportPlugins.Renderer.XlsTable` renders :term:`labeled
 values` as a table in xls format to download
 
 .. report:: Trackers.LabeledDataExample
@@ -191,7 +191,7 @@ index
 html-table
 ==========
 
-The :class:`SphinxReportPlugins.Renderer.HtmlTable` renders
+The :class:`CGATReportPlugins.Renderer.HtmlTable` renders
 :term:`labeled values` as a table in html format to download
 
 .. report:: Trackers.LabeledDataExample
@@ -203,7 +203,7 @@ The :class:`SphinxReportPlugins.Renderer.HtmlTable` renders
 glossary
 =========
 
-The :class:`SphinxReportPlugins.Renderer.GlossaryTable` renders :term:`labeled
+The :class:`CGATReportPlugins.Renderer.GlossaryTable` renders :term:`labeled
 values` as a table as a glossary
 
 .. report:: Trackers.LabeledDataExample

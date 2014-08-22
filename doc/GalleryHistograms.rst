@@ -4,7 +4,7 @@
 histogram-plot
 ==============
 
-The :class:`SphinxReportPlugins.Plotter.HistogramPlot` class presents
+The :class:`CGATReportPlugins.Plotter.HistogramPlot` class presents
 :term:`numerical arrays` as histograms.
 
 .. report:: Trackers.ArrayDataExample
@@ -17,7 +17,7 @@ The :class:`SphinxReportPlugins.Plotter.HistogramPlot` class presents
 Options
 =======
 
-:class:`SphinxReportPlugins.Plotter.HistogramPlot` understands the
+:class:`CGATReportPlugins.Plotter.HistogramPlot` understands the
 :ref:`common plot options` and the following options:
 
    error
@@ -29,7 +29,7 @@ Options
 histogram-gradient-plot
 =======================
 
-The :class:`SphinxReportPlugins.Plotter.HistogramGradientPlot` class presents
+The :class:`CGATReportPlugins.Plotter.HistogramGradientPlot` class presents
 :term:`numerical arrays` as gradients.
 
 .. report:: Trackers.ArrayDataExample
@@ -42,7 +42,7 @@ The :class:`SphinxReportPlugins.Plotter.HistogramGradientPlot` class presents
 Options
 =======
 
-:class:`SphinxReportPlugins.Plotter.HistogramGradientPlot` understands the
+:class:`CGATReportPlugins.Plotter.HistogramGradientPlot` understands the
 :ref:`common plot options` and the following options:
 
 .. glossary::

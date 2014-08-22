@@ -4,39 +4,39 @@
 Utilities
 =========
 
-This page describes the command line utilities that come with sphinxreport
+This page describes the command line utilities that come with cgatreport
 in detail.
 
-.. _sphinxreport-build:
+.. _cgatreport-build:
 
-.. automodule:: SphinxReport.build
+.. automodule:: CGATReport.build
 
-.. _sphinxreport-quickstart:
+.. _cgatreport-quickstart:
 
-.. automodule:: SphinxReport.quickstart
+.. automodule:: CGATReport.quickstart
 
-.. _sphinxreport-clean:
+.. _cgatreport-clean:
 
-.. automodule:: SphinxReport.clean
+.. automodule:: CGATReport.clean
 
-.. _sphinxreport-test:
+.. _cgatreport-test:
 
-.. automodule:: SphinxReport.test
+.. automodule:: CGATReport.test
 
-.. _sphinxreport-profile:
+.. _cgatreport-profile:
 
-.. automodule:: SphinxReport.profile
+.. automodule:: CGATReport.profile
 
-.. _sphinxreport-get:
+.. _cgatreport-get:
 
-.. automodule:: SphinxReport.get
+.. automodule:: CGATReport.get
 
-.. _sphinxreport-serve:
+.. _cgatreport-serve:
 
-.. automodule:: SphinxReport.serve
+.. automodule:: CGATReport.serve
 
-.. _sphinxreport-gallery:
+.. _cgatreport-gallery:
 
-.. automodule:: SphinxReport.gallery
+.. automodule:: CGATReport.gallery
 
 

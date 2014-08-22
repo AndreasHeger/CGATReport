@@ -2,7 +2,7 @@
 scatter-plot
 ============
 
-The :class:`SphinxReportPlugins.Plotter.ScatterPlot` class presents
+The :class:`CGATReportPlugins.Plotter.ScatterPlot` class presents
 :term:`numerical arrays` as a scatter plot.
 
 .. report:: Trackers.MultipleColumnDataExample
@@ -15,7 +15,7 @@ The :class:`SphinxReportPlugins.Plotter.ScatterPlot` class presents
 Options
 =======
 
-:class:`SphinxReportPlugins.Plotter.ScatterPlot` understands the
+:class:`CGATReportPlugins.Plotter.ScatterPlot` understands the
 :ref:`common plot options` and the following options:
 
 .. glossary::
@@ -30,7 +30,7 @@ Options
 rainbow-scatter-plot
 ====================
 
-The :class:`SphinxReportPlugins.Plotter.ScatterPlotWithColour` class presents
+The :class:`CGATReportPlugins.Plotter.ScatterPlotWithColour` class presents
 :term:`data arrays` as a scatter plot.
 
 
@@ -65,5 +65,5 @@ A scatter plot with pairwise variables, single plot:
 Options
 =======
 
-:class:`SphinxReportPlugins.Plotter.ScatterPlotWithColour` has no additional
+:class:`CGATReportPlugins.Plotter.ScatterPlotWithColour` has no additional
 options apart from :ref:`common plot options`. 

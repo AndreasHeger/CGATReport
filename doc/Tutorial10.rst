@@ -6,12 +6,12 @@ Tutorial 10: Using dates
 
 This tutorial demonstrates how to use date formatting in plots.
 
-Internally, values within SphinxReport are passed around as scalar
+Internally, values within CGATReport are passed around as scalar
 numbers. Thus, in order to plot dates, the :term:`Tracker` needs to 
 return dates as numbers, for example by using the matpotlib's date2num 
 function::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
 
     import matplotlib.dates
     import datetime

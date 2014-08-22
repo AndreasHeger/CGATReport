@@ -2,22 +2,30 @@
 ggplot
 ======
 
-The :class:`SphinxReportPlugins.GGPlotter.GGPlot` displays
+The :class:`CGATReportPlugins.GGPlotter.GGPlot` displays
 a dataframe using the python port (ggplot_) of the ggplot2_ package.
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :transform: melt
-   :aes: 'Data', color='Track'
+   :aes: 'expression', color='track'
    :geom: geom_histogram()
    :layout: column-2
 
    A histogram plot
 
+.. report:: Tutorial5.ExpressionLevel
+   :render: ggplot
+   :aes: 'expression', color='track'
+   :geom: geom_histogram()
+   :layout: column-2
+   :groupby: all
+
+   A histogram plot, all data grouped.
+
 Options
 -------
 
-:class:`SphinxReportPlugins.GGPlotter.GGPlot` understands the
+:class:`CGATReportPlugins.GGPlotter.GGPlot` understands the
 following options:
 
 .. glossary::
@@ -37,3 +45,4 @@ marks as they are interpreted as strings.
 
 For more information about plotting with the ggplot_ library, see
 its documentation.
+

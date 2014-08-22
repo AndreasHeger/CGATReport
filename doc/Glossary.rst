@@ -21,7 +21,7 @@ Glossary
    tracker
    trackers
       A python function or functor returning data, see
-      :class:`SphinxReport.Tracker.Tracker`.
+      :class:`CGATReport.Tracker.Tracker`.
 
    transformer
    transformers

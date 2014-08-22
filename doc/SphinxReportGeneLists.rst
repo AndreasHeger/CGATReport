@@ -1,10 +1,10 @@
-SphinxReportGeneLists Reference
+CGATReportGeneLists Reference
 ================================
 
 :mod:`Renders` Module
 ---------------------
 
-.. automodule:: SphinxReportGeneLists.Renders
+.. automodule:: CGATReportGeneLists.Renders
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ SphinxReportGeneLists Reference
 :mod:`Tracker` Module
 ---------------------
 
-.. automodule:: SphinxReportGeneLists.Tracker
+.. automodule:: CGATReportGeneLists.Tracker
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ SphinxReportGeneLists Reference
 :mod:`Transformers` Module
 --------------------------
 
-.. automodule:: SphinxReportGeneLists.Transformers
+.. automodule:: CGATReportGeneLists.Transformers
     :members:
     :undoc-members:
     :show-inheritance:

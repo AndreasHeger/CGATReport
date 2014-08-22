@@ -8,7 +8,7 @@ Introduction
 ============
 
 In this tutorial we will be looking at the integration
-of ipython_ and sphinxreport_.
+of ipython_ and cgatreport_.
 
 Let us say that we have computed meta-gene profiles for
 a variety of datasets. The results are stored in a collection
@@ -53,18 +53,18 @@ to play around with the data before adding it to our report. We will use
 an ipython_ session for this.
 
 As the data is present in tabular format in a collection of files, we can use one of
-the prepared sphinxreport :term:`trackers` directly. First, we only want to get the
+the prepared cgatreport :term:`trackers` directly. First, we only want to get the
 data for integration into our notebook. We type::
 
-   sphinxreport-test -r none -t TrackerDataframes -o glob='transcriptprofiles.dir/*.tsv.gz' -l notebook
+   cgatreport-test -r none -t TrackerDataframes -o glob='transcriptprofiles.dir/*.tsv.gz' -l notebook
 
 This produces the following output::
 
    .. Template start
 
    %matplotlib inline
-   import SphinxReport.test
-   result = SphinxReport.test.main( do_print = False,
+   import CGATReport.test
+   result = CGATReport.test.main( do_print = False,
    tracker="TrackerDataframes",
    renderer="none",
    trackerdir="/ifs/devel/andreas/sphinx-report/doc/trackers",
@@ -72,7 +72,7 @@ This produces the following output::
    glob=transcriptprofiles.dir/*.tsv.gz )
 
    .. Template end
-   --> sphinxreport - available data structures <--
+   --> cgatreport - available data structures <--
        result=<class 'collections.OrderedDict'>
        dataframe=<type 'NoneType'>
 
@@ -80,16 +80,16 @@ This statement will not render the data, but simply return a snippet for us to
 include in our ipython note. Copy the text between ``.. Template start`` and
 ``.. Template end`` into your ipython notebook.
 
-Please follow further instructions see this :download:`notebook <SphinxReportTutorial14.html>`.
+Please follow further instructions see this :download:`notebook <CGATReportTutorial14.html>`.
 
-Back to sphinxreport
+Back to cgatreport
 ====================
 
 Within the notebook, we have used ggplot for plotting. We now want to integrate
-this plot into our report. To do this, we can again make use of :ref:`sphinxreport-test` to 
+this plot into our report. To do this, we can again make use of :ref:`cgatreport-test` to 
 create an rst snippet to copy and paste into our report::
 
-    sphinxreport-test -r ggplot -t TrackerDataframes -o glob="data/*.tsv.gz" -o aes='x="bin", y="background", color="track"' -o geom="geom_point()" -o regex="data/(.*).transcript*"
+    cgatreport-test -r ggplot -t TrackerDataframes -o glob="data/*.tsv.gz" -o aes='x="bin", y="background", color="track"' -o geom="geom_point()" -o regex="data/(.*).transcript*"
 
 The output provides us with the snippet to put into the report::
 
@@ -111,7 +111,7 @@ The output provides us with the snippet to put into the report::
 
    add caption here
 
-We can now use some of SphinxReport's grouping capabilities in order to create plots 
+We can now use some of CGATReport's grouping capabilities in order to create plots 
 that will be useful if many tracks are being plotted. The following will plot at most 5
 data sets (``split-at``) and always include the ``input`` tracks (``split-always``) 
 in each plot::
@@ -143,14 +143,14 @@ in each plot::
 And back to the notebook again
 ==============================
 
-The example has shown how sphinxreport can be used as a data source
+The example has shown how cgatreport can be used as a data source
 within an ipython notebook and how a ggplot in the ipython notebook can then
 be reproduced within a report.
 
 However, we can go beyond a complete circle. Note the ``nb`` link below each figure in
 a sphinx-report. By clicking on the link and copying the displayed snipped
-into your notebook, you can get include sphinxreport generated plots and the resulting dataframe
-for inspection. This is very useful for elaborationg on sphinxreport
+into your notebook, you can get include cgatreport generated plots and the resulting dataframe
+for inspection. This is very useful for elaborationg on cgatreport
 rendered plots in a notebook.
 
 

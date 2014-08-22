@@ -4,7 +4,7 @@
 venn-plot
 =========
 
-:class:`SphinxReportPlugins.Renderer.Venn` plots a 2 or 3 circle
+:class:`CGATReportPlugins.Renderer.Venn` plots a 2 or 3 circle
 Venn diagramm:
 
 .. report:: Trackers.VennTracker 
@@ -43,6 +43,6 @@ For example::
 Options
 -------
 
-:class:`SphinxReportPlugins.Renderer.Venn` has no additional
+:class:`CGATReportPlugins.Renderer.Venn` has no additional
 options.
 

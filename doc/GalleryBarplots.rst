@@ -4,7 +4,7 @@
 bar-plot
 ========
 
-The :class:`SphinxReportPlugins.Plotter.BarPlot` class presents
+The :class:`CGATReportPlugins.Plotter.BarPlot` class presents
 :term:`labeled values` as overlapping bars.
 
 .. report:: Trackers.LabeledDataExample
@@ -17,7 +17,7 @@ The :class:`SphinxReportPlugins.Plotter.BarPlot` class presents
 Options
 =======
 
-:class:`SphinxReportPlugins.Plotter.BarPlot` understands the
+:class:`CGATReportPlugins.Plotter.BarPlot` understands the
 :ref:`common plot options` and the following options:
 
 .. glossary::
@@ -55,7 +55,7 @@ Options
 stacked-bar-plot
 ================
 
-The :class:`SphinxReportPlugins.Plotter.StackedBarPlot` class presents :term:`labeled values`
+The :class:`CGATReportPlugins.Plotter.StackedBarPlot` class presents :term:`labeled values`
 as stacked bars.
 
 .. report:: Trackers.LabeledDataExample
@@ -71,7 +71,7 @@ as stacked bars.
 interleaved-bar-plot
 ====================
 
-The :class:`SphinxReportPlugins.Plotter.InterleavedBarPlot` class presents :term:`labeled values`
+The :class:`CGATReportPlugins.Plotter.InterleavedBarPlot` class presents :term:`labeled values`
 as interleaved bars. Both *interleaved-bars* and *bars* can be used.
 
 .. report:: Trackers.LabeledDataExample
@@ -127,7 +127,7 @@ The option :term:`first-is-offset` can be used to create Gantt-like charts:
 Adding error bars and labels
 ============================
 
-The :class:`SphinxReportPlugins.Plotter.InterleavedBarPlot` class presents :term:`labeled values`
+The :class:`CGATReportPlugins.Plotter.InterleavedBarPlot` class presents :term:`labeled values`
 as interleaved bars. Both *interleaved-bars* and *bars* can be used.
 
 .. report:: Trackers.LabeledDataWithErrorsAndLabelsExample
