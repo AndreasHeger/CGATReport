@@ -1,10 +1,5 @@
-import os
-import sys
 import re
-import shelve
 import traceback
-import pickle
-import types
 import itertools
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
@@ -16,13 +11,10 @@ from CGATReport import Tracker
 
 # move User renderer to CGATReport main distribution
 from CGATReportPlugins import Renderer
-import numpy
 
 VERBOSE = True
 # maximimum number of levels in data tree
 MAX_PATH_NESTING = 5
-
-import pandas
 
 from collections import OrderedDict as odict
 
@@ -45,7 +37,7 @@ class Dispatcher(Component):
 
     This class adds the following options to the:term:`render` directive.
 
-:term:`groupby`: group data by:term:`track` or:term:`slice`.
+    :term:`groupby`: group data by:term:`track` or:term:`slice`.
 
     """
 

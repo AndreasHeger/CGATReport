@@ -88,8 +88,6 @@ class Renderer(Component):
 
         This method will call the:meth:`render` method
         '''
-        levels = Utils.getDataFrameLevels(dataframe)
-
         result = ResultBlocks()
         result.extend(self.render(dataframe, path))
         return result
@@ -155,6 +153,60 @@ class Renderer(Component):
             return self.format % value
         except TypeError:
             return ""
+
+
+class DataFrame(Renderer):
+    """
+    Renderer outputting the dataframe directly
+    as text without any modification.
+    """
+
+    options = Renderer.options +\
+        (('head', directives.length_or_unitless),
+         ('tail', directives.length_or_unitless),
+         ('summary', directives.unchanged))
+
+    # output head of dataframe - 0 is no head
+    head = 0
+    # output tail of dataframe - 0 is no tail
+    tail = 0
+    # output summary of dataframe
+    summary = False
+
+    def __init__(self, *args, **kwargs):
+        
+        Renderer.__init__(self, *args, **kwargs)
+        self.head = int(kwargs.get('head', 0))
+        self.tail = int(kwargs.get('tail', 0))
+        self.summary = 'summary' in kwargs
+
+    def __call__(self, dataframe, path):
+        result = ResultBlocks()
+        texts = []
+        if self.head or self.tail:
+            if self.head:
+                texts.append(str(dataframe.head(self.head)))
+            if self.tail:
+                texts.append(str(dataframe.tail(self.tail)))
+        elif self.summary:
+            texts.append(str(dataframe.summary()))
+        else:
+            texts.append(str(dataframe))
+
+        # add indentation
+        texts = ['\n'.join(['   %s' % y for y in x.split('\n')])
+                 for x in texts]
+
+        formatted = '''
+::
+
+%s
+
+''' % '\n   ...\n'.join(texts)
+
+        result.append(ResultBlock(formatted,
+                                  title=path2str(path)))
+        return result
 
 
 class TableBase(Renderer):

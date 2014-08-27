@@ -35,6 +35,7 @@ Contents:
    Tutorials.rst
    UseCase.rst
    ComplexDocuments.rst
+   DataMapping.rst
    TipsTricks.rst
    Reference.rst
    Running.rst

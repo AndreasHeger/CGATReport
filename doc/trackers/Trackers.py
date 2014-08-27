@@ -133,7 +133,6 @@ class HierarchicalLabeledDataExample(Tracker):
 
 class SingleColumnDataExample(Tracker):
 
-    '''return a single column of data.'''
     slices = ("slice1", "slice2")
     tracks = ("track1", "track2", "track3")
 

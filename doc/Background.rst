@@ -113,7 +113,7 @@ Note how the :term:`tracks` and :term:`slices` constitute the
 
 The type of data returned by a :term:`tracker` is flexible, the
 only requirement is that the data returned needs to be consistent.
-The section on :ref:`Data mapping` explains the warious conversions.
+The section on :ref:`Data mapping` explains the various conversions.
 
    
 

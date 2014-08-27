@@ -369,11 +369,13 @@ def getImageFormats(display_options=None):
     return default_format, additional_formats
 
 
-def getImageOptions(display_options=None):
+def getImageOptions(display_options=None, indent=0):
     '''return string with display_options for ``:image:`` directive.'''
+    indent = ' ' * indent
     if display_options:
         return "\n".join(
-            [':%s: %s' % (key, val) for key, val in display_options.items()
+            ['%s:%s: %s' % (indent, key, val)
+             for key, val in display_options.items()
              if key not in ('format', 'extra-formats', 'display')])
     else:
         return ''
@@ -986,7 +988,7 @@ def buildRstWithImage(outname,
 
     urls = asList(PARAMS["report_urls"])
 
-    image_options = getImageOptions(display_options)
+    image_options = getImageOptions(display_options, indent=6)
 
     if CGATReport.Config.HTML_IMAGE_FORMAT:
 

@@ -364,9 +364,13 @@ def asDataFrame(data):
                 # build a melted data frame with a single column
                 # given by the name of the path.
                 for key, leave in leaves.items():
-                    index_tuples.append(path)
+                    if len(labels) > 1:
+                        index_tuples.append(path + (key,))
+                    else:
+                        # Only one level, remove
+                        index_tuples.append((key,))
                     dataframes.append(pandas.DataFrame(leave,
-                                                       columns=(key,)))
+                                                       columns=('value',)))
 
         if is_coordinate:
             debug('dataframe conversion: from array - coordinates')

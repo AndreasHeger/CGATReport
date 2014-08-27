@@ -21,7 +21,7 @@ from docutils.parsers.rst import directives
 from CGATReport import Config, Dispatcher, Utils, Cache, Component
 from CGATReport.ResultBlock import ResultBlocks
 
-CGATREPORT_DEBUG = False
+CGATREPORT_DEBUG = True
 
 TEMPLATE_TEXT = """
 .. htmlonly::
@@ -182,7 +182,8 @@ def run(arguments,
         options_hash = hashlib.md5(options_key.encode()).hexdigest()
 
         template_name = Utils.quote_filename(
-            Config.SEPARATOR.join((tracker_name, renderer_name, options_hash)))
+            Config.SEPARATOR.join((tracker_name, renderer_name,
+                                   options_hash)))
         filename_text = os.path.join(outdir, "%s.txt" % (template_name))
 
         logging.debug("report_directive.run: options_hash=%s" % options_hash)
@@ -213,7 +214,8 @@ def run(arguments,
                         filenames.extend(list(x.groups()))
 
             logging.debug(
-                "report_directive.run: %s: checking for %s" % (tag, str(filenames)))
+                "report_directive.run: %s: checking for %s" %
+                (tag, str(filenames)))
             for filename in filenames:
                 if not os.path.exists(filename):
                     logging.info(
@@ -228,8 +230,9 @@ def run(arguments,
                         lines, state_machine.input_lines.source(0))
                 return []
         else:
-            logging.debug("report_directive.run: %s: no check performed: %s missing" % (
-                tag, str(filename_text)))
+            logging.debug(
+                "report_directive.run: %s: no check performed: %s missing" %
+                (tag, str(filename_text)))
     else:
         template_name = ""
         filename_text = None
@@ -273,7 +276,8 @@ def run(arguments,
 
         if renderer_name is None:
             logging.error(
-                "report_directive.run: no renderer - no output from %s" % str(document))
+                "report_directive.run: no renderer - no output from %s" %
+                str(document))
             raise ValueError("the report directive requires a renderer")
 
         renderer = Utils.getRenderer(renderer_name, renderer_options)
@@ -304,7 +308,8 @@ def run(arguments,
             "report_directive.run: exception caught at %s:%i - see document" %
             (str(document), lineno))
 
-        blocks = ResultBlocks(ResultBlocks(Utils.buildException("invocation")))
+        blocks = ResultBlocks(ResultBlocks(
+            Utils.buildException("invocation")))
         code = None
         tracker_id = None
 
@@ -356,7 +361,8 @@ def run(arguments,
         logging.warn("report_directive.run: exception caught while "
                      "collecting with %s at %s:%i - see document" %
                      (collector, str(document), lineno))
-        blocks = ResultBlocks(ResultBlocks(Utils.buildException("collection")))
+        blocks = ResultBlocks(ResultBlocks(
+            Utils.buildException("collection")))
         code = None
         tracker_id = None
 
