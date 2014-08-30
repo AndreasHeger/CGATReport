@@ -52,6 +52,16 @@ class Transformer(Component):
 
         dataframes, keys = [], []
         nlevels = Utils.getDataFrameLevels(data)
+
+        # negative levels reduce the group level from the
+        # depth of the hierarchical index.
+        if self.nlevels < 0:
+            if self.nlevels < -nlevels:
+                raise ValueError(
+                    'not enough levels in dataframe, got: %i, need %i' %
+                    (nlevels, self.nlevels))
+            nlevels += self.nlevels
+
         for key, group in data.groupby(level=range(nlevels)):
             debug('applying transformation on group %s' % group)
             dataframes.append(self.transform(group))

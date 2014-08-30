@@ -299,7 +299,6 @@ new column:
    :render: table
    :transform: hypergeometric,p-adjust
 
-
    Statistics with adjusted P-values
 
 By default ``p-adjust`` corrects accross the whole set of p-values,

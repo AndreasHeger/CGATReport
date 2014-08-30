@@ -1,10 +1,11 @@
 from CGATReportPlugins.Transformer import Transformer
-from scipy.stats import *
 from collections import OrderedDict as odict
 from docutils.parsers.rst import directives
-from CGATReport import Stats, DataTree, Utils
+from CGATReport import DataTree, Utils
+from CGATReport.DataTree import path2str
 import itertools
 import math
+import scipy.stats
 
 
 class TransformerHypergeometric(Transformer):
@@ -22,49 +23,75 @@ class TransformerHypergeometric(Transformer):
 
     '''
 
-    nlevels = 1
+    nlevels = -1
 
-    def transform(self, data, path):
+    def transform(self, data):
 
-        keys = data.keys()
-        if len(keys) < 3 or "background" not in data.keys():
-            raise ValueError("Expected at least 3 lists, with one called background, instead got %i lists called %s" % (
-                len(keys), ", ".join(keys)))
+        # check if data is melted:
+        if len(data.columns) != 1:
+            raise ValueError(
+                'transformer requires dataframe with'
+                'a single column, got %s' % data.columns)
+        column = data.columns[0]
 
-        keys = [x for x in keys if x != "background"]
+        # iterate over lowest levels to build a dictionary of
+        # sets
+        genesets = {}
+        nlevels = Utils.getDataFrameLevels(data)
+        for key, group in data.groupby(level=range(nlevels)):
+            genesets[path2str(key)] = set(group[column])
+
+        keys = genesets.keys()
+
+        background = None
+        foreground = []
+        for key in keys:
+            if "background" in key:
+                background = genesets[key]
+            else:
+                foreground.append(key)
+
+        if len(keys) < 3 or background is None:
+            raise ValueError(
+                "Expected at least 3 lists, with one called background, "
+                "instead got %i lists called %s" %
+                (len(keys), ", ".join(keys)))
 
         missing = {
-            y: [str(x) for x in data[y] if x not in data["background"]] for y in keys}
+            y: [str(x) for x in genesets[y]
+                if x not in background] for y in foreground}
 
         if any([len(missing[x]) > 0 for x in missing]):
             missing_items = "\n\t".join(
                 ["%s:\t%s" % (x, ",".join(missing[x])) for x in missing])
             raise ValueError(
-                "Found items in lists not in background. Missing items:\n\t %s" % missing_items)
+                "Found items in lists not in background. "
+                "Missing items:\n\t %s" % missing_items)
 
-        M = len(set(data["background"]))
+        M = len(set(background))
         if len(keys) == 2:
 
-            n = len(set(data[keys[1]]))
-            N = len(set(data[keys[0]]))
-            x = len(set(data[keys[0]]) & set(data[keys[1]]))
+            n = len(set(genesets[keys[1]]))
+            N = len(set(genesets[keys[0]]))
+            x = len(set(genesets[keys[0]]) & set(genesets[keys[1]]))
 
-            p = hypergeom.sf(x, M, n, N)
+            p = scipy.stats.hypergeom.sf(x, M, n, N)
 
             fc = ((x + 0.0) / N) / ((n + 0.0) / M)
 
-            return odict([("Enrichment", fc), ("P-value", p)])
+            values = [("Enrichment", fc),
+                      ("P-value", p)]
         else:
             enrichments = []
             pvals = []
             As = []
             Bs = []
             for a, b in itertools.combinations(keys, 2):
-                N = len(set(data[a]))
-                n = len(set(data[b]))
-                x = len(set(data[a]) & set(data[b]))
+                N = len(set(genesets[a]))
+                n = len(set(genesets[b]))
+                x = len(set(genesets[a]) & set(genesets[b]))
 
-                p = hypergeom.sf(x, M, n, N)
+                p = scipy.stats.hypergeom.sf(x, M, n, N)
 
                 fc = ((x + 0.0) / N) / ((n + 0.0) / M)
 
@@ -73,10 +100,12 @@ class TransformerHypergeometric(Transformer):
                 pvals.append(p)
                 enrichments.append(fc)
 
-            return odict([("ListA", As),
-                          ("ListB", Bs),
-                          ("Enrichment", enrichments),
-                          ("P-value", pvals)])
+            values = [("ListA", As),
+                      ("ListB", Bs),
+                      ("Enrichment", enrichments),
+                      ("P-value", pvals)]
+
+        return DataTree.listAsDataFrame(values)
 
 
 class TransformerOddsRatio(Transformer):
@@ -192,65 +221,79 @@ class TransformerVenn(Transformer):
 
     '''
 
-    nlevels = 0
+    nlevels = -1
 
     options = Transformer.options + (
         ('keep-background', directives.flag),)
 
     background = False
 
-    def __init__self(*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
         self.background = "keep-background" in kwargs
 
     def transform(self, data):
 
-        if "background" in data and not self.background:
-            del(data["background"])
+        # check if data is melted:
+        if len(data.columns) != 1:
+            raise ValueError(
+                'transformer requires dataframe with'
+                'a single column, got %s' % data.columns)
+        column = data.columns[0]
+        # iterate over lowest levels to build a dictionary of
+        # sets
+        genesets = {}
+        nlevels = Utils.getDataFrameLevels(data)
+        for key, group in data.groupby(level=range(nlevels)):
+            if "background" in key and not self.background:
+                continue
+            genesets[key] = set(group[column])
+            
+        values = []
+        if len(genesets) == 2:
+            a = set(genesets[genesets.keys()[0]])
+            b = set(genesets[genesets.keys()[1]])
 
-        if len(data) == 2:
-            results = dict()
-            a = set(data[data.keys()[0]])
-            b = set(data[data.keys()[1]])
+            values.append(("10", len(a - b)))
+            values.append(("01", len(b - a)))
+            values.append(("11", len(a & b)))
+            values.append(("labels", genesets.keys()))
+        elif len(genesets) == 3:
+            a = set(genesets[genesets.keys()[0]])
+            b = set(genesets[genesets.keys()[1]])
+            c = set(genesets[genesets.keys()[2]])
 
-            results["10"] = len(a - b)
-            results["01"] = len(b - a)
-            results["11"] = len(a & b)
-            results["labels"] = data.keys()
-            return results
-        elif len(data) == 3:
-            results = dict()
-            a = set(data[data.keys()[0]])
-            b = set(data[data.keys()[1]])
-            c = set(data[data.keys()[2]])
-
-            results["100"] = len(a - b - c)
-            results["010"] = len(b - a - c)
-            results["001"] = len(c - a - b)
-            results["110"] = len((a & b) - c)
-            results["101"] = len((a & c) - b)
-            results["011"] = len((b & c) - a)
-            results["111"] = len((a & b) & c)
-
-            results["labels"] = data.keys()
-            return results
+            values.append(("100", len(a - b - c)))
+            values.append(("010", len(b - a - c)))
+            values.append(("001", len(c - a - b)))
+            values.append(("110", len((a & b) - c)))
+            values.append(("101", len((a & c) - b)))
+            values.append(("011", len((b & c) - a)))
+            values.append(("111", len((a & b) & c)))
+            values.append(("labels", genesets.keys()))
         else:
             raise ValueError(
                 "Can currently only cope with 2 or 3 way intersections")
 
+        return DataTree.listAsDataFrame(values)
+
 
 class TransformerMultiTest(Transformer):
 
-    ''' This transformer performs multiple testing correction. By default, it looks for a P-value entry at
-    the lowest level and takes the P-values from there. This can be set with the p-value option. By default all
-    p-values from all levels are corrected together. In order to change this behavoir use the adj-levels option.
-    The original data tree is returned with an added P-adjust entry. The defualt method for correction is BH,
-    but other R style correction methods can be specified with adj-method.
+    ''' This transformer performs multiple testing correction. By default,
+    it looks for a P-value entry at the lowest level and takes the
+    P-values from there. This can be set with the p-value option. By
+    default all p-values from all levels are corrected together. In
+    order to change this behavoir use the adj-levels option.  The
+    original data tree is returned with an added P-adjust entry. The
+    defualt method for correction is BH, but other R style correction
+    methods can be specified with adj-method.
 
-    NOTE: The order that items are grouped in the datatree are not the same as the grouping in rendering as default
-    if adj-level is set to 2, then all values from each track are adjusted together, but rendering normally put all
-    data of the same slice together.'''
+    NOTE: The order that items are grouped in the datatree are not the
+    same as the grouping in rendering as default if adj-level is set
+    to 2, then all values from each track are adjusted together, but
+    rendering normally put all data of the same slice together.'''
 
     options = Transformer.options + (
         ('adj-level', directives.unchanged),

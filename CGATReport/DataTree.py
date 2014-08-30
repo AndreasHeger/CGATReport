@@ -210,6 +210,21 @@ class DataTree(object):
         setattr(self._data, name, value)
 
 
+def listAsDataFrame(data, index_title='names'):
+    '''convert a list of key, value pairs
+    to a dataframe.
+    
+    The keys will be a one-level index called *index_title*
+    and the values will be a single column.
+    '''
+    df = pandas.DataFrame(
+        data=[x[1] for x in data],
+        index=pandas.Index([x[0] for x in data],
+                           name=index_title))
+    return df
+
+
+
 def asDataFrame(data):
     '''convert data tree to pandas DataFrame.
 
@@ -305,10 +320,7 @@ def asDataFrame(data):
             # sort so that 'labels' is not the first item
             # specify data such that 'labels' will a single tuple entry
             values = sorted(branch.items())
-            df = pandas.DataFrame(
-                data=[x[1] for x in values],
-                index=pandas.Index([x[0] for x in values],
-                                   name='names'))
+            df = listAsDataFrame(values)
             dataframe_prune_index = False
             setLeaf(data, path, df)
 
