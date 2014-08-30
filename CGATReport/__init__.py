@@ -1,15 +1,19 @@
 __all__ = [
-    "Tracker",
     "CorrespondenceAnalysis",
     "Stats",
-    "Config",
     "DataTypes",
     "Logger",
     "Component",
     "Utils",
     "Cache",
     "ResultBlock",
-    'Dispatcher',
-    'DataTree',
+    "Dispatcher",
+    "DataTree",
+    # Trackers to export
+    "Tracker",
+    "Config",
+    "Empty",
+    "Status",
+    # directives to export
     "only_directive",
     "report_directive"]

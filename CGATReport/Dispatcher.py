@@ -450,7 +450,14 @@ class Dispatcher(Component):
         '''
 
         nlevels = Utils.getDataFrameLevels(self.data)
-        default_level = self.renderer.group_level
+        try:
+            default_level = self.renderer.group_level
+        except AttributeError:
+            # User rendere that is pure functions does not
+            # have a group_level attribute
+            default_level = 0
+
+
         groupby = self.groupby
 
         if str(default_level).startswith("force"):
@@ -631,7 +638,6 @@ class Dispatcher(Component):
         self.data = DataTree.asDataFrame(self.data)
         # transform data
         try:
-            self.debug('transformations disabled')
             self.transform()
         except:
             self.error("%s: exception in transformation" % self)

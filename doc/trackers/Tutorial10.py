@@ -1,5 +1,5 @@
-from SphinxReport.Tracker import *
-
+from SphinxReport.Tracker import Tracker
+from collections import OrderedDict as odict
 import matplotlib.dates
 import datetime
 

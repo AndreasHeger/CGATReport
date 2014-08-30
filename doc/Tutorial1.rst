@@ -37,13 +37,14 @@ There are three steps involved:
 Adding a data source
 ====================
 
-Create the file :file:`Tutorial1.py` in the :file:`trackers` subdirectory and add 
-the following code::
+Create the file :file:`Tutorial1.py` in the :file:`trackers`
+subdirectory and add the following code:
 
-   def MyDataFunction():
-      return dict( ( ("header1", 10), ("header2", 20), ) )
+.. literalinclude:: trackers/Tutorial1.py
+   :pyobject: MyDataFunction
 
-This function returns a dictionary as all data sources do.
+This function returns an ordered dictionary with labeled
+values.
 
 Testing the data source
 =======================
@@ -65,38 +66,30 @@ of a plot before inserting it into the main document.
 Creating a restructured text document
 =====================================
 
-Create the following rst file:`Tutorial1.rst`::
+Create the following rst file:`Tutorial1.rst`:
 
-    ==========
-    Tutorial 1
-    ==========
+.. literalinclude:: Tutorial1Demo.rst
 
-    My first bar blot:
+The :term:`report` directive is used to insert the graph into the
+restructured text document. Behind the scenes, cgatreport`sphinx` will
+call the cgatreport extension and request a barplot. The cgatreport in
+turn will look for a data source :meth:`MyDataFunction` in the module
+:file:`Tutorial1.py` that should be somewhere in your
+:env:`PYTHONPATH` or added in :file:`conf.py`.  The default location
+for these is in the :file:`python` subdirectory under the main
+installation directory. The content of the :term:`report` directive is
+the figure or table caption.
 
-    .. report:: Tutorial1.MyDataFunction
-       :render: interleaved-bar-plot
-
-       My first bar plot.
-
-The :term:`report` directive is used to insert the graph into 
-the restructured text document. Behind the scenes, cgatreport`sphinx` will call 
-the cgatreport extension and request a barplot. The cgatreport in 
-turn will look for a data source :meth:`MyDataFunction` in the module :file:`Tutorial1.py` 
-that should be somewhere in your :env:`PYTHONPATH` or added in :file:`conf.py`.
-The default location for these is in the :file:`python` subdirectory under the main installation
-directory. The content of the :term:`report` directive is the figure or table caption.::
-
-Add a link in the :file:`contents.rst` by appending a line immediately after the following::
+Add a link in the :file:`contents.rst` by appending a line immediately
+after the following::
 
    :maxdepth: 2
    analysis.rst
-   pipeline.rst
 
 to make it look like::
 
    :maxdepth: 2
    analysis.rst
-   pipeline.rst
    Tutorial1.rst
 
 and rebuild the sources::

@@ -27,13 +27,14 @@ class Transformer(Component):
 
     '''Base class for transformers.
 
-    Implements the basic __call__ method that iterates over a:term:`data tree`
-    and calls self.transform method on the appropriate levels in the
-    hierarchy.
+    Implements the basic __call__ method that iterates over
+    a:term:`data tree` and calls self.transform method on the
+    appropriate levels in the hierarchy.
 
     Levels:
     0 - the actual data point
     1 - dictionary of data points
+
     '''
 
     capabilities = ['transform']

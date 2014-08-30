@@ -4,12 +4,10 @@
 Tutorial 8: Extending CGATReport
 ==================================
 
-cgatreport can be extended via plugins.
-Extension points are available to add new
-Renderers and Transformers.
+cgatreport can be extended via plugins.  Extension points are
+available to add new Renderers and Transformers.
 
-There is a quick-and-dirty way and a more
-principled way.
+There is a quick-and-dirty way and a more principled way.
 
 Quick and dirty extension
 =========================
@@ -24,8 +22,9 @@ with any of the known :term:`Renderers`. Instead, it will try to import
 the function ``ExampleWithoutData`` from the module ``MyPlots``. The
 latter should be somewhere within the :envvar:`PYTHONPATH`.
 
-For better re-use, it is good practice to separate the data and the rendering process. 
-The same plot with a :term:`Tracker` and a :term:`Renderer`.
+For better re-use, it is good practice to separate the data and the
+rendering process.  The same plot with a :term:`Tracker` and a
+:term:`Renderer`.
 
 .. report:: MyPlots.ExampleData1
    :render: MyPlots.ExampleWithData
@@ -50,19 +49,22 @@ that it has become generally useful and you want to add it to
 cgatreport so that it becomes available in all reports. CGATReport
 provides a plugin mechanism to do this.
 
+.. note::
+   The following section is not up-to-date.
+
 Writing a transformer
 ---------------------
 
-Let us say we want to create a new :term:`Transformer` for our CGAT project. We will
-group them into a python module called
-``CGATCGATReportPlugins``. Conceptually we need to do things. We
-need to provide the actual implemenation of the Transformer and we
-need to tell the plugin system about the availability of the transformer.
+Let us say we want to create a new :term:`Transformer` for our CGAT
+project. We will group them into a python module called
+``MyCGATReportPlugins``. Conceptually we need to do things. We need
+to provide the actual implemenation of the Transformer and we need to
+tell the plugin system about the availability of the transformer.
 
 Let us start with the following directory structure::
 
     .
-    |-- CGATCGATReportPlugins
+    |-- MyCGATReportPlugins
     |   |-- CGATTransformer.py
     |   `-- __init__.py
     |-- ez_setup.py
@@ -73,7 +75,7 @@ the code for our transformer::
 
     from CGATReportPlugins.Transformer import Transformer
 
-    class TransformerCount( Transformer ):
+    class TransformerCount(Transformer):
 	'''Count the number of items on the top level of 
 	the hierarchy.
 	'''
@@ -82,18 +84,18 @@ the code for our transformer::
 
 	def transform(self, data, path):
 	    for v in data.keys():
-		data[v] = len( data[v] )
+		data[v] = len(data[v])
 	    return data
 
 The :attr:`nlevels` is used the by the :meth:`__call()__` method in
-the :class:`CGATReportPlugins.Transformer` class to iterate over the data tree at a
-certain level. Note that instead of overloading the :meth:`transform`
-method, the :meth:`__call__()` method can be overloaded to allow
-complete control over the DataTree.
+the :class:`CGATReportPlugins.Transformer` class to iterate over the
+data tree at a certain level. Note that instead of overloading the
+:meth:`transform` method, the :meth:`__call__()` method can be
+overloaded to allow complete control over the DataTree.
 
 The file ``__init__.py`` is empty and is simply required for our
-module to be complete (and the ``setuptools.find_packages()`` function to find
-our module).
+module to be complete (and the ``setuptools.find_packages()`` function
+to find our module).
 
 Registering a plugin
 --------------------
@@ -110,19 +112,19 @@ registers it with CGATReport::
 
     from setuptools import setup, find_packages
 
-    setup(name='CGATCGATReportPlugins',
+    setup(name='MyCGATReportPlugins',
 	  version='1.0',
 	  description='CGATReport : CGAT plugins',
 	  author='Andreas Heger',
 	  author_email='andreas.heger@gmail.com',
 	  packages=find_packages(),
-	  package_dir = { 'CGATCGATReportPlugins': 'CGATCGATReportPlugins' },
+	  package_dir = { 'MyCGATReportPlugins': 'MyCGATReportPlugins' },
 	  keywords="report generator sphinx matplotlib sql",
 	  long_description='CGATReport : CGAT plugins',
 	  entry_points = \
 	      {
 		  'CGATReport.plugins': [
-		'transform-count=CGATCGATReportPlugins.CGATTransformer:TransformerCount',
+		'transform-count=MyCGATReportPlugins.CGATTransformer:TransformerCount',
 		]
 		  },
 	  )
@@ -132,14 +134,14 @@ The registration happens at the ``entry_points`` option to
 plugins. Here, the line::
 
     'CGATReport.plugins': [
-        'transform-count=CGATCGATReportPlugins.CGATTransformer:TransformerCount',
+        'transform-count=MyCGATReportPlugins.CGATTransformer:TransformerCount',
     ]
 
-tells the plugin system, that our class ``TransformerCount`` in the module
-``CGATCGATReportPlugins.CGATTransformer`` is a plugin for
+tells the plugin system, that our class ``TransformerCount`` in the
+module ``MyCGATReportPlugins.CGATTransformer`` is a plugin for
 cgatreport. The plugin is called ``transform-count``, which is
-automatically linked by cgatreport to ``:transform:``, such that the following 
-will now work::
+automatically linked by cgatreport to ``:transform:``, such that the
+following will now work::
 
    .. report:: Trackers.LabeledDataExample
       :render: table
@@ -149,8 +151,8 @@ will now work::
 
 Additional plugins can be added as additional items in the list.
 
-See the :class:`CGATReportPlugins.Transformer` documentation
-for existing transformer.
+See the :class:`CGATReportPlugins.Transformer` documentation for
+existing transformer.
 
 Writing Renderers
 -----------------
@@ -161,14 +163,14 @@ transformed data, a :term:`Renderer` receives data and returns a
 representation of that data - a table, a plot, etc.
 
 A :term:`renderer` returns a collection of
-:class:`CGATReport.ResultBlocks`. A :term:`ResultBlock` contains
-the restructured text that is inserted into the document at the point
-of the ``report`` directive. 
+:class:`CGATReport.ResultBlocks`. A :term:`ResultBlock` contains the
+restructured text that is inserted into the document at the point of
+the ``report`` directive.
 
 At the same time, a :term:`Renderer` can create plots on a variety of
 devices. These plots will be collected by various agents of the
-CGATReport framework and inserted into the document. In order
-to associatde a plot with text, usually a place-holder is defined.
+CGATReport framework and inserted into the document. In order to
+associatde a plot with text, usually a place-holder is defined.
 
 The following collectors are defined:
 
@@ -195,7 +197,8 @@ RST text
     :class:`CGATReport.ResultBlock`. The contents are
     inserted into the document directly.
 
-A simple implementation of a :term:`Renderer` using matplotlib could be::
+A simple implementation of a :term:`Renderer` using matplotlib could
+be::
 
     from CGATReportPlugins.Renderer import Renderer
     from CGATReport import ResultBlock, ResultBlocks
@@ -226,21 +229,19 @@ A simple implementation of a :term:`Renderer` using matplotlib could be::
 
 
 This particular example is derived from the class
-:class:`CGATReport.Renderer`. The base class implements
-a ``__call__`` method that calls the ``render`` functions
-at appropriate levels in the data tree. However, there
-is no need for deriving from :class:`CGATReport.Renderer`,
-the only requirement for your own :term:`Renderer` is to
-implement a ``__call__( self, data)`` method.
+:class:`CGATReport.Renderer`. The base class implements a ``__call__``
+method that calls the ``render`` functions at appropriate levels in
+the data tree. However, there is no need for deriving from
+:class:`CGATReport.Renderer`, the only requirement for your own
+:term:`Renderer` is to implement a ``__call__( self, data)`` method.
 
 Note that this simple example performs permits very little
-customization such as setting axis labels, tick marks, etc. 
-The various Rendereres that are implemented in CGATReport
-a part of a class hierarchy that adds these customization
-options.
+customization such as setting axis labels, tick marks, etc.  The
+various Rendereres that are implemented in CGATReport a part of a
+class hierarchy that adds these customization options.
 
-See the :class:`CGATReportPlugins.Renderer` documentation
-for existing matplotlib renderers.
+See the :class:`CGATReportPlugins.Renderer` documentation for existing
+matplotlib renderers.
 
 
 

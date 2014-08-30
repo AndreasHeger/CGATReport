@@ -1,4 +1,4 @@
-from SphinxReport.Tracker import *
+from SphinxReport.Tracker import Tracker
 
 
 class UserVennTracker(Tracker):

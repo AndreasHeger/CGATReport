@@ -1,4 +1,4 @@
-from SphinxReport.Tracker import *
+from SphinxReport.Tracker import TrackerSQL
 
 
 class ExpressionLevel(TrackerSQL):
@@ -6,7 +6,13 @@ class ExpressionLevel(TrackerSQL):
     """Expression level measurements."""
     pattern = "(.*)_data$"
 
-    def __call__(self, track, slice=None):
+    def __init__(self, *args, **kwargs):
+        TrackerSQL.__init__(self,
+                            *args,
+                            backend="sqlite:///./csvdb",
+                            **kwargs)
+
+    def __call__(self, track):
         statement = "SELECT expression FROM %s_data" % track
         data = self.getValues(statement)
         return {"expression": data}
@@ -18,7 +24,7 @@ class ExpressionLevelWithSlices(ExpressionLevel):
 
     slices = ("housekeeping", "regulation")
 
-    def __call__(self, track, slice=None):
+    def __call__(self, track, slice):
         if not slice:
             where = ""
         else:

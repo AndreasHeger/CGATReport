@@ -11,8 +11,6 @@ Contents:
    :maxdepth: 2
 
    analysis.rst
-   pipeline.rst
-   usage.rst
 
 ====================
  Indices and tables

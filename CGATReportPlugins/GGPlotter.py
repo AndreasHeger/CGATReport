@@ -13,18 +13,14 @@ from ggplot import *
 
 class GGPlot(Renderer, Plotter):
 
-    """Write a set of box plots.
-
-    This:class:`Renderer` requires two levels.
-
-    labels[dict] / data[array]
+    """Use the python ggplot libary for plotting.
     """
     options = (
         ('aes',  directives.unchanged),
         ('geom', directives.unchanged),
     ) + Renderer.options + Plotter.options
 
-    nlevels = -1
+    group_level = 'force-all'
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs)
@@ -48,7 +44,6 @@ class GGPlot(Renderer, Plotter):
         # see this thread: https://github.com/yhat/ggplot/issues/285
 
         dataframe.reset_index(inplace=True)
-
         s = "p = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
 
         try:

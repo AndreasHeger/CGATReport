@@ -18,18 +18,13 @@ import rpy2.robjects as ro
 import rpy2.robjects.numpy2ri
 
 
-def getCurrentRDevice():
-    '''return the numerical device id of the current device.'''
-    return R["dev.cur"]()[0]
-
-
 class MatplotlibData(Tracker):
 
     '''create plot using matplotlib.'''
     slices = ("slice1", "slice2")
     tracks = ("track1", "track2", "track3")
 
-    def __call__(self, track, slice=None):
+    def __call__(self, track, slice):
         s = [random.randint(0, 20) for x in range(40)]
         random.shuffle(s)
 
@@ -37,6 +32,11 @@ class MatplotlibData(Tracker):
         fig = plt.figure()
         plt.plot(s)
         return odict((("text", "#$mpl %i$#" % fig.number),))
+
+
+def getCurrentRDevice():
+    '''return the numerical device id of the current device.'''
+    return R["dev.cur"]()[0]
 
 
 class RPlotData(Tracker):

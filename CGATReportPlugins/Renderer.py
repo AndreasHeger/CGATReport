@@ -1055,7 +1055,7 @@ class MatrixBase:
 
         lines = []
         lines.append(".. csv-table:: %s" % title)
-        lines.append(':header: "track","%s" ' % '","'.join(columns))
+        lines.append('   :header: "track","%s" ' % '","'.join(columns))
         lines.append('')
         for x in range(len(rows)):
             lines.append('   "%s","%s"' %

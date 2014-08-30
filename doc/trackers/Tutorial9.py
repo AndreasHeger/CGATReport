@@ -1,8 +1,7 @@
-from SphinxReport.Tracker import *
+from SphinxReport.Tracker import TrackerSQL
 
 
 class ExpressionLevels(TrackerSQL):
-
     """Expression level measurements."""
 
     def __call__(self, track):
@@ -17,5 +16,3 @@ class ExpressionLevels(TrackerSQL):
         return self.getDataFrame(statement)
 
 
-class MeltedExpressionLevels(MeltedTableTrackerDataframe):
-    pattern = "(.*)_data"

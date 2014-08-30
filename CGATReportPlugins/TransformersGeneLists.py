@@ -9,15 +9,18 @@ import math
 
 class TransformerHypergeometric(Transformer):
 
-    ''' Takes in lists of items (genes) and computes a hypergeometric p value and fold enrichment
-    on the overlap between the lists.
+    '''Takes in lists of items (genes) and computes a hypergeometric p
+    value and fold enrichment on the overlap between the lists.
 
-    Takes bottom level of the data tree, which is expects to be a dictionary of lists, one of which
-    should be named background. It will check if all the items in the other lists are also in
-    the background list.
+    Takes bottom level of the data tree, which is expects to be a
+    dictionary of lists, one of which should be named background. It
+    will check if all the items in the other lists are also in the
+    background list.
 
-    If the dictionary contains more than 2 lists in addition to background, all pairwise overlaps
-    are calculated. '''
+    If the dictionary contains more than 2 lists in addition to
+    background, all pairwise overlaps are calculated.
+
+    '''
 
     nlevels = 1
 
@@ -90,7 +93,7 @@ class TransformerOddsRatio(Transformer):
 
     nlevels = 1
 
-    def transform(self, data, path):
+    def transform(self, data):
 
         keys = data.keys()
         if len(keys) < 3 or "background" not in data.keys():
@@ -189,7 +192,7 @@ class TransformerVenn(Transformer):
 
     '''
 
-    nlevels = 1
+    nlevels = 0
 
     options = Transformer.options + (
         ('keep-background', directives.flag),)
@@ -201,7 +204,7 @@ class TransformerVenn(Transformer):
 
         self.background = "keep-background" in kwargs
 
-    def transform(self, data, path):
+    def transform(self, data):
 
         if "background" in data and not self.background:
             del(data["background"])

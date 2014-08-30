@@ -1,8 +1,6 @@
 import os
 import sys
 import re
-import types
-import copy
 import warnings
 import inspect
 import logging
@@ -537,7 +535,8 @@ class TrackerSQL(Tracker):
                 try:
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
-                        self.metadata = sqlalchemy.MetaData(db, reflect=True)
+                        self.metadata = sqlalchemy.MetaData(
+                            db, reflect=True)
                 except AttributeError:
                     self.metadata = sqlalchemy.MetaData(db, reflect=True)
 
