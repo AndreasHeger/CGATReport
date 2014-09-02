@@ -15,4 +15,3 @@ class ExpressionLevels(TrackerSQL):
 
         return self.getDataFrame(statement)
 
-

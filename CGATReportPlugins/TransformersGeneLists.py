@@ -105,7 +105,7 @@ class TransformerHypergeometric(Transformer):
                       ("Enrichment", enrichments),
                       ("P-value", pvals)]
 
-        return DataTree.listAsDataFrame(values)
+        return DataTree.listAsDataFrame(values, values_are_rows=True)
 
 
 class TransformerOddsRatio(Transformer):
@@ -280,81 +280,37 @@ class TransformerVenn(Transformer):
 
 
 class TransformerMultiTest(Transformer):
+    '''This transformer performs multiple testing correction.
 
-    ''' This transformer performs multiple testing correction. By default,
-    it looks for a P-value entry at the lowest level and takes the
-    P-values from there. This can be set with the p-value option. By
-    default all p-values from all levels are corrected together. In
-    order to change this behavoir use the adj-levels option.  The
-    original data tree is returned with an added P-adjust entry. The
-    defualt method for correction is BH, but other R style correction
-    methods can be specified with adj-method.
+    A multiple testing is applied to P-Values in a column called
+    *P-value* (can be changed using the ``p-value`` option).
 
-    NOTE: The order that items are grouped in the datatree are not the
-    same as the grouping in rendering as default if adj-level is set
-    to 2, then all values from each track are adjusted together, but
-    rendering normally put all data of the same slice together.'''
+    The original data frame is returned with an added ``P-adjust``
+    column. The default method for correction is BH, but other R style
+    correction methods can be specified with ``adj-method`` option.
+
+    P-values are adjusted overall.
+    '''
 
     options = Transformer.options + (
-        ('adj-level', directives.unchanged),
         ('adj-method', directives.unchanged),
         ('p-value', directives.unchanged),)
+
+    # group everything together
+    nlevels = 0
 
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        self.nlevels = int(kwargs.get("adj-level", 0))
-
         self.method = kwargs.get("adj-method", "BH")
         self.pval = kwargs.get("p-value", "P-value")
 
-    def __call__(self, data):
-
-        if self.nlevels == 0:
-            self.nlevels = len(DataTree.getPaths(data))
-
-        return Transformer.__call__(self, data)
-
-    def transform(self, data, path):
+    def transform(self, data):
 
         from rpy2.robjects import r as R
 
-        paths, lengths, values = [], [], []
+        padj = R["p.adjust"](data[self.pval],
+                             method=self.method)
 
-        labels = DataTree.getPaths(data)
-        paths = list(itertools.product(*labels[:-1]))
-
-        for path in paths:
-
-            work = DataTree.getLeaf(data, path)
-            try:
-                lengths.append(len(work[self.pval]))
-                values.extend(work[self.pval])
-
-            except TypeError:
-                lengths.append(0)
-                values.append(work[self.pval])
-
-        padj = R["p.adjust"](values, method=self.method)
-
-        padj = [x for x in padj]
-
-        for path in paths:
-
-            num = lengths.pop(0)
-
-            if num > 0:
-                new_values = padj[0:num]
-                padj = padj[num:]
-            else:
-                new_values = padj[0]
-                padj = padj[1:]
-
-            if path:
-                work = odict(DataTree.getLeaf(data, path))
-                work["P-adjust"] = new_values
-                DataTree.setLeaf(data, path, work)
-            else:
-                data["P-adjust"] = new_values
-
+        data["P-adjust"] = padj
         return data

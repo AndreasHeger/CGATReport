@@ -634,6 +634,17 @@ class Dispatcher(Component):
         self.debug("%s: after collection: %i data_paths: %s" %
                    (self, len(data_paths), str(data_paths)))
 
+        # special Renderers - do not process data further but render
+        # directly. Note that no transformations will be applied.
+        if isinstance(self.renderer, Renderer.User):
+            results = ResultBlocks(title="main")
+            results.append(self.renderer(self.data))
+            return results
+        elif isinstance(self.renderer, Renderer.Debug):
+            results = ResultBlocks(title="main")
+            results.append(self.renderer(self.data))
+            return results
+
         # merge all data to hierarchical indexed dataframe
         self.data = DataTree.asDataFrame(self.data)
         # transform data
@@ -648,15 +659,6 @@ class Dispatcher(Component):
         # self.debug("%s: after transformation: %i data_paths: %s" %
         #           (self, len(data_paths), str(data_paths)))
 
-        # special Renderers - do not process data further but render directly
-        if isinstance(self.renderer, Renderer.User):
-            results = ResultBlocks(title="main")
-            results.append(self.renderer(self.data, ('')))
-            return results
-        elif isinstance(self.renderer, Renderer.Debug):
-            results = ResultBlocks(title="main")
-            results.append(self.renderer(self.data, ('')))
-            return results
 
         # restrict
         try:
@@ -664,7 +666,8 @@ class Dispatcher(Component):
             # self.restrict()
         except:
             self.error("%s: exception in restrict" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("restrict")))
+            return ResultBlocks(ResultBlocks(
+                Utils.buildException("restrict")))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after restrict: %i data_paths: %s" %

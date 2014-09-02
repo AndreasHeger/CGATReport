@@ -15,7 +15,6 @@ Selection
    :render: line-plot
    :transform: histogram,filter
    :tf-bins: arange(0,10)
-   :tf-fields: col1
-   :tf-level: 2
+   :tf-fields: bin,col1
 
    A histogram plot, but only with *col1* selected

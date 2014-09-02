@@ -210,17 +210,25 @@ class DataTree(object):
         setattr(self._data, name, value)
 
 
-def listAsDataFrame(data, index_title='names'):
-    '''convert a list of key, value pairs
-    to a dataframe.
+def listAsDataFrame(data, index_title='names',
+                    values_are_rows=False):
+    '''convert a list of key, value pairs to a dataframe.
     
     The keys will be a one-level index called *index_title*
-    and the values will be a single column.
+    and the values will contain one or more columns.
+
+    If *values_are_rows* is set, keys will be column names
+    and values will separate rows in the dataframe.
+
     '''
-    df = pandas.DataFrame(
-        data=[x[1] for x in data],
-        index=pandas.Index([x[0] for x in data],
-                           name=index_title))
+    if values_are_rows:
+        df = pandas.DataFrame(
+            odict(data))
+    else:
+        df = pandas.DataFrame(
+            data=[x[1] for x in data],
+            index=pandas.Index([x[0] for x in data],
+                               name=index_title))
     return df
 
 

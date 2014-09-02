@@ -153,13 +153,21 @@ def getDataFrameLevels(dataframe,
     return nlevels
 
 
-def getGroupLevels(dataframe, max_level=None):
+def getGroupLevels(dataframe,
+                   max_level=None,
+                   modify_levels=None):
     '''return expression for pandas groupby statement.
 
     If dataframe has a multiindex, return a tuple
     of levels.
 
-    If dataframe is not a multiindex, return a single level.
+    If *modify_levels* is set to *n*, the tuple of group_levels
+    will be reduced:
+    If n is > 0, the first n levels are dropped. If n is negative,
+    the last n levels are dropped.
+
+    If dataframe is not a multiindex, return a level
+    of 0.
     '''
     nlevels = getDataFrameLevels(dataframe)
     if nlevels == 1:
@@ -167,6 +175,12 @@ def getGroupLevels(dataframe, max_level=None):
     else:
         if max_level is not None:
             return tuple(range(min(max_level, nlevels)))
+        elif modify_levels is not None:
+            if modify_levels > 0:
+                l = range(modify_levels, nlevels)
+            else:
+                l = range(0, nlevels+modify_levels)
+            return tuple(l)
         else:
             return tuple(range(nlevels))
 

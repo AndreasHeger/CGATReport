@@ -31,9 +31,15 @@ class Transformer(Component):
     a:term:`data tree` and calls self.transform method on the
     appropriate levels in the hierarchy.
 
-    Levels:
-    0 - the actual data point
-    1 - dictionary of data points
+    The property nlevels determines the grouping within a
+    Transformer. If it is set to None, data will be grouped by all
+    levels in the index. If nlevels is 0, the dataframe will not be
+    grouped. If nlevels it is a positive number, a certain number of
+    levels will be ignored from grouping.
+
+    If nlevels is a positive number, the first nlevel levels will not
+    be grouped. If it is a negative numbers, the last nlevel levels
+    will be ignored for gro
 
     '''
 
@@ -46,23 +52,17 @@ class Transformer(Component):
 
     def __call__(self, data):
 
-        if self.nlevels is None:
-            raise NotImplementedError(
-                "incomplete implementation of %s" % str(self))
+        if self.nlevels == 0:
+            # do not group
+            return self.transform(data)
 
         dataframes, keys = [], []
-        nlevels = Utils.getDataFrameLevels(data)
+        group_levels = Utils.getGroupLevels(
+            data,
+            modify_levels=self.nlevels,
+        )
 
-        # negative levels reduce the group level from the
-        # depth of the hierarchical index.
-        if self.nlevels < 0:
-            if self.nlevels < -nlevels:
-                raise ValueError(
-                    'not enough levels in dataframe, got: %i, need %i' %
-                    (nlevels, self.nlevels))
-            nlevels += self.nlevels
-
-        for key, group in data.groupby(level=range(nlevels)):
+        for key, group in data.groupby(level=group_levels):
             debug('applying transformation on group %s' % group)
             dataframes.append(self.transform(group))
             keys.append(key)
@@ -335,52 +335,30 @@ class TransformerCount(Transformer):
 
 
 class TransformerFilter(Transformer):
+    '''select columns from a dataframe.
 
-    '''select fields from the deepest level in the hierarchy.
-
-    This transformer removes all branches in a:term:`data tree` on
-    level:term:`tf-level` that do not match the :term:`tf-fields`
-    option.
-
-    Level is counted from the deepest branch. By default,
-    leaves (level = 1) are removed.
-
-    The following operations are perform when:term:`tf-fields` is set
-    to ``x``::
-       Input:          Returns:
-       a/x=1            a/x=1
-       a/y=2            b/x=3
-       b/x=3
-       b/y=4
+    The columns are specified in the ``tf-fields`` option.
 
     '''
 
-    nlevels = 1
+    nlevels = 0
     default = 0
 
     options = Transformer.options +\
-        (('tf-fields', directives.unchanged),
-         ('tf-level', directives.length_or_unitless))
+              (('tf-fields', directives.unchanged),)
 
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
         try:
-            self.filter = set(kwargs["tf-fields"].split(","))
+            self.filter = kwargs["tf-fields"].split(",")
         except KeyError:
             raise KeyError("TransformerFilter requires the "
                            "`tf-fields` option to be set.")
 
-        self.nlevels = int(kwargs.get("tf-level", self.nlevels))
-
-    def transform(self, data, path):
+    def transform(self, data):
         debug("%s: called" % str(self))
-
-        for v in list(data.keys()):
-            if v not in self.filter:
-                del data[v]
-
-        return data
+        return data[self.filter]
 
 
 class TransformerSelect(Transformer):
@@ -1008,7 +986,7 @@ class TransformerHistogram(TransformerAggregate):
     The bin-marker is placed on the left of the bin.
     '''
 
-    nlevels = 0
+    nlevels = None
 
     options = Transformer.options +\
         (('tf-bins', directives.unchanged),
@@ -1144,7 +1122,7 @@ class TransformerHistogram(TransformerAggregate):
             df = pandas.DataFrame.from_items(
                 [('bin', bin_edges)] + zip(
                     data.columns, all_counts))
-
+            
         return df
 
     def transform(self, data):
@@ -1153,7 +1131,7 @@ class TransformerHistogram(TransformerAggregate):
         df = self.toHistogram(data)
         for converter in self.mConverters:
             df = converter(df)
-
+            
         debug("%s: completed" % (str(self)))
         return df
 

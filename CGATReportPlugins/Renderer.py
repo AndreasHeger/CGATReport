@@ -1139,60 +1139,6 @@ class NumpyMatrix(TableMatrix, MatrixBase):
         MatrixBase.__init__(self, *args, **kwargs)
 
 
-class Debug(Renderer):
-
-    '''a simple renderer, returning the type of data
-    and the number of items at each path.'''
-
-    # only look at leaves
-    nlevels = 1
-
-    def render(self, data, path):
-
-        # initiate output structure
-        results = ResultBlocks(title=path)
-
-        try:
-            results.append(ResultBlock(json.dumps(data, indent=4), title=''))
-        except TypeError:
-            results.append(ResultBlock(str(data), title=''))
-
-        return results
-
-
-class User(Renderer):
-
-    """Renderer for user-implemented rendering.
-
-    The renderer itself creates no output, but returns the results
-    of the tracker.
-
-    When called, a Renderer and its subclasses will return blocks of
-    restructured text. Images are automatically collected from matplotlib
-    and other renderers from active graphics devices and inserted at
-    the place-holders.
-    """
-
-    # return the complete data set
-    nlevels = -1
-
-    def render(self, work, path):
-
-        # initiate output structure
-        results = ResultBlocks(title=path2str(path))
-
-        labels = DataTree.getPaths(work)
-        # iterate over all items at leaf
-        for path, branch in DataTree.getNodes(work, len(labels) - 2):
-            for key in Utils.TrackerKeywords:
-                if key in branch:
-                    # add a result block
-                    results.append(ResultBlock(branch[key],
-                                               title=path2str(path)))
-
-        return results
-
-
 class Status(Renderer):
 
     '''Renders a status report.
@@ -1263,3 +1209,71 @@ class Status(Renderer):
                                        Utils.indent(description, 6)))
 
         return ResultBlocks(ResultBlock("\n".join(lines), title=""))
+
+
+class DataTreeRenderer(object):
+    """Base class for renderers processing a data tree
+    directly.
+
+    Note that these are special case renderers.
+    """
+    # plugin fields
+    capabilities = ["render"]
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, data):
+        return self.render(data)
+
+
+class User(DataTreeRenderer):
+
+    """Renderer for user-implemented rendering.
+
+    The renderer itself creates no output, but returns the results
+    of the tracker.
+
+    When called, a Renderer and its subclasses will return blocks of
+    restructured text. Images are automatically collected from matplotlib
+    and other renderers from active graphics devices and inserted at
+    the place-holders.
+    """
+
+    def __init__(self, *args, **kwargs):
+        DataTreeRenderer.__init__(self, *args, **kwargs)
+
+    def render(self, data):
+
+        # initiate output structure
+        results = ResultBlocks(title='user')
+
+        labels = DataTree.getPaths(data)
+        # iterate over all items at leaf
+        for path, branch in DataTree.getNodes(data, len(labels) - 2):
+            for key in Utils.TrackerKeywords:
+                if key in branch:
+                    # add a result block
+                    results.append(ResultBlock(branch[key],
+                                               title=path2str(path)))
+
+        return results
+
+
+class Debug(DataTreeRenderer):
+
+    '''a simple renderer, returning the type of data
+    and the number of items at each path.'''
+
+    def render(self, data):
+
+        # initiate output structure
+        results = ResultBlocks(title='debug')
+
+        try:
+            results.append(ResultBlock(json.dumps(
+                data, indent=4), title=''))
+        except TypeError:
+            results.append(ResultBlock(str(data), title=''))
+            
+        return results

@@ -21,7 +21,7 @@ from docutils.parsers.rst import directives
 from CGATReport import Config, Dispatcher, Utils, Cache, Component
 from CGATReport.ResultBlock import ResultBlocks
 
-CGATREPORT_DEBUG = True
+CGATREPORT_DEBUG = False
 
 TEMPLATE_TEXT = """
 .. htmlonly::

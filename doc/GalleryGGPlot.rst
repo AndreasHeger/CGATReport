@@ -7,20 +7,23 @@ a dataframe using the python port (ggplot_) of the ggplot2_ package.
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'expression', color='track'
+   :aes: 'value', color='track'
    :geom: geom_histogram()
    :layout: column-2
+   :width: 300
 
-   A histogram plot
+   A histogram plot. Each track is plotted in a separate plot.
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'expression', color='track'
+   :aes: 'value', color='track'
    :geom: geom_histogram()
    :layout: column-2
    :groupby: all
+   :width: 300
 
-   A histogram plot, all data grouped.
+   A histogram plot, all data grouped so that they are plotted
+   in the same plot.
 
 Options
 -------

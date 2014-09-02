@@ -20,7 +20,7 @@ class GGPlot(Renderer, Plotter):
         ('geom', directives.unchanged),
     ) + Renderer.options + Plotter.options
 
-    group_level = 'force-all'
+    group_level = 0
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs)

@@ -56,7 +56,13 @@ implements a :meth:`tracks` property that automatically queries the
 database for tables matching the pattern in ``pattern``. It also
 defines convenience functions such as :meth:`getValues`.
 :meth:`getValues` executes an SQL statement that returns rows of
-single values and converts these to a python list.
+single values and converts these to a python list. The outcome is
+the following dataframe:
+
+.. report:: Tutorial5.ExpressionLevel
+   :render: dataframe
+   :head: 10
+   :tail: 10
 
 Testing this data source you should see one plot::
 
