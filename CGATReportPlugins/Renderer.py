@@ -678,7 +678,7 @@ class GlossaryTable(Table):
         for x, row in enumerate(dataframe.iterrows()):
             header, data = row
             txt = "\n      ".join([x.strip() for x in str(data).split("\n")])
-            lines.append('   %s\n      %s' % (header, txt))
+            lines.append('   %s\n      %s\n' % (path2str(header), txt))
 
         lines.append("")
 
@@ -929,74 +929,43 @@ class MatrixBase:
 
         Returns the normalized matrix.
         """
-        t = matrix.sum()
-        matrix /= t
-        return matrix, rows, cols
+        return matrix / matrix.sum(), rows, cols
 
     def transformNormalizeMax(self, matrix, rows, cols):
         """normalize a matrix by the max.
 
         Returns the normalized matrix.
         """
-        t = matrix.max()
-        matrix /= t
-        return matrix, rows, cols
+        return matrix / matrix.max(), rows, cols
 
     def transformNormalizeRowTotal(self, matrix, rows, cols):
         """normalize a matrix row by the row total.
 
         Returns the normalized matrix.
         """
-        nrows, ncols = matrix.shape
-
-        for x in range(nrows):
-            m = sum(matrix[x, :])
-            if m != 0:
-                for y in range(ncols):
-                    matrix[x, y] /= m
-        return matrix, rows, cols
+        return matrix / matrix.sum(axis=1), rows, cols
 
     def transformNormalizeRowMax(self, matrix, rows, cols):
         """normalize a matrix row by the row maximum.
 
         Returns the normalized matrix.
         """
-        nrows, ncols = matrix.shape
-
-        for x in range(nrows):
-            m = max(matrix[x, :])
-            if m != 0:
-                for y in range(ncols):
-                    matrix[x, y] /= m
-        return matrix, rows, cols
+        return matrix / matrix.max(axis=1), rows, cols
 
     def transformNormalizeRowFirst(self, matrix, rows, cols):
         """normalize a matrix row by the row maximum.
 
         Returns the normalized matrix.
         """
-        nrows, ncols = matrix.shape
-
-        for x in range(1, nrows):
-            for y in range(ncols):
-                m = matrix[0, y]
-                if m != 0:
-                    matrix[x, y] /= m
+        m = matrix[0]
         matrix = numpy.delete(matrix, 0, 0)
-        return matrix, rows[1:], cols
+        return matrix / m, rows[1:], cols
 
     def transformNormalizeColumnTotal(self, matrix, rows, cols):
         """normalize a matrix by the column total.
 
         Returns the normalized matrix."""
-        nrows, ncols = matrix.shape
-        totals = [sum(matrix[:, y]) for y in range(ncols)]
-        for x in range(nrows):
-            for y in range(ncols):
-                m = totals[y]
-                if m != 0:
-                    matrix[x, y] /= m
-        return matrix, rows, cols
+        return matrix / matrix.sum(axis=0), rows, cols
 
     def transformNormalizeColumnFirst(self, matrix, rows, cols):
         """normalize a matrix by the first column.
@@ -1004,28 +973,16 @@ class MatrixBase:
         Removes the first column.
 
         Returns the normalized matrix."""
-        nrows, ncols = matrix.shape
-        for x in range(nrows):
-            m = matrix[x, 0]
-            for y in range(1, ncols):
-                if m != 0:
-                    matrix[x, y] /= m
+        m = matrix[:, 0]
         matrix = numpy.delete(matrix, 0, 1)
-        return matrix, rows, cols[1:]
+        return matrix / m, rows, cols[1:]
 
     def transformNormalizeColumnMax(self, matrix, rows, cols):
         """normalize a matrix by the column maximum
 
         Returns the normalized matrix.
         """
-        nrows, ncols = matrix.shape
-
-        for y in range(ncols):
-            m = max(matrix[:, y])
-            if m != 0:
-                for x in range(nrows):
-                    matrix[x, y] /= m
-        return matrix, rows, cols
+        return matrix / matrix.max(axis=0), rows, cols
 
     def render(self, work, path):
         """render the data.
@@ -1057,11 +1014,11 @@ class MatrixBase:
         lines.append(".. csv-table:: %s" % title)
         lines.append('   :header: "track","%s" ' % '","'.join(columns))
         lines.append('')
-        for x in range(len(rows)):
-            lines.append('   "%s","%s"' %
-                         (rows[x],
-                          '","'.join([self.toString(x)
-                                      for x in matrix[x, :]])))
+        for row in range(len(rows)):
+            lines.append(
+                '   "%s","%s"' %
+                (rows[row], '","'.join(
+                    [self.toString(x) for x in matrix[row]])))
         lines.append("")
 
         if path is None:
@@ -1083,7 +1040,8 @@ class TableMatrix(TableBase, MatrixBase):
     All values need to be numerical.
     """
 
-    nlevels = 1
+    # By default, group everything together
+    group_level = "all"
 
     options = TableBase.options +\
         (('transform-matrix', directives.unchanged),)
@@ -1107,9 +1065,11 @@ class TableMatrix(TableBase, MatrixBase):
         is set.
         """
 
-        rows = list(dataframe.index)
+        rows = map(path2str, dataframe.index)
         columns = list(dataframe.columns)
-        matrix = dataframe.as_matrix()
+        # use numpy.matrix - permits easier broadcasting
+        # for normalization.
+        matrix = numpy.matrix(dataframe.as_matrix())
         if self.converters and apply_transformations:
             # convert to float for conversions
             if self.tofloat:
@@ -1123,7 +1083,8 @@ class TableMatrix(TableBase, MatrixBase):
         rows = [str(x) for x in rows]
         columns = [str(x) for x in columns]
 
-        return matrix, rows, columns
+        # convert numpy.matrix to numpy.array
+        return numpy.asarray(matrix), rows, columns
 
 # for compatibility
 Matrix = TableMatrix
@@ -1152,6 +1113,10 @@ class Status(Renderer):
 
     # read complete data
     nlevels = -1
+
+    # For backwards compatibility, group by slice (test function)
+    # and not track (data track) by default.
+    group_level = 'slice'
 
     map_code2image = {'FAIL': "fail.png",
                       'PASS': "pass.png",
@@ -1185,7 +1150,7 @@ class Status(Renderer):
             description = values['description']
             info = values['info']
             status = values['status']
-            track = index
+            track = path2str(index)
 
             descriptions[testname] = description
 

@@ -10,14 +10,14 @@ The :class:`CGATReportPlugins.Plotter.BoxPlot` displays
    :layout: row
    :width: 200
 
-   A box-plot.
+   A box-plot from a tracker returning a single column data.
 
 .. report:: Trackers.ArrayDataExample
    :render: box-plot
    :layout: row
    :width: 200
 
-   A box-plot.
+   A box-plot from a tracker returning multiple columns of data.
 
 Options
 -------

@@ -1,13 +1,13 @@
 import re
 import traceback
 import itertools
+import pandas
 
-from CGATReport.ResultBlock import ResultBlock, ResultBlocks
+from CGATReport.ResultBlock import ResultBlocks
 from CGATReport import DataTree
-from CGATReport.Component import *
+from CGATReport import Component
 from CGATReport import Utils
 from CGATReport import Cache
-from CGATReport import Tracker
 
 # move User renderer to CGATReport main distribution
 from CGATReportPlugins import Renderer
@@ -22,7 +22,7 @@ from collections import OrderedDict as odict
 # from guppy import hpy; HP=hpy()
 
 
-class Dispatcher(Component):
+class Dispatcher(Component.Component):
 
     """Dispatch the directives in the ``:report:`` directive
     to a:class:`Tracker`, class:`Transformer` and:class:`Renderer`.
@@ -47,9 +47,10 @@ class Dispatcher(Component):
         to obtain data, an optional:class:`Transformer` to transform
         the data and a:class:`Renderer.Renderer` to render the output.
         '''
-        Component.__init__(self)
+        Component.Component.__init__(self)
 
-        self.debug("starting dispatcher '%s': tracker='%s', renderer='%s', transformer:='%s'" %
+        self.debug("starting dispatcher '%s': tracker='%s', renderer='%s', "
+                   "transformer:='%s'" %
                    (str(self), str(tracker), str(renderer), str(transformers)))
 
         self.tracker = tracker
@@ -155,10 +156,11 @@ class Dispatcher(Component):
             try:
                 result = self.tracker(*path, **kwargs)
             except Exception as msg:
-                self.warn("exception for tracker '%s', path '%s': msg=%s" % (str(self.tracker),
-                                                                             DataTree.path2str(
-                                                                                 path),
-                                                                             msg))
+                self.warn("exception for tracker '%s', path '%s': msg=%s" %
+                          (str(self.tracker),
+                           DataTree.path2str(
+                               path),
+                           msg))
                 if VERBOSE:
                     self.warn(traceback.format_exc())
                 raise
@@ -310,10 +312,10 @@ class Dispatcher(Component):
         self.debug("%s: building all_paths" % (self.tracker))
         if len(datapaths) > MAX_PATH_NESTING:
             self.warn("%s: number of nesting in data paths too large: %i" % (
-                self.tracker, len(all_paths)))
+                self.tracker, len(datapaths)))
             raise ValueError(
                 "%s: number of nesting in data paths too large: %i" % (
-                    self.tracker, len(all_paths)))
+                    self.tracker, len(datapaths)))
 
         all_paths = list(itertools.product(*datapaths))
         self.debug(
@@ -369,7 +371,8 @@ class Dispatcher(Component):
                         break
             else:
                 self.debug(
-                    "%s: ignoring path %s because of:restrict=%s" % (self.tracker, path, s))
+                    "%s: ignoring path %s because of:restrict=%s" %
+                    (self.tracker, path, s))
                 try:
                     DataTree.removeLeaf(self.data, path)
                 except KeyError:
@@ -457,7 +460,6 @@ class Dispatcher(Component):
             # have a group_level attribute
             default_level = 0
 
-
         groupby = self.groupby
 
         if str(default_level).startswith("force"):
@@ -494,31 +496,40 @@ class Dispatcher(Component):
         else:
             self.group_level = 0
 
-        debug("grouping: nlevel=%i, groupby=%s, default=%s, group=%i" %
-              (nlevels, groupby, str(default_level), self.group_level))
+        self.debug("grouping: nlevel=%i, groupby=%s, default=%s, group=%i" %
+                   (nlevels, groupby, str(default_level), self.group_level))
 
         return self.data
 
     def prune(self):
-        '''prune data tree.
-
-        Remove all empty leaves.
+        '''prune data frame.
 
         Remove all levels from the data tree that are
-        superfluous, i.e. levels that contain only a single label
-        and all labels in the hierarchy below are the same.
+        superfluous, i.e. levels that contain only a single lable.
 
         This method ignores some labels with reserved key-words
         such as ``text``, ``rst``, ``xls``
 
-        Ignore both the first and last level for this analyis.
         '''
 
-        # set method to outwards - only prune leaves if they
-        # are superfluous.
-        pruned = DataTree.prune(self.data,
-                                ignore=Utils.TrackerKeywords,
-                                method='bottom-up')
+        dataframe = self.data
+
+        if isinstance(dataframe.index,
+                      pandas.core.index.MultiIndex):
+            todrop = []
+            for x, level in enumerate(dataframe.index.levels):
+                if len(level) == 1 and level[0] not in Utils.TrackerKeywords:
+                    todrop.append(x)
+                elif len(level) == len(dataframe.index):
+                    todrop.append(x)
+
+            names = dataframe.index.names
+            pruned = [(x, names[x]) for x in todrop]
+
+            dataframe.reset_index(
+                todrop,
+                drop=True,
+                inplace=True)
 
         for level, label in pruned:
             self.debug("pruned level %i from data tree: label='%s'" %
@@ -571,7 +582,7 @@ class Dispatcher(Component):
             level = Utils.getGroupLevels(dataframe,
                                          max_level=self.group_level+1)
 
-            debug("%s: grouping by levels: %s" % (self, str(level)))
+            self.debug("%s: grouping by levels: %s" % (self, str(level)))
 
             for key, work in dataframe.groupby(level=level):
 
@@ -687,9 +698,7 @@ class Dispatcher(Component):
 
         # remove superfluous levels
         try:
-            self.pruned = []
-            self.debug('pruning disabled')
-            # self.prune()
+            self.prune()
         except:
             self.error("%s: exception in pruning" % self)
             return ResultBlocks(ResultBlocks(Utils.buildException("pruning")))

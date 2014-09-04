@@ -883,13 +883,13 @@ class PlotterHinton(PlotterMatrix):
         plt.clf()
 
         # convert to real-valued data
-        weight_matrix = numpy.array(weight_matrix, dtype=numpy.float)
+        weight_matrix = numpy.nan_to_num(weight_matrix)
 
         height, width = weight_matrix.shape
-        if vmax == None:
+        if vmax is None:
             # 2**numpy.ceil(numpy.log(numpy.max(numpy.abs(weight_matrix)))/numpy.log(2))
             vmax = weight_matrix.max()
-        if vmin == None:
+        if vmin is None:
             vmin = weight_matrix.min()
 
         scale = vmax - vmin
@@ -1577,9 +1577,6 @@ class BarPlot(TableMatrix, Plotter):
             self.logscale = None
             self.plotf = plt.barh
 
-        if self.error or self.label:
-            self.nlevels += 1
-
         self.bottom_value = kwargs.get("bottom-value", None)
         self.first_is_offset = 'first-is-offset' in kwargs
 
@@ -1729,6 +1726,12 @@ class BarPlot(TableMatrix, Plotter):
             else:
                 bottom = None
 
+            kwargs = {}
+            if self.orientation == 'vertical':
+                kwargs['bottom'] = bottom
+            else:
+                kwargs['left'] = bottom
+
             plts.append(self.plotf(xvals,
                                    vals,
                                    self.bar_width,
@@ -1738,7 +1741,7 @@ class BarPlot(TableMatrix, Plotter):
                                    hatch=hatch,
                                    alpha=alpha,
                                    log=self.barlog,
-                                   )[0])
+                                   **kwargs)[0])
 
             if self.label and self.label_matrix is not None:
                 self.addLabels(xvals, vals, self.label_matrix[:, column])
@@ -1751,12 +1754,15 @@ class BarPlot(TableMatrix, Plotter):
 
 
 class InterleavedBarPlot(BarPlot):
-
     """A plot with interleaved bars.
 
     This:class:`Renderer` requires two levels:
     rows[dict] / cols[dict]
     """
+
+    # always put multiple bars in a plot
+    # and multiple data points in a plot
+    group_level = -2
 
     def __init__(self, *args, **kwargs):
         BarPlot.__init__(self, *args, **kwargs)
@@ -1796,7 +1802,7 @@ class InterleavedBarPlot(BarPlot):
                 kwargs['bottom'] = bottom
             else:
                 kwargs['left'] = bottom
-
+ 
             plts.append(self.plotf(xvals + offset,
                                    vals,
                                    width,
@@ -1829,6 +1835,10 @@ class StackedBarPlot(BarPlot):
     This:class:`Renderer` requires two levels:
     rows[dict] / cols[dict]
     """
+
+    # always put multiple bars in a plot
+    # and multiple data points in a plot
+    group_level = -2
 
     def __init__(self, *args, **kwargs):
         BarPlot.__init__(self, *args, **kwargs)
@@ -1932,18 +1942,25 @@ class DataSeriesPlot(Renderer, Plotter):
         plts, legend = [], []
 
         self.startPlot()
-
         if len(dataframe.columns) == 1:
             # in hierarchical indices, get rid of superfluous
             # levels (often these are row numbers)
             if isinstance(dataframe.index,
                           pandas.core.index.MultiIndex):
+                todrop = []
+                for x, level in enumerate(dataframe.index.levels):
+                    if len(level) == len(dataframe.index):
+                        todrop.append(x)
+
                 dd = dataframe.reset_index(
-                    range(1, dataframe.index.nlevels),
+                    todrop,
                     drop=True)
+                # convert to single-level index
+                dd.index = map(path2str, dd.index)
             else:
                 dd = dataframe
 
+            # convert index to columns
             dd = dd.reset_index()
             assert len(dd.columns) == 2
             dd.columns = ('label', 'value')
