@@ -8,6 +8,7 @@ This page demonstrates usage of the :term:`user` renderer
 in order to include custom generated plots or images into
 a cgatreport document.
 
+
 Plotting with matplotlib
 ========================
 
@@ -16,6 +17,7 @@ Plotting with matplotlib
 
    Plot using matplotlib
 
+
 Plotting with R
 ===============
 
@@ -23,6 +25,7 @@ Plotting with R
    :render: user
 
    Plot using R
+
 
 Adding pre-built images
 =======================
@@ -33,7 +36,6 @@ Pre-built images can be added, including flanking text.
    :render: user
 
    Plot pre-built images
-
 
 They can also appear in a table:
 

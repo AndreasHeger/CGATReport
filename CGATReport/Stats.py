@@ -1,9 +1,8 @@
-import types
 import math
 import numpy
-
 import scipy
 from functools import reduce
+
 # See http://projects.scipy.org/scipy/ticket/1739
 # scipy 0.11 for python3 broken, should be fixed for scipy 0.12
 try:
@@ -11,12 +10,8 @@ try:
 except ValueError:
     scipy.stats = None
 
-import collections
-import itertools
-
 try:
     from rpy2.robjects import r as R
-    import rpy2.robjects as ro
     import rpy2.robjects.numpy2ri
 except ImportError:
     R = None
@@ -48,11 +43,18 @@ class Result(object):
         *take* is a list of tuples mapping a field to the corresponding
         field in *r_result*.
         '''
+        # deactivate numpy2ri conversion, interferes with .rx
+        rpy2.robjects.numpy2ri.deactivate()
         for x, y in take:
             if y:
-                self._data[x] = r_result.rx(y)[0][0]
+                try:
+                    self._data[x] = r_result.rx(y)[0][0]
+                except TypeError:
+                    self._data[x] = "NA"
             else:
                 self._data[x] = r_result.rx(x)[0][0]
+
+        rpy2.robjects.numpy2ri.activate()
 
         return self
 
@@ -219,7 +221,8 @@ def doChiSquaredTest(matrix, significance_threshold=0.05):
     return result
 
 
-def doPearsonChiSquaredTest(p, sample_size, observed, significance_threshold=0.05):
+def doPearsonChiSquaredTest(p, sample_size, observed,
+                            significance_threshold=0.05):
     """perform a pearson chi squared test.
 
     Given are p: the probability of the NULL hypothesis, the sample_size
@@ -579,7 +582,9 @@ def filterNone(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype = nu
     return [numpy.array([x[i] for i in range(len(x)) if not mask[i]], dtype=dtype) for x in args]
 
 
-def filterMissing(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype = numpy.float):
+def filterMissing(args,
+                  missing=("na", "Nan", None, "", 'None', 'none'),
+                  dtype = numpy.float):
     '''remove rows in args where at least one of the columns have a
        missing value.'''
 
@@ -601,18 +606,13 @@ def doCorrelationTest(xvals, yvals, method="pearson"):
     Raises a value-error if there are not enough observations.
     """
 
-    if scipy.stats == None:
+    if scipy.stats is None:
         raise ImportError("scipy.stats not available")
 
     if len(xvals) <= 1 or len(yvals) <= 1:
         raise ValueError("can not compute correlation with no data")
     if len(xvals) != len(yvals):
         raise ValueError("data vectors have unequal length")
-
-#     try:
-#         result = CorrelationTest(r_result = R.cor_test(xvals, yvals, na_action="na_omit") )
-#     except rpy.RPyException, msg:
-#         raise ValueError(msg)
 
     x, y = filterMasked(xvals, yvals)
 
@@ -747,13 +747,17 @@ def getSensitivityRecall(values):
 
 def doMannWhitneyUTest(xvals, yvals):
     '''apply the Mann-Whitney U test to test for the difference of medians.'''
+    if len(xvals) == 0 or len(yvals) == 0:
+        result = Result()
+    else:
+        r_result = R['wilcox.test'](xvals, yvals, paired=False)
+        result = Result().fromR(
+            (("pvalue", 'p.value'),
+             ('alternative', None),
+             ('method', None)),
+            r_result)
 
-    r_result = R['wilcox.test'](xvals, yvals, paired=False)
-
-    result = Result().fromR(
-        (("pvalue", 'p.value'),
-         ('alternative', None),
-         ('method', None)),
-        r_result)
+    result.xobservations = len(xvals)
+    result.yobservations = len(yvals)
 
     return result.asDict()

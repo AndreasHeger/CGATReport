@@ -24,118 +24,119 @@ Transformer
     :undoc-members:
     :show-inheritance:
 
-Checks
-======
-
-TransformerFilter
-------------------
-
-Before transformation:
-
-.. report:: Transformers.TrackerFilter
-   :render: debug
-   
-   TransformerFilter
-
-After transformation:
-
-.. report:: Transformers.TrackerFilter
-   :render: debug
-   :transform: filter
-   :tf-fields: x
+..
+   Checks
+   ======
 
    TransformerFilter
+   ------------------
 
-TransformerSelect
-------------------
+   Before transformation:
 
-Before transformation:
+   .. report:: Transformers.TrackerFilter
+      :render: debug
 
-.. report:: Transformers.TrackerSelect
-   :render: debug
-   
+      TransformerFilter
+
+   After transformation:
+
+   .. report:: Transformers.TrackerFilter
+      :render: debug
+      :transform: filter
+      :tf-fields: x
+
+      TransformerFilter
+
    TransformerSelect
+   ------------------
 
-After transformation:
+   Before transformation:
 
-.. report:: Transformers.TrackerSelect
-   :render: debug
-   :transform: select
-   :tf-fields: x
+   .. report:: Transformers.TrackerSelect
+      :render: debug
 
-   TransformerSelect
+      TransformerSelect
 
-TransformerToLabels
---------------------
+   After transformation:
 
-Before transformation:
+   .. report:: Transformers.TrackerSelect
+      :render: debug
+      :transform: select
+      :tf-fields: x
 
-.. report:: Transformers.TrackerToLabels
-   :render: debug
-   
-   TransformerToLabels
-
-After transformation:
-
-.. report:: Transformers.TrackerToLabels
-   :render: debug
-   :transform: tolabels
+      TransformerSelect
 
    TransformerToLabels
+   --------------------
 
-TransformerToList
---------------------
+   Before transformation:
 
-Before transformation:
+   .. report:: Transformers.TrackerToLabels
+      :render: debug
 
-.. report:: Transformers.TrackerToList
-   :render: debug
-   
+      TransformerToLabels
+
+   After transformation:
+
+   .. report:: Transformers.TrackerToLabels
+      :render: debug
+      :transform: tolabels
+
+      TransformerToLabels
+
    TransformerToList
+   --------------------
 
-After transformation:
+   Before transformation:
 
-.. report:: Transformers.TrackerToList
-   :render: debug
-   :transform: tolist
+   .. report:: Transformers.TrackerToList
+      :render: debug
 
-   TransformerToList
+      TransformerToList
 
-TransformerToDataFrame
------------------------
+   After transformation:
 
-Before transformation:
+   .. report:: Transformers.TrackerToList
+      :render: debug
+      :transform: tolist
 
-.. report:: Transformers.TrackerToDataFrame
-   :render: debug
-   
-   TransformerToFrame
-
-After transformation:
-
-.. report:: Transformers.TrackerToDataFrame
-   :render: debug
-   :transform: toframe
+      TransformerToList
 
    TransformerToDataFrame
+   -----------------------
 
-TransformerCombinations
------------------------
+   Before transformation:
 
-Before transformation:
+   .. report:: Transformers.TrackerToDataFrame
+      :render: debug
 
-.. report:: Transformers.TrackerCombinations
-   :render: debug
-   
+      TransformerToFrame
+
+   After transformation:
+
+   .. report:: Transformers.TrackerToDataFrame
+      :render: debug
+      :transform: toframe
+
+      TransformerToDataFrame
+
    TransformerCombinations
+   -----------------------
 
-After transformation:
+   Before transformation:
 
-.. report:: Transformers.TrackerCombinations
-   :render: debug
-   :transform: combinations
+   .. report:: Transformers.TrackerCombinations
+      :render: debug
 
-   TransformerCombinations
+      TransformerCombinations
+
+   After transformation:
+
+   .. report:: Transformers.TrackerCombinations
+      :render: debug
+      :transform: combinations
+
+      TransformerCombinations
 
 .. TransformerIndicator
 .. -----------------------
@@ -155,24 +156,25 @@ After transformation:
    
 ..    TransformerIndicator
 
-TransformerGroup
------------------------
-
-Before transformation:
-
-.. report:: Transformers.TrackerGroup
-   :render: debug
-   
-   TransformerIndicator
-
-After transformation:
-
-.. report:: Transformers.TrackerGroup
-   :render: debug
-   :transform: group
-   :tf-fields: x
-
+..
    TransformerGroup
+   -----------------------
+
+   Before transformation:
+
+   .. report:: Transformers.TrackerGroup
+      :render: debug
+
+      TransformerIndicator
+
+   After transformation:
+
+   .. report:: Transformers.TrackerGroup
+      :render: debug
+      :transform: group
+      :tf-fields: x
+
+      TransformerGroup
 
 TransformerStats
 -----------------------

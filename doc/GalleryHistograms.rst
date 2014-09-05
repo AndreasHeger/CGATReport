@@ -25,19 +25,20 @@ Options
 
 .. _histogram-gradient-plot:
 
-=======================
-histogram-gradient-plot
-=======================
+..
+   =======================
+   histogram-gradient-plot
+   =======================
 
-The :class:`CGATReportPlugins.Plotter.HistogramGradientPlot` class presents
-:term:`numerical arrays` as gradients.
+   The :class:`CGATReportPlugins.Plotter.HistogramGradientPlot` class presents
+   :term:`numerical arrays` as gradients.
 
-.. report:: Trackers.ArrayDataExample
-   :render: histogram-gradient-plot
-   :layout: row
-   :width: 200
+   .. report:: Trackers.ArrayDataExample
+      :render: histogram-gradient-plot
+      :layout: row
+      :width: 200
 
-   A histogram plot
+      A histogram plot
 
 Options
 =======

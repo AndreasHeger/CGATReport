@@ -88,7 +88,8 @@ Defining a tracker
 -------------------
 
 
-The first thing we must do is define the tracker that will return our results. First import the tracker::
+The first thing we must do is define the tracker that will return our
+results. First import the tracker::
 
     from CGATReport.Tracker import *
 
@@ -112,11 +113,13 @@ This tracker will now have two tracks and two slices:
 Now I need to specify the the SQL statements. For each track/slice
 combination I want to look at the overlap between three lists of
 genes:
+
 1. The genes differentially regulated
 2. The genes bound by AR
 3. The genes bound by ERG
 
-The easiest way to do this is to specify the `ListA`, `ListB` and  `ListC` attributes to the tracker::
+The easiest way to do this is to specify the `ListA`, `ListB` and
+`ListC` attributes to the tracker::
 
     from CGATReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
@@ -138,13 +141,14 @@ The easiest way to do this is to specify the `ListA`, `ListB` and  `ListC` attri
                   "Bound by ERG" ]
 
 
-Note how I've used the ``%(track)`` and ``%(slice)`` place holders in the SQL
-statements, these will be substuted when the querys are executed. Now
-because hypergeometric testing requires a background, we need to
-produce a background list. For example, the differential testing used
-here didn't test genes that arn't expressed in either sample, so there
-is no way they could be in the differential set. So our background set
-is all genes that appear in the differential table::
+Note how I've used the ``%(track)`` and ``%(slice)`` place holders in
+the SQL statements, these will be substuted when the querys are
+executed. Now because hypergeometric testing requires a background, we
+need to produce a background list. For example, the differential
+testing used here didn't test genes that arn't expressed in either
+sample, so there is no way they could be in the differential set. So
+our background set is all genes that appear in the differential
+table::
     
     from CGATReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
@@ -237,7 +241,8 @@ Tracker:
    :tracks: Promoters
    
 
-   Output from the debug render from our venn transformed tracker data for one slice and one track.
+   Output from the debug render from our venn transformed tracker data
+   for one slice and one track.
 
 So we are now ready to plot these are venn diagrams, using a block
 like this in our report::
@@ -257,7 +262,8 @@ And the results look like this:
    :transform: venn
    :layout: grid
 
-   Venn diagrams showing the overlap between Up and down regulated genes and CHiP-seq intervals
+   Venn diagrams showing the overlap between Up and down regulated
+   genes and CHiP-seq intervals
 
 Note that the background list has been ignored for the sake of
 plotting the venn diagrams. If you really want to keep it, add the
@@ -281,7 +287,8 @@ then rendering using a table:
    :tracks: Promoters
    :slices: logFC < 0
 
-   Statitics on the overlap between Down regulated genes and genes with AR or ERG signals at their promoters.
+   Statitics on the overlap between Down regulated genes and genes
+   with AR or ERG signals at their promoters.
 
 
 Note that because there are three lists (plus the background) the

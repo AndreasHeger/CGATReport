@@ -38,7 +38,7 @@ Create the file :file:`Tutorial5.py` in the :file:`python`
 subdirectory and add the following code:
 
 .. literalinclude:: trackers/Tutorial5.py
-   :lines: -19
+   :lines: 1-19
 
 In order to use data from a database, a connection needs to be
 established. This is done by providing a value for the ``backend``
@@ -63,6 +63,8 @@ the following dataframe:
    :render: dataframe
    :head: 10
    :tail: 10
+
+   Dataframe returned from TrackerSQL
 
 Testing this data source you should see one plot::
 

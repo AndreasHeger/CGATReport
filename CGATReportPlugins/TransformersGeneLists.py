@@ -159,7 +159,10 @@ class TransformerOddsRatio(Transformer):
             CI95_hi = OR * math.exp(1.96 * sigma)
             CI95_low = OR * math.exp(-1.96 * sigma)
 
-            return odict([("OddRatio", OR), ("CI95_hi", CI95_hi), ("CI95_low", CI95_low), ("P-value", p)])
+            return odict([("OddRatio", OR),
+                          ("CI95_hi", CI95_hi),
+                          ("CI95_low", CI95_low),
+                          ("P-value", p)])
 
         else:
             ORs = []
@@ -228,6 +231,8 @@ class TransformerVenn(Transformer):
 
     background = False
 
+    prune_dataframe = False
+
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
@@ -258,7 +263,7 @@ class TransformerVenn(Transformer):
             values.append(("10", len(a - b)))
             values.append(("01", len(b - a)))
             values.append(("11", len(a & b)))
-            values.append(("labels", genesets.keys()))
+            values.append(("labels", map(path2str, genesets.keys())))
         elif len(genesets) == 3:
             a = set(genesets[genesets.keys()[0]])
             b = set(genesets[genesets.keys()[1]])
@@ -271,7 +276,7 @@ class TransformerVenn(Transformer):
             values.append(("101", len((a & c) - b)))
             values.append(("011", len((b & c) - a)))
             values.append(("111", len((a & b) & c)))
-            values.append(("labels", genesets.keys()))
+            values.append(("labels", map(path2str, genesets.keys())))
         else:
             raise ValueError(
                 "Can currently only cope with 2 or 3 way intersections")

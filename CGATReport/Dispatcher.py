@@ -504,8 +504,8 @@ class Dispatcher(Component.Component):
     def prune(self):
         '''prune data frame.
 
-        Remove all levels from the data tree that are
-        superfluous, i.e. levels that contain only a single lable.
+        Remove levels from the data tree that are
+        superfluous, i.e. levels that contain only a single label.
 
         This method ignores some labels with reserved key-words
         such as ``text``, ``rst``, ``xls``
@@ -513,14 +513,14 @@ class Dispatcher(Component.Component):
         '''
 
         dataframe = self.data
+        self.pruned = []
 
         if isinstance(dataframe.index,
                       pandas.core.index.MultiIndex):
             todrop = []
             for x, level in enumerate(dataframe.index.levels):
+
                 if len(level) == 1 and level[0] not in Utils.TrackerKeywords:
-                    todrop.append(x)
-                elif len(level) == len(dataframe.index):
                     todrop.append(x)
 
             names = dataframe.index.names
@@ -531,12 +531,12 @@ class Dispatcher(Component.Component):
                 drop=True,
                 inplace=True)
 
-        for level, label in pruned:
-            self.debug("pruned level %i from data tree: label='%s'" %
-                       (level, label))
+            for level, label in pruned:
+                self.debug("pruned level %i from data tree: label='%s'" %
+                           (level, label))
 
-        # save for conversion
-        self.pruned = pruned
+            # save for conversion
+            self.pruned = pruned
 
     def render(self):
         '''supply the:class:`Renderer.Renderer` with the data to render.
@@ -696,12 +696,13 @@ class Dispatcher(Component.Component):
         # self.debug("%s: after exclude: %i data_paths: %s" %
         #          (self, len(data_paths), str(data_paths)))
 
-        # remove superfluous levels
-        try:
-            self.prune()
-        except:
-            self.error("%s: exception in pruning" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("pruning")))
+        # No pruning - maybe enable later as a user option
+        self.pruned = []
+        # try:
+        #     self.prune()
+        # except:
+        #     self.error("%s: exception in pruning" % self)
+        #     return ResultBlocks(ResultBlocks(Utils.buildException("pruning")))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after pruning: %i data_paths: %s" %

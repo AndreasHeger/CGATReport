@@ -51,17 +51,18 @@ cgatreport_images=(("hires", "hires.png", 200),
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.doctest',
-              'sphinx.ext.coverage',
-              'sphinx.ext.pngmath',
-              'sphinx.ext.ifconfig',
-              'sphinx.ext.todo',
-              'CGATReport.only_directives',
-              'CGATReport.roles',
-              'CGATReport.errors_directive',
-	      'CGATReport.warnings_directive',
-              'CGATReport.report_directive']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'sphinx.ext.coverage',
+    'sphinx.ext.pngmath',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.todo',
+    'CGATReport.only_directives',
+    'CGATReport.roles',
+    'CGATReport.errors_directive',
+    'CGATReport.warnings_directive',
+    'CGATReport.report_directive']
 
 # inheritance_diagram broken in python3
 if sys.version_info[0] == 2:
@@ -70,6 +71,7 @@ if sys.version_info[0] == 2:
 # Included at the end of each rst file
 rst_epilog='''
 .. _CGAT Training Programme: http://www.cgat.org
+.. _python: http://python.org
 .. _pysam: http://code.google.com/p/pysam/
 .. _samtools: http://samtools.sourceforge.net/
 .. _tabix: http://samtools.sourceforge.net/tabix.shtml/
@@ -92,6 +94,7 @@ rst_epilog='''
 .. _ggplot2: http://ggplot2.org/
 .. _rpy2: http://rpy.sourceforge.net/rpy2.html
 .. _pandas: http://pandas.pydata.org/
+.. _ipython: http://ipython.org/
 '''
 
 # Add any paths that contain templates here, relative to this directory.

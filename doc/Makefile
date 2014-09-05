@@ -9,10 +9,8 @@ SPHINXBUILD   = $(BINDIR)build.py --num-jobs=4 sphinx-build
 SPHINXCLEAN   = $(BINDIR)clean.py
 PAPER         =
 
-DIR_PUBLISH       = ~/public_html/documentation/sphinx-report
-
-DIR_PUBLISH = ~/public_html/documentation/cgat-report-test
-URL_SUB="s/\/ifs\/devel\/CGATReport\/doc\/doc/http:\/\/www.cgat.org\/~andreas\/documentation\/cgat-report/"
+DIR_PUBLISH = /ifs/public/CGATReport/documentation
+URL_SUB="s/\/ifs\/devel\/andreas\/CGATReport\/doc\/doc/http:\/\/www.cgat.org\/downloads/public\/CGATReport/documentation/"
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4

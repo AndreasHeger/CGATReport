@@ -11,7 +11,6 @@ This section explains the main features of cgatreport and demonstrates its usage
 Features
 ********
 
-
 cgatreport is a report generator that is implemented as an extension
 to cgatreport`Sphinx`. It is easy to use and powerful enough to give all the flexibility 
 needed during the development of computational pipelines and robustness during the
@@ -68,7 +67,8 @@ python class or function called *BarData* in the python module
 
 The :file:`Trackers.py` should contain a function *BarData*, that might look like this::
 
-   def BarData(): return dict( [("bar1", 20), ("bar2", 10)] )
+   def BarData():
+      return dict([("bar1", 20), ("bar2", 10)])
 
 Instead of plain functions, function objects can be used as well. 
 

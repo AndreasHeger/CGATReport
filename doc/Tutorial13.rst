@@ -13,7 +13,7 @@ but a bar-plot with 100 bars is difficult to interprete.
 Sphinx-report provides several mechanisms to deal with data sets
 of varying sizes.
 
-1. Some :term:`Renderers` such as :term:`table` have built-in 
+1. Some :term:`Renderers` such as :ref:`table` have built-in 
    thresholds that will change the how the data is displayed dependend on the size
    of the data set. For example, a small table will be inserted inside
    the document, while a large table will be displayed in a separate
@@ -43,13 +43,13 @@ of varying sizes.
    with any level of its index. 
 
    To enforce grouping with these kind, the group-level can be
-   specified explicitely using the :term:`groupy-by` option. If 
+   specified explicitely using the :term:`groupby` option. If 
    there are not enough levels present, additional levels will be
    added to the data in order to allow grouping.
   
-4. Some :term:`Renderers` such as :term:`ggplot` have additional
+4. Some :term:`Renderers` such as :ref:`ggplot` have additional
    abilities to create trellis plots, plots subdivided into separated
-   panels according to some criterion. In :term:`ggplot` this is is
+   panels according to some criterion. In :ref:`ggplot` this is is
    called ``faceting``.
 
 

@@ -20,7 +20,7 @@ steps:
 3. Testing the :term:`tracker` and customizing the plot using
    :ref:`cgatreport-test`.
 
-4. Inserting the :term:``report` directive into the text.
+4. Inserting the :term:`report` directive into the text.
 
 5. Optionally, removing existing cached data of this :term:`tracker`
    using :ref:`cgatreport-clean`.
@@ -38,7 +38,7 @@ Command line utilities
 This page explains the various utilities that come with cgatreport. See :ref:`Utilities`
 for the complete documentation.
 
-.. _sphinxeport-quickstart:
+.. _cgatreport-quickstart:
 
 cgatreport-quickstart
 -----------------------
@@ -58,14 +58,14 @@ controlling the build process. Type::
 
 for a list of all commands available.
 
-.. _sphinxeport-build:
+.. _cgatreport-build:
 
 cgatreport-build
 ------------------
 
 At its simplest, cgatreport is a :mod:`Sphinx` extension
 and all images are simply built using the usual cgatreport`Sphinx` build.
- See the `Sphinx documentation <http://sphinx.pocoo.org/intro.html#running-a-build>`
+See the `Sphinx documentation <http://sphinx.pocoo.org/intro.html#running-a-build>`
 on how to running sphinx.
 
 However, rendering many images and extracting data takes time. The :ref:`cgatreport-build`
@@ -79,7 +79,7 @@ command, for example::
 will use 4 processors in parallel to create all images before calling
 ``sphinx-build`` to build the document.
 
-.. _sphinxeport-clean:
+.. _cgatreport-clean:
 
 cgatreport-clean
 ------------------
@@ -101,7 +101,7 @@ Where *target* can be one of
    on this tracker are removed so that they will be re-build during the 
    next build. Multiple trackers can be named on the command line.
 
-.. _sphinxeport-test:
+.. _cgatreport-test:
 
 cgatreport-test
 -----------------
@@ -229,8 +229,8 @@ the :ref:`cgatreport-get` command. It is called as::
 
    cgatreport-get [options] tracker
 
-For example, to output the data in the cache hold for the tracker ``Tracker.LabeledDataExample`` as
-comma separated values, type::
+For example, to output the data in the cache hold for the tracker
+``Tracker.LabeledDataExample`` as comma separated values, type::
 
    cgatreport-get --format=csv Trackers-LabeledDataExample
 
@@ -239,67 +239,59 @@ comma separated values, type::
 Caching
 =======
 
-Extracting data from a database potentially takes much time if a lot of processing
-is involved or the data set is large. To speed up the writing process cgatreport
-is able to cache function calls to a :term:`Tracker` if the configuration variable
-``cgatreport_cachedir`` is set, for example to::
+Extracting data from a database potentially takes much time if a lot
+of processing is involved or the data set is large. To speed up the
+writing process cgatreport is able to cache function calls to a
+:term:`Tracker` if the configuration variable ``cgatreport_cachedir``
+is set, for example to::
 
    cgatreport_cachedir=os.path.abspath("_cache")
 
-Enabling caching will speed up the build process considerably, in particular as
-:ref:`cgatreport-build` can make use of parallel data gathering and plotting.
-Unfortunately currently there is no :ref:`Dependency` checking for cached data.
-Thus, changes in the code of a :term:`Tracker` or changes in the data will not
-result in an automatic update of the cache. The best solution is to manually
-delete the cached data using the command :ref:`cgatreport-clean`.
+Enabling caching will speed up the build process considerably, in
+particular as :ref:`cgatreport-build` can make use of parallel data
+gathering and plotting.  Unfortunately currently there is no
+:ref:`Dependency` checking for cached data.  Thus, changes in the code
+of a :term:`Tracker` or changes in the data will not result in an
+automatic update of the cache. The best solution is to manually delete
+the cached data using the command :ref:`cgatreport-clean`.
 
 .. _Dependency:
 
 Dependency checking
 ===================
 
-cgatreport`Sphinx` implements dependency checking such that existing documents are only rebuilt
-if the underlying sources have changed. The same dependency checking is still available in
-cgatreport, however currently there is no dependency checking between the data
-source and an existing image. As long as an image or table is present on the file system, it
-will not be re-rendered even if the document or the underlying data has changed. To force
-re-rendering, use the command :ref:`cgatreport-clean`.
+cgatreport`Sphinx` implements dependency checking such that existing
+documents are only rebuilt if the underlying sources have changed. The
+same dependency checking is still available in cgatreport, however
+currently there is no dependency checking between the data source and
+an existing image. As long as an image or table is present on the file
+system, it will not be re-rendered even if the document or the
+underlying data has changed. To force re-rendering, use the command
+:ref:`cgatreport-clean`.
 
 .. _BuildDirecotry:
 
 Using a build directory
 =======================
 
-It is good practice to keep the development of the report from the actual
-report itself. CGATReport and Sphinx do support building using a build
-directory.
+It is good practice to keep the development of the report from the
+actual report itself. CGATReport and Sphinx do support building using
+a build directory.
 
-For example, assume your code is in directory :file:`./code` and you want to build
-in the directory :file:`./build`. In the :file:`build` directory create a :file:`conf.py`
-and :ref:`Makefile`.
+For example, assume your code is in directory :file:`./code` and you
+want to build in the directory :file:`./build`. In the :file:`build`
+directory create a :file:`conf.py` and :ref:`Makefile`.
 
-Apply the following modifications to point them to the source directory:
+Apply the following modifications to point them to the source
+directory:
 
 1. Update the relative path to the Trackers to *sys.path*. For example, add::
 
-   sys.path.append( "../code" )
+      sys.path.append( "../code" )
 
 2. Point the *templates_path* variable in the html section to the :file:`code` directory::
 
-   templates_path = ['../code/_templates']
+      templates_path = ['../code/_templates']
 
-3. Update :file:`Makefile` and add ``-c . ../source`` to the
+3. Update :file:`Makefile` and add ``-c . ../source`` to the command line.
 
-.. _Gallery:
-.. _cgatreport-gallery:
-
-Gallery
-=======
-
-cgatreport builds a gallery of all plots created similar to the
-`matplotlib gallery <matplotlib.sourceforge.net/gallery.html>`_. The gallery
-can be built manually with :ref:`cgatreport-gallery`, but is also built
-automatically by :ref:`cgatreport-build`.
-
-
-.. _ipython: http://ipython.org/ 

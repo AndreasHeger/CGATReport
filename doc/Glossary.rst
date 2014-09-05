@@ -6,7 +6,18 @@ Glossary
    :sorted:
 
    report
-      The restructured text directive supplied by the SphinxSqlPlot extension.
+      The restructured text directive supplied by CGAReport.
+
+   dataframe
+      A dictionary like data structure for tabular data.
+      Dataframes have been implemented in pandas_
+
+   hierarchical index
+      Rows (and columns) can be indexed in a pandas_
+      :term:`dataframe`. This indexing can be done on
+      multiple levels. CGATReport uses a hierachical
+      index on rows to separate data sets. The first
+      two levels are called :term:`track` and :term:`slice`.
 
    track
    tracks

@@ -17,13 +17,15 @@ Requirements
 
 cgatreport requires the following software
 
-   * `Python <http://www.python.org>`_ (2.5.2 or higher) 
-   * `SQLAlchemy <http://www.sqlalchemy.org/>`_ (0.4.8 or higher)
-   * `matplotlib <http://matplotlib.sourceforge.net/>`_ (0.98.1 or higher)
-   * `sphinx <http://sphinx.pocoo.org/>`_ (0.5-1 or higher)
+* python_
+* `SQLAlchemy <http://www.sqlalchemy.org/>`_
+* matplotlib_
+* sphinx_
 
-Additional functionality is available if the following modules are installed:
-   * `web.py <http://webpy.org>`_ (0.3 or higer)
+Additional functionality is available if the following modules are
+installed:
+
+* `web.py <http://webpy.org>`_
 
 Installation
 ************

@@ -108,67 +108,19 @@ The returned data is then assembled into a dataframe.
    kidney    4h      |  apoe       1.2
    kidney    4h      |  dhfr       3.1       
 
-Note how the :term:`tracks` and :term:`slices` constitute the
+The :term:`tracks` and :term:`slices` constitute the
 :term:`hierarchical index` of the data frame.
 
-The type of data returned by a :term:`tracker` is flexible, the
-only requirement is that the data returned needs to be consistent.
-The section on :ref:`Data mapping` explains the various conversions.
-
-   
-
-
+The type of data returned by a :term:`tracker` is flexible, it can be
+a number, text, dictionary or array-like structure. The only
+requirement is that the data returned needs to be consistent.  The
+section on :ref:`Data mapping` explains the various conversions.
 
 .. note::
 
    Note that the data returned from a :term:`tracker` needs to
    be consistent - a mixture will break the transformation into
    a data frame.
-
-
-
-in cgatreport is represented by ordered python dictionaries. 
-
-The key in the dictionary denotes a data label, while the associated
-value can be any of the python data types such as numbers, strings,
-tuples, lists. Different renderes will require different data types.
-For example, a scatter-plot will require a dictionary with at least
-two items, each of which should be a tuple or list of same length
-containing of numerical items, for example::
-
-   data = { 'expected' : (1,2,3), 'observed' : (4,5,6) }
-
-The scatter plot renderer will create a plot, labeling the x and
-y-axis ``expected`` and ``observed``, respectively.  Note that a
-different renderer will interprete the data differently. Given the
-same data, a box-plot for example will create a single image with two
-box plots for ``expected`` and ``observed``.
-
-Nesting data
-------------
-
-The data dictionaries can be nested. The nesting creates a hierarchy,
-a :term:`data tree` (see also :class:`DataTree`).  Data in a
-:term:`data tree` can be accessed via a :term:`data path`, which is
-simply a tuple of dictionary keys.
-
-The following example shows two data sets ``dataset1`` and
-``dataset2``::
-
-   data = { 'dataset1' : { 'expected' : (1,2,3), 'observed' : (4,5,6) },
-            'dataset2' : { 'expected' : (10,20,30), 'observed' : (3,7,6) }, }
-
-The data at :term:`data path` ``('dataset1', 'expected')`` is
-``(1,2,3)``.
-
-Given to a scatter plot, this data set will produce two scatter plots,
-one for ``dataset1`` and one for ``dataset2``.
-
-The nesting can be up to any level. The first two levels have
-particular names (:term:`track` and :term:`slice`). Renderers may
-require different levels. For example, a scatter plot requires at
-least one, while a matrix plot requires at least two (one for row and
-one for the column).
 
 Grouping data
 -------------

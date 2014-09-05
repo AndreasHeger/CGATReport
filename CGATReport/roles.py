@@ -1,17 +1,19 @@
 import re
 import os
-import sys
-
 from docutils import nodes, utils
-from docutils.parsers.rst import roles, directives
-
-from sphinx import addnodes
-from sphinx.util import ws_re, caption_ref_re
+from docutils.parsers.rst import roles
 
 from CGATReport import Utils
 
 default_settings = {
-    'pubmed_url': "http://www.ncbi.nlm.nih.gov/pubmed/%i"}
+    'pubmed_url': "http://www.ncbi.nlm.nih.gov/pubmed/%i",
+    'biogps_url': "http://biogps.org/?query=%s",
+    'ucsc_url':
+    "http://genome.ucsc.edu/cgi-bin/hgTracks?db=%s&position=%s",
+    'ensembl_generic_search':
+    'http://www.ensembl.org/Multi/Search/Results?q=%s',
+    'ensembl_species_search':
+    'http://www.ensembl.org/%s/Search/Results?q=%s'}
 
 
 def writeCode(class_name, code, inliner):
@@ -26,14 +28,11 @@ def writeCode(class_name, code, inliner):
     # root of document tree
     srcdir = setup.srcdir
 
-    # build directory
-    builddir = setup.confdir
-
     # get the directory of the rst file
     rstdir, rstfile = os.path.split(document)
 
-    basedir, fname, basename, ext, outdir, codename, notebookname = Utils.buildPaths(
-        reference)
+    (basedir, fname, basename, ext, outdir, codename,
+     notebookname) = Utils.buildPaths(reference)
 
     # path to root relative to rst
     rst2srcdir = os.path.join(os.path.relpath(srcdir, start=rstdir), outdir)
@@ -49,8 +48,8 @@ def writeCode(class_name, code, inliner):
     return linked_codename
 
 
-def pmid_reference_role(role, rawtext, text, lineno, inliner,
-                        options={}, content=[]):
+def pubmed_role(role, rawtext, text, lineno, inliner,
+                options={}, content=[]):
     '''insert a link to pubmed into the text.'''
     try:
         pmid = int(text)
@@ -67,6 +66,57 @@ def pmid_reference_role(role, rawtext, text, lineno, inliner,
     # in example, but deprecated
     # set_classes(options)
     node = nodes.reference(rawtext, 'PMID ' + utils.unescape(text), refuri=ref,
+                           **options)
+
+    return [node], []
+
+
+def biogps_role(role, rawtext, text, lineno, inliner,
+                options={}, content=[]):
+    '''insert a link to biogps into the text.'''
+    ref = default_settings["biogps_url"] % text
+    node = nodes.reference(rawtext,
+                           utils.unescape(text),
+                           refuri=ref,
+                           **options)
+
+    return [node], []
+
+
+def ucsc_role(role, rawtext, text, lineno, inliner,
+              options={}, content=[]):
+    '''insert a link to biogps into the text.'''
+    if '@' not in text:
+        msg = inliner.reporter.error(
+            'the ucsc role expects a database and a coordinate '
+            'separated by "@" '
+            '"%s" is invalid.' % text, line=lineno)
+        prb = inliner.problematic(rawtext, rawtext, msg)
+        return [prb], [msg]
+
+    database, coordinates = text.split('@', 1)
+
+    ref = default_settings["ucsc_url"] % (database, coordinates)
+    node = nodes.reference(rawtext,
+                           utils.unescape(text),
+                           refuri=ref,
+                           **options)
+
+    return [node], []
+
+
+def ensembl_role(role, rawtext, text, lineno, inliner,
+                 options={}, content=[]):
+    '''insert a link to biogps into the text.'''
+    if '@' in text:
+        database, query = text.split('@', 1)
+        ref = default_settings["ensembl_species_search"] % (
+            database, query)
+    else:
+        ref = default_settings["ensembl_generic_search"] % text
+    node = nodes.reference(rawtext,
+                           utils.unescape(text),
+                           refuri=ref,
                            **options)
 
     return [node], []
@@ -104,7 +154,8 @@ def param_role(role, rawtext, text, lineno, inliner,
     except AttributeError:
         msg = inliner.reporter.error(
             ':param: can not find variable %s in '
-            ': "%s" is invalid -tracker=%s.' % (parameter_name, class_name, str(tracker)), line=lineno)
+            ': "%s" is invalid -tracker=%s.' %
+            (parameter_name, class_name, str(tracker)), line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 
@@ -165,9 +216,9 @@ def setup(app):
     setup.confdir = app.confdir
     setup.srcdir = app.srcdir
 
-roles.register_local_role('pmid', pmid_reference_role)
+roles.register_local_role('pmid', pubmed_role)
+roles.register_local_role('biogps', biogps_role)
+roles.register_local_role('ucsc', ucsc_role)
+roles.register_local_role('ensembl', ensembl_role)
 roles.register_local_role('param', param_role)
 roles.register_local_role('value', value_role)
-
-# def setup(self):
-#    pass

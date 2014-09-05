@@ -58,6 +58,8 @@ a :term:`Tracker` can return.
    :render: dataframe
    :groupby: all
 
+   Tracker returning a scalar
+
 If the tracker returns slices, the slices will be added as columns:
 
 .. literalinclude:: trackers/DataMapping.py
@@ -66,6 +68,8 @@ If the tracker returns slices, the slices will be added as columns:
 .. report:: DataMapping.ReturnValueWithSlice
    :render: dataframe
    :groupby: all
+
+   Tracker returning a scalar
 
 If the :term:`tracker` adds additional levels is the dictionary,
 they will be added as columns:
@@ -76,6 +80,8 @@ they will be added as columns:
 .. report:: DataMapping.ReturnValueInDictionary
    :render: dataframe
    :groupby: all
+
+   Tracker returning a scalar in a dictionary
 
 Arrays
 ======
@@ -95,6 +101,8 @@ x, y and z values. The resultant dataframe will have multiple columns:
    :head: 10
    :tail: 10
 
+   Tracker returning an array
+
 Note that coordinate data need not be actual coordinates, they could
 equally be multiple observations on a sample. The assumption is that
 the arrays are ordered.
@@ -107,6 +115,8 @@ the arrays are ordered.
    :groupby: all
    :head: 10
    :tail: 10
+
+   Tracker returning an array
 
 If the arrays have different lengths, they are assumed to be a
 collection of measurements, for example, height measurements in 
@@ -121,6 +131,7 @@ a treatment and a control group of individuals.
    :head: 5
    :tail: 5
 
+   Tracker returning an array
 
 Dataframes
 ==========
@@ -139,6 +150,8 @@ through the data translation from the :term:`datatree` to the
    :head: 5
    :tail: 5
 
+   Tracker returning a dataframe
+
 In a :term:`dataframe` with column labels, the labels will be
 preserved and the columns of the same name aligned.
 
@@ -151,6 +164,7 @@ preserved and the columns of the same name aligned.
    :head: 5
    :tail: 5
 
+   Tracker returning a dataframe
 
 In a :term:`dataframe` with different labels, the labels will be
 preserved and missing values added as ``NaN``.
@@ -163,6 +177,8 @@ preserved and missing values added as ``NaN``.
    :groupby: all
    :head: 5
    :tail: 5
+
+   Tracker returning a dataframe
 
 In a :term:`dataframe` with index, the index will be preserved as
 part of a hierarchical index that will also include the :term:`tracks`
@@ -177,7 +193,14 @@ and :term:`slices`.
    :head: 5
    :tail: 5
 
+   Tracker returning a dataframe
+
 Special cases
 =============
 
-TODO
+There are certain special cases. To be covered:
+
+TODO:
+
+* Status
+* Venn

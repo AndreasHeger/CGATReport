@@ -2623,7 +2623,6 @@ class VennPlot(Renderer, Plotter):
         plts = []
         self.startPlot()
 
-
         for column in dataframe.columns:
 
             values = tuple(dataframe[column])
