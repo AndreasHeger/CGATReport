@@ -5,25 +5,23 @@ import itertools
 import json
 import StringIO
 from docutils.parsers.rst import directives
-
+import numpy
+import pandas
 # for output of excel work books
 import openpyxl
 
-import numpy
-import pandas
-# import numpy and math namepsace so that arange and log are available
-# in eval
-from numpy import *
-from math import *
+# import numpy.arange and math.log into namepsace that they
+# are available in eval
+from numpy import arange
+from math import log
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReport.DataTree import path2str
-from CGATReport.Component import *
-from CGATReport import Utils, DataTree
+from CGATReport import Utils, DataTree, Component
 from CGATReport import CorrespondenceAnalysis
 
 
-class Renderer(Component):
+class Renderer(Component.Component):
 
     """Base class of renderers that render data into restructured text.
 
@@ -174,7 +172,7 @@ class DataFrame(Renderer):
     summary = False
 
     def __init__(self, *args, **kwargs):
-        
+
         Renderer.__init__(self, *args, **kwargs)
         self.head = int(kwargs.get('head', 0))
         self.tail = int(kwargs.get('tail', 0))
@@ -1240,5 +1238,5 @@ class Debug(DataTreeRenderer):
                 data, indent=4), title=''))
         except TypeError:
             results.append(ResultBlock(str(data), title=''))
-            
+
         return results
