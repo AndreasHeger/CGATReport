@@ -790,9 +790,11 @@ class TrackerSQL(Tracker):
         return self.getDataFrame(self.buildStatement(stmt))
 
     def getValues(self, stmt):
-        '''return results of SQL statement as pandas dataframe.
+        '''return results of SQL statement as pandas Series.
         '''
-        return self.getDataFrame(self.buildStatement(stmt))
+        e = self.exectute(self.buildStatement(stmt))
+        col = [x[0] for x in e]
+        return pandas.Series(col)
 
     def getRow(self, stmt):
         '''return results of SQL statement as pandas dataframe.
@@ -800,9 +802,11 @@ class TrackerSQL(Tracker):
         return self.getDataFrame(self.buildStatement(stmt))
 
     def getFirstRow(self, stmt):
-        '''return results of SQL statement as pandas dataframe.
+        '''return first row of SQL statement as pandas Series.
         '''
-        return self.getDataFrame(self.buildStatement(stmt))
+        e = self.execute(self.buildStatement(stmt))
+        row = e.fetchone()
+        return pandas.Series(row)
 
 
 class TrackerSQLCheckTables(TrackerSQL):
