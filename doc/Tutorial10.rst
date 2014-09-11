@@ -6,34 +6,12 @@ Tutorial 10: Using dates
 
 This tutorial demonstrates how to use date formatting in plots.
 
-Internally, values within SphinxReport are passed around as scalar
+Internally, values within CGATReport are passed around as scalar
 numbers. Thus, in order to plot dates, the :term:`Tracker` needs to 
 return dates as numbers, for example by using the matpotlib's date2num 
-function::
+function:
 
-    from SphinxReport.Tracker import *
-
-    import matplotlib.dates
-    import datetime
-
-    class ProjectDatesExample( Tracker ):
-	tracks = ("proj1", "proj2", "proj3")
-	def __call__(self, track ):
-
-	    # define a convenience function to convert
-            # a three-number tuple to a scalar date float:
-
-	    f = lambda year, month, day: matplotlib.dates.date2num( datetime.datetime( year, month, day ))
-	    if track == "proj1":
-		return odict( ( ( "start", f(2012,1,1) ),
-			      ( "duration", 100 ) ) )
-	    elif track == "proj2":
-		return odict( ( ( "start", f(2012,6,1) ),
-				( "duration", 200 ) ) )
-	    elif track == "proj3":
-		return odict( (  ( "start", f(2012,8,1) ),
-				 ( "duration", 100 ) ) )
-
+.. literalinclude:: trackers/Tutorial10.py
 
 In order to display the numbers as dates, use the :term:`xformat` and
 :term:`yformat` options to format respective ticks as dates. 

@@ -10,11 +10,11 @@ The base class of all :term:`trackers` is the class
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReport.Tracker
+.. inheritance-diagram:: CGATReport.Tracker
    :parts: 1
 
 
-sphinxreport`Tracker`
+cgatreport`Tracker`
 =======================
 
 .. automodule:: Tracker

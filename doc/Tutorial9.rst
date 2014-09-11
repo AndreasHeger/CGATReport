@@ -4,11 +4,12 @@
 Tutorial 9: Plotting with R
 ==================================
 
-The principal plotting engine in SphinxReport is matplotlib. However,
-it is just as easy to create plots with R. There are several ways
-to use R for plotting: 
+The principal plotting engine in CGATReport is matplotlib. However, it
+is just as easy to create plots with R. There are several ways to use
+R for plotting:
 
-* :ref:`Via Plugins` extending the in-built plotting capabilities of SphinxReport,
+* :ref:`Via Plugins` extending the in-built plotting capabilities of
+  CGATReport,
 * :ref:`Via Tracker` involving writing a :term:`Tracker` that both
   collects data and plots
 * :ref:`Via ggplot2` involving a data frame and the R ggplot library.
@@ -20,9 +21,10 @@ Note that plotting with R makes use of rpy2, the python interface to R.
 Via Plugins
 ===========
 
-Sphinxreport contains a few renderers that make use of the standard R plotting
-library, for example :ref:`r-box-plot` or
-:ref:`r-smooth-scatter-plot` (see :ref:`Renderers` for a complete list).
+CGATReport contains a few renderers that make use of the standard R
+plotting library, for example :ref:`r-box-plot` or
+:ref:`r-smooth-scatter-plot` (see :ref:`Renderers` for a complete
+list).
 
 .. _Via Tracker:
 
@@ -39,26 +41,11 @@ Via ggplot2
 ===========
 
 ggplot2_ is a plotting system for R, based on the grammar of
-graphics. Plots are built from a :term:`data frame` by adding aesthetics
-and geometries.
+graphics. Plots are built from a :term:`data frame` by adding
+aesthetics and geometries.
 
-In order to plot with ggplot2_, the results of a :term:`Tracker`
-need first be converted to a :term:`data frame` with the 
-:ref:`toframe` transformer::
-
-    .. report:: Tutorial5.ExpressionLevel
-       :render: debug
-       :transform: toframe
-       
-       Debugging
-
-.. report:: Tutorial5.ExpressionLevel
-   :render: debug
-   :transform: toframe
-
-   Debugging   
    
-Plotting is then done with :ref:`r-ggplot`. This :term:`Renderer` 
+Plotting is done with :ref:`r-ggplot`. This :term:`Renderer` 
 requires a ``statement`` describing the plot aesthetics and geometry. 
 
 The simple example below plots the data on a straight line. Note
@@ -66,7 +53,6 @@ how the :term:`slice` ``expression`` is set as a column name in
 the data frame and can thus be used within the ggplot statement::
 
     .. report:: Tutorial5.ExpressionLevel
-       :transform: toframe
        :render: r-ggplot
        :statement: aes(expression, expression) + geom_point()
        :layout: column-2
@@ -74,7 +60,6 @@ the data frame and can thus be used within the ggplot statement::
        A simple plot
 
 .. report:: Tutorial5.ExpressionLevel
-   :transform: toframe
    :render: r-ggplot
    :statement: aes(expression, expression) + geom_point()
    :layout: column-2
@@ -85,7 +70,6 @@ More interesting might be to plot a histogram::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: r-ggplot
-       :transform: toframe
        :statement: aes(expression) + geom_histogram()
        :layout: column-2
 
@@ -93,7 +77,6 @@ More interesting might be to plot a histogram::
 
 .. report:: Tutorial5.ExpressionLevel
    :render: r-ggplot
-   :transform: toframe
    :statement: aes(expression) + geom_histogram()
    :layout: column-2
 
@@ -104,7 +87,7 @@ we want to create a plot with the correlation of expression values
 between two experiments. We implement the following :term:`tracker`
 that returns a :term:`data frame` ::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
 
     class ExpressionLevels(TrackerSQL):
 	"""Expression level measurements."""
@@ -117,9 +100,9 @@ that returns a :term:`data frame` ::
 				     experiment2_data as e2
 				WHERE e1.gene_id = e2.gene_id"""
 
-	    return self.getDataFrame( statement )
+	    return self.getDataFrame(statement)
 
-Plotting can then be done directly without transformation::
+Plotting can then be done directly::
 
     .. report:: Tutorial9.ExpressionLevels
        :render: r-ggplot
@@ -133,7 +116,8 @@ Plotting can then be done directly without transformation::
 
    Correlation with expression values
    	       
-More interesting is to colour the different expression values by gene_function::
+More interesting is to colour the different expression values by
+gene_function::
 
     .. report:: Tutorial9.ExpressionLevels
        :render: r-ggplot
@@ -147,28 +131,7 @@ More interesting is to colour the different expression values by gene_function::
 
    Correlation with expression values coloured by factor gene_function
 
-The MeltedDataFrameTracker provides a shortcut::
-
-    class MeltedExpressionLevels(MeltedTableTrackerDataframe):
-        pattern = "(.*)_data"
-
-The data is now in a single melted data frame with a column called
-``track`` denoting the different tracks:
-
-    .. report:: Tutorial9.MeltedExpressionLevels
-       :render: r-ggplot
-       :statement: aes(expression, color=factor(track)) + geom_density()
-
-       Plot of gene expression densities
-
-.. report:: Tutorial9.MeltedExpressionLevels
-    :render: r-ggplot
-    :statement: aes(expression, color=factor(track)) + geom_density()
-
-    Plot of gene expression densities
-
-
-See options in :ref:`sphinxreport-test` for ways to do interactive 
+See options in :ref:`cgatreport-test` for ways to do interactive
 refinement of such plots.
 
 .. note:: 

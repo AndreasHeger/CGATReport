@@ -4,12 +4,12 @@
 table
 =====
 
-The :class:`SphinxReportPlugins.Renderer.Table` renders :term:`labeled
+The :class:`CGATReportPlugins.Renderer.Table` renders :term:`labeled
 values` as a table.
 
 Tables are built from columns and rows. By default, each :term:`slice`
-creates a new table with each :term:`track` displayed in a row in a table.
-Columns are created from entries in the nested dictionary
+creates a new table with each :term:`track` displayed in a row in a
+table.  Columns are created from entries in the nested dictionary
 returned by the tracker.
 
 .. report:: Trackers.LabeledDataExample
@@ -23,7 +23,7 @@ of all renderers.
 Options
 -------
 
-:class:`SphinxReportPlugions.Renderer.Table` permits the following options:
+:class:`CGATReportPlugions.Renderer.Table` permits the following options:
 
 .. glossary::
 
@@ -154,3 +154,59 @@ Alternatives can be
 * another column such as ``:add-percent:column1,column2``, or
 * a value such as ``:add-percent:column1,20``.
 
+
+=========
+rst-table
+=========
+
+The :class:`CGATReportPlugins.Renderer.RSTTable` renders
+:term:`labeled values` as a table in rst format
+
+.. report:: Trackers.LabeledDataExample
+   :render: rst-table
+
+   RST tables
+
+=========
+xls-table
+=========
+
+The :class:`CGATReportPlugins.Renderer.XlsTable` renders :term:`labeled
+values` as a table in xls format to download
+
+.. report:: Trackers.LabeledDataExample
+   :render: xls-table
+
+   XLS Tables
+
+The following is an example of XLS tables with a hierarchical
+index
+
+.. report:: Trackers.HierarchicalLabeledDataExample
+   :render: xls-table
+
+   XLS Tables
+
+==========
+html-table
+==========
+
+The :class:`CGATReportPlugins.Renderer.HtmlTable` renders
+:term:`labeled values` as a table in html format to download
+
+.. report:: Trackers.LabeledDataExample
+   :render: html-table
+
+   HTML Tables
+
+=========
+glossary
+=========
+
+The :class:`CGATReportPlugins.Renderer.GlossaryTable` renders :term:`labeled
+values` as a table as a glossary
+
+.. report:: Trackers.LabeledDataExample
+   :render: glossary-table
+
+   A glossary table

@@ -1,5 +1,5 @@
 regex:
 
 ^build/
-^SphinxReport.egg-info/
+^CGATReport.egg-info/
 ^dist/

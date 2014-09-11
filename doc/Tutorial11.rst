@@ -7,15 +7,20 @@ Tutorial 11: Plotting Venn diagrams
 A simple example
 ----------------
 
-To find the overlap between two transcription factors we define a TrackerMultipleLists tracker, plot the venns and calculate the p-values::
+To find the overlap between two transcription factors we define a
+TrackerMultipleLists tracker, plot the venns and calculate the
+p-values::
 
-    class SimpleOverlap( TrackerMultipleLists ):
+    class SimpleOverlap(TrackerMultipleLists):
 
        statements = {"AR": "SELECT gene_id FROM Promoters_with_ar",
                      "ERG": "SELECT gene_id FROM Promoters_with_erg",
                      "background":"SELECT gene_id FROM all_genes"}
 
-And then we can render it as a venn diagram using the ``venn`` transformer and ``venn-plot`` renderer, or test the statistical significance of the overlap using the ``hypergeometric`` transformer and the ``table`` renderer.
+And then we can render it as a venn diagram using the ``venn``
+transformer and ``venn-plot`` renderer, or test the statistical
+significance of the overlap using the ``hypergeometric`` transformer
+and the ``table`` renderer.
 
 As a venn:
 
@@ -83,9 +88,10 @@ Defining a tracker
 -------------------
 
 
-The first thing we must do is define the tracker that will return our results. First import the tracker::
+The first thing we must do is define the tracker that will return our
+results. First import the tracker::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
 
 Now we must define the tracker that will return our results. There are
 lots of comparisons here and we must decide what are tracks and slices
@@ -95,7 +101,7 @@ the Up and down regulated genes. The `tracks` can be sepcified using a
 pattern on the database (the different tracks appear in the names of
 the tables). The `slices` will have to be specified manually::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
     class OverlapTracker( TrackerOverlappingLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
@@ -107,13 +113,15 @@ This tracker will now have two tracks and two slices:
 Now I need to specify the the SQL statements. For each track/slice
 combination I want to look at the overlap between three lists of
 genes:
+
 1. The genes differentially regulated
 2. The genes bound by AR
 3. The genes bound by ERG
 
-The easiest way to do this is to specify the `ListA`, `ListB` and  `ListC` attributes to the tracker::
+The easiest way to do this is to specify the `ListA`, `ListB` and
+`ListC` attributes to the tracker::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
@@ -133,15 +141,16 @@ The easiest way to do this is to specify the `ListA`, `ListB` and  `ListC` attri
                   "Bound by ERG" ]
 
 
-Note how I've used the ``%(track)`` and ``%(slice)`` place holders in the SQL
-statements, these will be substuted when the querys are executed. Now
-because hypergeometric testing requires a background, we need to
-produce a background list. For example, the differential testing used
-here didn't test genes that arn't expressed in either sample, so there
-is no way they could be in the differential set. So our background set
-is all genes that appear in the differential table::
+Note how I've used the ``%(track)`` and ``%(slice)`` place holders in
+the SQL statements, these will be substuted when the querys are
+executed. Now because hypergeometric testing requires a background, we
+need to produce a background list. For example, the differential
+testing used here didn't test genes that arn't expressed in either
+sample, so there is no way they could be in the differential set. So
+our background set is all genes that appear in the differential
+table::
     
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
@@ -169,7 +178,7 @@ is all genes in the differential table. But there could be genes in
 the Bound genes lists that arn't in the background, so we need to
 limit these::
 
-    from SphinxReport.Tracker import *
+    from CGATReport.Tracker import *
     class OverlapTracker( TrackerMultipleLists ):
         pattern = "(.+)_with_.+"
         slices=["logFC < 0", "logFC > 0"]
@@ -196,7 +205,8 @@ limit these::
                   "Bound by ERG",
 		  "background" ]
 
-Now we have finished our tracker. Lets see if it works using the debug render:
+Now we have finished our tracker. Lets see if it works using the table 
+:term:`Renderer`:
 
 .. report:: Genelists.OverlapTracker
    :render: debug
@@ -231,7 +241,8 @@ Tracker:
    :tracks: Promoters
    
 
-   Output from the debug render from our venn transformed tracker data for one slice and one track.
+   Output from the debug render from our venn transformed tracker data
+   for one slice and one track.
 
 So we are now ready to plot these are venn diagrams, using a block
 like this in our report::
@@ -251,7 +262,8 @@ And the results look like this:
    :transform: venn
    :layout: grid
 
-   Venn diagrams showing the overlap between Up and down regulated genes and CHiP-seq intervals
+   Venn diagrams showing the overlap between Up and down regulated
+   genes and CHiP-seq intervals
 
 Note that the background list has been ignored for the sake of
 plotting the venn diagrams. If you really want to keep it, add the
@@ -275,7 +287,8 @@ then rendering using a table:
    :tracks: Promoters
    :slices: logFC < 0
 
-   Statitics on the overlap between Down regulated genes and genes with AR or ERG signals at their promoters.
+   Statitics on the overlap between Down regulated genes and genes
+   with AR or ERG signals at their promoters.
 
 
 Note that because there are three lists (plus the background) the
@@ -292,7 +305,6 @@ new column:
 .. report:: Genelists.OverlapTracker
    :render: table
    :transform: hypergeometric,p-adjust
-
 
    Statistics with adjusted P-values
 

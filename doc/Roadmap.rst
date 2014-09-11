@@ -36,36 +36,67 @@ optional pdf support
 Release Notes
 =============
 
+Version 0.2
+===========
+
+* Complete feature implementation of the most popular
+  Renderers and Transformers.
+
+Version 0.1
+===========
+
+* Refactoring to use pandas_ dataframes for transformation
+  and grouping.
+* Some backwards-incompatible changes, thus rename project
+  to CGATReport and give version number 0.1. Most trackers
+  will need no or little changes, but custom Renderers or
+  Transformers will need to be updated.
+
+  Most notable backwards incompatible changes are:
+  * default grouping is by track
+  * several transformers deprecated as they are
+    not needed any more
+
+Version 2.4.1
+=============
+
+* Add javascript interactivity to plots using mpld3
+* installation bugfix
+
+Version 2.4.0
+=============
+
+* ?
+
 Version 2.3
 ============
 
-   * Moved to github
-   * Use pandas_ dataframes for rendering
-   * Use seaborn_ plot aesthetics and plots
-   * Refined notebook integration
-   * r-ggplot now plots without needing X
-   * ggplot_ added
-
-Incompatibilities to Version 2
-
-   * pie-plot might orient the data differently.
+* Moved to github
+* Use pandas_ dataframes for rendering
+* Use seaborn_ plot aesthetics and plots
+* Refined notebook integration
+* r-ggplot now plots without needing X
+* ggplot_ added
+* pep8 reformatting
+* added xls-table, rst-table, glossary-table
+* TrackerImages requires :glob: attribute
 
 Version 2.2
 ============
 
-   * Moved to setuptools 
-   * MeltedTableTracker and MeltedTableTrackerDataframe
-   * Added interactive plotting support via python/ipython console or
+* Moved to setuptools 
+* MeltedTableTracker and MeltedTableTrackerDataframe
+* Added interactive plotting support via python/ipython console or
      ipython notebook   
 
 
 Version 2.1
 ============
 
-   * Added Ian's genelist tools
-   * Require matplotlib 1.2.1 for tight_layout() option.
-   * Call tight_layout() after each plot.
-   * added :add-percent: option to tables.
+* Added Ian Sudbery's genelist tools
+* Require matplotlib 1.2.1 for tight_layout() option.
+* Call tight_layout() after each plot.
+* added :add-percent: option to tables.
 
 Version 2.0
 ===========
@@ -75,9 +106,9 @@ supported any more as the rpy2 module is not available for
 2.6.
 
 Python3 support is incomplete, the following will not work:
-   * eps rendering - segmentation fault
-   * scipy.stats - can't be imported
-   * web.py - pip install fails
+* eps rendering - segmentation fault
+* scipy.stats - can't be imported
+* web.py - pip install fails
 
 Version 1.2
 ===========
@@ -87,15 +118,15 @@ rpy integration
 
 plugin architecture
     A plugin architecture has been added to allow easy
-    extension of sphinxreport with additional renderes,
+    extension of cgatreport with additional renderes,
     transformers and plotting engines.
 
 data download
-   data from cache can be retrieved via the sphinxreport-get
+   data from cache can be retrieved via the cgatreport-get
    utility
 
 web server
-   sphinxreport-server has been added to serve a report 
+   cgatreport-server has been added to serve a report 
    and add interactive components.
 
 refactoring
@@ -123,7 +154,7 @@ load balancing
     how long it will take.
 
 logging
-    added summary of logging messages to ``sphinxreport-build``.
+    added summary of logging messages to ``cgatreport-build``.
 
 multi-figure layout
    implemented multi-figure layout using option
@@ -160,7 +191,7 @@ add hinton plot
    added hinton plot (see http://www.scipy.org/Cookbook/Matplotlib)
 
 --force option
-   add --clean or --force option to sphinxreport-test or build
+   add --clean or --force option to cgatreport-test or build
    automatically force a new build. See also the corresponding
    sphinx-build options.
 

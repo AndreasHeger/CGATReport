@@ -4,7 +4,7 @@
 Tutorial 12: Plotting with ggplot
 =================================
 
-The :class:`SphinxReportPlugins.GGPlotter.GGPlot` displays
+The :class:`CGATReportPlugins.GGPlotter.GGPlot` displays
 a dataframe using the python port (ggplot_) of the ggplot2_ package.
 
 ggplot2_ is a plotting system for R, based on the grammar of
@@ -21,76 +21,75 @@ the data frame and can thus be used within the ggplot statement::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: ggplot
-       :aes: 'experiment1', 'experiment2' 
-       :geom: geom_point()
+       :aes: 'expression' 
+       :geom: geom_histogram()
 
-       A simple plot
+       A simple histogram plot
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'experiment1', 'experiment2' 
-   :geom: geom_point()
+   :aes: 'expression', 
+   :geom: geom_histogram()
+   :layout: column-2
+   :width: 300
 
-   A simple plot
+   A simple histogram plot
 
-More interesting might be to plot a histogram::
+If we want to display multiple data sets on the same plot, the data
+needs to be grouped::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: ggplot
-       :aes: 'experiment1'
+       :aes: 'expression' 
        :geom: geom_histogram()
+       :groupby: all
 
        A histogram plot
-
+       
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'experiment1'
+   :aes: 'expression' 
    :geom: geom_histogram()
+   :groupby: all
+   :width: 300
 
    A histogram plot
 
-If we want to display multiple data sets on the same plot, the data
-needs to be melted::
+We can also colour by :term:`track`::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: ggplot
-       :transform: melt
-       :aes: 'Data', color='Track'
+       :aes: 'expression', color='track'
        :geom: geom_histogram()
-       :layout: column-2
+       :groupby: all
+       :width: 300
 
        A histogram plot
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :transform: melt
-   :aes: 'Data', color='Track'
+   :aes: 'expression', color='track'
    :geom: geom_histogram()
-   :layout: column-2
+   :groupby: all
+   :width: 300
 
    A histogram plot
 
 Creating a data frame from an SQL statement is a common use case. Say
 we want to create a plot with the correlation of expression values
 between two experiments. We implement the following :term:`tracker`
-that returns a :term:`data frame` ::
+that returns a :term:`data frame`:
 
-    from SphinxReport.Tracker import *
+.. literalinclude:: trackers/Tutorial9.py
 
-    class ExpressionLevels(TrackerSQL):
-	"""Expression level measurements."""
+Note how the data is arranged differently to the previous example::
 
-	def __call__(self, track ):
-	    statement = """SELECT e1.expression AS experiment1, 
-				e2.expression AS experiment2,
-				e1.function as gene_function
-				FROM experiment1_data as e1, 
-				     experiment2_data as e2
-				WHERE e1.gene_id = e2.gene_id"""
+.. report:: Tutorial9.ExpressionLevels
+   :render: dataframe
+   :head: 10
+   :tail: 10
 
-	    return self.getDataFrame( statement )
-
-Plotting can then be done directly without transformation::
+Plotting can be done thus::
 
     .. report:: Tutorial9.ExpressionLevels
        :render: ggplot
@@ -103,10 +102,12 @@ Plotting can then be done directly without transformation::
    :render: ggplot
    :aes: 'experiment1','experiment2' 
    :geom: geom_point()
+   :width: 300
 
    Correlation with expression values
    	       
-More interesting is to colour the different expression values by gene_function::
+More interesting is to colour the different expression values by
+gene_function::
 
     .. report:: Tutorial9.ExpressionLevels
        :render: ggplot
@@ -119,9 +120,10 @@ More interesting is to colour the different expression values by gene_function::
    :render: ggplot
    :aes: 'experiment1', 'experiment2', color='gene_function'
    :geom: geom_point()
+   :width: 300
 
    Correlation with expression values coloured by factor gene_function
 
-See options in :ref:`sphinxreport-test` for ways to do interactive 
+See options in :ref:`cgatreport-test` for ways to do interactive
 refinement of such plots.
 

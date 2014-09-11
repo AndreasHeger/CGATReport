@@ -5,15 +5,15 @@ Transformers
 ============
 
 Transformers change data before rendering. They are called by the
-``:transform:`` option. Transformers can be combined in a ``,``
-separated list.
+``:transform:`` option. 
+Transformers can be combined in a comma-separated list.
 
 .. _stats:
 
 stats
 =====
 
-The :class:`SphinxReportPlugins.Transformer.Stats` class computes
+The :class:`CGATReportPlugins.Transformer.Stats` class computes
 summary statistics of a :term:`numerical array`::
 
   .. report:: Trackers.SingleColumnDataExample
@@ -40,11 +40,12 @@ synonymous to :ref:`pearson`.
 pearson
 =======
 
-The :class:`SphinxReportPlugins.Transformer.TransformerCorrelationPearson` class computes
-Pearson correlation statistics between two or more :term:`numerical
-arrays`. 
-Each possible combination of arrays is tested and for each
-comparison a new dictionary is inserted with the result of the test.
+The
+:class:`CGATReportPlugins.Transformer.TransformerCorrelationPearson`
+class computes Pearson correlation statistics between two or more
+:term:`numerical arrays`.  Each possible combination of arrays is
+tested and for each comparison a new dictionary is inserted with the
+result of the test::
 
   .. report:: Trackers.MultipleColumnDataExample
      :render: table
@@ -63,10 +64,10 @@ comparison a new dictionary is inserted with the result of the test.
 spearman
 ========
 
-The :class:`SphinxReportPlugins.Transformer.TransformerCorrelationPearson` class computes
+The :class:`CGATReportPlugins.Transformer.TransformerCorrelationPearson` class computes
 Spearman correlation statistics between two or more :term:`numerical
 arrays`. Each possible combination of arrays is tested and for each
-comparison a new dictionary is inserted with the result of the test.
+comparison a new dictionary is inserted with the result of the test::
 
   .. report:: Trackers.MultipleColumnDataExample
      :render: table
@@ -85,11 +86,11 @@ comparison a new dictionary is inserted with the result of the test.
 test-mwu
 ========
 
-The :class:`SphinxReportPlugins.Transformer.TransformerMannWhitneyU`
+The :class:`CGATReportPlugins.Transformer.TransformerMannWhitneyU`
 class computes Mann-Whitney U test to test for the difference of medians
 between two or more :term:`numerical
 arrays`. Each possible combination of arrays is tested and for each
-comparison a new dictionary is inserted with the result of the test.
+comparison a new dictionary is inserted with the result of the test::
 
   .. report:: Trackers.MultipleColumnDataExample
      :render: table
@@ -105,95 +106,101 @@ comparison a new dictionary is inserted with the result of the test.
 
 .. _select:
 
-select
-======
+..
+   select
+   ======
 
-The :class:`SphinxReportPlugins.Transformer.TransformerSelect` selects
-one field from a :term:`data tree`.
+   The :class:`CGATReportPlugins.Transformer.TransformerSelect` selects
+   one field from a :term:`data tree`.
 
-  .. report:: Trackers.SingleColumnDataExample
-     :render: table
-     :transform: select,correlation
-     :tf-fields: data
+     .. report:: Trackers.SingleColumnDataExample
+	:render: table
+	:transform: select,correlation
+	:tf-fields: data
 
-     A pairwise statistics table.
+	A pairwise statistics table.
 
-.. report:: Trackers.SingleColumnDataExample
-   :render: table
-   :transform: select,correlation
-   :tf-fields: data
+   .. report:: Trackers.SingleColumnDataExample
+      :render: table
+      :transform: select,correlation
+      :tf-fields: data
 
-   A pairwise statistics table.
+      A pairwise statistics table.
 
-Options
--------
+   Options
+   -------
 
-The :class:`SphinxReportPlugins.Transformer.TransformerSelect` understands the
-following options:
+   The :class:`CGATReportPlugins.Transformer.TransformerSelect` understands the
+   following options:
 
-.. glossary::
+   .. glossary::
 
-   tf-fields
-      string
+      tf-fields
+	 string
 
-      fields to select. This option is required.
+	 fields to select. This option is required.
 
-Without slices
---------------
+   Without slices
+   --------------
 
-Compute correlation statistics between tracks/slices for a single column
+   Compute correlation statistics between tracks/slices for a single column
 
-.. report:: Trackers.SingleColumnDataExampleWithoutSlices
-   :render: table
-   :transform: select,correlation
-   :tf-fields: data
+   .. report:: Trackers.SingleColumnDataExampleWithoutSlices
+      :render: table
+      :transform: select,correlation
+      :tf-fields: data
 
-   A pairwise statistics table.
+      A pairwise statistics table.
 
-Compute correlation statistics between all columns.
+   Compute correlation statistics between all columns.
 
-.. report:: Trackers.MultipleColumnDataExample
-   :render: matrix
-   :transform: correlation,select
-   :tf-fields: coefficient
-   :format: %6.4f
+   .. report:: Trackers.MultipleColumnDataExample
+      :render: matrix
+      :transform: correlation,select
+      :tf-fields: coefficient
+      :format: %6.4f
 
-   Matrix of correlation coefficients
+      Matrix of correlation coefficients
 
 .. _filter:
 
 filter
 ======
 
-The :class:`SphinxReportPlugins.Transformer.TransformerFilter` removes
-one or more fields from a :term:`data tree`.
+The :class:`CGATReportPlugins.Transformer.TransformerFilter` removes
+one or more fields from a :term:`data tree`:
 
-  .. report:: Trackers.MultipleColumnDataExample
-     :render: line-plot
-     :transform: histogram,filter
-     :tf-bins: arange(0,10)
-     :tf-fields: col1
-     :tf-level: 2
-     :layout: row
-     :width: 200
-
-     A histogram plot, but only with *col1* selected
+Input:
 
 .. report:: Trackers.MultipleColumnDataExample
-   :render: line-plot
-   :transform: histogram,filter
-   :tf-bins: arange(0,10)
-   :tf-fields: col1
-   :tf-level: 2
-   :layout: row
-   :width: 200
+   :render: dataframe
+   :head: 5
+    
+   Input data
 
-   A histogram plot, but only with *col1* selected
+Transformation::
+
+   .. report:: Trackers.MultipleColumnDataExample
+      :render: dataframe
+      :transform: filter
+      :tf-fields: col1
+
+      Output
+
+Output:
+
+.. report:: Trackers.MultipleColumnDataExample
+   :render: dataframe
+   :head: 5
+   :transform: filter
+   :tf-fields: col1
+
+   Output
 
 Options
 -------
 
-The :class:`SphinxReportPlugins.Transformer.TransformerFilter` understands the
+The :class:`CGATReportPlugins.Transformer.TransformerFilter` understands the
 following options:
 
 .. glossary::
@@ -213,29 +220,42 @@ following options:
 histogram
 =========
 
-The :class:`SphinxReportPlugins.Transformer.Histogram` class computes a histogram
-of ``numerical array` and inserts it as a table::
+The :class:`CGATReportPlugins.Transformer.Histogram` class computes a histogram
+of ``numerical array` and inserts it as a table.
+
+Input:
+
+.. report:: Trackers.SingleColumnDataExample
+   :render: dataframe
+   :head: 5
+   :tail: 5
+
+   Input data
+
+Transformation::
 
    .. report:: Trackers.SingleColumnDataExample
-      :render: line-plot
+      :render: dataframe
       :transform: histogram
       :tf-bins: arange(0,10)
 
       A histogram.
 
+Output:
+
 .. report:: Trackers.SingleColumnDataExample
-   :render: line-plot
+   :render: dataframe
    :transform: histogram
    :tf-bins: arange(0,10)
-   :layout: row
-   :width: 200
+   :head: 5
+   :tail: 5
   
    A histogram.
 
 Options
 -------
 
-The :class:`SphinxReportPlugins.Transformer.Histogram` understands the
+The :class:`CGATReportPlugins.Transformer.Histogram` understands the
 following options:
 
 .. glossary::
@@ -260,7 +280,7 @@ following options:
       bins in the given range (10, by default). If `bins` is a sequence,
       it defines the bin edges, including the rightmost edge, allowing
       for non-uniform bin widths.
-      (From the sphinxreport`numpy` documentation)
+      (From the cgatreport`numpy` documentation)
       If bins is of the format ''log-X'' with X an integer number, X 
       logarithmig bins will be used. 
       If bins is ''dict'', then the histogram will be computed using a
@@ -294,163 +314,195 @@ Working with multiple columns
    A histogram plot.
 
 
-.. Multihistogram plot
-.. ===================
-
-.. .. report:: TestCases.MultipleHistogramTest
-..    :render: multihistogram-plot
-..    :as-lines:
-..    :layout: grid
-..    :mpl-rc: figure.figsize=(3,3)
-
-..    testing multiple histograms with grid layout.
-
 .. _aggregate:
 
 aggregate
 =========
 
-The :class:`SphinxReportPlugins.Transformer.Aggregate` takes
+The :class:`CGATReportPlugins.Transformer.Aggregate` takes
 histogrammed data and performs various aggregation or normalization
-tasks.
+tasks. The dataframe needs to have two columns and the aggregation
+is performed on all columns but the first, which is assumed
+to be the histogram bins.
 
-The transformer expects dictionaries of lists of numerical values. 
-The first list is assumed to be bins and not transformed.
+Input:
+
+.. report:: Trackers.ArrayDataExample
+   :render: dataframe
+   :head: 5
+   :tail: 5
+      		  
+   Input data
+
+Transformation::
 
    .. report:: Trackers.ArrayDataExample
       :render: line-plot
       :transform: aggregate
       :tf-aggregate: cumulative
-      		  
-      cumulative data
+
+      Data output
+
+Output:
 
 .. report:: Trackers.ArrayDataExample
-   :render: line-plot
+   :render: dataframe
    :transform: aggregate
    :tf-aggregate: cumulative
+   :head: 5
+   :tail: 5
       		  
-   cumulative data
+   Cumulative data.
 
-.. _tolist:
+..
+   .. _tolist:
 
-toList
-======
+   toList
+   ======
 
-The :class:`SphinxReportPlugins.Transformer.List` takes
-labeled data and converts it into lists. For example,
-if you have the following data::
+   The :class:`CGATReportPlugins.Transformer.List` takes
+   labeled data and converts it into lists. For example,
+   if you have the following data::
 
-   data1/x/1/2   data1/y/1/4
-   data2/x/2/4   data2/y/2/5
-   data3/x/3/3   data3/y/3/5
-   data4/x/4/4   data4/y/4/6
+      data1/x/1/2   data1/y/1/4
+      data2/x/2/4   data2/y/2/5
+      data3/x/3/3   data3/y/3/5
+      data4/x/4/4   data4/y/4/6
 
-Transformation results in:
+   Transformation results in:
 
-   x/(2,4,3,4)
-   y/(4,5,5,6)
+      x/(2,4,3,4)
+      y/(4,5,5,6)
 
-Note how the higher level of the path is discarded. The operation is
-in some ways the reverse of the :ref:`tolables` transformation.
+   Note how the higher level of the path is discarded. The operation is
+   in some ways the reverse of the :ref:`tolables` transformation.
 
-.. _group:
+..
+   .. _group:
 
-group
-=====
+   group
+   =====
 
-.. _indicator:
+   .. _indicator:
 
-indicator
-=========
+   indicator
+   =========
 
-.. _tolabels:
+   .. _tolabels:
 
-tolabels
-========
+   tolabels
+   ========
 
-The :class:`SphinxReportPlugins.Transformer.TransformerToLabels` converts
-:term:`numerical arrays` to :term:`labeled data`. Imagine you have the following
-data::
-   
-   data1/x/(2,4,3,4)
-   data1/y/(4,5,5,6)
+   The :class:`CGATReportPlugins.Transformer.TransformerToLabels` converts
+   :term:`numerical arrays` to :term:`labeled data`. Imagine you have the following
+   data::
 
-These data can be displayed as a :ref:`scatter-plot` or a :ref:`line-plot`. However,
-if you tried displaying these as a :ref:`bar-plot` you will get a ``malformatted data``
-error message as :ref:`bar-plot` expects :term:`labeled data`. 
+      data1/x/(2,4,3,4)
+      data1/y/(4,5,5,6)
 
-The :ref:`tolabels` transformation can help transform the data. In the example above,
-the transformation would result in::
+   These data can be displayed as a :ref:`scatter-plot` or a :ref:`line-plot`. However,
+   if you tried displaying these as a :ref:`bar-plot` you will get a ``malformatted data``
+   error message as :ref:`bar-plot` expects :term:`labeled data`. 
 
-   data1/x/1/2   data1/y/1/4
-        /x/2/4        /y/2/5
-	/x/3/3        /y/3/5
-        /x/4/4        /y/5/6
+   The :ref:`tolabels` transformation can help transform the data. In the example above,
+   the transformation would result in::
+
+      data1/x/1/2   data1/y/1/4
+	   /x/2/4        /y/2/5
+	   /x/3/3        /y/3/5
+	   /x/4/4        /y/5/6
+
+      .. report:: Trackers.MultipleColumnDataExample
+	 :render: interleaved-bar-plot
+	 :transform: tolabels
+
+	 An interleaved bar plot
 
    .. report:: Trackers.MultipleColumnDataExample
       :render: interleaved-bar-plot
       :transform: tolabels
 
-      An interleaved bar plot
+       An interleaved bar plot
 
-.. report:: Trackers.MultipleColumnDataExample
-   :render: interleaved-bar-plot
-   :transform: tolabels
+   Options
+   -------
 
-    An interleaved bar plot
+   The :class:`CGATReportPlugins.Transformer.TransformerFilter` understands the
+   following options:
 
-Options
--------
+   .. glossary::
 
-The :class:`SphinxReportPlugins.Transformer.TransformerFilter` understands the
-following options:
+      tf-fields
+	 string
 
-.. glossary::
+	 fields to select. This option is required.
 
-   tf-fields
-      string
+      tf-level
+	 int
 
-      fields to select. This option is required.
-
-   tf-level
-      int
-
-      level in the :term:`data tree` on which to act.
+	 level in the :term:`data tree` on which to act.
 
 .. _melt:
 
 melt
 ====
 
-The :class:`SphinxReportPlugins.Transformer.TransformerMelt` creates a melted table. See
-`<http://scienceoss.com/restructure-or-reformat-dataframes-in-r-with-melt>
-here`_ for an example.
+The :class:`CGATReportPlugins.Transformer.TransformerMelt` creates a
+melted table. See
+`here <http://scienceoss.com/restructure-or-reformat-dataframes-in-r-with-melt>`_
+for an example.
 
-For example::
+CGATReport will call the
+`melt <http://pandas.pydata.org/pandas-docs/stable/generated/pandas.melt.html>`_
+function in pandas_, the index will be used as the ``identifier``
+variables and all columns as ``value`` variables.  For example, melting the
+following dataframe:
 
-        Input:                                 Output
-        experiment1/Sample1 = [1]              Track = ["experiment1","experiment1","experiment2","experiment2"]
-        experiment1/Sample2 = [3]              Slice = ["Sample1","Sample2","Sample1","Sample2"]
-        experiment2/Sample1 = [1]              Data =  [1,3,1,3]
-        experiment2/Sample2 = [3]
+.. report:: Trackers.MultipleColumnDataExample
+   :render: dataframe
+   :groupby: all
+   :head: 5
+   :tail: 5
 
-:class:`SphinxReportPlugins.Transformer.TransformerMelt` has no options.
+   Input dataframe
+
+Transformation::
+
+    .. report:: Trackers.MultipleColumnDataExample
+       :render: dataframe
+       :groupby: all
+       :transform: melt
+
+       Output
+
+will result in:
+
+.. report:: Trackers.MultipleColumnDataExample
+   :render: dataframe
+   :groupby: all
+   :transform: melt
+   :head: 5
+   :tail: 5
+
+   Output dataframe
+
+:class:`CGATReportPlugins.Transformer.TransformerMelt` has no options.
 
 .. _venn:
 
 venn
 ====
 
-The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerVenn`
+The :class:`CGATReportPlugins.TransformersGeneLists.TransformerVenn`
 takes a dictionary of lists and transforms the data so that it is in
 the correct format for plotting a venn diagram of the overlaps between
 the lists. This :term:`Transformer` understand the following options:
 
 .. glossary::
-   
+
    keep-background
       flag
-      
+
       keep background data
 
 
@@ -459,7 +511,7 @@ the lists. This :term:`Transformer` understand the following options:
 hypergeometric
 ==============
 
-The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerHypergeometric`
+The :class:`CGATReportPlugins.TransformersGeneLists.TransformerHypergeometric`
 takes a dictionary of lists and calculates the enrichements and
 p-values for the overlaps using the hypergeometric distribution. If
 there are more than two lists, all pairwise combinations will be
@@ -470,15 +522,15 @@ computed. This :term:`Transformer` has no options.
 p-adjust
 ========
 
-The :class:`SphinxReportPlugins.TransformersGeneLists.TransformerMultiTest`
+The :class:`CGATReportPlugins.TransformersGeneLists.TransformerMultiTest`
 looks for a P-value column in a table and computes multiple testing
-corrected p-values and adds these as a new column to the table. 
+corrected p-values and adds these as a new column to the table.
 
 By default all p-values from all levels are corrected together. In
 order to change this behavoir use the adj-levels option.  The
 original data tree is returned with an added P-adjust entry. The
 default method for correction is BH, but other R style correction
-methods can be specified with the option `adj-method`.  
+methods can be specified with the option `adj-method`.
 
 This :term:`Transformer` has the following options:
 
@@ -486,7 +538,7 @@ This :term:`Transformer` has the following options:
 
    adj-level
       int
-      
+
       Group tests from all levels below for adjustment.
 
    adj-method
@@ -507,7 +559,7 @@ This :term:`Transformer` has the following options:
 count
 =====
 
-The :class:`SphinxReportPlugins.Transformer.TransformerCount` computes
+The :class:`CGATReportPlugins.Transformer.TransformerCount` computes
 the numbers of values in a data tree. Displaying a table of counts can often be useful to
 summarize the number of entries in a list prior to plotting.
 
@@ -517,7 +569,7 @@ This :term:`Transformer` has the following options:
 
    level
       int
-      
+
       Level in the :term:`datatree` hierarchy at which to count.
 
 

@@ -5,7 +5,7 @@ Tutorials
 *********
 
 The tutorials provide step-by-step introductions to the 
-main features of sphinxreport.
+main features of cgatreport.
 
 Tutorials
 =========
@@ -25,6 +25,8 @@ Tutorials
    Tutorial10.rst
    Tutorial11.rst
    Tutorial12.rst
+   Tutorial13.rst
+   Tutorial14.rst
 
 Tutorial results
 ================

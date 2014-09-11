@@ -2,11 +2,11 @@
 Example Use Case
 =====================
 
-This document explains how to use sphinxreport by building a report
+This document explains how to use cgatreport by building a report
 using an example database.
 
 This is a typical use case. Usually you would have some automated
-process or pipeline that generates data. Sphinxreport can then be
+process or pipeline that generates data. CGATReport can then be
 used to write interactively an reproducible report on the data. 
 
 Background
@@ -16,7 +16,7 @@ The database is from a short-read mapping experiment.
 
 Download the datab for this use case from:
 
-   wget http://www.cgat.org/~andreas/documentation/SphinxReportExamples/data/usecase1/csvdb
+   wget http://www.cgat.org/~andreas/documentation/CGATReportExamples/data/usecase1/csvdb
 
 The file :file:`csvdb` is an sqlite database. It contains summary data
 created by the CGAT short read mapping pipeline. 
@@ -63,10 +63,10 @@ view_mapping
 Setting up the report
 =====================
 
-The aim of SphinxReport is to make report writing easy. To get going,
+The aim of CGATReport is to make report writing easy. To get going,
 type::
 
-   sphinxreport-quickstart -d report
+   cgatreport-quickstart -d report
 
 This will create a skeleton report in the directory :file:`report`. The main page is
 :file:`contents.rst` and it has two sections, :file:`pipeline.rst`
@@ -77,9 +77,9 @@ Let us enter the :file:`report` directory and see if the report builds::
    cd report
    make html; firefox _build/html/contents.html
 
-SphinxReport lets you write your report as you perform the analysis.
-Before we start, let us tell SphinxReport where to find our database.
-To do this, open the file :file:`sphinxreport.ini` and change the line::
+CGATReport lets you write your report as you perform the analysis.
+Before we start, let us tell CGATReport where to find our database.
+To do this, open the file :file:`cgatreport.ini` and change the line::
 
    sql_backend=sqlite:///./csvdb
 
@@ -90,7 +90,7 @@ following should work::
 
    sql_backend=sqlite:///../csvdb
 
-There are many options in :file:`sphinxreport.ini` and :file:`conf.py`
+There are many options in :file:`cgatreport.ini` and :file:`conf.py`
 that govern the look and feel of the report. They are very well worth
 experimenting with, but in this example we will go straight to the analysis.
 
@@ -116,11 +116,11 @@ To do this, we need to define a data source. Open the
 
 This short statement creates a new :term:`Tracker`. It is derived
 from the class
-:class:`SphinxReport.Tracker.SingleTableTrackerRows`. This tracker
+:class:`CGATReport.Tracker.SingleTableTrackerRows`. This tracker
 collects data from a single table with multiple tracks. To check if
 it works, type on the command line::
 
-   sphinxreport-test -r table -t ReadsSummary
+   cgatreport-test -r table -t ReadsSummary
 
 Now you can simply copy and paste the template into the file
 :file:`analysis/Results.rst`::
@@ -137,14 +137,14 @@ As this changes only the representation of the data while the data
 itself remains unchanged, we can re-use the existing :term:`Tracker`.
 Type on the command line::
 
-   sphinxreport-test -r interleaved-bar-plot -t ReadsSummary
+   cgatreport-test -r interleaved-bar-plot -t ReadsSummary
 
-:ref:`sphinxreport-test` can be used to fine-tune the representation
+:ref:`cgatreport-test` can be used to fine-tune the representation
 of a plot. For example, let us get rid of the legend::
 
-   sphinxreport-test -r interleaved-bar-plot -t ReadsSummary -o legend-location=none
+   cgatreport-test -r interleaved-bar-plot -t ReadsSummary -o legend-location=none
 
-All options accessible in sphinxreport can be passed to the :term:`Renderer`
+All options accessible in cgatreport can be passed to the :term:`Renderer`
 with the ``-o/--option`` keyword argument.
 
 Now paste the following into :file:`analysis/Results.rst`::
@@ -178,11 +178,11 @@ We can now re-build the report and examine the result::
    make html; firefox _build/html/contents.html
 
 This short example illustrates the typical workflow when
-writing a report with sphinxreport:
+writing a report with cgatreport:
 
    1. Write a :term:`Tracker` to collect the data.
-   2. Test the data source with :ref:`sphinxreport-test`.
-   3. Refine the representation with :ref:`sphinxreport-test`.
+   2. Test the data source with :ref:`cgatreport-test`.
+   3. Refine the representation with :ref:`cgatreport-test`.
    4. Interprete the data with different representations/trackers.
    5. Write thoughts into restructured text document and add
       macro to display data supporting the text.
@@ -200,7 +200,7 @@ by simply pointing to a different database.
    1. An editor (such as emacs) with multiple buffers open (rst-file,
       python-file with trackers, ...) - usually side-by-side in 
       a split window.
-   2. A command line shell for testing with :ref:`sphinxreport-test`
+   2. A command line shell for testing with :ref:`cgatreport-test`
       and exploring the database via SQL commands.
    3. A web browser (firefox) with multiple tabs pointed at the
       various parts of the report that are in progress.
@@ -214,7 +214,7 @@ Tracks and slices
 Now that we now where we started, let us add some results. In this
 section we introduce :term:`tracks` and :term:`slices` more thoroughly. 
 
-:term:`tracks` and :term:`slices` are sphinxreport
+:term:`tracks` and :term:`slices` are cgatreport
 terminology. An alternative labeling would be as ``track=dataset`` and
 ``slice=measurement``. For example, :term:`tracks` or data sets could be ``mouse``,
 ``human``, ``rabbit`` and :term:`slices` or measurements could be ``height`` and
@@ -244,27 +244,27 @@ specified. Each field in a row is a different :term:`slice`.
 
 Again, you can test the tracker on the command line::
 
-   sphinxreport-test -r table -t BamStats
+   cgatreport-test -r table -t BamStats
 
 Wait, no table? The output you will see is::
 
     `60 x 27 table <#$html $#>`__
 
-By default, sphinxreport puts large tables into a separate file and
+By default, cgatreport puts large tables into a separate file and
 links to it. In order to see it on the command line or force entering it into the
 main page, add the ``force`` option::
 
-   sphinxreport-test -r table -t BamStats -o force
+   cgatreport-test -r table -t BamStats -o force
 
 Now we get the table, but we feel it is too large to enter into the
 report. Let us enter just the slices we are interested in, such as
 the reads in the :term:`bam` file and the number of mapped reads::
 
-   sphinxreport-test -r table -t BamStats -o force -o slices=reads_total,reads_mapped
+   cgatreport-test -r table -t BamStats -o force -o slices=reads_total,reads_mapped
 
 Again, we would prefer displaying the data as a bar plot::
 
-   sphinxreport-test -r interleaved-bar-plot -t BamStats -o force -o slices=reads_total,reads_mapped
+   cgatreport-test -r interleaved-bar-plot -t BamStats -o force -o slices=reads_total,reads_mapped
 
 Copy the template into :file:`analysis/Results.rst`, maybe with some text::
 
@@ -308,7 +308,7 @@ our own tracker::
    			FROM bam_stats WHERE track = '%(track)s'""")
 
 As before, try out the tracker on the command line and fine-tune the
-representation with :ref:`sphinxreport-test`. Once happy, enter into
+representation with :ref:`cgatreport-test`. Once happy, enter into
 the report::
 
     Quoth the star (in percent):
@@ -363,7 +363,7 @@ contents of the variable names ``track`` and ``slice``.
 Now that we have the data, we can test the tracker. A good way to do
 this is by using the :class:`Debug` renderer. Type on the command line::
 
-   sphinxreport-test -r debug -t TranscriptCoverage
+   cgatreport-test -r debug -t TranscriptCoverage
 
 The tracker works and we can display it using a boxplot. Add the
 following to :file:`analysis/Results.rst`::
@@ -383,12 +383,12 @@ following to :file:`analysis/Results.rst`::
 Let us say we wanted to display the densities. To do this we need to
 transform the data points into a histogram. This conversion could be
 encoded into a separate tracker, but in order to permit re-use of trackers
-as much as possible, sphinxreport allows you to add transformations
+as much as possible, cgatreport allows you to add transformations
 to data before it is rendered. The transformer we need here is 
 :class:`TransformerHistogram`. Again, the :class:`Debug` renderer can
 show us what is happening::
 
-   sphinxreport-test -r debug -t TranscriptCoverage -m histogram
+   cgatreport-test -r debug -t TranscriptCoverage -m histogram
 
 Note how each measurement is transformed from a simple list of values
 to a dictionary of two items, a list of bins and a list of values. 
@@ -406,12 +406,12 @@ Add the following to :file:`analysis/Results.rst`::
 
 At this stage, my report looks like this:
 
-http://www.cgat.org/~andreas/documentation/SphinxReportExamples/usecase1/_build/html/analysis/Results.html
+http://www.cgat.org/~andreas/documentation/CGATReportExamples/usecase1/_build/html/analysis/Results.html
 
 Conclusions
 ===========
 
-In this worked example we have introduced how sphinxreport can be used
+In this worked example we have introduced how cgatreport can be used
 to perform interactive and reproducible analysis. 
 
 Further on
@@ -476,7 +476,15 @@ Using this use case, try to implement the following analyses:
    .. note::
       Think about ordering the table.
 
+.. glossary::
 
+   bam
+      a genomic file format
+
+
+.. _bowtie: http://bowtie-bio.sourceforge.net/index.shtml
+.. _tophat: http://tophat.cbcb.umd.edu/index.shtml
+.. _star: http://code.google.com/p/rna-star/
 
 
 

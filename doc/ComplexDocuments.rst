@@ -28,11 +28,11 @@ In fact, separation of the three is good practice:
 Code organization
 =================
 
-Sphinxreport is a framework. Additional :term:`renderers` and :term:`transformers`
+CGATReport is a framework. Additional :term:`renderers` and :term:`transformers`
 can be added as plugins, which is covered elsewhere.
 
 :term:`trackers` are report specific. As the complexity of a report
-increases so will the number of trackers. Sphinxreport does not impose
+increases so will the number of trackers. CGATReport does not impose
 any restrictions on how trackers are organized as long as they can be
 imported through python. Thus, :term:`trackers` can be a simple
 collection of functions in a single file or a complex class hierarchy of functors
@@ -75,7 +75,7 @@ Document organization
 
 Our philosophy in data analysis is to plot everything - if you plot a certain
 pie-chart for one data set, plot it for all data sets to make sure it
-is typical or atypical. Sphinxreport's mechanism of tracks and slices
+is typical or atypical. CGATReport's mechanism of tracks and slices
 automates plotting everything. However, once too many plots are
 created, pages become quickly hard too navigate and the interpretation
 is lost among a forest of plots.

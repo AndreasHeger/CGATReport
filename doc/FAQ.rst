@@ -28,15 +28,15 @@ I get the error message ``RuntimeError: maximum recursion depth exceeded while c
 This is possibly a data type error. If the type of a database column is defined as text (for example
 if there are so few values that the correct type can not be guessed), the Trackers might return a
 string instead of a numeric value, for example ``(u'0.64425349087',)`` instead of ``(u'0.64425349087',)``.
-These should be caught by the sphinxreport`SphinxReport.DataTypes`.
+These should be caught by the cgatreport`CGATReport.DataTypes`.
 
-sphinxreport-build freezes keyboard and mouse when run with multiple processes
+cgatreport-build freezes keyboard and mouse when run with multiple processes
 ******************************************************************************
 
-When running sphinxreport-build, the keyboard and mouse freezes. The only remedy
+When running cgatreport-build, the keyboard and mouse freezes. The only remedy
 is to kill the processes remotely. Then, the following message appears::
 
-   sphinxreport-build: Fatal IO error 0 (Success) on X server :0.0
+   cgatreport-build: Fatal IO error 0 (Success) on X server :0.0
 
 This seems to be a problem with combining matplotlib and multiprocessing. Possibly, 
 the first time a plot command is called that process receives the X connection and 
@@ -46,8 +46,8 @@ other processes will then hang. The solutions are to either
    GTKAgg does not. To change the matplotlib backend, edit your :file:`matplotlibrc` file.
    Or, 
 
-2. only run sphinxreport, not sphinxreport-build. Instead of
-   ``sphinxreport-build --num-jobs=4 sphinx-build -b html -d _build/doctrees   . _build/html``
+2. only run cgatreport, not cgatreport-build. Instead of
+   ``cgatreport-build --num-jobs=4 sphinx-build -b html -d _build/doctrees   . _build/html``
    run
    ``sphinx-build -b html -d _build/doctrees   . _build/html``
 

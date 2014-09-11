@@ -5,7 +5,7 @@ Renderers
 =========
 
 The section contains an overview of all the plots
-that are included in sphinxreport.
+that are included in cgatreport.
 
 .. toctree::
    :maxdepth: 2
@@ -30,3 +30,4 @@ that are included in sphinxreport.
    GalleryDebug.rst
    GalleryLegends.rst
    GalleryOptions.rst
+   GalleryBokeh.rst

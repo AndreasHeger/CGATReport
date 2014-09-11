@@ -4,12 +4,12 @@
 Developer's guide
 =================
 
-.. _Extending sphinxreport:
+.. _Extending cgatreport:
 
-Extending SphinxReport
+Extending CGATReport
 ======================
 
-sphinxreport provides a component architecture 
+cgatreport provides a component architecture 
 for adding new capabilities. Components provide the following 
 functions:
 
@@ -32,12 +32,11 @@ Modules documentation
    Server.rst
    Tracker.rst
    DataTypes.rst
-   Component.rst
 
 Contributions
 =============
 
-The following people contributed to SphinxReport:
+The following people contributed to CGATReport:
 
 Andreas Heger 
 Ian Sudbery

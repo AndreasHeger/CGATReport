@@ -5,10 +5,10 @@ DataTree
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: SphinxReport.DataTree
+.. inheritance-diagram:: CGATReport.DataTree
    :parts: 1
 
-sphinxreport`DataTree`
+cgatreport`DataTree`
 =======================
 
 .. automodule:: DataTree

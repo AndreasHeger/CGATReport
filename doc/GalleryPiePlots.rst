@@ -1,7 +1,7 @@
 pie-plot
 ========
 
-The :class:`SphinxReportPlugins.Plotter.PiePlot` class presents :term:`labeled values`
+The :class:`CGATReportPlugins.Plotter.PiePlot` class presents :term:`labeled values`
 as pie charts. For example:
 
 .. report:: Trackers.LabeledDataExample
@@ -14,7 +14,7 @@ as pie charts. For example:
 Options
 -------
 
-:class:`SphinxReportPlugins.Plotter.PiePlot` understands the
+:class:`CGATReportPlugins.Plotter.PiePlot` understands the
 :ref:`common plot options` and the following options:
 
 .. glossary::

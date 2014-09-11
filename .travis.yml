@@ -1,0 +1,13 @@
+
+language: python
+
+python:
+  - "2.7"
+
+script: 
+   - ./install.sh --travis
+
+notifications:
+  email:
+    - andreas.heger@gmail.com
+

@@ -6,43 +6,51 @@ Glossary
    :sorted:
 
    report
-      The restructured text directive supplied by the SphinxSqlPlot extension.
+      The restructured text directive supplied by CGAReport.
+
+   dataframe
+      A dictionary like data structure for tabular data.
+      Dataframes have been implemented in pandas_
+
+   hierarchical index
+      Rows (and columns) can be indexed in a pandas_
+      :term:`dataframe`. This indexing can be done on
+      multiple levels. CGATReport uses a hierachical
+      index on rows to separate data sets. The first
+      two levels are called :term:`track` and :term:`slice`.
 
    track
+   tracks
       A data set, for example species like "frog", "mouse", and "dog".
 
-   tracks
-      see :term:`track`      
-
    slice
+   slices
       A measurement of a data set, for example 'height', 'weight', but also
       a slice of subset of data, for example gender like "male" and
       "female" 
 
-   slices
-      see :term:`slice`      
-
    tracker
+   trackers
       A python function or functor returning data, see
-      :class:`SphinxReport.Tracker.Tracker`.
+      :class:`CGATReport.Tracker.Tracker`.
 
    transformer
+   transformers
       A python class transforming data before rendering. 
 
    renderer
+   renderers
       An object displaying data returned from a :term:`Tracker`.
 
    path
       Data is stored hierarchically in a nested dictionary. The sequence of keys to 
       access a data item is called the path.
 
-   functor
-      A python object that can be used as a function. Functors define a ``__call__`` method. 
-
-   labeled values
-      ``label, value`` pairs in a nested dictionary. This
-      data structure is understood by many renderers. An example of
-      labeled data is::
+   functor 
+      A python object that can be used as a function. Functors
+      define a ``__call__`` method.  labeled values ``label, value``
+      pairs in a nested dictionary. This data structure is understood
+      by many renderers. An example of labeled data is::
 
             blue/car/wheels=4
       	    blue/car/doors=3
@@ -62,6 +70,7 @@ Glossary
          red/car/tankfillings=(30,30,35,30,20)
          red/car/pumpprices=(30,32,30,32,21)
 
+   matrix
    matrices
       matrices are represented as a dictionary with the three mandatory
       entries: ``matrix``, ``rows``, ``columns``. The matrix field
@@ -72,18 +81,29 @@ Glossary
 	 rows=["row1", "row2"]
 	 columns=["column1", "column2", "column3"]
    
+   data frame
    data frames
        is a generic data container used in R. 
 
+   labeled values
+      Labeled values are the most basic type of data in the data tree.
+      Values are atomic and can be numbers or strings.
+
+            car/wheels/4
+            car/colour/blue
+	    bike/wheels/4
+	    bike/color/red
+
    labeled values with errors
-      :term:`labeled values` can be extended with labels or errors.
+      :term:`labeled values` can be extended with errors or labels
+      using the words ``error`` and ``label``, respectively.
 
             blue/car/wheels/data=4
-            blue/car/wheels/data=4
-
-
-      Here, ``blue`` and ``red`` are a :term:`track`, ``car`` and
-      ``bike`` are a :term:`slice` and ``weels=4`` is a ``label,value`` pair.
+            blue/car/wheels/error=1
+            blue/car/wheels/label=mycar
+            red/bike/wheels/data=4
+            red/bike/wheels/error=0
+            red/bike/wheels/label=mybike
 
    source directory
       The directory which, including its subdirectories, contains all source
@@ -99,3 +119,4 @@ Glossary
 
    data path
       path towards some data in a :term:`data tree`.
+

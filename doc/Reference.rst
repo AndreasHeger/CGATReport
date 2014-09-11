@@ -5,7 +5,7 @@ Reference
 *********
 
 This section contains a list of all renderes, trackers,
-transformers and roles that are packaged with sphinxreport.
+transformers and roles that are packaged with cgatreport.
 
 To make best use of the examples, use  the
 ``Show Source`` link in the left navigation bar
@@ -153,7 +153,7 @@ Superfluous options are ignored.
    legend-location
       choice
 
-      specify the location of the legend. See sphinxreportmatplotlib
+      specify the location of the legend. See cgatreportmatplotlib
       for the basic options. Additional options are prefixed by ``outer``
       to place the legend outside a plot. Specify ``none`` to show no legend.
       The default option ``outer-top`` displays the legend above the plot. 

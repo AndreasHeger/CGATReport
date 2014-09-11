@@ -7,13 +7,13 @@ Trackers
 The purpose of a :term:`tracker` is to provide data for rendering.
 As such, they need not follow strict rules - at minimum they
 just need to callable and return a dictionary of values.
-Users of sphinxreport are encouraged to build their own
+Users of cgatreport are encouraged to build their own
 collection of :term:`trackers`.
 
-However, sphinxreport comes with a collection of :term:`trackers`
+However, cgatreport comes with a collection of :term:`trackers`
 that cover some common use cases, in particular when working with
 data organized in SQL databases. This section contains an overview 
-of the trackers included in sphinxreport. The use of the
+of the trackers included in cgatreport. The use of the
 :term:`trackers` here is optional.
 
 Special purpose trackers
@@ -29,7 +29,7 @@ Special purpose trackers
 Accessing SQL tables
 ====================
 
-Very often, sphinxreport is used to display data from an SQL database.
+Very often, cgatreport is used to display data from an SQL database.
 This section describes a set of utility trackers that permit easy
 retrieval from SQL databases.
 
@@ -56,13 +56,13 @@ given by the option::
    [report] 
    sql_backend=...
 
-in :file:`sphinxreport.ini`. It will query the database for tables
-matching the pattern and define these as :term:`tracks`. Sphinxreport
+in :file:`cgatreport.ini`. It will query the database for tables
+matching the pattern and define these as :term:`tracks`. CGATReport
 will then call the tracker with each track to extract the relevant
 data from the database.
 
 :class:`~TrackerSQL` is a very generic way to get data from SQL tables.
-Some additional utility trackers are part of Sphinxreport that cover
+Some additional utility trackers are part of CGATReport that cover
 some common use cases:
 
 :class:`~.SingleTableTrackerRows`

@@ -7,7 +7,7 @@ Tutorial 4
 Using slices
 ============
 
-.. report:: Tutorial3.WordCounterWithSlices
+.. report:: Tutorial4.WordCounterWithSlices
    :render: line-plot
    :transform: histogram
    :tf-range: 0,100,1
@@ -17,7 +17,7 @@ Using slices
 Using tracks
 ============
 
-.. report:: Tutorial3.WordCounterWithSlices
+.. report:: Tutorial4.WordCounterWithSlices
    :render: line-plot
    :transform: histogram
    :tf-range: 0,100,1
@@ -28,7 +28,7 @@ Using tracks
 Selecting tracks and slices
 ===========================
 
-.. report:: Tutorial3.WordCounterWithSlices
+.. report:: Tutorial4.WordCounterWithSlices
    :render: line-plot
    :transform: histogram
    :tf-range: 0,100,1
