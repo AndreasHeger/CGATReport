@@ -6,7 +6,7 @@ import glob
 import itertools
 import numpy
 
-from SphinxReport.Tracker import Tracker, Status
+from CGATReport.Tracker import Tracker, Status
 from collections import OrderedDict as odict
 import collections
 

@@ -4,10 +4,10 @@ import re
 import random
 import glob
 
-from SphinxReport.Tracker import Tracker
+from CGATReport.Tracker import Tracker
 from collections import OrderedDict as odict
-from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
-from SphinxReport import Utils
+from CGATReport.ResultBlock import ResultBlock, ResultBlocks
+from CGATReport import Utils
 
 
 import matplotlib

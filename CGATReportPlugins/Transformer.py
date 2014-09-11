@@ -620,28 +620,19 @@ class TransformerFilter(Transformer):
 
 
 class TransformerStats(Transformer):
+    '''Compute summary statistics for each
+    column in a table.
 
-    '''Compute summary statistics
-
-    For example::
-
-       Input:
-       [1,2,3,4,5,6,7,8,9,10]
-
-       Output:
-       counts=10
-       min=1
-       max=10
-       mean=5.5
-       median=5.5
-       samplestd=2.87
-       sum=55
-       q1=3
-       q3=8
+    The summary statistics will be the columns
+    of the data frame, while the column headers
+    will be in the rows.
     '''
 
     # make sure that at least one grouping is done.
     nlevels = -1
+
+    # keep row names (samples)
+    prune_dataframe = False
 
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)

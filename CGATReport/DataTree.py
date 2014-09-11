@@ -350,7 +350,6 @@ def asDataFrame(data):
         # build dataframe from arrays
         dataframes = []
         index_tuples = []
-        is_coordinate = None
 
         # not a nested dictionary
         if len(labels) == 1:
@@ -358,44 +357,37 @@ def asDataFrame(data):
         else:
             branches = list(getNodes(data, max(0, len(labels) - 2)))
 
+        # check if it is coordinate data
+        # All arrays need to have the same length
+        is_coordinate = True
         for path, leaves in branches:
             lengths = [len(x) for x in leaves.values()]
+            if len(lengths) == 0:
+                continue
 
             # all arrays have the same length - coordinate data
-            if len(lengths) > 1 and min(lengths) == max(lengths):
-                if is_coordinate is None:
-                    is_coordinate = True
-                else:
-                    if is_coordinate is False:
-                        raise ValueError(
-                            "arrays have a mixture of same/different lengths")
-
-                dataframes.append(pandas.DataFrame(leaves))
-                index_tuples.append(path)
-            else:
-                if is_coordinate is None:
-                    is_coordinate = False
-                else:
-                    if is_coordinate is True:
-                        raise ValueError(
-                            "arrays have a mixture of same/different lengths")
-
-                # arrays of unequal length are measurements
-                # build a melted data frame with a single column
-                # given by the name of the path.
-                for key, leave in leaves.items():
-                    if len(labels) > 1:
-                        index_tuples.append(path + (key,))
-                    else:
-                        # Only one level, remove
-                        index_tuples.append((key,))
-                    dataframes.append(pandas.DataFrame(leave,
-                                                       columns=('value',)))
+            if len(lengths) == 1 or min(lengths) != max(lengths):
+                is_coordinate = False
+                break
 
         if is_coordinate:
             debug('dataframe conversion: from array - coordinates')
+            for path, leaves in branches:
+                dataframes.append(pandas.DataFrame(leaves))
+                index_tuples.append(path)
         else:
             debug('dataframe conversion: from array - series')
+            # arrays of unequal length are measurements
+            # build a melted data frame with a single column
+            # given by the name of the path.
+            for key, leave in leaves.items():
+                if len(labels) > 1:
+                    index_tuples.append(path + (key,))
+                else:
+                    # Only one level, remove
+                    index_tuples.append((key,))
+                dataframes.append(pandas.DataFrame(leave,
+                                                   columns=('value',)))
 
         expected_levels = len(index_tuples[0])
         df = pandas.concat(dataframes, keys=index_tuples)

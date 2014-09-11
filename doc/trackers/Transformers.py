@@ -1,5 +1,5 @@
 '''Test cases for transformers.'''
-from SphinxReport.Tracker import *
+from CGATReport.Tracker import *
 
 
 def TrackerFilter():

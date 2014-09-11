@@ -1,4 +1,4 @@
-from SphinxReport.Tracker import Tracker
+from CGATReport.Tracker import Tracker
 from collections import OrderedDict as odict
 from random import randint
 import pandas

@@ -9,7 +9,7 @@ a dataframe using the python port (ggplot_) of the ggplot2_ package.
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'value', color='track'
+   :aes: 'expression', color='track'
    :geom: geom_histogram()
    :layout: column-2
    :width: 300
@@ -18,7 +18,7 @@ a dataframe using the python port (ggplot_) of the ggplot2_ package.
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'value', color='track'
+   :aes: 'expression', color='track'
    :geom: geom_histogram()
    :layout: column-2
    :groupby: all

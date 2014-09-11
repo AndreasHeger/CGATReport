@@ -328,7 +328,8 @@ class SmoothScatterPlot(Renderer, Plotter):
 
         if len(dataframe.columns) < 2:
             raise ValueError(
-                "requiring two coordinates, only got %s" % str(dataframe.columns))
+                "requiring two coordinates, only got %s" %
+                str(dataframe.columns))
 
         plts, legend = [], []
         blocks = ResultBlocks()

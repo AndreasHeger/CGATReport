@@ -1,4 +1,4 @@
-from SphinxReport.Tracker import TrackerSQL
+from CGATReport.Tracker import TrackerSQL
 
 
 class ExpressionLevel(TrackerSQL):

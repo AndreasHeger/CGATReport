@@ -1,5 +1,5 @@
-from SphinxReport.Tracker import Tracker
-from SphinxReport.DataTypes import returnLabeledData, returnSingleColumnData, returnMultipleColumnData, returnMultipleColumns
+from CGATReport.Tracker import Tracker
+from CGATReport.DataTypes import returnLabeledData, returnSingleColumnData, returnMultipleColumnData, returnMultipleColumns
 
 
 class SingleColumnDataExample(Tracker):

@@ -243,7 +243,7 @@ class TransformerVenn(Transformer):
         # check if data is melted:
         if len(data.columns) != 1:
             raise ValueError(
-                'transformer requires dataframe with'
+                'transformer requires dataframe with '
                 'a single column, got %s' % data.columns)
         column = data.columns[0]
         # iterate over lowest levels to build a dictionary of

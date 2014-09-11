@@ -3,7 +3,7 @@ import os
 import re
 import random
 
-from SphinxReport.Tracker import *
+from CGATReport.Tracker import *
 
 
 class LongLabelsSmall(Tracker):

@@ -1,5 +1,5 @@
-from SphinxReport.Tracker import *
-#from SphinxReportGeneLists.Tracker import *
+from CGATReport.Tracker import *
+#from CGATReportGeneLists.Tracker import *
 
 
 class SimpleExampleData(Tracker):
@@ -43,21 +43,22 @@ class OverlapTracker(TrackerMultipleLists):
     pattern = "(.+)_with_.+"
     slices = ["logFC < 0", "logFC > 0"]
 
-    ListA = '''SELECT id
+    # Note that the column names in the lists must match
+    ListA = '''SELECT id as gene_id
                    FROM differential
                    WHERE FDR < 0.05 AND %(slice)s '''
 
     ListB = '''SELECT gene_id
-	           FROM %(track)s_with_ar as ar,
-                        differential as diff
-                   WHERE ar.gene_id = diff.id'''
+    FROM %(track)s_with_ar as ar,
+    differential as diff
+    WHERE ar.gene_id = diff.id'''
 
     ListC = '''SELECT gene_id
                    FROM %(track)s_with_erg as erg,
                          differential as diff
                    WHERE erg.gene_id = diff.id'''
 
-    background = '''SELECT id FROM differential'''
+    background = '''SELECT id AS gene_id FROM differential'''
 
     # we also need to add backround to the labels
     labels = ["Differentially Expressed",

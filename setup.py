@@ -117,7 +117,7 @@ setup(name='CGATReport',
       packages=find_packages(),
       package_dir={'CGATReport': 'CGATReport',
                    'CGATReportPlugins': 'CGATReportPlugins'},
-      url="https://github.com/AndreasHeger/sphinx-report/",
+      url="https://github.com/AndreasHeger/CGATReport/",
       scripts=['scripts/cgatreport-%s' % x
                for x in ("build", "clean", "test", "quickstart", "gallery")],
       package_data={'CGATReport': ['./templates/*', './images/*']},

@@ -778,10 +778,11 @@ class TrackerSQL(Tracker):
         '''return results of SQL statement as an pandas dataframe.
         '''
         e = self.execute(self.buildStatement(stmt))
-        columns = [d[0] for d in e.description]
+        # the conversion to a list incurs a performance penalty
+        # but pandas requires a __len__ method.
         return pandas.DataFrame.from_records(
-            e,
-            columns=columns)
+            list(e),
+            columns=e.keys())
 
     def getAll(self, stmt):
         '''return results of SQL statement as pandas dataframe.
@@ -1437,7 +1438,7 @@ class TrackerMultipleLists(TrackerSQL):
     The items in each list are specified by an SQL statement. The
     statements can be specified in 3 different ways:
 
-:attr:`statements` dictionary
+    :attr:`statements` dictionary
         If the tracker contains a statements attribute then the statments
         are taken from here as well as the list names e.g.::
 
@@ -1445,7 +1446,7 @@ class TrackerMultipleLists(TrackerSQL):
             statements = {"listA": "SELECT gene_id FROM table_a",
                           "listB": "SELECT gene_id FROM table_b"}
 
-:attr:`listA`,:attr:`listB`,:attr:`listC` and:attr:`background` attributes
+    :attr:`listA`,:attr:`listB`,:attr:`listC` and:attr:`background` attributes
 
         If the tracker does not contain a statements dictionary then
         the statements can be specifed using these attributes. An
@@ -1458,7 +1459,7 @@ class TrackerMultipleLists(TrackerSQL):
 
                labels = ["FirstList","SecondList"]
 
-:meth:`getStatements` method
+    :meth:`getStatements` method
 
          The:meth:`getStatements` method can be overridden to allow
          full control over where the statements come from. It should
@@ -1517,7 +1518,9 @@ class TrackerMultipleLists(TrackerSQL):
 
         statements = self.getStatements()
         # track and slice will be substituted in the statements
-        return odict([(x, self.getValues(statements[x])) for x in statements])
+        return odict([(
+            x, 
+            self.getValues(statements[x])) for x in statements])
 
 
 class MeltedTableTracker(TrackerSQL):

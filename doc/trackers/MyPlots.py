@@ -1,7 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from SphinxReport.ResultBlock import ResultBlock, ResultBlocks
+from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from collections import OrderedDict as odict
 
 def ExampleWithoutData():

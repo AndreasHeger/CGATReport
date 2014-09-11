@@ -1,7 +1,7 @@
 ############################################################
 # Tutorial examples
 
-from SphinxReport.Tracker import *
+from CGATReport.Tracker import *
 
 
 class MyDataOneTrack(Tracker):
