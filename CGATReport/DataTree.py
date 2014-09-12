@@ -213,7 +213,7 @@ class DataTree(object):
 def listAsDataFrame(data, index_title='names',
                     values_are_rows=False):
     '''convert a list of key, value pairs to a dataframe.
-    
+
     The keys will be a one-level index called *index_title*
     and the values will contain one or more columns.
 
@@ -360,8 +360,8 @@ def asDataFrame(data):
         # check if it is coordinate data
         # All arrays need to have the same length
         is_coordinate = True
-        for path, leaves in branches:
-            lengths = [len(x) for x in leaves.values()]
+        for path, subtree in branches:
+            lengths = [len(x) for x in subtree.values()]
             if len(lengths) == 0:
                 continue
 
@@ -380,16 +380,13 @@ def asDataFrame(data):
             # arrays of unequal length are measurements
             # build a melted data frame with a single column
             # given by the name of the path.
-            for key, leave in leaves.items():
-                if len(labels) > 1:
-                    index_tuples.append(path + (key,))
-                else:
-                    # Only one level, remove
-                    index_tuples.append((key,))
+            for key, leave in leaves:
+                index_tuples.append(key)
                 dataframes.append(pandas.DataFrame(leave,
                                                    columns=('value',)))
-
+        
         expected_levels = len(index_tuples[0])
+
         df = pandas.concat(dataframes, keys=index_tuples)
 
     elif Utils.isDataFrame(leaf):
