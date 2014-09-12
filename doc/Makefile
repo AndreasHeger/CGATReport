@@ -52,6 +52,7 @@ csvdb: csvdb_data.txt.gz
 html: csvdb
 	@echo 'building notebooks' 
 	ipython nbconvert --to html notebooks/CGATReportTutorial14.ipynb
+	ipython nbconvert --to html notebooks/GenomeInformatics2014.ipynb
 	$(XVFB) $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."

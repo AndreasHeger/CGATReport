@@ -80,7 +80,8 @@ This statement will not render the data, but simply return a snippet for us to
 include in our ipython note. Copy the text between ``.. Template start`` and
 ``.. Template end`` into your ipython notebook.
 
-Please follow further instructions see this :download:`notebook <CGATReportTutorial14.html>`.
+Please follow further instructions see this :download:`notebook
+<CGATReportTutorial14.html>`.
 
 Back to cgatreport
 ====================
@@ -99,8 +100,9 @@ The output provides us with the snippet to put into the report::
        :glob: data/*.tsv.gz
        :aes: x="bin", y="background", color="track"
        :geom: geom_point()
+       :groupby: all
 
-       add caption here
+       Methylation profiles of transcripts
 
 .. report:: TestCases.TrackerDataframes
    :render: ggplot
@@ -108,8 +110,9 @@ The output provides us with the snippet to put into the report::
    :glob: data/*.tsv.gz
    :aes: x="bin", y="background", color="track"
    :geom: geom_point()
+   :groupby: all
 
-   add caption here
+   Methylation profiles of transcripts
 
 We can now use some of CGATReport's grouping capabilities in order to create plots 
 that will be useful if many tracks are being plotted. The following will plot at most 5
@@ -125,8 +128,9 @@ in each plot::
        :split-at: 5
        :split-always: input
        :layout: row
+       :groupby: all
 
-       add caption here
+       Methylation profiles of transcripts
 
 .. report:: TestCases.TrackerDataframes
    :render: ggplot
@@ -137,8 +141,9 @@ in each plot::
    :split-at: 5
    :split-always: input
    :layout: row
-
-   add caption here
+   :groupby: all
+	    
+   Methylation profiles of transcripts
 
 And back to the notebook again
 ==============================
@@ -147,10 +152,11 @@ The example has shown how cgatreport can be used as a data source
 within an ipython notebook and how a ggplot in the ipython notebook can then
 be reproduced within a report.
 
-However, we can go beyond a complete circle. Note the ``nb`` link below each figure in
-a sphinx-report. By clicking on the link and copying the displayed snipped
-into your notebook, you can get include cgatreport generated plots and the resulting dataframe
-for inspection. This is very useful for elaborationg on cgatreport
+However, we can go beyond a complete circle. Note the ``nb`` link
+below each figure in a CGATreport. By clicking on the link and
+copying the displayed snipped into your notebook, you can get include
+cgatreport generated plots and the resulting dataframe for
+inspection. This is very useful for elaborationg on cgatreport
 rendered plots in a notebook.
 
 
