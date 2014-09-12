@@ -652,10 +652,11 @@ class TrackerSQL(Tracker):
         statement = stmt % dict(list(kwargs.items()))
         return statement
 
-    # -------------------------------------
-    # Deprecate return functions
+    # --------------------------------------------------
+    # Functions returning the results of SQL statements
+    # as various python structures (dicts, lists, ...)
 
-    def _getFirstRow(self, stmt):
+    def getFirstRow(self, stmt):
         """return a row of values from SQL statement *stmt* as a list.
 
         The SQL statement is subjected to variable interpolation.
@@ -671,7 +672,7 @@ class TrackerSQL(Tracker):
         else:
             return None
 
-    def _getRow(self, stmt):
+    def getRow(self, stmt):
         """return a row of values from an SQL statement as dictionary.
 
         This function will return the first row from a SELECT
@@ -686,7 +687,7 @@ class TrackerSQL(Tracker):
         else:
             return None
 
-    def _getValues(self, stmt):
+    def getValues(self, stmt):
         """return values from SQL statement *stmt* as a list.
 
         This function will return the first value in each row
@@ -695,12 +696,12 @@ class TrackerSQL(Tracker):
         Returns an empty list if there is no result.
         """
         e = self.execute(self.buildStatement(stmt)).fetchall()
-        
+
         if e:
             return [x[0] for x in e]
         return []
 
-    def _getAll(self, stmt):
+    def getAll(self, stmt):
         """return all rows from SQL statement *stmt* as a dictionary.
 
         This method is deprecated.
@@ -719,7 +720,7 @@ class TrackerSQL(Tracker):
         d = e.fetchall()
         return odict(list(zip(columns, list(zip(*d)))))
 
-    def _get(self, stmt):
+    def get(self, stmt):
         """return all results from an SQL statement as list of tuples.
 
         Example: SELECT column1, column2 FROM table
@@ -729,7 +730,7 @@ class TrackerSQL(Tracker):
         """
         return self.execute(self.buildStatement(stmt)).fetchall()
 
-    def _getDict(self, stmt):
+    def getDict(self, stmt):
         """return results from SQL statement *stmt* as a dictionary.
 
         Example: SELECT column1, column2 FROM table
@@ -771,9 +772,6 @@ class TrackerSQL(Tracker):
         '''
         return self.execute(stmt)
 
-    # -------------------------------------
-    # Direct access functios for return to CGATReport
-
     def getDataFrame(self, stmt):
         '''return results of SQL statement as an pandas dataframe.
         '''
@@ -784,29 +782,47 @@ class TrackerSQL(Tracker):
             list(e),
             columns=e.keys())
 
-    def getAll(self, stmt):
-        '''return results of SQL statement as pandas dataframe.
-        '''
-        return self.getDataFrame(self.buildStatement(stmt))
+    # # -------------------------------------
+    # # Direct access functios for return to CGATReport
+    # def getRows(self, stmt):
+    #     """return all results from an SQL statement as list of tuples.
 
-    def getValues(self, stmt):
-        '''return results of SQL statement as pandas Series.
-        '''
-        e = self.exectute(self.buildStatement(stmt))
-        col = [x[0] for x in e]
-        return pandas.Series(col)
+    #     Example: SELECT column1, column2 FROM table
+    #     Result: [(1,2),(2,4),(3,2)]
 
-    def getRow(self, stmt):
-        '''return results of SQL statement as pandas dataframe.
-        '''
-        return self.getDataFrame(self.buildStatement(stmt))
+    #     Returns an empty list if there is no result.
+    #     """
+    #     return self.execute(self.buildStatement(stmt)).fetchall()
 
-    def getFirstRow(self, stmt):
-        '''return first row of SQL statement as pandas Series.
-        '''
-        e = self.execute(self.buildStatement(stmt))
-        row = e.fetchone()
-        return pandas.Series(row)
+    # def get(self, stmt):
+    #     """deprecated - use getRows instead."""
+    #     return self.getRows(self.buildStatement(stmt))
+
+
+    # def getAll(self, stmt):
+    #     '''return results of SQL statement as pandas dataframe.
+    #     '''
+    #     return self.getDataFrame(self.buildStatement(stmt))
+
+    # def getValues(self, stmt):
+    #     '''return results of SQL statement as pandas Series.
+    #     '''
+    #     e = self.exectute(self.buildStatement(stmt))
+    #     return pandas.Series([x[0] for x in e])
+
+    # def getRow(self, stmt):
+    #     '''return results of SQL statement as pandas dataframe
+    #     '''
+    #     e = self.execute(self.buildStatement(stmt))
+    #     return pandas.Series(e.fetchone())
+
+    # def getFirstRow(self, stmt):
+    #     '''return first row of SQL statement as pandas Series.
+    #     '''
+    #     e = self.execute(self.buildStatement(stmt))
+    #     return pandas.Series(e.fetchone())
+
+
 
 
 class TrackerSQLCheckTables(TrackerSQL):
