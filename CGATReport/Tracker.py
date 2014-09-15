@@ -798,7 +798,6 @@ class TrackerSQL(Tracker):
     #     """deprecated - use getRows instead."""
     #     return self.getRows(self.buildStatement(stmt))
 
-
     # def getAll(self, stmt):
     #     '''return results of SQL statement as pandas dataframe.
     #     '''
@@ -821,8 +820,6 @@ class TrackerSQL(Tracker):
     #     '''
     #     e = self.execute(self.buildStatement(stmt))
     #     return pandas.Series(e.fetchone())
-
-
 
 
 class TrackerSQLCheckTables(TrackerSQL):
