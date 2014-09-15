@@ -2009,7 +2009,7 @@ class MultipleSeriesPlot(Renderer, Plotter):
 
         if len(dataframe.columns) == 1:
             keys = tuple(dataframe.index)
-            values = tuple(dataframe[0])
+            values = tuple(dataframe.iloc[:, 0])
             blocks.extend(self.plot(keys, values, path))
         else:
             for title, row in dataframe.iterrows():
