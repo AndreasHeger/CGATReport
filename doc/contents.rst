@@ -43,6 +43,7 @@ Contents:
    Glossary.rst
    Developing.rst
    Roadmap.rst
+   Examples.rst
    Test.rst
    FAQ.rst
    Errors.rst

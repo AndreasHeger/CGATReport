@@ -1143,3 +1143,48 @@ class TransformerMelt(Transformer):
         # melt
 
         return pandas.melt(data.reset_index(), data.index.names)
+
+
+class TransformerPivot(Transformer):
+    '''pivot a table.
+
+    Requires to define three columns in the
+    dataframe to determine the row labels,
+    column labels and values in the new dataframe.
+    '''
+
+    nlevels = None
+
+    options = Transformer.options +\
+        (('pivot-index', directives.unchanged),
+         ('pivot-column', directives.unchanged),
+         ('pivot-value', directives.unchanged),
+         )
+
+    pivot_index = None
+    pivot_columns = None
+    pivot_value = None
+
+    def __init__(self, *args, **kwargs):
+        Transformer.__init__(self, *args, **kwargs)
+
+        self.pivot_index = kwargs.get("pivot-index", None)
+        self.pivot_column = kwargs.get("pivot-column", None)
+        self.pivot_value = kwargs.get("pivot-value", None)
+
+        if self.pivot_index is None:
+            raise ValueError('pivot requires a column to use as index')
+        if self.pivot_column is None:
+            raise ValueError('pivot requires a column to use as column')
+        if self.pivot_value is None:
+            raise ValueError('pivot requires a column to use as value')
+
+    def __call__(self, data):
+        ''' returns a melted table'''
+        # merge index into dataframe
+        # pivot
+
+        return data.reset_index().pivot(
+            index=self.pivot_index,
+            columns=self.pivot_column,
+            values=self.pivot_value)

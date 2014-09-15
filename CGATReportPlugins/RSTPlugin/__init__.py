@@ -21,6 +21,9 @@ class RSTPlugin(Component):
     capabilities = ['collect']
 
     # include white spaces at the end for length-neutral substitution
+    # Pattern will also include a terminating '"'. This is used to
+    # test if the context is a csv table, in which case no padding
+    # should be done.
     rx_img = re.compile("\.\. (image|figure):: ([^ |+,:]+[ ]*)")
 
     # external link targets:
@@ -52,10 +55,11 @@ class RSTPlugin(Component):
 
             There needs to be enough space for padding.
             '''
-
-            oldlen = len(old)
-            newlen = len(new)
-            new = new + " " * (oldlen - newlen)
+            # do not pad in csv tables
+            if not old.endswith('"'):
+                oldlen = len(old)
+                newlen = len(new)
+                new = new + " " * (oldlen - newlen)
             n = s.replace(old, new)
             return n
 
