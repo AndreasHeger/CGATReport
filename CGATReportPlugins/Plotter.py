@@ -158,6 +158,8 @@ class Plotter(object):
         ('yformat', directives.unchanged),
         ('no-tight', directives.flag),  # currently ignored
         ('tight', directives.flag),
+        ('xticks-action', directives.unchanged),
+        ('xticks-max-chars', directives.length_or_unitless),
     )
 
     if HAS_SEABORN:
@@ -168,6 +170,14 @@ class Plotter(object):
     format_markers = "so^>dph8+x"
     format_lines = ('-', ':', '--')
     mPatterns = [None, '/', '\\', '|', '-', '+', 'x', 'o', 'O', '.', '*']
+
+    # maximum number of characters in X ticks
+    # If 0, do not perform any action
+    xticks_max_length = 10
+
+    # action to perform when X ticks are longer than maximum.
+    # Options are "truncate-start", "truncate-end", "number"
+    xticks_action = "truncate-end"
 
     def __init__(self, *args, **kwargs):
         """parse option arguments."""
@@ -199,6 +209,17 @@ class Plotter(object):
 
         self.xformat = kwargs.get("xformat", None)
         self.yformat = kwargs.get("yformat", None)
+
+        self.xticks_max_length = int(kwargs.get('xticks_max_length',
+                                                self.xticks_max_length))
+        self.xticks_action = kwargs.get('xticks_action',
+                                        'number')
+
+        if self.xticks_action not in ('number', 'truncate-start',
+                                      'truncate-end'):
+            raise ValueError(
+                "unknown option for xticks-action: '%s'" %
+                self.xticks_action)
 
         def setupMPLOption(key):
             options = {}
@@ -297,6 +318,7 @@ class Plotter(object):
         if not plts:
             return ResultBlocks()
 
+        # convert to log-scale
         ax = plt.gca()
         # set logscale before the xlim, as it re-scales the plot.
         if self.logscale:
@@ -328,11 +350,13 @@ class Plotter(object):
 
             ax.relim()
 
+        # truncate plot
         if self.xrange:
             plt.xlim(self.xrange)
         if self.yrange:
             plt.ylim(self.yrange)
 
+        # add additional plot elements
         if self.functions:
             xstart, xend = ax.get_xlim()
             increment = (xend - xstart) / 100.0
@@ -363,6 +387,7 @@ class Plotter(object):
         if self.ylabel:
             plt.ylabel(self.ylabel)
 
+        # change x/y labels
         # change x/y axis formatter
         if self.xformat:
             if self.xformat.startswith('date'):
@@ -398,10 +423,37 @@ class Plotter(object):
                     matplotlib.dates.AutoDateFormatter(loc,
                                                        defaultfmt=fmt))
 
+        # If longest label on X-axis is larger than
+        # threshold, either truncate, summarize or
+        # map.
+        # modifying labels in place did not work as
+        # set_xticklabels expects strings, not Text attributes,
+        # so work with text directly:
+        xlabels = [x.get_text() for x in ax.get_xticklabels()]
+
+        max_len = max([len(x) for x in xlabels])
+        preamble, postamble = "", ""
+        if max_len > self.xticks_max_length:
+
+            if self.xticks_action == "truncate-end":
+                f = lambda x, txt: txt[:self.xticks_max_length]
+            elif self.xticks_action == "truncate-start":
+                f = lambda x, txt: txt[-self.xticks_max_length:]
+            elif self.xticks_action == "number":
+                f = lambda x, txt: str(x)
+                postamble = "\n" + "\n".join(
+                    ["* %i: %s" % (x, y)
+                     for x, y in enumerate(xlabels)])
+
+            ax.set_xticklabels([f(x, y)
+                                for x, y in enumerate(xlabels)])
+
         blocks = ResultBlocks(
             ResultBlock(
-                "\n".join(
-                    ("#$mpl %i$#" % (self.mFigure), "")),
+                "\n".join((
+                    preamble,
+                    "#$mpl %i$#" % self.mFigure,
+                    postamble)),
                 title=DataTree.path2str(path)))
 
         legend = None
