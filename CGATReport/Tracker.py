@@ -792,7 +792,7 @@ class TrackerSQL(Tracker):
     def getValues(self, stmt):
         '''return results of SQL statement as pandas Series.
         '''
-        e = self.exectute(self.buildStatement(stmt))
+        e = self.execute(self.buildStatement(stmt))
         col = [x[0] for x in e]
         return pandas.Series(col)
 
