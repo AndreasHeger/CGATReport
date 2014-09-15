@@ -429,24 +429,25 @@ class Plotter(object):
         # modifying labels in place did not work as
         # set_xticklabels expects strings, not Text attributes,
         # so work with text directly:
-        xlabels = [x.get_text() for x in ax.get_xticklabels()]
-
-        max_len = max([len(x) for x in xlabels])
         preamble, postamble = "", ""
-        if max_len > self.xticks_max_length:
+        xlabels = [x.get_text() for x in ax.get_xticklabels()]
+        if xlabels:
+            max_len = max([len(x) for x in xlabels])
 
-            if self.xticks_action == "truncate-end":
-                f = lambda x, txt: txt[:self.xticks_max_length]
-            elif self.xticks_action == "truncate-start":
-                f = lambda x, txt: txt[-self.xticks_max_length:]
-            elif self.xticks_action == "number":
-                f = lambda x, txt: str(x)
-                postamble = "\n" + "\n".join(
-                    ["* %i: %s" % (x, y)
-                     for x, y in enumerate(xlabels)])
+            if max_len > self.xticks_max_length:
 
-            ax.set_xticklabels([f(x, y)
-                                for x, y in enumerate(xlabels)])
+                if self.xticks_action == "truncate-end":
+                    f = lambda x, txt: txt[:self.xticks_max_length]
+                elif self.xticks_action == "truncate-start":
+                    f = lambda x, txt: txt[-self.xticks_max_length:]
+                elif self.xticks_action == "number":
+                    f = lambda x, txt: str(x)
+                    postamble = "\n" + "\n".join(
+                        ["* %i: %s" % (x, y)
+                         for x, y in enumerate(xlabels)])
+
+                ax.set_xticklabels([f(x, y)
+                                    for x, y in enumerate(xlabels)])
 
         blocks = ResultBlocks(
             ResultBlock(
@@ -2049,8 +2050,6 @@ class MultipleSeriesPlot(Renderer, Plotter):
     """
     options = Renderer.options + Plotter.options
 
-    nlevels = 1
-
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs)
         Plotter.__init__(self, *args, **kwargs)
@@ -2058,7 +2057,6 @@ class MultipleSeriesPlot(Renderer, Plotter):
     def render(self, dataframe, path):
 
         blocks = ResultBlocks()
-
         if len(dataframe.columns) == 1:
             keys = tuple(dataframe.index)
             values = tuple(dataframe.iloc[:, 0])
@@ -2115,6 +2113,7 @@ class PiePlot(MultipleSeriesPlot):
         (('pie-min-percentage', directives.unchanged),
          ('pie-first-is-total', directives.unchanged),)
 
+    # Do not group data
     group_level = 'force-none'
 
     def __init__(self, *args, **kwargs):
