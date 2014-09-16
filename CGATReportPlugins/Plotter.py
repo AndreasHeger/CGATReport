@@ -128,6 +128,16 @@ class Plotter(object):
           separated by ;, for example
           ``:mpl-rc: figure.figsize=(20,10);legend.fontsize=4``
 
+:term:`xticks-max-chars`: if the number of characters on the
+    tick-labels on the X-axis exceed this value, the labels
+    will be replaced by shorter version. See :term:`xticks-action`.
+    If set to 0, no truncation will be performed.
+
+:term:`xticks-action`: action to perform it tick-labels are to long.
+    Valid values are ``truncate-start`` and ``truncate-end`` to truncate
+    from the start or end of the label, respectively; ``numbers`` to
+    replace the values with numbers.
+
     """
 
     mLegendFontSize = 8
@@ -177,7 +187,7 @@ class Plotter(object):
 
     # action to perform when X ticks are longer than maximum.
     # Options are "truncate-start", "truncate-end", "number"
-    xticks_action = "truncate-end"
+    xticks_action = "truncate-start"
 
     def __init__(self, *args, **kwargs):
         """parse option arguments."""
@@ -431,7 +441,7 @@ class Plotter(object):
         # so work with text directly:
         preamble, postamble = "", ""
         xlabels = [x.get_text() for x in ax.get_xticklabels()]
-        if xlabels:
+        if xlabels and self.xticks_max_length > 0:
             max_len = max([len(x) for x in xlabels])
 
             if max_len > self.xticks_max_length:
@@ -442,12 +452,14 @@ class Plotter(object):
                     f = lambda x, txt: txt[-self.xticks_max_length:]
                 elif self.xticks_action == "number":
                     f = lambda x, txt: str(x)
-                    postamble = "\n" + "\n".join(
-                        ["* %i: %s" % (x, y)
-                         for x, y in enumerate(xlabels)])
 
-                ax.set_xticklabels([f(x, y)
-                                    for x, y in enumerate(xlabels)])
+                new_labels = [f(x, y) for x, y in enumerate(xlabels)]
+                
+                postamble = "\n" + "\n".join(
+                    ["* %s: %s" % (x, y)
+                     for x, y in zip(new_labels, xlabels)])
+
+                ax.set_xticklabels(new_labels)
 
         blocks = ResultBlocks(
             ResultBlock(

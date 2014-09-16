@@ -21,14 +21,14 @@ the data frame and can thus be used within the ggplot statement::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: ggplot
-       :aes: 'expression' 
+       :aes: 'value' 
        :geom: geom_histogram()
 
        A simple histogram plot
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'expression', 
+   :aes: 'value', 
    :geom: geom_histogram()
    :layout: column-2
    :width: 300
@@ -40,7 +40,7 @@ needs to be grouped::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: ggplot
-       :aes: 'expression' 
+       :aes: 'value' 
        :geom: geom_histogram()
        :groupby: all
 
@@ -48,7 +48,7 @@ needs to be grouped::
        
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'expression' 
+   :aes: 'value' 
    :geom: geom_histogram()
    :groupby: all
    :width: 300
@@ -59,7 +59,7 @@ We can also colour by :term:`track`::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: ggplot
-       :aes: 'expression', color='track'
+       :aes: 'value', color='track'
        :geom: geom_histogram()
        :groupby: all
        :width: 300
@@ -68,7 +68,7 @@ We can also colour by :term:`track`::
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'expression', color='track'
+   :aes: 'value', color='track'
    :geom: geom_histogram()
    :groupby: all
    :width: 300
