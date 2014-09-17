@@ -2,6 +2,8 @@ import os
 import re
 from CGATReport.Component import *
 from CGATReport import Config
+import bokeh.embed
+import bokeh.plotting
 
 
 class BokehPlugin(Component):
@@ -39,19 +41,29 @@ class BokehPlugin(Component):
                 if not hasattr(block, "bokeh"):
                     continue
                 figid = block.bokeh._id
+                res = bokeh.resources.CDN
+                script_path = os.path.join('_static/report_directive/', "%s.js" % figid)
+
+                js_txt, script_txt = bokeh.embed.autoload_static(
+                    block.bokeh, res, script_path)
+
                 # make sure to add the '/' at the end
-                script = block.bokeh.create_html_snippet(
-                    server=False,
-                    embed_base_url='_static/report_directive/',
-                    embed_save_loc=outdir,
-                    static_path='_static/')
+                # script = block.bokeh.create_html_snippet(
+                #     server=False,
+                #     embed_base_url='_static/report_directive/',
+                #     embed_save_loc=outdir,
+                #     static_path='_static/')
+
+
+                with open(script_path, "w") as outf:
+                    outf.write(js_txt)
 
                 text = """.. raw:: html
 
    <div><p>
          %s
    </p></div>
-""" % script
+""" % script_txt
 
                 map_figure2text["#$bkh %s$#" % figid] = text
         return map_figure2text

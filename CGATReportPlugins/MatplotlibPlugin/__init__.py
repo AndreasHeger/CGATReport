@@ -16,6 +16,15 @@ except ImportError:
 HAS_MPLD3 = False
 
 
+try:
+    import bokeh.plotting
+    import bokeh.embed
+    import bokeh.mpl
+    HAS_BOKEH = True
+except ImportError:
+    HAS_BOKEH = False
+HAS_BOKEH = False
+
 class MatplotlibPlugin(Component):
 
     capabilities = ['collect']
@@ -59,8 +68,14 @@ class MatplotlibPlugin(Component):
         # create all required images
         for figman in fig_managers:
 
+
             # create all images
             figid = figman.num
+
+            # select the correct figure
+            figure = plt.figure(figid)
+
+            # save explicit formats
             outname = "%s_%02d" % (template_name, figid)
 
             for id, format, dpi in all_formats:
@@ -74,20 +89,51 @@ class MatplotlibPlugin(Component):
                         "Exception running plot %s" % outpath)
                     warnings.warn(s)
                     return []
-
+                    
+            # insert display figure
             is_html = False
             if HAS_MPLD3:
                 outpath = os.path.join(
                     outdir,
                     '%s.html' % (outname))
 
-                # select the correct figure
-                figure = plt.figure(figid)
                 # plt.legend()
                 # write to file
                 with open(outpath, "w") as outf:
                     outf.write(mpld3.fig_to_html(figure))
                 is_html = True
+
+            elif HAS_BOKEH:
+                outpath = os.path.join(
+                    outdir,
+                    '%s.html' % (outname))
+                is_html = True
+
+                # (try to) convert to bokeh figure
+                try:
+                    bpl = bokeh.mpl.to_bokeh(figure)
+                except NotImplementedError:
+                    # fall back to matplotlib
+                    is_html = False
+                    
+                if is_html:
+                    bokeh_id = bpl._id
+                    res = bokeh.resources.CDN
+                    script_path = os.path.join(
+                        '_static/report_directive/',
+                        "%s.js" % bokeh_id)
+
+                    # get js figure and html snippet
+                    js_txt, script_txt = bokeh.embed.autoload_static(
+                        bpl, res, script_path)
+
+
+
+                    with open(script_path, "w") as outf:
+                        outf.write(js_txt)
+
+                    with open(outpath, "w") as outf:
+                        outf.write(script_text)
 
             # create the text element
             rst_output = Utils.buildRstWithImage(
