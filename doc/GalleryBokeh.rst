@@ -2,8 +2,10 @@
 Bokeh plotting
 ===============
 
-.. report:: Trackers.SingleColumnDataExample
+.. report:: Trackers.ArrayDataExample
    :render: b-line-plot
+   :as-lines:
 
-   add caption here
+   Line plots with Bokeh
+
 
