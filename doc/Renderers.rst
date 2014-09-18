@@ -28,6 +28,7 @@ that are included in cgatreport.
    GalleryUser.rst
    GalleryRPlots.rst
    GalleryDebug.rst
+   GalleryDataframe.rst
    GalleryLegends.rst
    GalleryOptions.rst
    GalleryBokeh.rst

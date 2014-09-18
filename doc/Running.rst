@@ -111,15 +111,22 @@ can also generate template restructured text for cutting and pasting into a
 document. It is very useful for debugging trackers and tweaking parameters in order
 to build the desired plot.
 
-:ref:`cgatreport-test` is called as
+:ref:`cgatreport-test` is called as::
 
    cgatreport-test [options] [tracker] [renderer]
 
-The following example shows how an interactive session develops. First, we start by printing 
-debugging summary for the :class:`Tracker` ``SingleColumnDataExample``, to see if all is 
-as expected::
+The following example shows how an interactive session
+develops. First, we start by printing debugging summary for the
+:class:`Tracker` ``SingleColumnDataExample``, to see if all is as
+expected::
 
    cgatreport-test -t SingleColumnDataExample -r debug
+
+The :ref:`debug` Renderer displays the data as it is returned from the
+:term:`Tracker` as a nested dictionary. To see the :term:`dataframe`
+that is built, use::
+
+   cgatreport-test -t SingleColumnDataExample -r dataframe
 
 The following command will compute stats and output a table::
 
