@@ -974,7 +974,8 @@ def buildRstWithImage(outname,
                       links,
                       display_options,
                       default_format=None,
-                      is_html=False):
+                      is_html=False,
+                      text=None):
     '''output rst text for inserting an image.'''
     rst_output = ""
 
@@ -1011,7 +1012,23 @@ def buildRstWithImage(outname,
         else:
             id, format, dpi = CGATReport.Config.HTML_IMAGE_FORMAT
 
-        if is_html:
+        if text is not None:
+
+            template = '''
+.. htmlonly::
+
+   .. raw:: html
+
+      <div><p>
+         %(outname)s
+      <p><div>
+
+   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
+'''
+            # put text in outname
+            outname = indent(text, 6)
+
+        elif is_html:
             # put in html
             template = '''
 .. htmlonly::
@@ -1023,6 +1040,7 @@ def buildRstWithImage(outname,
 '''
             # use absolute path for html file
             outname = os.path.abspath(os.path.join(outdir, outname)) + ".html"
+            
         else:
             # put in image directive
             template = '''
