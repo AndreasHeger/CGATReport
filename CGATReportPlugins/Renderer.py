@@ -87,58 +87,60 @@ class Renderer(Component.Component):
         This method will call the:meth:`render` method
         '''
         result = ResultBlocks()
-        result.extend(self.render(dataframe, path))
-        return result
-
-        # TOOD: implement splitting
-
-        if self.nlevels != -1 and len(labels) != self.nlevels:
-            raise ValueError("at path %s: expected %i levels - got %i: %s" %
-                             (str(path), self.nlevels,
-                              len(labels), str(labels)))
 
         if not self.split_at:
             result.extend(self.render(dataframe, path))
         else:
             # split dataframe at first index
-            first_level_labels = dataframe.index.get_level_values(0).unique()
-
-            if len(first_level_labels) < self.split_at:
+            level = Utils.getGroupLevels(dataframe)
+            grouper = dataframe.groupby(level=level)
+            if len(grouper) < self.split_at:
                 result.extend(self.render(dataframe, path))
             else:
-                # select tracks to always add to split
-                # pick always tracks
+                # build groups
+                always, remove_always = [], set()
+
                 if self.split_always:
-                    always = [x for x, y in
-                              itertools.product(first_level_labels,
-                                                self.split_always)
-                              if re.search(y, x)]
-                else:
-                    always = []
+                    for key, work in grouper:
+                        for pat in self.split_always:
+                            rx = re.compile(pat)
+                            if rx.search(path2str(key)):
+                                always.append((key, work))
+                                remove_always.add(key)
 
-                for z, x in enumerate(range(0, len(first_level_labels),
-                                            self.split_at)):
-                    select = list(DataTree.unique(always +
-                                                  list(first_level_labels[
-                                                      x:x + self.split_at])))
+                    grouper = dataframe.groupby(level=level)
 
-                    if len(dataframe.index.names) == 1:
-                        # if only one level, use loc to obtain dataframe
-                        # index is duplicated, so ignore second level
-                        work = pandas.concat([dataframe.loc[[s]]
-                                              for s in select],
-                                             keys=select)
-                        work.reset_index(range(1, len(work.index.names)),
-                                         drop=True,
-                                         inplace=True)
-                    else:
-                        work = pandas.concat([dataframe.xs(s, axis=0)
-                                              for s in select],
-                                             keys=select)
+                def _group_group(grouper, always, remove_always):
+                    group = always[:]
+                    for key, work in grouper:
+
+                        if key in remove_always:
+                            continue
+                        group.append((key, work))
+
+                        if len(group) >= self.split_at:
+                            yield group
+                            group = always[:]
 
                     # reconcile index names
-                    work.index.names = dataframe.index.names
-                    result.extend(self.render(work, path + (z,)))
+                    yield group
+
+                first = True
+                for group in _group_group(grouper,
+                                          always,
+                                          remove_always):
+                    # do not plot last dataframe that contains
+                    # only the common tracks to plot
+                    if not first and len(group) == len(always):
+                        continue
+                    first = False
+
+                    df = pandas.concat(
+                        [x[1] for x in group])
+
+                    # reconcile index names
+                    df.index.names = dataframe.index.names
+                    result.extend(self.render(df, path))
 
         return result
 
@@ -244,7 +246,7 @@ class TableBase(Renderer):
             lines.append("   :class: %s" % self.html_class)
 
         if self.add_rowindex:
-            raise NotImplemnetedError('add-rowindex not implemented')
+            raise NotImplementedError('add-rowindex not implemented')
             lines.append('   :header: "row", "", "%s" ' %
                          '", "'.join(map(str, col_headers)))
             lines.append('')

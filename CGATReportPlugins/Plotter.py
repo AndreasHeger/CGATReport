@@ -1202,7 +1202,10 @@ class LinePlot(Renderer, Plotter):
         self.yerror = "yerror" in kwargs
 
         # do not plot more than ten tracks in one plot
-        self.split_at = 10
+        if self.split_at == 0:
+            self.split_at = 10
+
+        self.split_at = min(self.split_at, 10)
 
     def initPlot(self, fig, dataseries, path):
         '''initialize plot.'''

@@ -1,9 +1,6 @@
-import sys
-import os
-import re
 import random
-
-from CGATReport.Tracker import *
+from CGATReport.Tracker import Tracker
+from collections import OrderedDict as odict
 
 
 class LongLabelsSmall(Tracker):
@@ -32,7 +29,8 @@ class LongLabelsSmall(Tracker):
         data = []
         for x in range(0, ncolumns):
             label = "%s:%i %s" % (
-                slice, x, " ".join(["a" * self.wordsize for y in range(self.numwords)]))
+                slice, x, " ".join(["a" * self.wordsize
+                                    for y in range(self.numwords)]))
             data.append((label, random.randint(0, 100)))
 
         return odict(sorted(data))
@@ -72,14 +70,15 @@ class LayoutTest(Tracker):
     tracks = ["track%i" % i for i in range(5)]
 
     def __call__(self, track, slice=None):
-        return odict((("data", [random.gauss(0, 1) for x in range(self.nsamples)]),))
+        return odict((("data", [random.gauss(0, 1) for x in
+                                range(self.nsamples)]),))
 
 
 class SplittingTest(Tracker):
 
     '''return a single column of data.'''
-    tracks = ["track%i" % x for x in range(0, 10)]
-    slices = ["slice%i" % x for x in range(0, 2)]
+    tracks = ["track%i" % x for x in range(0, 2)]
+    slices = ["slice%i" % x for x in range(0, 10)]
 
     def __call__(self, track, slice=None):
         s = [random.randint(0, 20) for x in range(10)]

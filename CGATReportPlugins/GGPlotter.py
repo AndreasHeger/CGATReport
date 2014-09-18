@@ -35,6 +35,13 @@ class GGPlot(Renderer, Plotter):
         self.aes = kwargs.get('aes')
         self.geom = kwargs.get('geom')
 
+        # at most 6 lines per plot - limit of colours
+        # in ggplot
+        if self.split_at == 0:
+            self.split_at = 6
+        else:
+            self.split_at = min(self.split_at, 6)
+
     def render(self, dataframe, path):
 
         # the index in the dataframe is reset in order
