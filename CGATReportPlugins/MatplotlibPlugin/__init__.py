@@ -18,6 +18,7 @@ try:
     import bokeh.plotting
     import bokeh.embed
     import bokeh.mpl
+    import bokeh.mplexporter.exporter
     USE_BOKEH = Utils.PARAMS.get('report_mpl', None) == 'bokeh'
 except ImportError:
     USE_BOKEH = False
@@ -90,6 +91,7 @@ class MatplotlibPlugin(Component):
                     
             # insert display figure
             is_html = False
+            script_text = None
             if USE_MPLD3:
                 outpath = os.path.join(
                     outdir,
@@ -109,11 +111,18 @@ class MatplotlibPlugin(Component):
 
                 # (try to) convert to bokeh figure
                 try:
-                    bpl = bokeh.mpl.to_bokeh(figure)
+                    # pd_job - use pandas object
+                    # xkcd - use xkcd style
+                    renderer = bokeh.mpl.BokehRenderer(pd_obj=True,
+                                                       xkcd=False)
+                    exporter = bokeh.mplexporter.exporter.Exporter(renderer)
+                    exporter.run(figure)
+                    bpl = renderer.fig
+
                 except NotImplementedError:
                     # fall back to matplotlib
                     is_html = False
-                    
+
                 if is_html:
                     bokeh_id = bpl._id
                     res = bokeh.resources.CDN
@@ -122,13 +131,12 @@ class MatplotlibPlugin(Component):
                         "%s.js" % bokeh_id)
 
                     # get js figure and html snippet
-                    js_txt, script_txt = bokeh.embed.autoload_static(
+                    js_text, script_text = bokeh.embed.autoload_static(
                         bpl, res, script_path)
 
 
-
                     with open(script_path, "w") as outf:
-                        outf.write(js_txt)
+                        outf.write(js_text)
 
                     with open(outpath, "w") as outf:
                         outf.write(script_text)
@@ -145,7 +153,8 @@ class MatplotlibPlugin(Component):
                 links,
                 display_options,
                 default_format,
-                is_html=is_html)
+                is_html=is_html,
+                text=script_text)
 
             map_figure2text["#$mpl %i$#" % figid] = rst_output
 

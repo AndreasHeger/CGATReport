@@ -54,7 +54,6 @@ class BokehPlugin(Component):
                 #     embed_save_loc=outdir,
                 #     static_path='_static/')
 
-
                 with open(script_path, "w") as outf:
                     outf.write(js_txt)
 
