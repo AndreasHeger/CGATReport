@@ -344,39 +344,38 @@ class Dispatcher(Component.Component):
     def restrict(self):
         '''restrict data paths.
 
-        Only those data paths matching the restrict term are accepted.
+        Only those data paths and columns matching the restrict term
+        are accepted.
         '''
         if not self.restrict_paths:
             return
 
-        data_paths = DataTree.getPaths(self.data)
-
-        # currently enumerates - bfs more efficient
-
-        all_paths = list(itertools.product(*data_paths))
-
-        for path in all_paths:
+        # rows first
+        def _match(label):
             for s in self.restrict_paths:
-                if s in path:
-                    break
+                if label == s:
+                    return True
                 elif s.startswith("r(") and s.endswith(")"):
-                    # collect pattern matches:
-                    # remove r()
-                    s = s[2:-1]
-                    # remove flanking quotation marks
-                    if s[0] in ('"', "'") and s[-1] in ('"', "'"):
-                        s = s[1:-1]
-                    rx = re.compile(s)
-                    if any((rx.search(p) for p in path)):
-                        break
-            else:
-                self.debug(
-                    "%s: ignoring path %s because of:restrict=%s" %
-                    (self.tracker, path, s))
-                try:
-                    DataTree.removeLeaf(self.data, path)
-                except KeyError:
-                    pass
+                        # collect pattern matches:
+                        # remove r()
+                        s = s[2:-1]
+                        # remove flanking quotation marks
+                        if s[0] in ('"', "'") and s[-1] in ('"', "'"):
+                            s = s[1:-1]
+                        rx = re.compile(s)
+                        if rx.search(label):
+                            return True
+            return False
+
+        # select rows to keep (matching any of the patterns in any
+        # of the levels of the hierarchical index
+        keep = [any([_match(x) for x in labels]) for labels in self.data.index]
+        self.data = self.data[keep]
+
+        # now select columns (does not work together with row restrict)
+        # needs a separate way to restrict output
+        # keep = [x for x in self.data.columns if _match(x)]
+        # self.data = self.data[keep]
 
     def exclude(self):
         '''exclude data paths.
@@ -670,11 +669,9 @@ class Dispatcher(Component.Component):
         # self.debug("%s: after transformation: %i data_paths: %s" %
         #           (self, len(data_paths), str(data_paths)))
 
-
         # restrict
         try:
-            self.debug('restrictions disabled')
-            # self.restrict()
+            self.restrict()
         except:
             self.error("%s: exception in restrict" % self)
             return ResultBlocks(ResultBlocks(

@@ -219,11 +219,13 @@ def run(arguments,
             for filename in filenames:
                 if not os.path.exists(filename):
                     logging.info(
-                        "report_directive.run: %s: redo: %s missing" % (tag, filename))
+                        "report_directive.run: %s: redo: %s missing" %
+                        (tag, filename))
                     break
             else:
                 logging.info(
-                    "report_directive.run: %s: noredo: all files are present" % tag)
+                    "report_directive.run: %s: noredo: all files are present" %
+                    tag)
                 # all is present - save text and return
                 if lines and state_machine:
                     state_machine.insert_input(
@@ -250,12 +252,14 @@ def run(arguments,
     try:
         ########################################################
         # find the tracker
-        logging.debug("report_directive.run: collecting tracker %s with options %s " % (
-            tracker_name, tracker_options))
+        logging.debug(
+            "report_directive.run: collecting tracker %s with options %s " %
+            (tracker_name, tracker_options))
         code, tracker = Utils.makeTracker(tracker_name, (), tracker_options)
         if not tracker:
             logging.error(
-                "report_directive.run: no tracker - no output from %s " % str(document))
+                "report_directive.run: no tracker - no output from %s " %
+                str(document))
             raise ValueError("tracker `%s` not found" % tracker_name)
 
         logging.debug(
@@ -373,11 +377,10 @@ def run(arguments,
     map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
     map_figure2text["default-suffix"] = ""
     blocks.updatePlaceholders(map_figure2text)
-    ###########################################################
+
     # render the output taking into account the layout
     lines = Utils.layoutBlocks(blocks, layout)
 
-    ###########################################################
     # add caption
     lines.extend(['::', ''])
     if content:
