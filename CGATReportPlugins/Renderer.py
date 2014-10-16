@@ -189,7 +189,7 @@ class DataFrame(Renderer):
             if self.tail:
                 texts.append(str(dataframe.tail(self.tail)))
         elif self.summary:
-            texts.append(str(dataframe.summary()))
+            texts.append(str(dataframe.describe()))
         else:
             texts.append(str(dataframe))
 
