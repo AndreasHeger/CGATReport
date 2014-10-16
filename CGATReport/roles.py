@@ -138,7 +138,7 @@ def param_role(role, rawtext, text, lineno, inliner,
     class_name, parameter_name = ".".join(parts[:-1]), parts[-1]
 
     try:
-        code, tracker = Utils.makeTracker(class_name)
+        code, tracker, tracker_path = Utils.makeTracker(class_name)
     except AttributeError:
         tracker = None
 
@@ -176,7 +176,7 @@ def value_role(role, rawtext, text, lineno, inliner,
     class_name = text
 
     try:
-        code, tracker = Utils.makeTracker(class_name)
+        code, tracker, tracker_path = Utils.makeTracker(class_name)
     except (AttributeError, ImportError):
         tracker = None
 

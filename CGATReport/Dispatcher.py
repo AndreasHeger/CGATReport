@@ -59,6 +59,9 @@ class Dispatcher(Component.Component):
         self.renderer = renderer
         self.transformers = transformers
 
+        # set to true if index will be later set by tracker
+        self.indexFromTracker = False
+
         try:
             if tracker.cache:
                 self.cache = Cache.Cache(Cache.tracker2key(tracker))
@@ -67,7 +70,8 @@ class Dispatcher(Component.Component):
         except AttributeError:
             self.cache = Cache.Cache(Cache.tracker2key(tracker))
 
-        self.data = DataTree.DataTree()
+        self.tree = None
+        self.data = None
 
         # Level at which to group the results of Renderers
         # None is no grouping
@@ -174,11 +178,11 @@ class Dispatcher(Component.Component):
         return result
 
     def getDataPaths(self, obj):
-        '''determine data paths from a tracker.
+        '''determine if obj is a function and return
+        data paths from a tracker.
 
         If obj is a function, returns True and an empty list.
-
-        returns False and a list of lists.
+        If obj is an object, returns False and a list datapaths.
         '''
         data_paths = []
 
@@ -188,7 +192,10 @@ class Dispatcher(Component.Component):
             data_paths = obj.getPaths()
 
         if not data_paths:
-            if hasattr(obj, 'tracks'):
+            if hasattr(obj, 'setIndex'):
+                self.indexFromTracker = True
+                return True, []
+            elif hasattr(obj, 'tracks'):
                 tracks = getattr(obj, 'tracks')
             elif hasattr(obj, 'getTracks'):
                 tracks = obj.getTracks()
@@ -273,7 +280,7 @@ class Dispatcher(Component.Component):
         Data is stored in a multi-level dictionary (DataTree)
         '''
 
-        self.data = odict()
+        self.tree = odict()
 
         self.debug("%s: collecting data paths." % (self.tracker))
         is_function, datapaths = self.getDataPaths(self.tracker)
@@ -284,7 +291,7 @@ class Dispatcher(Component.Component):
             d = self.getData(())
 
             # save in data tree as leaf
-            DataTree.setLeaf(self.data, ("all",), d)
+            DataTree.setLeaf(self.tree, ("all",), d)
 
             self.debug("%s: collecting data finished for function." %
                        (self.tracker))
@@ -323,7 +330,7 @@ class Dispatcher(Component.Component):
                 self.tracker,
                 len(all_paths)))
 
-        self.data = odict()
+        self.tree = odict()
         for path in all_paths:
 
             d = self.getData(path)
@@ -333,13 +340,13 @@ class Dispatcher(Component.Component):
                 continue
 
             # save in data tree as leaf
-            DataTree.setLeaf(self.data, path, d)
+            DataTree.setLeaf(self.tree, path, d)
 
         self.debug(
             "%s: collecting data finished for %i data paths" % (
                 self.tracker,
                 len(all_paths)))
-        return self.data
+        return self.tree
 
     def restrict(self):
         '''restrict data paths.
@@ -372,8 +379,8 @@ class Dispatcher(Component.Component):
         keep = [any([_match(x) for x in labels]) for labels in self.data.index]
         self.data = self.data[keep]
 
-        # now select columns (does not work together with row restrict)
-        # needs a separate way to restrict output
+        # Selecting columns does not work together with row restrict
+        # needs a separate option.
         # keep = [x for x in self.data.columns if _match(x)]
         # self.data = self.data[keep]
 
@@ -420,11 +427,9 @@ class Dispatcher(Component.Component):
     def transform(self):
         '''call data transformers and group tree
         '''
-
         for transformer in self.transformers:
             self.debug("profile: started: transformer: %s" % (transformer))
             self.debug("%s: applying %s" % (self.renderer, transformer))
-
             try:
                 self.data = transformer(self.data)
             finally:
@@ -636,11 +641,11 @@ class Dispatcher(Component.Component):
         finally:
             self.debug("profile: finished: tracker: %s" % (self.tracker))
 
-        if len(self.data) == 0:
+        if self.tree is None or len(self.tree) == 0:
             self.info("%s: no data - processing complete" % self.tracker)
             return None
 
-        data_paths = DataTree.getPaths(self.data)
+        data_paths = DataTree.getPaths(self.tree)
         self.debug("%s: after collection: %i data_paths: %s" %
                    (self, len(data_paths), str(data_paths)))
 
@@ -648,15 +653,28 @@ class Dispatcher(Component.Component):
         # directly. Note that no transformations will be applied.
         if isinstance(self.renderer, Renderer.User):
             results = ResultBlocks(title="main")
-            results.append(self.renderer(self.data))
+            results.append(self.renderer(self.tree))
             return results
         elif isinstance(self.renderer, Renderer.Debug):
             results = ResultBlocks(title="main")
-            results.append(self.renderer(self.data))
+            results.append(self.renderer(self.tree))
             return results
 
         # merge all data to hierarchical indexed dataframe
-        self.data = DataTree.asDataFrame(self.data)
+        self.data = DataTree.asDataFrame(self.tree)
+
+        self.debug("dataframe memory usage: total=%i,data=%i,index=%i,col=%i" %
+                   (self.data.values.nbytes +
+                    self.data.index.nbytes +
+                    self.data.columns.nbytes,
+                    self.data.values.nbytes,
+                    self.data.index.nbytes,
+                    self.data.columns.nbytes))
+
+        # if tracks are set by tracker, call tracker with dataframe
+        if self.indexFromTracker:
+            self.tracker.setIndex(self.data)
+
         # transform data
         try:
             self.transform()
@@ -668,7 +686,6 @@ class Dispatcher(Component.Component):
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after transformation: %i data_paths: %s" %
         #           (self, len(data_paths), str(data_paths)))
-
         # restrict
         try:
             self.restrict()
@@ -680,7 +697,6 @@ class Dispatcher(Component.Component):
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after restrict: %i data_paths: %s" %
         #          (self, len(data_paths), str(data_paths)))
-
         # exclude
         try:
             self.debug('exclusions disabled')
@@ -704,7 +720,6 @@ class Dispatcher(Component.Component):
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after pruning: %i data_paths: %s" %
         #           (self, len(data_paths), str(data_paths)))
-
         try:
             self.group()
         except:
@@ -714,17 +729,19 @@ class Dispatcher(Component.Component):
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after grouping: %i data_paths: %s" %
         #           (self, len(data_paths), str(data_paths)))
+        if self.renderer is not None:
+            self.debug("profile: started: renderer: %s" % (self.renderer))
 
-        self.debug("profile: started: renderer: %s" % (self.renderer))
-
-        try:
-            result = self.render()
-        except:
-            self.error("%s: exception in rendering" % self)
-            return ResultBlocks(ResultBlocks(
-                Utils.buildException("rendering")))
-        finally:
-            self.debug("profile: finished: renderer: %s" % (self.renderer))
+            try:
+                result = self.render()
+            except:
+                self.error("%s: exception in rendering" % self)
+                return ResultBlocks(ResultBlocks(
+                    Utils.buildException("rendering")))
+            finally:
+                self.debug("profile: finished: renderer: %s" % (self.renderer))
+        else:
+            result = ResultBlocks(title="")
 
         return result
 
@@ -741,3 +758,11 @@ class Dispatcher(Component.Component):
         used for re-constructing call to cache.
         '''
         return self.slices
+        
+    def getDataTree(self):
+        '''return data tree.'''
+        return self.tree
+
+    def getDataFrame(self):
+        '''return data frame.'''
+        return self.data

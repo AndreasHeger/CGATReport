@@ -9,7 +9,7 @@ from CGATReport.Component import Component
 from CGATReport import Utils
 
 try:
-    # import mpld3
+    import mpld3
     USE_MPLD3 = Utils.PARAMS.get('report_mpl', None) == 'mpld3'
 except ImportError:
     USE_MPLD3 = False
@@ -67,7 +67,6 @@ class MatplotlibPlugin(Component):
         # create all required images
         for figman in fig_managers:
 
-
             # create all images
             figid = figman.num
 
@@ -88,7 +87,7 @@ class MatplotlibPlugin(Component):
                         "Exception running plot %s" % outpath)
                     warnings.warn(s)
                     return []
-                    
+
             # insert display figure
             is_html = False
             script_text = None
@@ -133,7 +132,6 @@ class MatplotlibPlugin(Component):
                     # get js figure and html snippet
                     js_text, script_text = bokeh.embed.autoload_static(
                         bpl, res, script_path)
-
 
                     with open(script_path, "w") as outf:
                         outf.write(js_text)

@@ -235,7 +235,7 @@ def writeNotebook(outfile, options, kwargs,
     params = {"tracker": "%s" % (name),
               "options": ",\n".join(cmd_options)}
 
-    outfile.write(Utils.NOTEBOOK_TEMPLATE % params)
+    outfile.write(Utils.NOTEBOOK_TEXT_TEMPLATE % params)
 
 
 def run(name, t, kwargs):
@@ -405,7 +405,7 @@ def main(argv=None, **kwargs):
     ######################################################
     # decide whether to render or not
     if options.renderer == "none" or options.start_interpreter or \
-            options.start_ipython or options.language == "notebook":
+       options.start_ipython or options.language == "notebook":
         renderer = None
     else:
         renderer = Utils.getRenderer(options.renderer, renderer_options)
@@ -475,10 +475,11 @@ def main(argv=None, **kwargs):
 
         dispatcher = Dispatcher(t, renderer, transformers)
 
-        if renderer == None:
-            dispatcher.parseArguments(**kwargs)
-            result = dispatcher.collect()
-            result = dispatcher.transform()
+        if renderer is None:
+            # dispatcher.parseArguments(**kwargs)
+            # result = dispatcher.collect()
+            # result = dispatcher.transform()
+            result = dispatcher(**kwargs)
             options.do_print = options.language == "notebook"
             options.do_show = False
             options.hardcopy = False
@@ -509,7 +510,7 @@ def main(argv=None, **kwargs):
 
             sys.stdout.write("\n.. Template end\n")
 
-        if result and renderer != None:
+        if result and renderer is not None:
             for r in result:
                 if r.title:
                     print ("")
@@ -596,16 +597,13 @@ def main(argv=None, **kwargs):
     if savedir is not None:
         os.chdir(savedir)
 
-    if renderer is None:
-        dataframe = asDataFrame(result)
-
-        print ("--> cgatreport - available data structures <--")
-        print ("    result=%s" % type(result))
-        print ("    dataframe=%s" % type(dataframe))
+    if options.tracker and renderer is None:
+        datatree = dispatcher.getDataTree()
+        dataframe = dispatcher.getDataFrame()
 
         # trying to push R objects
         # from rpy2.robjects import r as R
-        # for k, v in flat_iterator(result):
+        # for k, v in flat_iterator(datatree):
         #     try:
         #         R.assign(k, v)
         #     except ValueError, msg:
@@ -614,6 +612,9 @@ def main(argv=None, **kwargs):
         # print ("----------------------------------------")
 
         if options.start_interpreter:
+            print ("--> cgatreport - available data structures <--")
+            print ("    datatree=%s" % type(datatree))
+            print ("    dataframe=%s" % type(dataframe))
             interpreter = code.InteractiveConsole(
                 dict(globals().items() + locals().items()))
             interpreter.interact()
