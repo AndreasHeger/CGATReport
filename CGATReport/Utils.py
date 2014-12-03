@@ -81,6 +81,14 @@ def isArray(data):
     return type(data) in ContainerTypes
 
 
+def isMatrix(data):
+    '''return True if data is a numpy matrix.
+
+    A matrix is an array with two dimensions.
+    '''
+    return isinstance(data, numpy.ndarray) and len(data.shape) == 2
+
+
 def isDict(data):
     '''return True if data is a dictionary'''
     return type(data) in DictionaryTypes
