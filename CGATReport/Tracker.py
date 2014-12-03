@@ -29,6 +29,7 @@ except ImportError:
     R = None
 
 from CGATReport import Utils
+from CGATReport import Stats
 
 
 class SQLError(Exception):
@@ -261,10 +262,6 @@ class TrackerSingleFile(Tracker):
 
         self.filename = kwargs['filename'].strip()
 
-#######################################################
-#######################################################
-#######################################################
-
 
 class TrackerMultipleFiles(Tracker):
 
@@ -275,20 +272,23 @@ class TrackerMultipleFiles(Tracker):
 
     This tracker accepts the following parameters:
 
-:glob:
+    :glob:
 
         glob expression describing the files to include.
 
-:regex:
+    :regex:
 
         regular expression for extracting a track label from
         a filename. If not given, the complete filename
         path is used.
 
     '''
+    # do not cache as retrieved directly from file
+    # and is usually parameterized
+    cache = False
 
     def getTracks(self, subset=None):
-        files = glob.glob(self.glob)
+        files = sorted(glob.glob(self.glob))
         self.mapTrack2File = {}
         for f in files:
             try:
@@ -321,10 +321,6 @@ class TrackerMultipleFiles(Tracker):
         else:
             infile = open(filename, "r")
         return infile
-
-#######################################################
-#######################################################
-#######################################################
 
 
 class TrackerTSV(TrackerSingleFile):
@@ -375,7 +371,6 @@ class TrackerTSV(TrackerSingleFile):
 
 
 class TrackerMatrices(TrackerMultipleFiles):
-
     """Return matrix data from multiple files.
     """
 
@@ -399,6 +394,23 @@ class TrackerMatrices(TrackerMultipleFiles):
             row_headers.append(data[0])
             matrix[row] = numpy.array(data[1:],
                                       dtype=dtype)
+
+        # convert to floats/ints - in dataframe construction
+        # columns get sorted lexicographical order if they
+        # are strings.
+        def _convert(l):
+            try:
+                return map(int, l)
+            except ValueError:
+                pass
+            try:
+                return map(float, l)
+            except ValueError:
+                pass
+            return l
+
+        row_headers = _convert(row_headers)
+        col_headers = _convert(col_headers)
 
         return odict((('matrix', matrix),
                       ('rows', row_headers),
@@ -424,7 +436,6 @@ class TrackerDataframes(TrackerMultipleFiles):
                              sep='\t',
                              header=0,
                              index_col=self.index_column)
-        
         return df
 
 
@@ -432,6 +443,9 @@ class TrackerImages(Tracker):
 
     '''Collect image files and arrange them in a gallery.
     '''
+    # do not cache as retrieved directly from file
+    # and is usually parameterized
+    cache = False
 
     def __init__(self, *args, **kwargs):
         Tracker.__init__(self, *args, **kwargs)
@@ -1140,10 +1154,6 @@ class SingleTableTrackerRows(TrackerSQL):
             track = (track,)
         return self.data[track][slice]
 
-###########################################################################
-###########################################################################
-###########################################################################
-
 
 class SingleTableTrackerColumns(TrackerSQL):
 
@@ -1204,14 +1214,16 @@ class SingleTableTrackerColumns(TrackerSQL):
             data = self.getValues("SELECT %(track)s FROM %(table)s")
         return data
 
-###########################################################################
-###########################################################################
-###########################################################################
-
 
 class SingleTableTrackerEdgeList(TrackerSQL):
 
-    '''Tracker representing a table with matrix type data.
+    '''Tracker returning values from a table with matrix type data
+    that is stored in an edge list, for example::
+
+         row   column    value
+         A     B         1
+         A     C         2
+         B     C         3
 
     Returns a dictionary of values.
 
@@ -1231,6 +1243,7 @@ class SingleTableTrackerEdgeList(TrackerSQL):
 
     This method is inefficient, particularly so if there are no
     indices on:py:attr:`row` and:py:attr:`column`.
+
 
     '''
     table = None
@@ -1290,9 +1303,90 @@ class SingleTableTrackerEdgeList(TrackerSQL):
             return self.transform(val)
         return val
 
-###########################################################################
-###########################################################################
-###########################################################################
+
+class SingleTableTrackerEdgeListToMatrix(TrackerSQL):
+
+    '''Tracker returning values from a table with matrix type data
+    that is stored in an edge list, for example::
+
+         row   column    value
+         A     B         1
+         A     C         2
+         B     C         3
+
+    Returns a numpy matrix.
+
+    The tracks are given by entries in the:py:attr:`row` column in a
+    table:py:attr:`table`.  The slices are given by entries in the
+    :py:attr:`column` column in a table.
+
+    The:py:attr:`value` is a third column specifying the value
+    returned. If:py:attr:`where` is set, it is added to the SQL
+    statement to permit some filtering.
+
+    If:py:attr:`transform` is set, it is applied to the value.
+
+    if:py:attr:`value2` is set, the matrix is assumed to be stored in
+    the format ``(row, column, value, value1)``, where ``value`` is
+    the value for ``row,col`` and value2 is the value for ``col,row``.
+    '''
+    table = None
+    row = None
+    column = None
+    value = None
+    value2 = None
+    missing_value = 0
+    diagonal_value = 0
+    # set to true if matrix is symmetric
+    is_symmetric = False
+    dtype = numpy.int
+    where = "1"
+
+    # saved by preloading 
+    _matrix = None
+    _rows = None
+    _cols = None
+
+    def __init__(self, *args, **kwargs):
+        TrackerSQL.__init__(self, *args, **kwargs)
+
+    def getTracks(self):
+        self._load()
+        return self._rows
+
+    def getSlices(self):
+        self._load()
+        return self._cols
+
+    def _load(self):
+        '''load data.
+
+        The data is pre-loaded in order to avoid multiple random access
+        operations on the same table.
+        '''
+        if self._matrix is None:
+            if self.value2 is None:
+                data = self.get(
+                    "SELECT %(row)s, %(column)s, %(value)s "
+                    "FROM %(table)s WHERE %(where)s")
+            else:
+                data = self.get(
+                    "SELECT %(row)s, %(column)s, %(value)s, %(value2)s "
+                    "FROM %(table)s WHERE %(where)s")
+
+            self._matrix, self._rows, self._cols = \
+                Stats.buildMatrixFromEdges(
+                    data,
+                    is_symmetric=self.is_symmetric,
+                    missing_value=self.missing_value,
+                    diagonal_value=self.diagonal_value,
+                    dtype=self.dtype)
+            self._map_rows = dict([(y, x) for x, y in enumerate(self._rows)])
+            self._map_cols = dict([(y, x) for x, y in enumerate(self._cols)])
+
+    def __call__(self, track, slice):
+        self._load()
+        return self._matrix[self._map_rows[track], self._map_cols[slice]]
 
 
 class MultipleTableTrackerEdgeList(TrackerSQL):
@@ -1332,10 +1426,6 @@ class MultipleTableTrackerEdgeList(TrackerSQL):
                 result[row][col] = value
 
         return result
-
-###########################################################################
-###########################################################################
-###########################################################################
 
 
 class SingleTableTrackerHistogram(TrackerSQL):
