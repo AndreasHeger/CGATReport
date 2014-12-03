@@ -830,6 +830,15 @@ def layoutBlocks(blocks, layout="column"):
 
     blocks = bb
 
+    # check if postambles are identical across all blocks
+    postambles = set([b.postamble for b in blocks])
+
+    if len(postambles) == 1:
+        blocks.clearPostamble()
+        postamble = postambles.pop()
+    else:
+        postamble = None
+
     if layout == "column":
         for block in blocks:
             if block.title:
@@ -924,6 +933,10 @@ def layoutBlocks(blocks, layout="column"):
                 lines.append("|%s|" % "|".join(l))
 
     lines.append(separator)
+
+    if postamble:
+        lines.append(postamble)
+
     lines.append("")
 
     return lines

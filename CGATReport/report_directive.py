@@ -389,7 +389,7 @@ def run(arguments,
 
     if "notebook" in urls:
         nb_url = '`nb <%(notebook_url)s>`__' % links
-    
+
     map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
     map_figure2text["default-suffix"] = ""
     blocks.updatePlaceholders(map_figure2text)

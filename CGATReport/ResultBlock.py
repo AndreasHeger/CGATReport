@@ -1,8 +1,5 @@
-import types
 import re
-import string
 import itertools
-import operator
 import sys
 
 # PYTHON 2/3 compatibility
@@ -14,46 +11,62 @@ class ResultBlock(object):
 
     """Result of:class:``Renderer``
 
-    A ResultBlock is a container of an:class:``Renderer`` result. It contains
-    text (:attr:`text`) and a title (:attr:`title`).
+    A ResultBlock is a container of an:class:``Renderer`` result. It
+    contains text (:attr:`text`) and a title (:attr:`title`).
 
     Blocks will be arranged according to the:term: `layout`
     option to the ``report`` directive.
+
+    Each block might contain a pre-amble or post-amble that
+    will be added to text.
+
     """
 
-    def __init__(self, text, title):
+    def __init__(self, text, title, preamble="", postamble=""):
         assert isinstance(
-            text, basestring), "created ResultBlock without txt, but %s" % str(type(text))
+            text, basestring), \
+            "created ResultBlock without text, but %s" % str(type(text))
         assert isinstance(
-            title, basestring), "created ResultBlock without title, but %s" % str(title)
-        assert title != None
-        assert text != None
+            title, basestring), \
+            "created ResultBlock without title, but %s" % str(title)
+        assert title is not None
+        assert text is not None
         self.text = text
         self.title = title
+        self.preamble = preamble
+        self.postamble = postamble
 
     def _getWidth(self, txt):
         """return the width of the block."""
-        if txt == None:
+        if txt is None:
             return 0
         return max([len(x) for x in txt.split("\n")])
 
     def _getHeight(self, txt):
         """return the width of the block."""
-        if txt == None:
+        if txt is None:
             return 0
         return len(txt.split("\n"))
 
     def getWidth(self):
-        return max(self._getWidth(self.text), self._getWidth(self.title))
+        return max(self._getWidth(self.text),
+                   self._getWidth(self.title),
+                   self._getWidth(self.preamble),
+                   self._getWidth(self.postamble))
 
     def getHeight(self):
-        return max(self._getHeight(self.text), self._getHeight(self.title))
+        return max(self._getHeight(self.text),
+                   self._getHeight(self.title),
+                   self._getHeight(self.preamble),
+                   self._getHeight(self.postamble))
 
     def getTextWidth(self):
         return self._getWidth(self.text)
 
     def getTextHeight(self):
-        return self._getHeight(self.text)
+        return self._getHeight(self.preamble) +\
+            self._getHeight(self.text) +\
+            self._getHeight(self.postamble)
 
     def getTitleWidth(self):
         return self._getWidth(self.title)
@@ -87,8 +100,17 @@ class ResultBlock(object):
         # make unique
         self.title = "/".join([key for key, _ in itertools.groupby(parts)])
 
+    def clearPostamble(self):
+        self.postamble = ""
+
+    def clearPreamble(self):
+        self.preamble = ""
+
     def __str__(self):
-        return "\n\n".join((self.title, self.text))
+        return "\n\n".join((self.title,
+                            self.preamble,
+                            self.text,
+                            self.postamble))
 
 
 class EmptyResultBlock(ResultBlock):
@@ -146,6 +168,14 @@ class ResultBlocks(object):
 
     def __setattr__(self, name, value):
         setattr(self._data, name, value)
+
+    def clearPostamble(self):
+        for block in self._data:
+            block.clearPostamble()
+
+    def clearPreamble(self):
+        for block in self._data:
+            block.clearPostamble()
 
 
 def flat_iterator(blocks):

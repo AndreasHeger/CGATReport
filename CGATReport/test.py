@@ -302,6 +302,9 @@ def main(argv=None, **kwargs):
     parser.add_option("--no-show", dest="do_show", action="store_false",
                       help="do not show a plot [default=%default].")
 
+    parser.add_option("--layout", dest="layout", type="string",
+                      help="output rst with layout [default=%default].")
+
     parser.add_option("-i", "--start-interpreter", dest="start_interpreter",
                       action="store_true",
                       help="do not render, but start python interpreter "
@@ -341,6 +344,7 @@ def main(argv=None, **kwargs):
         start_ipython=False,
         language="rst",
         workdir=None,
+        layout=None,
         dpi=100)
 
     if argv is None and len(kwargs) == 0:
@@ -511,13 +515,17 @@ def main(argv=None, **kwargs):
             sys.stdout.write("\n.. Template end\n")
 
         if result and renderer is not None:
-            for r in result:
-                if r.title:
-                    print ("")
-                    print ("title: %s" % r.title)
-                    print ("")
-                for s in r:
-                    print(str(s))
+            if options.layout is not None:
+                lines = Utils.layoutBlocks(result, layout=options.layout)
+                print "\n".join(lines)
+            else:
+                for r in result:
+                    if r.title:
+                        print ("")
+                        print ("title: %s" % r.title)
+                        print ("")
+                    for s in r:
+                        print(str(s))
 
         if options.hardcopy:
 

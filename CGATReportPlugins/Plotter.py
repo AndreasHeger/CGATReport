@@ -455,7 +455,6 @@ class Plotter(object):
                     f = lambda x, txt: str(x)
 
                 new_labels = [f(x, y) for x, y in enumerate(xlabels)]
-                
                 postamble = "\n" + "\n".join(
                     ["* %s: %s" % (x, y)
                      for x, y in zip(new_labels, xlabels)])
@@ -464,11 +463,10 @@ class Plotter(object):
 
         blocks = ResultBlocks(
             ResultBlock(
-                "\n".join((
-                    preamble,
-                    "#$mpl %i$#" % self.mFigure,
-                    postamble)),
-                title=DataTree.path2str(path)))
+                text="#$mpl %i$#" % self.mFigure,
+                title=DataTree.path2str(path),
+                preamble=preamble,
+                postamble=postamble))
 
         legend = None
         maxlen = 0
@@ -694,7 +692,6 @@ class PlotterMatrix(Plotter):
                    color_scheme=None):
 
         self.debug("plot matrix started")
-
         # when matrix is very different from square matrix
         # adjust figure size
         # better would be to move the axes as well to the left of
