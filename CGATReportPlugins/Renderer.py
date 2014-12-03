@@ -217,7 +217,9 @@ class TableBase(Renderer):
         (('force', directives.unchanged),
          ('separate', directives.unchanged),
          ('max-rows', directives.length_or_unitless),
+         ('large-rows', directives.length_or_unitless),
          ('max-cols', directives.length_or_unitless),
+         ('large-html-class', directives.unchanged),
          ('html-class', directives.unchanged))
 
     max_rows = 50
@@ -230,43 +232,42 @@ class TableBase(Renderer):
         self.separate = "separate" in kwargs
         self.max_rows = kwargs.get("max-rows", 50)
         self.max_cols = kwargs.get("max-cols", 20)
-        self.html_class = kwargs.get('html-class',
-                                     Utils.PARAMS.get('report_table_class',
-                                                      None))
+        self.html_class = kwargs.get(
+            'html-class',
+            Utils.PARAMS.get('report_table_class',
+                             None))
+        self.large_rows = kwargs.get("max-rows", 20)
+        self.large_html_class = kwargs.get(
+            'large-html-class',
+            Utils.PARAMS.get('report_largetable_class',
+                             None))
 
     def asCSV(self, dataframe, row_headers, col_headers, title):
         '''save the table using CSV.'''
 
-        lines = []
         out = StringIO.StringIO()
         dataframe.to_csv(out)
-        lines = []
-        lines.append(".. csv-table:: %s" % title)
-        if self.html_class is not None:
-            lines.append("   :class: %s" % self.html_class)
+        result = []
+        result.append(".. csv-table:: %s" % title)
+        lines = out.getvalue().split("\n")
+
+        if len(lines) > self.large_rows:
+            if self.large_html_class is not None:
+                result.append("   :class: %s" % self.large_html_class)
+        else:
+            if self.html_class is not None:
+                result.append("   :class: %s" % self.html_class)
 
         if self.add_rowindex:
             raise NotImplementedError('add-rowindex not implemented')
-            lines.append('   :header: "row", "", "%s" ' %
-                         '", "'.join(map(str, col_headers)))
-            lines.append('')
-
-            x = 0
-            for header, line in zip(row_headers, matrix):
-                x += 1
-                lines.append('   %i,"%s","%s"' %
-                             (x, str(header),
-                              '", "'.join(map(str, line))))
-
         else:
-            l = out.getvalue().split("\n")
-            lines.append('   :header: %s' % l[0])
-            lines.append('')
-            lines.extend(['   %s' % x for x in l[1:]])
+            result.append('   :header: %s' % lines[0])
+            result.append('')
+            result.extend(['   %s' % x for x in lines[1:]])
 
-        lines.append("")
+        result.append("")
 
-        return ResultBlock("\n".join(lines), title=title)
+        return ResultBlock("\n".join(result), title=title)
 
     def asRST(self, dataframe, row_headers, col_headers, title):
         '''save the table using RST.'''
@@ -505,7 +506,7 @@ class Table(TableBase):
                 total, other_col = None, None
                 if "," in part:
                     column, method = part.split(",")
-                    if method in col_headers:
+                    if method in columns:
                         other_col = columns.index(method)
                     else:
                         try:
@@ -534,7 +535,15 @@ class Table(TableBase):
                     dataframe['%s/%%' % column] = 100.0 *\
                         dataframe[column] / values
 
-        # If index is not hierarchical, but contains tuples,
+        if self.transpose:
+            dataframe = dataframe.transpose()
+            # flatten the column index if it is hierarchical
+            is_hierarchical = isinstance(dataframe.columns,
+                                         pandas.core.index.MultiIndex)
+            if is_hierarchical:
+                dataframe.columns = ["/".join(x) for x in dataframe.columns]
+
+        # if index is not hierarchical, but contains tuples,
         # split tuples in index to build a new (hierarchical) index
         is_hierarchical = isinstance(dataframe.index,
                                      pandas.core.index.MultiIndex)
@@ -823,7 +832,6 @@ class MatrixBase:
                                         col_headers):
         """apply correspondence analysis to a matrix.
         """
-
         if len(row_headers) <= 1 or len(col_headers) <= 1:
             self.warn("correspondence analysis skipped for "
                       "matrices with single row/column")
@@ -1064,12 +1072,19 @@ class TableMatrix(TableBase, MatrixBase):
         This method will also apply conversions if apply_transformations
         is set.
         """
-
         rows = map(path2str, dataframe.index)
         columns = list(dataframe.columns)
         # use numpy.matrix - permits easier broadcasting
         # for normalization.
         matrix = numpy.matrix(dataframe.as_matrix())
+
+        # remove columns with only NaNs. This can happend
+        # during the dataframe merging process if the
+        # columns are unique to each matrix.
+        take = numpy.array(numpy.all(numpy.isnan(matrix), axis=0).flat)
+        matrix = matrix[:, ~take]
+        columns = list(numpy.array(columns)[~take])
+
         if self.converters and apply_transformations:
             # convert to float for conversions
             if self.tofloat:
