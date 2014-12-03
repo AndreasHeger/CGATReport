@@ -279,9 +279,10 @@ class Plotter(object):
     def wrapText(self, text, cliplen=20, separators=":_"):
         """wrap around text using the mathtext.
 
-        Currently this subroutine uses the \frac
-        directive, so it is not pretty.
-        returns the wrapped text."""
+        Currently this subroutine uses the \frac directive, so it is
+        not pretty.  returns the wrapped text.
+
+        """
 
         # split txt into two equal parts trying
         # a list of separators
@@ -599,6 +600,10 @@ class PlotterMatrix(Plotter):
 
     :term:`max-cols`: maximum number of columns per plot
 
+    :term:`nolabel-rows`: do not add row labels
+
+    :term:`nolabel-cols`: do not add column labels
+
     """
 
     mFontSize = 8
@@ -792,8 +797,6 @@ class PlotterMatrix(Plotter):
             if False:
                 plot_nrows = int(math.ceil(float(nrows) / self.mMaxRows))
                 plot_ncols = int(math.ceil(float(ncols) / self.mMaxCols))
-                # new_row_headers = ["R%s" % (x + 1) for x in range(len(row_headers))]
-                # new_col_headers = ["C%s" % (x + 1) for x in range(len(col_headers))]
                 new_row_headers = row_headers
                 new_col_headers = col_headers
                 nplot = 1
@@ -812,7 +815,8 @@ class PlotterMatrix(Plotter):
                             vmin, vmax,
                             color_scheme)
 
-                labels = ["%s: %s" % x for x in zip(new_headers, row_headers)]
+                labels = ["%s: %s" % x for x in zip(new_row_headers,
+                                                    row_headers)]
                 self.legend_location = "extra"
                 plt.subplots_adjust(**self.mMPLSubplotOptions)
 
