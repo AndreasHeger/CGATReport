@@ -423,6 +423,20 @@ def asDataFrame(data):
         expected_levels = min(path_lengths) + min(levels)
         df = pandas.concat(dataframes, keys=index_tuples)
 
+        # concat is akin to an SQL join operation and will
+        # sort the columns lexicographically.
+        # For matrices that could result in the columns not
+        # being in the natural order any more unless the
+        # column names have been set accordingly.
+        # The following thus reorders the columns preserving
+        # the order in the original dataframes.
+        column_set = collections.OrderedDict()
+        for d in dataframes:
+            column_set.update(collections.OrderedDict(
+                [(x, 0) for x in d.columns]))
+
+        df = df.reindex_axis(column_set.keys(), axis=1)
+
     else:
         debug('dataframe conversion: from values')
         if len(labels) == 1:
