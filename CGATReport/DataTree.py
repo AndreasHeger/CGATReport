@@ -345,6 +345,7 @@ def asDataFrame(data):
     expected_levels = None
 
     leaf = leaves[0][1]
+
     if Utils.isArray(leaf):
 
         # build dataframe from arrays
@@ -381,10 +382,13 @@ def asDataFrame(data):
             # build a melted data frame with a single column
             # given by the name of the path.
             for key, leave in leaves:
+                # skip empty leaves
+                if len(leave) == 0:
+                    continue
                 index_tuples.append(key)
                 dataframes.append(pandas.DataFrame(leave,
                                                    columns=('value',)))
-        
+
         expected_levels = len(index_tuples[0])
 
         df = pandas.concat(dataframes, keys=index_tuples)
