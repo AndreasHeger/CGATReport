@@ -154,6 +154,25 @@ Alternatives can be
 * another column such as ``:add-percent:column1,column2``, or
 * a value such as ``:add-percent:column1,20``.
 
+Transposing
+-----------
+
+With the option :term:`transpose` option the rows and colums
+of a table are switched.
+
+For example::
+
+   .. report:: Trackers.LabeledDataExample
+      :render: table
+      :transpose: 
+
+      A transposed table
+
+.. report:: Trackers.LabeledDataExample
+   :render: table
+   :transpose:
+
+   A transposed table
 
 =========
 rst-table
