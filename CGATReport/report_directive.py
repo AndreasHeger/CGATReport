@@ -26,7 +26,7 @@ CGATREPORT_DEBUG = False
 TEMPLATE_TEXT = """
 .. htmlonly::
 
-   [`source code <%(linked_codename)s>`__]
+   [%(code_url)s %(nb_url)s]
 
 """
 
@@ -62,8 +62,8 @@ def run(arguments,
     # reference is used for time-stamping
     tracker_name = directives.uri(arguments[0])
 
-    basedir, fname, basename, ext, outdir, codename, notebookname = Utils.buildPaths(
-        tracker_name)
+    (basedir, fname, basename, ext, outdir,
+     codename, notebookname) = Utils.buildPaths(tracker_name)
 
     # get the directory of the rst file
     # state_machine.document.attributes['source'])
@@ -98,18 +98,20 @@ def run(arguments,
         os.path.relpath(builddir, start=srcdir), outdir)
 
     logging.debug(
-        "report_directive.run: arguments=%s, options=%s, lineno=%s, content=%s, document=%s" %
+        "report_directive.run: arguments=%s, options=%s, lineno=%s, "
+        "content=%s, document=%s" %
         (str(arguments),
          str(options),
          str(lineno),
          str(content),
          str(document)))
-    
     logging.debug(
-        "report_directive.run: plotdir=%s, basename=%s, ext=%s, fname=%s, rstdir=%s, srcdir=%s, builddir=%s" %
+        "report_directive.run: plotdir=%s, basename=%s, ext=%s, "
+        "fname=%s, rstdir=%s, srcdir=%s, builddir=%s" %
         (tracker_name, basename, ext, fname, rstdir, srcdir, builddir))
     logging.debug(
-        "report_directive.run: tracker_name=%s, basedir=%s, rst2src=%s, root2build=%s, outdir=%s, codename=%s" %
+        "report_directive.run: tracker_name=%s, basedir=%s, "
+        "rst2src=%s, root2build=%s, outdir=%s, codename=%s" %
         (tracker_name, basedir, rst2srcdir, rst2builddir, outdir, codename))
 
     # try to create. If several processes try to create it,
@@ -186,6 +188,8 @@ def run(arguments,
                                    options_hash)))
         filename_text = os.path.join(outdir, "%s.txt" % (template_name))
 
+        notebookname += options_hash
+
         logging.debug("report_directive.run: options_hash=%s" % options_hash)
 
         ###########################################################
@@ -219,11 +223,13 @@ def run(arguments,
             for filename in filenames:
                 if not os.path.exists(filename):
                     logging.info(
-                        "report_directive.run: %s: redo: %s missing" % (tag, filename))
+                        "report_directive.run: %s: redo: %s missing" %
+                        (tag, filename))
                     break
             else:
                 logging.info(
-                    "report_directive.run: %s: noredo: all files are present" % tag)
+                    "report_directive.run: %s: noredo: all files are present" %
+                    tag)
                 # all is present - save text and return
                 if lines and state_machine:
                     state_machine.insert_input(
@@ -250,12 +256,15 @@ def run(arguments,
     try:
         ########################################################
         # find the tracker
-        logging.debug("report_directive.run: collecting tracker %s with options %s " % (
-            tracker_name, tracker_options))
-        code, tracker = Utils.makeTracker(tracker_name, (), tracker_options)
+        logging.debug(
+            "report_directive.run: collecting tracker %s with options %s " %
+            (tracker_name, tracker_options))
+        code, tracker, tracker_path = Utils.makeTracker(
+            tracker_name, (), tracker_options)
         if not tracker:
             logging.error(
-                "report_directive.run: no tracker - no output from %s " % str(document))
+                "report_directive.run: no tracker - no output from %s " %
+                str(document))
             raise ValueError("tracker `%s` not found" % tracker_name)
 
         logging.debug(
@@ -292,6 +301,7 @@ def run(arguments,
 
         # add the tracker options
         dispatcher_options.update(tracker_options)
+
         blocks = dispatcher(**dispatcher_options)
 
         if blocks is None:
@@ -328,12 +338,13 @@ def run(arguments,
     # write notebook snippet
     linked_notebookname = re.sub(
         "\\\\", "/", os.path.join(rst2srcdir, notebookname))
-    if basedir != outdir:
+    if basedir != outdir and tracker_id is not None:
         with open(os.path.join(outdir, notebookname), "w") as outfile:
             Utils.writeNoteBookEntry(outfile,
                                      renderer=renderer_name,
                                      tracker=tracker_name,
                                      transformers=transformer_names,
+                                     tracker_path=tracker_path,
                                      options=renderer_options.items() +
                                      tracker_options.items() +
                                      transformer_options.items())
@@ -342,6 +353,8 @@ def run(arguments,
     # collect images
     ###########################################################
     map_figure2text = {}
+    links = {'code_url': linked_codename,
+             'notebook_url': linked_notebookname}
     try:
         for collector in collectors:
             map_figure2text.update(collector.collect(
@@ -354,8 +367,7 @@ def run(arguments,
                 content,
                 display_options,
                 tracker_id,
-                links={'code_url': linked_codename,
-                       'notebook_url': linked_notebookname}))
+                links=links))
     except:
 
         logging.warn("report_directive.run: exception caught while "
@@ -370,14 +382,21 @@ def run(arguments,
     # replace place holders or add text
     ###########################################################
     # add default for text-only output
+    urls = Utils.asList(Utils.PARAMS["report_urls"])
+    code_url, nb_url = "", ""
+    if "code" in urls:
+        code_url = "`code <%(code_url)s>`__" % links
+
+    if "notebook" in urls:
+        nb_url = '`nb <%(notebook_url)s>`__' % links
+    
     map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
     map_figure2text["default-suffix"] = ""
     blocks.updatePlaceholders(map_figure2text)
-    ###########################################################
+
     # render the output taking into account the layout
     lines = Utils.layoutBlocks(blocks, layout)
 
-    ###########################################################
     # add caption
     lines.extend(['::', ''])
     if content:

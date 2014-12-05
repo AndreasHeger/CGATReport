@@ -54,14 +54,14 @@ the data frame and can thus be used within the ggplot statement::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: r-ggplot
-       :statement: aes(expression, expression) + geom_point()
+       :statement: aes(value, value) + geom_point()
        :layout: column-2
 
        A simple plot
 
 .. report:: Tutorial5.ExpressionLevel
    :render: r-ggplot
-   :statement: aes(expression, expression) + geom_point()
+   :statement: aes(value, value) + geom_point()
    :layout: column-2
 
    A simple plot
@@ -70,14 +70,14 @@ More interesting might be to plot a histogram::
 
     .. report:: Tutorial5.ExpressionLevel
        :render: r-ggplot
-       :statement: aes(expression) + geom_histogram()
+       :statement: aes(value) + geom_histogram()
        :layout: column-2
 
        A histogram plot
 
 .. report:: Tutorial5.ExpressionLevel
    :render: r-ggplot
-   :statement: aes(expression) + geom_histogram()
+   :statement: aes(value) + geom_histogram()
    :layout: column-2
 
    A histogram plot

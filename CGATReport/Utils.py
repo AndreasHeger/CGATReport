@@ -81,6 +81,14 @@ def isArray(data):
     return type(data) in ContainerTypes
 
 
+def isMatrix(data):
+    '''return True if data is a numpy matrix.
+
+    A matrix is an array with two dimensions.
+    '''
+    return isinstance(data, numpy.ndarray) and len(data.shape) == 2
+
+
 def isDict(data):
     '''return True if data is a dictionary'''
     return type(data) in DictionaryTypes
@@ -580,7 +588,7 @@ def makeTracker(path, args=(), kwargs={}):
     """
     obj, module, pathname, cls = makeObject(path, args, kwargs)
     code = getCode(cls, pathname)
-    return code, obj
+    return code, obj, pathname
 
 
 @memoized
@@ -932,20 +940,74 @@ def buildPaths(reference):
 
     return basedir, fname, basename, ext, outdir, codename, notebookname
 
-NOTEBOOK_TEMPLATE = """%%matplotlib inline
+NOTEBOOK_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script src="%(staticdir)s/jquery.min.js"></script>
+<script src="%(staticdir)s/notebook.js"></script>
+<script>
+$(document).ready(function() {
+$("#rendered").click(function(){
+    create_notebook('%(rendered_options)s');})
+});
+$(document).ready(function() {
+$("#data").click(function(){
+    create_notebook('%(data_options)s');})
+});
+</script>
+
+</head>
+<body>
+
+<h1>Notebook integration</h1>
+
+<p>
+Click on the buttons below to import the figure
+or the data into your notebook.
+</p>
+<button type="button" id="data">Data</button>
+<button type="button" id="rendered">Figure</button>
+
+<h2>Copy and Paste</h2>
+Copy and paste the text below for importing the data
+in your notebook without rendering.
+
+<pre>
+%%matplotlib inline
+import CGATReport.test
+result = CGATReport.test.main(%(data_options)s)
+</pre>
+
+Copy and paste below for importing the rendered
+display item in your notebook.
+<pre>
+%%matplotlib inline
+import CGATReport.test
+result = CGATReport.test.main(%(rendered_options)s)
+</pre>
+
+</body>
+</html>
+"""
+
+NOTEBOOK_TEXT_TEMPLATE = """
+%%matplotlib inline
 import CGATReport.test
 result = CGATReport.test.main(%(options)s)
 """
 
 
-def writeNoteBookEntry(outfile, tracker, renderer, transformers, options):
+def writeNoteBookEntry(outfile, tracker, renderer, transformers,
+                       tracker_path, options):
     '''output text for pasting into an ipython notebook into *outfile*
     '''
 
     cmd_options = [
         'do_print = False',
         'tracker="%s"' % tracker,
-        'renderer="%s"' % renderer,
+        'trackerdir="%s"' % os.path.dirname(tracker_path),
         'workdir="%s"' % os.getcwd()]
 
     for key, val in options:
@@ -953,16 +1015,27 @@ def writeNoteBookEntry(outfile, tracker, renderer, transformers, options):
             cmd_options.append("%s" % key)
         else:
             if isString(val):
-                cmd_options.append("%s='%s'" % (key, val))
+                cmd_options.append('%s="%s"' % (key, val))
             else:
-                cmd_options.append('%s=%s' % (key, str(val)))
+                cmd_options.append("%s=%s" % (key, str(val)))
 
     if transformers:
-        cmd_options.append("transformer=['%s']" % "','".join(transformers))
+        cmd_options.append('transformers=["%s"]' % '","'.join(transformers))
+
+    # For the javascript to work, the options must not contain any
+    # single quotes.
+    rendered_options = ",".join(cmd_options + ['renderer="%s"' % renderer])
+    data_options = ",".join(cmd_options + ['renderer="none"'])
+    if "'" in rendered_options:
+        warn("notebook options contain ': %s" % (rendered_options))
 
     # no module name in tracker
-    params = {"options": ",".join(cmd_options),
-              "curdir": os.getcwd()}
+    # javascript files life in the "_static" directory, while
+    # the notebook entry will end up in "_static/report_directive"
+    params = {"rendered_options": rendered_options,
+              "data_options": data_options,
+              "curdir": os.getcwd(),
+              "staticdir": ".."}
 
     outfile.write(NOTEBOOK_TEMPLATE % params)
 
@@ -974,7 +1047,8 @@ def buildRstWithImage(outname,
                       links,
                       display_options,
                       default_format=None,
-                      is_html=False):
+                      is_html=False,
+                      text=None):
     '''output rst text for inserting an image.'''
     rst_output = ""
 
@@ -1011,7 +1085,25 @@ def buildRstWithImage(outname,
         else:
             id, format, dpi = CGATReport.Config.HTML_IMAGE_FORMAT
 
-        if is_html:
+        #######################################################
+        # Define templates
+        if text is not None:
+
+            template = '''
+.. htmlonly::
+
+   .. raw:: html
+
+      <div><p>
+         %(outname)s
+      <p><div>
+
+   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
+'''
+            # put text in outname
+            outname = indent(text, 6)
+
+        elif is_html:
             # put in html
             template = '''
 .. htmlonly::
@@ -1023,6 +1115,7 @@ def buildRstWithImage(outname,
 '''
             # use absolute path for html file
             outname = os.path.abspath(os.path.join(outdir, outname)) + ".html"
+
         else:
             # put in image directive
             template = '''
@@ -1034,6 +1127,7 @@ def buildRstWithImage(outname,
    [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
 '''
             linked_image = imagepath + ".%s" % format
+        #######################################################
 
         extra_images = []
         for id, format, dpi in additional_formats:
@@ -1051,7 +1145,7 @@ def buildRstWithImage(outname,
             code_url = "`code <%(code_url)s>`__" % links
 
         if "notebook" in urls:
-            nb_url = "`nb <%(notebook_url)s>`__" % links
+            nb_url = '`nb <%(notebook_url)s>`__' % links
 
         if "data" in urls:
             data_url = "`data </data/%(tracker_id)s>`__" % locals()

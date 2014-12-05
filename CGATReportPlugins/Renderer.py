@@ -87,58 +87,60 @@ class Renderer(Component.Component):
         This method will call the:meth:`render` method
         '''
         result = ResultBlocks()
-        result.extend(self.render(dataframe, path))
-        return result
-
-        # TOOD: implement splitting
-
-        if self.nlevels != -1 and len(labels) != self.nlevels:
-            raise ValueError("at path %s: expected %i levels - got %i: %s" %
-                             (str(path), self.nlevels,
-                              len(labels), str(labels)))
 
         if not self.split_at:
             result.extend(self.render(dataframe, path))
         else:
             # split dataframe at first index
-            first_level_labels = dataframe.index.get_level_values(0).unique()
-
-            if len(first_level_labels) < self.split_at:
+            level = Utils.getGroupLevels(dataframe)
+            grouper = dataframe.groupby(level=level)
+            if len(grouper) < self.split_at:
                 result.extend(self.render(dataframe, path))
             else:
-                # select tracks to always add to split
-                # pick always tracks
+                # build groups
+                always, remove_always = [], set()
+
                 if self.split_always:
-                    always = [x for x, y in
-                              itertools.product(first_level_labels,
-                                                self.split_always)
-                              if re.search(y, x)]
-                else:
-                    always = []
+                    for key, work in grouper:
+                        for pat in self.split_always:
+                            rx = re.compile(pat)
+                            if rx.search(path2str(key)):
+                                always.append((key, work))
+                                remove_always.add(key)
 
-                for z, x in enumerate(range(0, len(first_level_labels),
-                                            self.split_at)):
-                    select = list(DataTree.unique(always +
-                                                  list(first_level_labels[
-                                                      x:x + self.split_at])))
+                    grouper = dataframe.groupby(level=level)
 
-                    if len(dataframe.index.names) == 1:
-                        # if only one level, use loc to obtain dataframe
-                        # index is duplicated, so ignore second level
-                        work = pandas.concat([dataframe.loc[[s]]
-                                              for s in select],
-                                             keys=select)
-                        work.reset_index(range(1, len(work.index.names)),
-                                         drop=True,
-                                         inplace=True)
-                    else:
-                        work = pandas.concat([dataframe.xs(s, axis=0)
-                                              for s in select],
-                                             keys=select)
+                def _group_group(grouper, always, remove_always):
+                    group = always[:]
+                    for key, work in grouper:
+
+                        if key in remove_always:
+                            continue
+                        group.append((key, work))
+
+                        if len(group) >= self.split_at:
+                            yield group
+                            group = always[:]
 
                     # reconcile index names
-                    work.index.names = dataframe.index.names
-                    result.extend(self.render(work, path + (z,)))
+                    yield group
+
+                first = True
+                for group in _group_group(grouper,
+                                          always,
+                                          remove_always):
+                    # do not plot last dataframe that contains
+                    # only the common tracks to plot
+                    if not first and len(group) == len(always):
+                        continue
+                    first = False
+
+                    df = pandas.concat(
+                        [x[1] for x in group])
+
+                    # reconcile index names
+                    df.index.names = dataframe.index.names
+                    result.extend(self.render(df, path))
 
         return result
 
@@ -187,7 +189,7 @@ class DataFrame(Renderer):
             if self.tail:
                 texts.append(str(dataframe.tail(self.tail)))
         elif self.summary:
-            texts.append(str(dataframe.summary()))
+            texts.append(str(dataframe.describe()))
         else:
             texts.append(str(dataframe))
 
@@ -215,7 +217,9 @@ class TableBase(Renderer):
         (('force', directives.unchanged),
          ('separate', directives.unchanged),
          ('max-rows', directives.length_or_unitless),
+         ('large-rows', directives.length_or_unitless),
          ('max-cols', directives.length_or_unitless),
+         ('large-html-class', directives.unchanged),
          ('html-class', directives.unchanged))
 
     max_rows = 50
@@ -228,43 +232,42 @@ class TableBase(Renderer):
         self.separate = "separate" in kwargs
         self.max_rows = kwargs.get("max-rows", 50)
         self.max_cols = kwargs.get("max-cols", 20)
-        self.html_class = kwargs.get('html-class',
-                                     Utils.PARAMS.get('report_table_class',
-                                                      None))
+        self.html_class = kwargs.get(
+            'html-class',
+            Utils.PARAMS.get('report_table_class',
+                             None))
+        self.large_rows = kwargs.get("max-rows", 20)
+        self.large_html_class = kwargs.get(
+            'large-html-class',
+            Utils.PARAMS.get('report_largetable_class',
+                             None))
 
     def asCSV(self, dataframe, row_headers, col_headers, title):
         '''save the table using CSV.'''
 
-        lines = []
         out = StringIO.StringIO()
         dataframe.to_csv(out)
-        lines = []
-        lines.append(".. csv-table:: %s" % title)
-        if self.html_class is not None:
-            lines.append("   :class: %s" % self.html_class)
+        result = []
+        result.append(".. csv-table:: %s" % title)
+        lines = out.getvalue().split("\n")
+
+        if len(lines) > self.large_rows:
+            if self.large_html_class is not None:
+                result.append("   :class: %s" % self.large_html_class)
+        else:
+            if self.html_class is not None:
+                result.append("   :class: %s" % self.html_class)
 
         if self.add_rowindex:
-            raise NotImplemnetedError('add-rowindex not implemented')
-            lines.append('   :header: "row", "", "%s" ' %
-                         '", "'.join(map(str, col_headers)))
-            lines.append('')
-
-            x = 0
-            for header, line in zip(row_headers, matrix):
-                x += 1
-                lines.append('   %i,"%s","%s"' %
-                             (x, str(header),
-                              '", "'.join(map(str, line))))
-
+            raise NotImplementedError('add-rowindex not implemented')
         else:
-            l = out.getvalue().split("\n")
-            lines.append('   :header: %s' % l[0])
-            lines.append('')
-            lines.extend(['   %s' % x for x in l[1:]])
+            result.append('   :header: %s' % lines[0])
+            result.append('')
+            result.extend(['   %s' % x for x in lines[1:]])
 
-        lines.append("")
+        result.append("")
 
-        return ResultBlock("\n".join(lines), title=title)
+        return ResultBlock("\n".join(result), title=title)
 
     def asRST(self, dataframe, row_headers, col_headers, title):
         '''save the table using RST.'''
@@ -503,7 +506,7 @@ class Table(TableBase):
                 total, other_col = None, None
                 if "," in part:
                     column, method = part.split(",")
-                    if method in col_headers:
+                    if method in columns:
                         other_col = columns.index(method)
                     else:
                         try:
@@ -532,7 +535,15 @@ class Table(TableBase):
                     dataframe['%s/%%' % column] = 100.0 *\
                         dataframe[column] / values
 
-        # If index is not hierarchical, but contains tuples,
+        if self.transpose:
+            dataframe = dataframe.transpose()
+            # flatten the column index if it is hierarchical
+            is_hierarchical = isinstance(dataframe.columns,
+                                         pandas.core.index.MultiIndex)
+            if is_hierarchical:
+                dataframe.columns = ["/".join(x) for x in dataframe.columns]
+
+        # if index is not hierarchical, but contains tuples,
         # split tuples in index to build a new (hierarchical) index
         is_hierarchical = isinstance(dataframe.index,
                                      pandas.core.index.MultiIndex)
@@ -821,7 +832,6 @@ class MatrixBase:
                                         col_headers):
         """apply correspondence analysis to a matrix.
         """
-
         if len(row_headers) <= 1 or len(col_headers) <= 1:
             self.warn("correspondence analysis skipped for "
                       "matrices with single row/column")
@@ -1062,12 +1072,19 @@ class TableMatrix(TableBase, MatrixBase):
         This method will also apply conversions if apply_transformations
         is set.
         """
-
         rows = map(path2str, dataframe.index)
         columns = list(dataframe.columns)
         # use numpy.matrix - permits easier broadcasting
         # for normalization.
         matrix = numpy.matrix(dataframe.as_matrix())
+
+        # remove columns with only NaNs. This can happend
+        # during the dataframe merging process if the
+        # columns are unique to each matrix.
+        take = numpy.array(numpy.all(numpy.isnan(matrix), axis=0).flat)
+        matrix = matrix[:, ~take]
+        columns = list(numpy.array(columns)[~take])
+
         if self.converters and apply_transformations:
             # convert to float for conversions
             if self.tofloat:

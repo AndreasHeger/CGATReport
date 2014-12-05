@@ -43,7 +43,7 @@ The columns are:
 
 The background normalized meta-gene profiles are below:
 
-.. report:: TestCases.TrackerDataframes
+.. report:: Tracker.TrackerDataframes
    :render: ggplot
    :regex: data/(.*).transcript*
    :glob: data/*.tsv.gz

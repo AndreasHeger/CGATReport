@@ -24,7 +24,9 @@ Create the file :file:`Tutorial2.py` in the :file:`trackers`
 subdirectory and add the following code:
 
 .. literalinclude:: trackers/Tutorial2.py
-   :pyobject: MyDataOneTrack
+
+.. literalinclude:: trackers/Tutorial2.py
+   :lines: 1-13
 
 The module cgatreport`Trackers` is imported and the data source
 ``MyDataOneTrack`` is derived from it::

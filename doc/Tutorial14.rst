@@ -94,7 +94,7 @@ create an rst snippet to copy and paste into our report::
 
 The output provides us with the snippet to put into the report::
 
-    .. report:: TestCases.TrackerDataframes
+    .. report:: Tracker.TrackerDataframes
        :render: ggplot
        :regex: data/(.*).transcript*
        :glob: data/*.tsv.gz
@@ -104,7 +104,7 @@ The output provides us with the snippet to put into the report::
 
        Methylation profiles of transcripts
 
-.. report:: TestCases.TrackerDataframes
+.. report:: Tracker.TrackerDataframes
    :render: ggplot
    :regex: data/(.*).transcript*
    :glob: data/*.tsv.gz
@@ -119,7 +119,7 @@ that will be useful if many tracks are being plotted. The following will plot at
 data sets (``split-at``) and always include the ``input`` tracks (``split-always``) 
 in each plot::
 
-    .. report:: TestCases.TrackerDataframes
+    .. report:: Tracker.TrackerDataframes
        :render: ggplot
        :regex: data/(.*).transcript*
        :glob: data/*.tsv.gz
@@ -132,7 +132,7 @@ in each plot::
 
        Methylation profiles of transcripts
 
-.. report:: TestCases.TrackerDataframes
+.. report:: Tracker.TrackerDataframes
    :render: ggplot
    :regex: data/(.*).transcript*
    :glob: data/*.tsv.gz

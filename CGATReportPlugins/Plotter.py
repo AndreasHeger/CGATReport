@@ -128,6 +128,16 @@ class Plotter(object):
           separated by ;, for example
           ``:mpl-rc: figure.figsize=(20,10);legend.fontsize=4``
 
+:term:`xticks-max-chars`: if the number of characters on the
+    tick-labels on the X-axis exceed this value, the labels
+    will be replaced by shorter version. See :term:`xticks-action`.
+    If set to 0, no truncation will be performed.
+
+:term:`xticks-action`: action to perform it tick-labels are to long.
+    Valid values are ``truncate-start`` and ``truncate-end`` to truncate
+    from the start or end of the label, respectively; ``numbers`` to
+    replace the values with numbers.
+
     """
 
     mLegendFontSize = 8
@@ -177,7 +187,7 @@ class Plotter(object):
 
     # action to perform when X ticks are longer than maximum.
     # Options are "truncate-start", "truncate-end", "number"
-    xticks_action = "truncate-end"
+    xticks_action = "truncate-start"
 
     def __init__(self, *args, **kwargs):
         """parse option arguments."""
@@ -269,9 +279,10 @@ class Plotter(object):
     def wrapText(self, text, cliplen=20, separators=":_"):
         """wrap around text using the mathtext.
 
-        Currently this subroutine uses the \frac
-        directive, so it is not pretty.
-        returns the wrapped text."""
+        Currently this subroutine uses the \frac directive, so it is
+        not pretty.  returns the wrapped text.
+
+        """
 
         # split txt into two equal parts trying
         # a list of separators
@@ -429,24 +440,27 @@ class Plotter(object):
         # modifying labels in place did not work as
         # set_xticklabels expects strings, not Text attributes,
         # so work with text directly:
-        xlabels = [x.get_text() for x in ax.get_xticklabels()]
-
-        max_len = max([len(x) for x in xlabels])
         preamble, postamble = "", ""
-        if max_len > self.xticks_max_length:
+        xlabels = [x.get_text() for x in ax.get_xticklabels()]
+        if xlabels and self.xticks_max_length > 0:
+            max_len = max([len(x) for x in xlabels])
 
-            if self.xticks_action == "truncate-end":
-                f = lambda x, txt: txt[:self.xticks_max_length]
-            elif self.xticks_action == "truncate-start":
-                f = lambda x, txt: txt[-self.xticks_max_length:]
-            elif self.xticks_action == "number":
-                f = lambda x, txt: str(x)
+            if max_len > self.xticks_max_length:
+
+                if self.xticks_action == "truncate-end":
+                    f = lambda x, txt: txt[:self.xticks_max_length]
+                elif self.xticks_action == "truncate-start":
+                    f = lambda x, txt: txt[-self.xticks_max_length:]
+                elif self.xticks_action == "number":
+                    f = lambda x, txt: str(x)
+
+                new_labels = [f(x, y) for x, y in enumerate(xlabels)]
+                
                 postamble = "\n" + "\n".join(
-                    ["* %i: %s" % (x, y)
-                     for x, y in enumerate(xlabels)])
+                    ["* %s: %s" % (x, y)
+                     for x, y in zip(new_labels, xlabels)])
 
-            ax.set_xticklabels([f(x, y)
-                                for x, y in enumerate(xlabels)])
+                ax.set_xticklabels(new_labels)
 
         blocks = ResultBlocks(
             ResultBlock(
@@ -585,6 +599,10 @@ class PlotterMatrix(Plotter):
     :term:`max-rows`: maximum number of rows per plot
 
     :term:`max-cols`: maximum number of columns per plot
+
+    :term:`nolabel-rows`: do not add row labels
+
+    :term:`nolabel-cols`: do not add column labels
 
     """
 
@@ -779,8 +797,6 @@ class PlotterMatrix(Plotter):
             if False:
                 plot_nrows = int(math.ceil(float(nrows) / self.mMaxRows))
                 plot_ncols = int(math.ceil(float(ncols) / self.mMaxCols))
-                # new_row_headers = ["R%s" % (x + 1) for x in range(len(row_headers))]
-                # new_col_headers = ["C%s" % (x + 1) for x in range(len(col_headers))]
                 new_row_headers = row_headers
                 new_col_headers = col_headers
                 nplot = 1
@@ -799,7 +815,8 @@ class PlotterMatrix(Plotter):
                             vmin, vmax,
                             color_scheme)
 
-                labels = ["%s: %s" % x for x in zip(new_headers, row_headers)]
+                labels = ["%s: %s" % x for x in zip(new_row_headers,
+                                                    row_headers)]
                 self.legend_location = "extra"
                 plt.subplots_adjust(**self.mMPLSubplotOptions)
 
@@ -1189,7 +1206,10 @@ class LinePlot(Renderer, Plotter):
         self.yerror = "yerror" in kwargs
 
         # do not plot more than ten tracks in one plot
-        self.split_at = 10
+        if self.split_at == 0:
+            self.split_at = 10
+
+        self.split_at = min(self.split_at, 10)
 
     def initPlot(self, fig, dataseries, path):
         '''initialize plot.'''
@@ -2049,8 +2069,6 @@ class MultipleSeriesPlot(Renderer, Plotter):
     """
     options = Renderer.options + Plotter.options
 
-    nlevels = 1
-
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs)
         Plotter.__init__(self, *args, **kwargs)
@@ -2058,7 +2076,6 @@ class MultipleSeriesPlot(Renderer, Plotter):
     def render(self, dataframe, path):
 
         blocks = ResultBlocks()
-
         if len(dataframe.columns) == 1:
             keys = tuple(dataframe.index)
             values = tuple(dataframe.iloc[:, 0])
@@ -2115,6 +2132,7 @@ class PiePlot(MultipleSeriesPlot):
         (('pie-min-percentage', directives.unchanged),
          ('pie-first-is-total', directives.unchanged),)
 
+    # Do not group data
     group_level = 'force-none'
 
     def __init__(self, *args, **kwargs):

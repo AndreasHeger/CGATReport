@@ -1,7 +1,4 @@
-############################################################
-# Tutorial examples
-
-from CGATReport.Tracker import *
+from CGATReport.Tracker import Tracker
 
 
 class MyDataOneTrack(Tracker):

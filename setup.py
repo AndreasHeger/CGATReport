@@ -18,6 +18,7 @@ import os
 import re
 import distutils.sysconfig
 import stat
+import subprocess
 
 major, minor1, minor2, s, tmp = sys.version_info
 
@@ -110,7 +111,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='CGATReport',
-      version='0.2',
+      version='0.2.1',
       description='CGATReport : a report generator in python based on sphinx',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',
@@ -118,8 +119,6 @@ setup(name='CGATReport',
       package_dir={'CGATReport': 'CGATReport',
                    'CGATReportPlugins': 'CGATReportPlugins'},
       url="https://github.com/AndreasHeger/CGATReport/",
-      scripts=['scripts/cgatreport-%s' % x
-               for x in ("build", "clean", "test", "quickstart", "gallery")],
       package_data={'CGATReport': ['./templates/*', './images/*']},
       license="BSD",
       platforms=["any"],
@@ -220,12 +219,21 @@ setup(name='CGATReport',
 # fix file permission for executables
 # set to "group writeable"
 # also updates the "sphinx" permissions
-if sys.argv[0] == "install":
+if "install" in sys.argv:
     print ("updating file permissions for scripts")
-    for x in glob.glob(os.path.join(
-            distutils.sysconfig.project_base,
-            "cgat-*")):
+    file_glob = os.path.join(
+        distutils.sysconfig.project_base,
+        "cgatreport-*")
+    for x in glob.glob(file_glob):
         try:
             os.chmod(x, os.stat(x).st_mode | stat.S_IWGRP)
         except OSError:
             pass
+
+    # replace the hardcoded python with /bin/env python. This
+    # allows using the install within a virtual environment.
+    print ("setting python to /bin/env python")
+    statement = 'perl -p -i -e "s/\/ifs\/apps\/apps\/python-2.7.1\/bin\/python2.7/\/bin\/env python/" ' + file_glob
+    print statement
+    subprocess.call(statement, shell=True)
+        

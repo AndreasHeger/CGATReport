@@ -55,7 +55,7 @@ Testing the :term:`split-at` option
 .. report:: TestCases.SplittingTest
    :render: line-plot
    :split-at: 4
-   :split-always: track0
+   :split-always: slice0
    :layout: column-4
    :width: 200
 

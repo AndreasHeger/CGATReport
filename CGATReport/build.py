@@ -178,9 +178,11 @@ class timeit:
         def wrapped(*args, **kwargs):
             start = time.time()
             print("CGATReport: phase %s started" % (self.mStage))
+            sys.stdout.flush()
             result = func(*args, **kwargs)
             print("CGATReport: phase %s finished in %i seconds" %
                   (self.mStage, time.time() - start))
+            sys.stdout.flush()
             return result
         return wrapped
 
@@ -288,7 +290,7 @@ def cleanTrackers(rst_files, options, args):
     for reference in trackers:
 
         try:
-            code, tracker = report_directive.makeTracker(reference)
+            code, tracker, tracker_path = report_directive.makeTracker(reference)
         except AttributeError:
             # ignore missing trackers
             nskipped += 1
