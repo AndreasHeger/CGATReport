@@ -463,7 +463,7 @@ class Plotter(object):
 
         blocks = ResultBlocks(
             ResultBlock(
-                text="#$mpl %i$#" % self.mFigure,
+                text="#$mpl %i$#\n" % self.mFigure,
                 title=DataTree.path2str(path),
                 preamble=preamble,
                 postamble=postamble))
