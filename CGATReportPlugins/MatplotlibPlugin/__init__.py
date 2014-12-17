@@ -76,6 +76,8 @@ class MatplotlibPlugin(Component):
             # save explicit formats
             outname = "%s_%02d" % (template_name, figid)
 
+            has_output = False
+
             for id, format, dpi in all_formats:
 
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
@@ -84,9 +86,14 @@ class MatplotlibPlugin(Component):
                     figman.canvas.figure.savefig(outpath, dpi=dpi)
                 except:
                     s = Utils.collectExceptionAsString(
-                        "Exception running plot %s" % outpath)
+                        "exception raised while building plot '%s'" % outpath)
                     warnings.warn(s)
-                    return []
+                    continue
+                has_output = True
+
+            if not has_output:
+                warnings.warn("no output for '%s'" % outpath)
+                continue
 
             # insert display figure
             is_html = False
