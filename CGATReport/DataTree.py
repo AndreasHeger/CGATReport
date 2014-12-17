@@ -374,6 +374,9 @@ def asDataFrame(data):
         if is_coordinate:
             debug('dataframe conversion: from array - coordinates')
             for path, leaves in branches:
+                # skip empty leaves
+                if len(leaves) == 0:
+                    continue
                 dataframes.append(pandas.DataFrame(leaves))
                 index_tuples.append(path)
         else:
@@ -390,7 +393,10 @@ def asDataFrame(data):
                                                    columns=('value',)))
 
         expected_levels = len(index_tuples[0])
-
+        # concat will sort the column names if they are not
+        # identical between all dataframes. If there are empty
+        # dataframes, they count as different and a sort is
+        # triggered. Hence make sure there are no empty frames.
         df = pandas.concat(dataframes, keys=index_tuples)
 
     elif Utils.isDataFrame(leaf):
