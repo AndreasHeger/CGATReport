@@ -36,6 +36,11 @@ optional pdf support
 Release Notes
 =============
 
+Version 0.2.1
+=============
+
+* Removed bokeh dependency
+
 Version 0.2
 ===========
 
