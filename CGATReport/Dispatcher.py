@@ -62,9 +62,10 @@ class Dispatcher(Component.Component):
         # set to true if index will be later set by tracker
         self.indexFromTracker = False
 
-        self.debug("cache of tracker: %s: %s" % (self.tracker,
-                                                 str(tracker.cache)))
         try:
+            self.debug("cache of tracker: %s: %s" % (self.tracker,
+                                                     str(tracker.cache)))
+
             if tracker.cache:
                 self.cache = Cache.Cache(Cache.tracker2key(tracker))
             else:
