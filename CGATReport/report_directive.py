@@ -21,7 +21,7 @@ from docutils.parsers.rst import directives
 from CGATReport import Config, Dispatcher, Utils, Cache, Component
 from CGATReport.ResultBlock import ResultBlocks
 
-CGATREPORT_DEBUG = False
+CGATREPORT_DEBUG = "CGATREPORT_DEBUG" in os.environ
 
 TEMPLATE_TEXT = """
 .. htmlonly::
@@ -396,6 +396,7 @@ def run(arguments,
 
     # render the output taking into account the layout
     lines = Utils.layoutBlocks(blocks, layout)
+    lines.append("")
 
     # add caption
     lines.extend(['::', ''])
