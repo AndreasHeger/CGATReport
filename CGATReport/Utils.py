@@ -848,7 +848,12 @@ def layoutBlocks(blocks, layout="column"):
                 warn("report_directive.layoutBlocks: missing title")
 
             lines.extend(block.text.split("\n"))
-        lines.extend(["", ])
+
+        lines.append("")
+
+        if postamble:
+            lines.extend(postamble.split("\n"))
+            lines.append("")
         return lines
 
     elif layout in ("row", "grid"):
@@ -863,7 +868,6 @@ def layoutBlocks(blocks, layout="column"):
         if ncols == 0:
             ncols = 1
             return lines
-
     else:
         raise ValueError("unknown layout %s " % layout)
 
