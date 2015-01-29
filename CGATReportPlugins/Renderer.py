@@ -58,6 +58,9 @@ class Renderer(Component.Component):
     # several plots.
     split_always = []
 
+    # when splitting, keep first column
+    split_keep_first_column = False
+
     # default group_level for render
     group_level = 0
 
@@ -78,13 +81,21 @@ class Renderer(Component.Component):
 
         if "split-always" in kwargs:
             self.split_always = kwargs["split-always"].split(',')
-        else:
-            self.split_always = None
 
     def __call__(self, dataframe, path):
         '''iterate over leaves/branches in data structure.
 
-        This method will call the:meth:`render` method
+        This method will call the:meth:`render` method.
+
+        Large dataframes are split into multiple, smaller rendered
+        objects if self.split_at is not zero.
+
+        By default, dataframes are split along the hierachical
+        index. However, if there is only a single index, but multiple
+        columns, the split is performed on the columns instead. This
+        is used when splitting coordinate data as a result of the
+        histogram transformation.
+
         '''
         result = ResultBlocks()
 
@@ -94,9 +105,24 @@ class Renderer(Component.Component):
             # split dataframe at first index
             level = Utils.getGroupLevels(dataframe)
             grouper = dataframe.groupby(level=level)
-            if len(grouper) < self.split_at:
-                result.extend(self.render(dataframe, path))
-            else:
+
+            # split dataframe column wise if only one index
+            # and multiple columns
+            if len(grouper) == 1 and len(dataframe.columns) > self.split_at:
+                columns = list(dataframe.columns)
+                always = []
+                if self.split_keep_first_column:
+                    always.append(columns[0])
+                # columns to always keep
+                always.extend([c for c in columns if c in self.split_always])
+                columns = [c for c in columns if c not in always]
+                for x in range(0, len(columns), self.split_at):
+                    # extract a set of columns
+                    result.extend(self.render(
+                        dataframe.loc[:, always+columns[x:x+self.split_at]],
+                        path))
+            # split dataframe along index
+            elif len(grouper) >= self.split_at:
                 # build groups
                 always, remove_always = [], set()
 
@@ -141,6 +167,9 @@ class Renderer(Component.Component):
                     # reconcile index names
                     df.index.names = dataframe.index.names
                     result.extend(self.render(df, path))
+            else:
+                # do not split dataframe
+                result.extend(self.render(dataframe, path))
 
         return result
 

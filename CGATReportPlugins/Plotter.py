@@ -1193,6 +1193,9 @@ class LinePlot(Renderer, Plotter):
          ('yerror', directives.flag),
          )
 
+    # when splitting, keep first column (X coordinates)
+    split_keep_first_column = True
+
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs)
         Plotter.__init__(self, *args, **kwargs)
