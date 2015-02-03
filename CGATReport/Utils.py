@@ -946,12 +946,19 @@ def layoutBlocks(blocks, layout="column"):
     return lines
 
 
-def buildPaths(reference):
-    '''return relevant paths from reference document.'''
+def getOutputDirectory():
+    return os.path.join('_static', 'report_directive')
 
+
+def buildPaths(reference):
+    '''return paths and filenames for a tracker.
+
+    Reference is usually a Tracker such as "Tracker.TrackerImages".
+    '''
     basedir, fname = os.path.split(reference)
     basename, ext = os.path.splitext(fname)
-    outdir = os.path.join('_static', 'report_directive', basedir)
+    # note: outdir had basedir at the end?
+    outdir = getOutputDirectory()
     codename = quote_filename(reference) + ".code"
     notebookname = quote_filename(reference) + ".notebook"
 
