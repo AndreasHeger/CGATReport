@@ -72,7 +72,8 @@ for requirement in (l.strip() for l in open('requires.txt')
 
     match = HTTPS_REQUIREMENT.match(requirement)
     if match:
-        install_requires.append("%(package)s>=%(version)s" % match.groupdict())
+        install_requires.append(
+            "%(package)s>=%(version)s" % match.groupdict())
         dependency_links.append(match.group('link'))
         continue
 
@@ -119,7 +120,11 @@ setup(name='CGATReport',
       package_dir={'CGATReport': 'CGATReport',
                    'CGATReportPlugins': 'CGATReportPlugins'},
       url="https://github.com/AndreasHeger/CGATReport/",
-      package_data={'CGATReport': ['./templates/*', './images/*']},
+      package_data={'CGATReport': [
+          './templates/*.*',
+          './templates/Makefile',
+          './templates/js/*',
+          './images/*']},
       license="BSD",
       platforms=["any"],
       keywords="report generator sphinx matplotlib sql",
@@ -200,6 +205,7 @@ setup(name='CGATReport',
               'render-matrixNP-plot=CGATReportPlugins.Plotter:NumpyMatrixPlot',
               'render-hinton-plot=CGATReportPlugins.Plotter:HintonPlot',
               'render-gallery-plot=CGATReportPlugins.Plotter:GalleryPlot',
+              'render-slideshow-plot=CGATReportPlugins.SlideShow:SlideshowPlot',
               'render-bar-plot=CGATReportPlugins.Plotter:BarPlot',
               'render-stacked-bar-plot=CGATReportPlugins.Plotter:StackedBarPlot',
               'render-interleaved-bar-plot=CGATReportPlugins.Plotter:InterleavedBarPlot',
