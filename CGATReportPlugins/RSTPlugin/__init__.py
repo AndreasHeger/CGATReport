@@ -1,7 +1,6 @@
 import os
 import re
-from CGATReport.Component import *
-from CGATReport import Config
+from CGATReport.Component import Component
 
 
 class RSTPlugin(Component):
@@ -75,14 +74,16 @@ class RSTPlugin(Component):
                     for x in self.rx_img.finditer(ll):
                         directive, filename = x.groups()
                         relpath = os.path.relpath(
-                            filename.strip(), os.path.abspath(rstdir))
+                            filename.strip(),
+                            os.path.abspath(rstdir))
                         newpath = re.sub("\\\\", "/", relpath)
                         l = replace_and_pad(l, filename, newpath)
 
                     for x in self.rx_link.finditer(ll):
                         directive, filename = x.groups()
                         newpath = re.sub(
-                            "\\\\", "/", os.path.abspath(filename.strip()))
+                            "\\\\", "/",
+                            os.path.abspath(filename.strip()))
                         # pad with spaces to keep table alignment
                         l = replace_and_pad(l, filename, newpath)
 
