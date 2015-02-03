@@ -2378,7 +2378,8 @@ class GalleryPlot(PlotByRow):
             # return value is a series
             filename = dataseries['filename']
         except KeyError:
-            self.warn("no 'filename' key in path %s" % (path2str(path)))
+            self.warn(
+                "no 'filename' key in path %s" % (path2str(path)))
             return blocks
 
         try:
