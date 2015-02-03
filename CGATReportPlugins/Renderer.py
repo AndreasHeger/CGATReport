@@ -1,7 +1,6 @@
 import os
 import sys
 import re
-import itertools
 import json
 import StringIO
 from docutils.parsers.rst import directives
