@@ -1,13 +1,17 @@
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReportPlugins.Renderer import Renderer
 from CGATReportPlugins.Plotter import parseRanges
-from CGATReport import Utils, DataTree, Stats
+from CGATReport import Stats
 from CGATReport.DataTree import path2str
 
 from docutils.parsers.rst import directives
 
 import re
-import bokeh.plotting as bk
+try:
+    import bokeh.plotting as bk
+    HAS_BOKEH = True
+except ImportError:
+    HAS_BOKEH = False
 
 
 class BokehPlotter():
@@ -270,8 +274,8 @@ class LinePlot(Renderer, BokehPlotter):
 
     def finishPlot(self, fig, work, path):
         '''hook called after plotting has finished.'''
-        #plt.xlabel("-".join(set(self.xlabels)) )
-        #plt.ylabel("-".join(set(self.ylabels)) )
+        # plt.xlabel("-".join(set(self.xlabels)))
+        # plt.ylabel("-".join(set(self.ylabels)))
 
     def render(self, dataframe, path):
 

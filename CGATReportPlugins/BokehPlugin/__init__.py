@@ -1,9 +1,12 @@
 import os
-import re
-from CGATReport.Component import *
-from CGATReport import Config
-import bokeh.embed
-import bokeh.plotting
+from CGATReport.Component import Component
+
+try:
+    import bokeh.embed
+    import bokeh.plotting
+    HAS_BOKEH = True
+except ImportError:
+    HAS_BOKEH = False
 
 
 class BokehPlugin(Component):
@@ -33,6 +36,9 @@ class BokehPlugin(Component):
         '''
 
         map_figure2text = {}
+
+        if not HAS_BOKEH:
+            return map_figure2text
 
         figid = 10
 
