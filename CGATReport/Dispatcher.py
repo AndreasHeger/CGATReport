@@ -565,10 +565,12 @@ class Dispatcher(Component.Component):
             # grouping has been asked for.
             results.append(self.renderer(dataframe, path=()))
         else:
-            level = Utils.getGroupLevels(dataframe,
-                                         max_level=self.group_level+1)
+            level = Utils.getGroupLevels(
+                dataframe,
+                max_level=self.group_level+1)
 
-            self.debug("%s: grouping by levels: %s" % (self, str(level)))
+            self.debug("%s: grouping by levels: %s" %
+                       (self, str(level)))
 
             for key, work in dataframe.groupby(level=level):
 
