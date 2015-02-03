@@ -200,7 +200,7 @@ def run(arguments,
         ###########################################################
         queries = [re.compile("%s(%s\S+.%s)" %
                               (root2builddir, outdir, suffix))
-                   for suffix in ("png", "pdf")]
+                   for suffix in ("png", "pdf", "svg")]
 
         logging.debug("report_directive.run: checking for changed files.")
 
