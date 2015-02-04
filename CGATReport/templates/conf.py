@@ -18,7 +18,8 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.extend([os.path.abspath('.'), os.path.abspath('trackers')])
+sys.path.extend([os.path.abspath('.'),
+                 os.path.abspath('trackers')])
 
 # -- CGATReport configuration -----------------------------------------------
 
@@ -114,7 +115,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = 'labbook'
+html_theme = 'cgat'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -158,7 +159,7 @@ html_static_path = ['_static']
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {'index': 'index.html', 'gallery': 'gallery.html'}
+html_additional_pages = {}
 
 # If false, no module index is generated.
 # html_use_modindex = True
@@ -197,7 +198,7 @@ htmlhelp_basename = 'Testdoc'
 # [howto/manual]).
 latex_documents = [
     ('contents', 'Test.tex', r'Test Documentation',
-     r'Andreas Heger', 'manual'),
+     r'FirstName LastName', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

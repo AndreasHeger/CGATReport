@@ -1,6 +1,7 @@
 #!/bin/env python
 import sys
 import re
+import glob
 import os
 import optparse
 
@@ -14,7 +15,7 @@ set up an new cgatreport in the current directory.
 
 def main(argv=None):
 
-    if argv == None:
+    if argv is None:
         argv = sys.argv
 
     parser = optparse.OptionParser(version="%prog version: $Id$", usage=USAGE)
@@ -31,14 +32,19 @@ def main(argv=None):
     dest = options.destination
 
     # create directories
-    for d in ("", "_templates", "labbook", "labbook/static", "analysis", "pipeline", "trackers", "templates"):
+    for d in ("",
+              "_templates",
+              "cgat",
+              "cgat/static",
+              "trackers",
+              "templates"):
         dd = os.path.join(dest, d)
         if not os.path.exists(dd):
             os.makedirs(dd)
 
     # copy files
     def copy(src, dst):
-        fn = os.path.join(dest, dst, src)
+        fn = os.path.join(dest, dst, os.path.basename(src))
         if os.path.exists(fn):
             raise OSError("file %s already exists - not overwriting." % fn)
 
@@ -53,38 +59,32 @@ def main(argv=None):
               "server.py",
               "cgatreport.ini",
               "conf.py",
-              "analysis.rst",
-              "contents.rst",
-              "pipeline.rst",
-              "usage.rst"):
+              "contents.rst"):
         copy(f, "")
 
-    for f in ("gallery.html",
-              "index.html",
-              "indexsidebar.html",
-              "layout.html",
-              "search.html"):
-        copy(f, "_templates")
+    # for f in ("indexsidebar.html",
+    #           "layout.html",
+    #           "search.html"):
+    #     copy(f, "_templates")
 
-    for f in ("data_table.html",):
-        copy(f, "templates")
-
-    for f in ("Discussion.rst",
-              "Introduction.rst",
-              "Methods.rst",
-              "Results.rst"):
-        copy(f, "analysis")
-
-    for f in ("PipelineTest.rst",):
-        copy(f, "pipeline")
+    # for f in ("data_table.html",):
+    #     copy(f, "templates")
 
     for f in ("theme.conf",):
-        copy(f, "labbook")
+        copy(f, "cgat")
 
-    for f in ("labbook.css",):
-        copy(f, os.path.join("labbook", "static"))
+    for f in ("cgat.css_t",
+              "js/jquery-1.9.1.min.js",
+              "js/jssor.js",
+              "js/jssor.player.ytiframe.js",
+              "js/jssor.player.ytiframe.min.js",
+              "js/jssor.slider.debug.min.js",
+              "js/jssor.slider.js",
+              "js/jssor.slider.min.js",
+              "js/jssor.slider.mini.js"):
+        copy(f, os.path.join("cgat", "static"))
 
-    for f in ("Trackers.py", "Trackers.rst"):
+    for f in ("Trackers.py"):
         copy(f, "trackers")
 
     print("""
