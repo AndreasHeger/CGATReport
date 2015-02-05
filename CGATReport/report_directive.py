@@ -291,6 +291,8 @@ def run(arguments,
 
         renderer = Utils.getRenderer(renderer_name, renderer_options)
 
+        renderer.set_paths(rstdir, srcdir, builddir)
+
         ########################################################
         # create and call dispatcher
         logging.debug("report_directive.run: creating dispatcher")

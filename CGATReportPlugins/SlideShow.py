@@ -8,12 +8,17 @@ from CGATReport import Utils
 
 import PIL
 
+# Any scripts need to be added to layout.html in the theme.
+# This will ensure that the relative path is used if a page
+# is within a subdirectory. As a downside, all js code will
+# be imported on every page.
+
 # Plain setup, simple horizontal/vertical slider
 # Customization: autoplay, dragorientation, size
+
+
+
 PLAIN_SETUP = """
-<script type="text/javascript" src="_static/js/jquery-1.9.1.min.js"></script>
-<script type="text/javascript" src="_static/js/jssor.js"></script>
-<script type="text/javascript" src="_static/js/jssor.slider.js"></script>
 <script>
    jQuery(document).ready(function ($) {
             var options = {
@@ -35,9 +40,6 @@ PLAIN_SETUP = """
 """
 
 LIST_SETUP = """
-<script type="text/javascript" src="_static/js/jquery-1.9.1.min.js"></script>
-<script type="text/javascript" src="_static/js/jssor.js"></script>
-<script type="text/javascript" src="_static/js/jssor.slider.js"></script>
 <script>
     jQuery(document).ready(function ($) {
         var options = {
@@ -64,16 +66,17 @@ LIST_SETUP = """
 
 <div id="%(name)s_container"
         style="position: relative; top: 0px; left: 0px;
-        width: %(width)ipx; height: %(width)ipx;">
+        width: %(width)ipx; height: %(height)ipx;">
    <div u="slides"
         style="cursor: move; position: absolute; left: 0px; top: 0px;
-        width: %(width)ipx; height: %(width)ipx; overflow: hidden;">
+        width: %(width)ipx; height: %(height)ipx; overflow: hidden;">
 
 """
 
 LIST_SKIN = """
         <!-- ThumbnailNavigator Skin Begin -->
-        <div u="thumbnavigator" class="jssort11" style="position: absolute; width: 200px; height: 300px; left:605px; top:0px;">
+        <div u="thumbnavigator" class="jssort11" style="position: absolute;
+              width: 200px; height: %(height)ipx; left:%(width)ipx; top:0px;">
             <!-- Thumbnail Item Skin Begin -->
             <style>
                 /* jssor slider thumbnail navigator skin 11 css */
@@ -170,14 +173,18 @@ LIST_SKIN = """
                 }
             </style>
             <div u="slides" style="cursor: move;">
-                <div u="prototype" class="p" style="position: absolute; width: 200px; height: 69px; top: 0; left: 0;">
-                    <div u="thumbnailtemplate" style=" width: 100%%; height: 100%%; border: none;position:absolute; top: 0; left: 0;"></div>
+                <div u="prototype" class="p" style="position: absolute;
+                     width: 200px; height: 69px; top: 0; left: 0;">
+                    <div u="thumbnailtemplate" style="
+                     width: 100%%; height: 100%%;
+                     border: none;position:absolute; top: 0; left: 0;"></div>
                 </div>
             </div>
             <!-- Thumbnail Item Skin End -->
         </div>
         <!-- ThumbnailNavigator Skin End -->
 """
+
 
 class SlideshowPlot(Renderer):
 
@@ -208,7 +215,7 @@ class SlideshowPlot(Renderer):
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs)
 
-    def add_image(self, filename, name):
+    def add_image(self, filename, title, description):
 
         mangled_filename = re.sub("/", "_", filename)
         filename = os.path.abspath(filename)
@@ -253,7 +260,9 @@ class SlideshowPlot(Renderer):
                     "no 'name' key in path %s" % (path2str(path)))
                 return blocks
 
-            lines.extend(self.add_image(filename, name))
+            description, title = os.path.split(name)
+
+            lines.extend(self.add_image(filename, title, description))
 
         lines.append("""</div>""")
 
@@ -281,31 +290,49 @@ class SlideshowWithThumbnailsPlot(SlideshowPlot):
     prefix = LIST_SETUP
     skin = LIST_SKIN
 
-    thumbnail_size = 128, 128
-
     width = 600
-    heigh = 300
+    height = 300
 
-    def add_image(self, filename, name):
+    # number of thumbnails in navigation bar
+    nthumbs = 4
+
+    def add_image(self, filename, title, description):
 
         mangled_filename = re.sub("/", "_", filename)
         filename = os.path.abspath(filename)
-        outdir = Utils.getOutputDirectory()
-        dest = os.path.join(outdir,
-                            mangled_filename)
-        thumb = os.path.join(outdir,
-                             "thumb-%s.png" % mangled_filename)
-        os.link(filename, dest)
 
+        # directory in which to store images and thumbnails
+        outdir = Utils.getOutputDirectory()
+        image_filename = os.path.join(outdir,
+                                      mangled_filename)
+
+        thumb_filename = os.path.join(outdir,
+                                      "thumb-%s.png" % mangled_filename)
+
+        # copy image and build thumbnail
+        os.link(filename, image_filename)
         image = PIL.Image.open(filename)
-        image.thumbnail(self.thumbnail_size)
-        image.save(thumb)
+        thumbnail_size = self.height / self.nthumbs
+        image.thumbnail((thumbnail_size, thumbnail_size))
+        image.save(thumb_filename)
+
+        # filenames to use in html - must take document hierarchy
+        # into account
+        rst2srcdir = os.path.join(
+            os.path.relpath(self.src_dir, start=self.rst_dir),
+            outdir)
+        html_image_filename = os.path.join(rst2srcdir,
+                                           mangled_filename)
+        html_thumb_filename = os.path.join(rst2srcdir,
+                                           "thumb-%s.png" % mangled_filename)
 
         return [
             """<div>
-                   <img u="image" src="%(dest)s" />
+                   <img u="image" src="%(html_image_filename)s" />
                    <div u="thumb">
-                        <img class="i" src="%(thumb)s" />
+                        <img class="i" src="%(html_thumb_filename)s" />
+                        <div class="t">%(title)s</div>
+                        <div class="c">%(description)s</div>
                    </div>
             </div>
             """ % locals()]

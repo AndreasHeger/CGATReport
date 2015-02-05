@@ -70,21 +70,19 @@ def main(argv=None):
     # for f in ("data_table.html",):
     #     copy(f, "templates")
 
-    for f in ("theme.conf",):
+    for f in ("theme.conf", "layout.html"):
         copy(f, "cgat")
 
     for f in ("cgat.css_t",
-              "js/jquery-1.9.1.min.js",
+              'js/jquery.min.js',
+              "js/sorttable.js"
+              "js/jquery.dataTables.min.js",
+              "js/notebook.js",
               "js/jssor.js",
-              "js/jssor.player.ytiframe.js",
-              "js/jssor.player.ytiframe.min.js",
-              "js/jssor.slider.debug.min.js",
-              "js/jssor.slider.js",
-              "js/jssor.slider.min.js",
-              "js/jssor.slider.mini.js"):
+              "js/jssor.slider.js"):
         copy(f, os.path.join("cgat", "static"))
 
-    for f in ("Trackers.py"):
+    for f in ("Trackers.py", ):
         copy(f, "trackers")
 
     print("""

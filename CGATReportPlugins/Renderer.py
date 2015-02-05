@@ -63,6 +63,16 @@ class Renderer(Component.Component):
     # default group_level for render
     group_level = 0
 
+    # directory where the actual restructured text is located.
+    rst_dir = None
+
+    # directory of the root of the source document. rstdir is
+    # a subdirectory of this.
+    src_dir = None
+
+    # directory in which the document is built.
+    build_dir = None
+
     def __init__(self, *args, **kwargs):
         """create an Renderer object using an instance of
         a:class:`Tracker.Tracker`.
@@ -181,6 +191,18 @@ class Renderer(Component.Component):
             return self.format % value
         except TypeError:
             return ""
+
+    def set_paths(self, rst_dir, src_dir, build_dir):
+        '''set document paths. These are relevant to determine the
+        relative position of the object to be rendered in a hierarchy
+        of documents.
+        '''
+        self.rst_dir = rst_dir
+        self.src_dir = src_dir
+        self.build_dir = build_dir
+
+    def get_paths(self):
+        return self.rst_dir, self.src_dir, self.build_dir
 
 
 class DataFrame(Renderer):
