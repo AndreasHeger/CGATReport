@@ -467,7 +467,7 @@ def asDataFrame(data):
                 df = pandas.DataFrame(nested_dict).transpose()
                 dataframes.append(df)
                 index_tuples.extend([path])
-            df = pandas.concat(dataframes, keys=index_tuples)
+            df = concatDataFrames(dataframes, index_tuples)
 
     # remove index with row numbers
     if expected_levels is not None and dataframe_prune_index:
