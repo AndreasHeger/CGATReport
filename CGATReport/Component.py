@@ -64,7 +64,6 @@ def init_plugins():
     for name in pkg_env:
         egg = pkg_env[name][0]
         egg.activate()
-        modules = []
         for name in egg.get_entry_map(ENTRYPOINT):
             entry_point = egg.get_entry_info(ENTRYPOINT, name)
             cls = entry_point.load()

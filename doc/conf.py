@@ -95,6 +95,7 @@ rst_epilog='''
 .. _rpy2: http://rpy.sourceforge.net/rpy2.html
 .. _pandas: http://pandas.pydata.org/
 .. _ipython: http://ipython.org/
+.. _jssor: http://www.jssor.com/
 '''
 
 # Add any paths that contain templates here, relative to this directory.
@@ -166,7 +167,7 @@ todo_include_todos = True
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = 'nature'
+html_theme = 'cgat'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

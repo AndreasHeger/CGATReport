@@ -58,6 +58,7 @@ Version 0.1
   Transformers will need to be updated.
 
   Most notable backwards incompatible changes are:
+
   * default grouping is by track
   * several transformers deprecated as they are
     not needed any more

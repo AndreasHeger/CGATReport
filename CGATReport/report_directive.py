@@ -291,7 +291,12 @@ def run(arguments,
 
         renderer = Utils.getRenderer(renderer_name, renderer_options)
 
-        renderer.set_paths(rstdir, srcdir, builddir)
+        try:
+            renderer.set_paths(rstdir, srcdir, builddir)
+            renderer.set_display_options(display_options)
+        except AttributeError:
+            # User renderers will not have these methods
+            pass
 
         ########################################################
         # create and call dispatcher

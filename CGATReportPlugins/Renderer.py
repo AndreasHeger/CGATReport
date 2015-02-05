@@ -73,6 +73,10 @@ class Renderer(Component.Component):
     # directory in which the document is built.
     build_dir = None
 
+    # dictionary of rst options controlling the display of a
+    # directive.
+    display_options = {}
+
     def __init__(self, *args, **kwargs):
         """create an Renderer object using an instance of
         a:class:`Tracker.Tracker`.
@@ -203,6 +207,10 @@ class Renderer(Component.Component):
 
     def get_paths(self):
         return self.rst_dir, self.src_dir, self.build_dir
+
+    def set_display_options(self, display_options):
+        '''set display options given by user.'''
+        self.display_options = display_options
 
 
 class DataFrame(Renderer):

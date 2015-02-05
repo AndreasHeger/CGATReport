@@ -25,6 +25,7 @@ that are included in cgatreport.
    GalleryConfig.rst
    GalleryStatus.rst
    GalleryGallery.rst
+   GallerySlideShowPlot.rst
    GalleryUser.rst
    GalleryRPlots.rst
    GalleryDebug.rst
