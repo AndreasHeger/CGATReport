@@ -5,12 +5,12 @@
  Contents
 ==========
 
-Contents:
+Simple tutorial example.
 
-.. toctree::
-   :maxdepth: 2
+.. report:: Trackers.SimpleExampleData
+   :render: interleaved-bar-plot
 
-   analysis.rst
+   Simple example data.
 
 ====================
  Indices and tables

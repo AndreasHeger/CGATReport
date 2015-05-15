@@ -965,7 +965,7 @@ class TransformerAggregate(Transformer):
 
         for column in data.columns[1:]:
             for converter in self.mConverters:
-                data[column] = converter(data[column])
+                data.loc[:, column] = converter(data[column])
 
         return data
 

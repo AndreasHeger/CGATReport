@@ -62,9 +62,10 @@ class Dispatcher(Component.Component):
         # set to true if index will be later set by tracker
         self.indexFromTracker = False
 
-        self.debug("cache of tracker: %s: %s" % (self.tracker,
-                                                 str(tracker.cache)))
         try:
+            self.debug("cache of tracker: %s: %s" % (self.tracker,
+                                                     str(tracker.cache)))
+
             if tracker.cache:
                 self.cache = Cache.Cache(Cache.tracker2key(tracker))
             else:
@@ -564,10 +565,12 @@ class Dispatcher(Component.Component):
             # grouping has been asked for.
             results.append(self.renderer(dataframe, path=()))
         else:
-            level = Utils.getGroupLevels(dataframe,
-                                         max_level=self.group_level+1)
+            level = Utils.getGroupLevels(
+                dataframe,
+                max_level=self.group_level+1)
 
-            self.debug("%s: grouping by levels: %s" % (self, str(level)))
+            self.debug("%s: grouping by levels: %s" %
+                       (self, str(level)))
 
             for key, work in dataframe.groupby(level=level):
 

@@ -231,6 +231,24 @@ def listAsDataFrame(data, index_title='names',
                                name=index_title))
     return df
 
+def concatDataFrames(dataframes, index_tuples):
+
+    df = pandas.concat(dataframes, keys=index_tuples)
+    
+    # concat is akin to an SQL join operation and will
+    # sort the columns lexicographically.
+    # For matrices that could result in the columns not
+    # being in the natural order any more unless the
+    # column names have been set accordingly.
+    # The following thus reorders the columns preserving
+    # the order in the original dataframes.
+    column_set = collections.OrderedDict()
+    for d in dataframes:
+        column_set.update(collections.OrderedDict(
+            [(x, 0) for x in d.columns]))
+
+    df = df.reindex_axis(column_set.keys(), axis=1)
+    return df
 
 
 def asDataFrame(data):
@@ -374,6 +392,9 @@ def asDataFrame(data):
         if is_coordinate:
             debug('dataframe conversion: from array - coordinates')
             for path, leaves in branches:
+                # skip empty leaves
+                if len(leaves) == 0:
+                    continue
                 dataframes.append(pandas.DataFrame(leaves))
                 index_tuples.append(path)
         else:
@@ -390,8 +411,7 @@ def asDataFrame(data):
                                                    columns=('value',)))
 
         expected_levels = len(index_tuples[0])
-
-        df = pandas.concat(dataframes, keys=index_tuples)
+        df = concatDataFrames(dataframes, index_tuples)
 
     elif Utils.isDataFrame(leaf):
         debug('dataframe conversion: from dataframe')
@@ -421,7 +441,7 @@ def asDataFrame(data):
         assert min(levels) == max(levels)
 
         expected_levels = min(path_lengths) + min(levels)
-        df = pandas.concat(dataframes, keys=index_tuples)
+        df = concatDataFrames(dataframes, index_tuples)
 
     else:
         debug('dataframe conversion: from values')
@@ -447,7 +467,7 @@ def asDataFrame(data):
                 df = pandas.DataFrame(nested_dict).transpose()
                 dataframes.append(df)
                 index_tuples.extend([path])
-            df = pandas.concat(dataframes, keys=index_tuples)
+            df = concatDataFrames(dataframes, index_tuples)
 
     # remove index with row numbers
     if expected_levels is not None and dataframe_prune_index:

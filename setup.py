@@ -72,7 +72,8 @@ for requirement in (l.strip() for l in open('requires.txt')
 
     match = HTTPS_REQUIREMENT.match(requirement)
     if match:
-        install_requires.append("%(package)s>=%(version)s" % match.groupdict())
+        install_requires.append(
+            "%(package)s>=%(version)s" % match.groupdict())
         dependency_links.append(match.group('link'))
         continue
 
@@ -119,7 +120,11 @@ setup(name='CGATReport',
       package_dir={'CGATReport': 'CGATReport',
                    'CGATReportPlugins': 'CGATReportPlugins'},
       url="https://github.com/AndreasHeger/CGATReport/",
-      package_data={'CGATReport': ['./templates/*', './images/*']},
+      package_data={'CGATReport': [
+          './templates/*.*',
+          './templates/Makefile',
+          './templates/js/*',
+          './images/*']},
       license="BSD",
       platforms=["any"],
       keywords="report generator sphinx matplotlib sql",
@@ -146,22 +151,36 @@ setup(name='CGATReport',
               'build_sphinx = cgatreport.setup_command:BuildDoc',
           ],
           'CGATReport.plugins': [
-              'matplotlib=CGATReportPlugins.MatplotlibPlugin:MatplotlibPlugin',
-              'rplot=CGATReportPlugins.RPlotPlugin:RPlotPlugin',
-              'html=CGATReportPlugins.HTMLPlugin:HTMLPlugin',
-              'rst=CGATReportPlugins.RSTPlugin:RSTPlugin',
-              'xls=CGATReportPlugins.XLSPlugin:XLSPlugin',
-              'bokeh=CGATReportPlugins.BokehPlugin:BokehPlugin',
+              'matplotlib='
+              'CGATReportPlugins.MatplotlibPlugin:MatplotlibPlugin',
+              'rplot='
+              'CGATReportPlugins.RPlotPlugin:RPlotPlugin',
+              'html='
+              'CGATReportPlugins.HTMLPlugin:HTMLPlugin',
+              'rst='
+              'CGATReportPlugins.RSTPlugin:RSTPlugin',
+              'xls='
+              'CGATReportPlugins.XLSPlugin:XLSPlugin',
+              'bokeh='
+              'CGATReportPlugins.BokehPlugin:BokehPlugin',
               'transform-stats=CGATReportPlugins.Transformer:TransformerStats',
-              'transform-correlation=CGATReportPlugins.Transformer:TransformerCorrelationPearson',
-              'transform-pearson=CGATReportPlugins.Transformer:TransformerCorrelationPearson',
-              'transform-contingency=CGATReportPlugins.Transformer:TransformerContingency',
-              'transform-spearman=CGATReportPlugins.Transformer:TransformerCorrelationSpearman', 
-              'transform-test-mwu=CGATReportPlugins.Transformer:TransformerMannWhitneyU', 
-              'transform-aggregate=CGATReportPlugins.Transformer:TransformerAggregate',
-              'transform-histogram=CGATReportPlugins.Transformer:TransformerHistogram',
+              'transform-correlation='
+              'CGATReportPlugins.Transformer:TransformerCorrelationPearson',
+              'transform-pearson='
+              'CGATReportPlugins.Transformer:TransformerCorrelationPearson',
+              'transform-contingency='
+              'CGATReportPlugins.Transformer:TransformerContingency',
+              'transform-spearman='
+              'CGATReportPlugins.Transformer:TransformerCorrelationSpearman', 
+              'transform-test-mwu='
+              'CGATReportPlugins.Transformer:TransformerMannWhitneyU', 
+              'transform-aggregate='
+              'CGATReportPlugins.Transformer:TransformerAggregate',
+              'transform-histogram='
+              'CGATReportPlugins.Transformer:TransformerHistogram',
               # 'transform-tolabels=CGATReportPlugins.Transformer:TransformerToLabels',
-              'transform-filter=CGATReportPlugins.Transformer:TransformerFilter',
+              'transform-filter='
+              'CGATReportPlugins.Transformer:TransformerFilter',
               # 'transform-indicator=CGATReportPlugins.Transformer:TransformerIndicator',
               # 'transform-select=CGATReportPlugins.Transformer:TransformerSelect',
               # 'transform-swop=CGATReportPlugins.Transformer:TransformerSwop',
@@ -170,49 +189,92 @@ setup(name='CGATReport',
               # 'transform-combine=CGATReportPlugins.Transformer:TransformerCombinations',
               # 'transform-tolist=CGATReportPlugins.Transformer:TransformerToList',
               # 'transform-toframe=CGATReportPlugins.Transformer:TransformerToDataFrame',
-              'transform-melt=CGATReportPlugins.Transformer:TransformerMelt',
-              'transform-pivot=CGATReportPlugins.Transformer:TransformerPivot',
-              # 'transform-count=CGATReportPlugins.Transformer:TransformerCount',
-              'transform-hypergeometric=CGATReportPlugins.TransformersGeneLists:TransformerHypergeometric',
-              # 'transform-label-paths=CGATReportPlugins.TransformersGeneLists:TransformerPathToLabel',
+              'transform-melt='
+              'CGATReportPlugins.Transformer:TransformerMelt',
+              'transform-pivot='
+              'CGATReportPlugins.Transformer:TransformerPivot',
+              # 'transform-count='
+              # 'CGATReportPlugins.Transformer:TransformerCount',
+              'transform-hypergeometric='
+              'CGATReportPlugins.TransformersGeneLists:TransformerHypergeometric',
+              # 'transform-label-paths='
+              # 'CGATReportPlugins.TransformersGeneLists:TransformerPathToLabel',
               'transform-venn=CGATReportPlugins.TransformersGeneLists:TransformerVenn',
-              'transform-p-adjust=CGATReportPlugins.TransformersGeneLists:TransformerMultiTest',
-              'transform-odds-ratio=CGATReportPlugins.TransformersGeneLists:TransformerOddsRatio',
-              'render-user=CGATReportPlugins.Renderer:User',
-              'render-debug=CGATReportPlugins.Renderer:Debug',
-              'render-dataframe=CGATReportPlugins.Renderer:DataFrame',
-              'render-table=CGATReportPlugins.Renderer:Table',
-              'render-rst-table=CGATReportPlugins.Renderer:RstTable',
-              'render-xls-table=CGATReportPlugins.Renderer:XlsTable',
-              'render-html-table=CGATReportPlugins.Renderer:HTMLTable',
-              'render-glossary-table=CGATReportPlugins.Renderer:GlossaryTable',
-              'render-matrix=CGATReportPlugins.Renderer:TableMatrix',
-              'render-matrixNP=CGATReportPlugins.Renderer:NumpyMatrix',
-              'render-status=CGATReportPlugins.Renderer:Status',
-              'render-line-plot=CGATReportPlugins.Plotter:LinePlot',
-              'render-density-plot=CGATReportPlugins.Plotter:DensityPlot',
-              'render-histogram-plot=CGATReportPlugins.Plotter:HistogramPlot',
-              # 'render-histogram-gradient-plot=CGATReportPlugins.Plotter:HistogramGradientPlot',
-              'render-pie-plot=CGATReportPlugins.Plotter:PiePlot',
+              'transform-p-adjust='
+              'CGATReportPlugins.TransformersGeneLists:TransformerMultiTest',
+              'transform-odds-ratio='
+              'CGATReportPlugins.TransformersGeneLists:TransformerOddsRatio',
+              'render-user='
+              'CGATReportPlugins.Renderer:User',
+              'render-debug='
+              'CGATReportPlugins.Renderer:Debug',
+              'render-dataframe='
+              'CGATReportPlugins.Renderer:DataFrame',
+              'render-table='
+              'CGATReportPlugins.Renderer:Table',
+              'render-rst-table='
+              'CGATReportPlugins.Renderer:RstTable',
+              'render-xls-table='
+              'CGATReportPlugins.Renderer:XlsTable',
+              'render-html-table='
+              'CGATReportPlugins.Renderer:HTMLTable',
+              'render-glossary-table='
+              'CGATReportPlugins.Renderer:GlossaryTable',
+              'render-matrix='
+              'CGATReportPlugins.Renderer:TableMatrix',
+              'render-matrixNP='
+              'CGATReportPlugins.Renderer:NumpyMatrix',
+              'render-status='
+              'CGATReportPlugins.Renderer:Status',
+              'render-line-plot='
+              'CGATReportPlugins.Plotter:LinePlot',
+              'render-density-plot='
+              'CGATReportPlugins.Plotter:DensityPlot',
+              'render-histogram-plot='
+              'CGATReportPlugins.Plotter:HistogramPlot',
+              # 'render-histogram-gradient-plot='
+              # 'CGATReportPlugins.Plotter:HistogramGradientPlot',
+              'render-pie-plot='
+              'CGATReportPlugins.Plotter:PiePlot',
               'render-scatter-plot=CGATReportPlugins.Plotter:ScatterPlot',
-              'render-scatter-rainbow-plot=CGATReportPlugins.Plotter:ScatterPlotWithColor',
-              'render-matrix-plot=CGATReportPlugins.Plotter:TableMatrixPlot',
-              'render-matrixNP-plot=CGATReportPlugins.Plotter:NumpyMatrixPlot',
-              'render-hinton-plot=CGATReportPlugins.Plotter:HintonPlot',
-              'render-gallery-plot=CGATReportPlugins.Plotter:GalleryPlot',
-              'render-bar-plot=CGATReportPlugins.Plotter:BarPlot',
-              'render-stacked-bar-plot=CGATReportPlugins.Plotter:StackedBarPlot',
-              'render-interleaved-bar-plot=CGATReportPlugins.Plotter:InterleavedBarPlot',
-              'render-box-plot=CGATReportPlugins.Plotter:BoxPlot',
-              'render-violin-plot=CGATReportPlugins.Plotter:ViolinPlot',
-              'render-venn-plot=CGATReportPlugins.Plotter:VennPlot',
-              'render-ggplot=CGATReportPlugins.GGPlotter:GGPlot',
-              'render-r-line-plot=CGATReportPlugins.RPlotter:LinePlot',
-              'render-r-box-plot=CGATReportPlugins.RPlotter:BoxPlot',
-              'render-r-smooth-scatter-plot=CGATReportPlugins.RPlotter:SmoothScatterPlot',
-              'render-r-heatmap-plot=CGATReportPlugins.RPlotter:HeatmapPlot',
-              'render-r-ggplot=CGATReportPlugins.RPlotter:GGPlot',
-              'render-b-line-plot=CGATReportPlugins.BokehPlotter:LinePlot',
+              'render-scatter-rainbow-plot='
+              'CGATReportPlugins.Plotter:ScatterPlotWithColor',
+              'render-matrix-plot='
+              'CGATReportPlugins.Plotter:TableMatrixPlot',
+              'render-matrixNP-plot='
+              'CGATReportPlugins.Plotter:NumpyMatrixPlot',
+              'render-hinton-plot='
+              'CGATReportPlugins.Plotter:HintonPlot',
+              'render-gallery-plot='
+              'CGATReportPlugins.Plotter:GalleryPlot',
+              'render-slideshow-plot='
+              'CGATReportPlugins.SlideShow:SlideShowPlot',
+              'render-bar-plot='
+              'CGATReportPlugins.Plotter:BarPlot',
+              'render-stacked-bar-plot='
+              'CGATReportPlugins.Plotter:StackedBarPlot',
+              'render-interleaved-bar-plot='
+              'CGATReportPlugins.Plotter:InterleavedBarPlot',
+              'render-box-plot='
+              'CGATReportPlugins.Plotter:BoxPlot',
+              'render-violin-plot='
+              'CGATReportPlugins.Plotter:ViolinPlot',
+              'render-venn-plot='
+              'CGATReportPlugins.Plotter:VennPlot',
+              'render-ggplot='
+              'CGATReportPlugins.GGPlotter:GGPlot',
+              'render-r-line-plot='
+              'CGATReportPlugins.RPlotter:LinePlot',
+              'render-r-box-plot='
+              'CGATReportPlugins.RPlotter:BoxPlot',
+              'render-r-smooth-scatter-plot='
+              'CGATReportPlugins.RPlotter:SmoothScatterPlot',
+              'render-r-heatmap-plot='
+              'CGATReportPlugins.RPlotter:HeatmapPlot',
+              'render-r-ggplot='
+              'CGATReportPlugins.RPlotter:GGPlot',
+              'render-b-line-plot='
+              'CGATReportPlugins.BokehPlotter:LinePlot',
           ]
       },)
 

@@ -36,6 +36,11 @@ optional pdf support
 Release Notes
 =============
 
+Version 0.2.1
+=============
+
+* Removed bokeh dependency
+
 Version 0.2
 ===========
 
@@ -53,6 +58,7 @@ Version 0.1
   Transformers will need to be updated.
 
   Most notable backwards incompatible changes are:
+
   * default grouping is by track
   * several transformers deprecated as they are
     not needed any more

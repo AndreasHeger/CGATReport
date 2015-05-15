@@ -5,8 +5,8 @@ Transformers
 ============
 
 Transformers change data before rendering. They are called by the
-``:transform:`` option. 
-Transformers can be combined in a comma-separated list.
+``:transform:`` option. Transformers can be combined in a
+comma-separated list.
 
 .. _stats:
 

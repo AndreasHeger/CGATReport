@@ -455,7 +455,6 @@ class Plotter(object):
                     f = lambda x, txt: str(x)
 
                 new_labels = [f(x, y) for x, y in enumerate(xlabels)]
-                
                 postamble = "\n" + "\n".join(
                     ["* %s: %s" % (x, y)
                      for x, y in zip(new_labels, xlabels)])
@@ -464,11 +463,10 @@ class Plotter(object):
 
         blocks = ResultBlocks(
             ResultBlock(
-                "\n".join((
-                    preamble,
-                    "#$mpl %i$#" % self.mFigure,
-                    postamble)),
-                title=DataTree.path2str(path)))
+                text="#$mpl %i$#\n" % self.mFigure,
+                title=DataTree.path2str(path),
+                preamble=preamble,
+                postamble=postamble))
 
         legend = None
         maxlen = 0
@@ -694,7 +692,6 @@ class PlotterMatrix(Plotter):
                    color_scheme=None):
 
         self.debug("plot matrix started")
-
         # when matrix is very different from square matrix
         # adjust figure size
         # better would be to move the axes as well to the left of
@@ -1195,6 +1192,9 @@ class LinePlot(Renderer, Plotter):
         (('as-lines', directives.flag),
          ('yerror', directives.flag),
          )
+
+    # when splitting, keep first column (X coordinates)
+    split_keep_first_column = True
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs)
@@ -2378,7 +2378,8 @@ class GalleryPlot(PlotByRow):
             # return value is a series
             filename = dataseries['filename']
         except KeyError:
-            self.warn("no 'filename' key in path %s" % (path2str(path)))
+            self.warn(
+                "no 'filename' key in path %s" % (path2str(path)))
             return blocks
 
         try:

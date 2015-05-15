@@ -830,6 +830,15 @@ def layoutBlocks(blocks, layout="column"):
 
     blocks = bb
 
+    # check if postambles are identical across all blocks
+    postambles = set([b.postamble for b in blocks])
+
+    if len(postambles) == 1:
+        blocks.clearPostamble()
+        postamble = postambles.pop()
+    else:
+        postamble = None
+
     if layout == "column":
         for block in blocks:
             if block.title:
@@ -839,7 +848,12 @@ def layoutBlocks(blocks, layout="column"):
                 warn("report_directive.layoutBlocks: missing title")
 
             lines.extend(block.text.split("\n"))
-        lines.extend(["", ])
+
+        lines.append("")
+
+        if postamble:
+            lines.extend(postamble.split("\n"))
+            lines.append("")
         return lines
 
     elif layout in ("row", "grid"):
@@ -854,7 +868,6 @@ def layoutBlocks(blocks, layout="column"):
         if ncols == 0:
             ncols = 1
             return lines
-
     else:
         raise ValueError("unknown layout %s " % layout)
 
@@ -924,17 +937,28 @@ def layoutBlocks(blocks, layout="column"):
                 lines.append("|%s|" % "|".join(l))
 
     lines.append(separator)
+
+    if postamble:
+        lines.append(postamble)
+
     lines.append("")
 
     return lines
 
 
-def buildPaths(reference):
-    '''return relevant paths from reference document.'''
+def getOutputDirectory():
+    return os.path.join('_static', 'report_directive')
 
+
+def buildPaths(reference):
+    '''return paths and filenames for a tracker.
+
+    Reference is usually a Tracker such as "Tracker.TrackerImages".
+    '''
     basedir, fname = os.path.split(reference)
     basename, ext = os.path.splitext(fname)
-    outdir = os.path.join('_static', 'report_directive', basedir)
+    # note: outdir had basedir at the end?
+    outdir = getOutputDirectory()
     codename = quote_filename(reference) + ".code"
     notebookname = quote_filename(reference) + ".notebook"
 

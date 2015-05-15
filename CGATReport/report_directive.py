@@ -21,7 +21,7 @@ from docutils.parsers.rst import directives
 from CGATReport import Config, Dispatcher, Utils, Cache, Component
 from CGATReport.ResultBlock import ResultBlocks
 
-CGATREPORT_DEBUG = False
+CGATREPORT_DEBUG = "CGATREPORT_DEBUG" in os.environ
 
 TEMPLATE_TEXT = """
 .. htmlonly::
@@ -200,7 +200,7 @@ def run(arguments,
         ###########################################################
         queries = [re.compile("%s(%s\S+.%s)" %
                               (root2builddir, outdir, suffix))
-                   for suffix in ("png", "pdf")]
+                   for suffix in ("png", "pdf", "svg")]
 
         logging.debug("report_directive.run: checking for changed files.")
 
@@ -290,6 +290,13 @@ def run(arguments,
             raise ValueError("the report directive requires a renderer")
 
         renderer = Utils.getRenderer(renderer_name, renderer_options)
+
+        try:
+            renderer.set_paths(rstdir, srcdir, builddir)
+            renderer.set_display_options(display_options)
+        except AttributeError:
+            # User renderers will not have these methods
+            pass
 
         ########################################################
         # create and call dispatcher
@@ -389,13 +396,14 @@ def run(arguments,
 
     if "notebook" in urls:
         nb_url = '`nb <%(notebook_url)s>`__' % links
-    
+
     map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
     map_figure2text["default-suffix"] = ""
     blocks.updatePlaceholders(map_figure2text)
 
     # render the output taking into account the layout
     lines = Utils.layoutBlocks(blocks, layout)
+    lines.append("")
 
     # add caption
     lines.extend(['::', ''])
