@@ -431,13 +431,16 @@ class ThumbnailSlideShow(PlainSlideShow):
              thumbnail_size))
 
         return [
-            """<div>
-                   <img u="image" src="%(html_image_filename)s" />
-                   <div u="thumb">
-                        <img class="i" src="%(html_thumb_filename)s" />
-                        <div class="c">%(title)s</div>
-                        <div class="t">%(description)s</div>
-                   </div>
+            """
+            <div>
+              <img u="image" src="%(html_image_filename)s" />
+                <div u="thumb">
+                  <abbr title="%(title)s %(description)s">
+                     <img class="i" src="%(html_thumb_filename)s" />
+                  </abbr>
+                  <div class="c">%(title)s</div>
+                  <div class="t">%(description)s</div>
+                </div>
             </div>
             """ % locals()]
 
