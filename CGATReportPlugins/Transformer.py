@@ -1123,9 +1123,11 @@ class TransformerHistogram(TransformerAggregate):
         debug("%s: called" % (str(self)))
 
         df = self.toHistogram(data)
+        df = df.set_index("bin", append=True)
         for converter in self.mConverters:
-            df = converter(df)
+            df = df.apply(converter, axis=0)
 
+        df.reset_index(level="bin", inplace=True)
         debug("%s: completed" % (str(self)))
         return df
 
