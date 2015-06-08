@@ -101,6 +101,11 @@ Options
       maximum number of columns per plot. If the matrix contains
       more columns, the plot is split into multiple plots.
 
+   nolabel-rows, nolabel-col
+      flag
+
+      produce plot without annotting the row or column axes.
+
 Plotting large matrices
 -----------------------
 
