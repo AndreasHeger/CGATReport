@@ -32,7 +32,7 @@ def writeCode(class_name, code, inliner):
     rstdir, rstfile = os.path.split(document)
 
     (basedir, fname, basename, ext, outdir, codename,
-     notebookname) = Utils.buildPaths(reference)
+     notebookname) = Utils.build_paths(reference)
 
     # path to root relative to rst
     rst2srcdir = os.path.join(os.path.relpath(srcdir, start=rstdir), outdir)

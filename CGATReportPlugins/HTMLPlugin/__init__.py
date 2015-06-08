@@ -1,7 +1,5 @@
 import os
-import re
-from CGATReport.Component import *
-from CGATReport import Config
+from CGATReport.Component import Component
 from CGATReport import Utils
 
 

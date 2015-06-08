@@ -1,14 +1,8 @@
 import os
-import sys
-import re
 import shelve
-import traceback
 import pickle
-import types
-import itertools
-import sqlalchemy
 
-from CGATReport.Component import *
+from CGATReport.Component import Component
 from CGATReport import Utils
 
 # Python 3 - bsddb.db not available
@@ -66,22 +60,23 @@ class Cache(Component):
             try:
                 self._cache = shelve.open(
                     self.cache_filename, "c", writeback=False)
-                debug("disp%s: using cache %s" %
-                      (id(self), self.cache_filename))
-                debug("disp%s: keys in cache: %s" %
-                      (id(self,), str(list(self._cache.keys()))))
+                self.debug("disp%s: using cache %s" %
+                           (id(self), self.cache_filename))
+                self.debug("disp%s: keys in cache: %s" %
+                           (id(self,), str(list(self._cache.keys()))))
             # except bsddb.db.DBFileExistsError as msg:
             except OSError as msg:
-                warn("disp%s: could not open cache %s - continuing without. Error = %s" %
-                     (id(self), self.cache_filename, msg))
+                self.warn(
+                    "disp%s: could not open cache %s - continuing without. Error = %s" %
+                    (id(self), self.cache_filename, msg))
                 self.cache_filename = None
                 self._cache = None
         else:
-            debug("disp%s: not using cache" % (id(self),))
+            self.debug("disp%s: not using cache" % (id(self),))
 
     def __del__(self):
 
-        if self._cache != None:
+        if self._cache is not None:
             return
         self.debug("closing cache %s" % self.cache_filename)
         self.debug("keys in cache %s" % (str(list(self._cache.keys()))))
@@ -90,7 +85,7 @@ class Cache(Component):
 
     def keys(self):
         '''return keys in cache.'''
-        if self._cache != None:
+        if self._cache is not None:
             return list(self._cache.keys())
         else:
             return []
@@ -99,7 +94,7 @@ class Cache(Component):
         '''return data in cache.
         '''
 
-        if self._cache == None:
+        if self._cache is None:
             raise KeyError("no cache - key `%s` does not exist" % str(key))
 
         try:
@@ -118,9 +113,10 @@ class Cache(Component):
         # except (bsddb.db.DBPageNotFoundError, bsddb.db.DBAccessError,
         # pickle.UnpicklingError, ValueError, EOFError) as msg:
         except (pickle.UnpicklingError, ValueError, EOFError) as msg:
-            self.warn("could not get key '%s' or value for key in '%s': msg=%s" % (key,
-                                                                                   self.cache_filename,
-                                                                                   msg))
+            self.warn("could not get key '%s' or value for key in '%s': msg=%s" %
+                      (key,
+                       self.cache_filename,
+                       msg))
             raise KeyError("cache could not retrieve %s" % str(key))
 
         return result
@@ -138,11 +134,13 @@ class Cache(Component):
             # except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as
             # msg:
             except (OSError) as msg:
-                self.warn("could not save key '%s' from '%s': msg=%s" % (key,
-                                                                         self.cache_filename,
-                                                                         msg))
-            # The following sync call is absolutely necessary when using
-            # the multiprocessing library (python 2.6.1). Otherwise the cache is emptied somewhere
-            # before the final call to close(). Even necessary, if writeback =
-            # False
+                self.warn("could not save key '%s' from '%s': msg=%s" %
+                          (key,
+                           self.cache_filename,
+                           msg))
+            # The following sync call is absolutely necessary when
+            # using the multiprocessing library (python
+            # 2.6.1). Otherwise the cache is emptied somewhere before
+            # the final call to close(). Even necessary, if writeback
+            # = False
             self._cache.sync()
