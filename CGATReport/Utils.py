@@ -128,13 +128,17 @@ def quote_rst(text):
 
 def quote_filename(text):
     '''quote filename for use as link in restructured text (remove spaces,
-    quotes, etc).
+    quotes, slashes, etc).
 
     latex does not permit a "." for image files.
 
+    Note that the quoting removes slashes and backslashes and thus removes
+    any path information.
+
     Replace all with "_"
+
     '''
-    return re.sub(r"""[ '"()\[\].]""", r"_", str(text))
+    return re.sub(r"""[ '"()\[\]./]""", r"_", str(text))
 
 
 def getDataFrameLevels(dataframe,
@@ -950,19 +954,21 @@ def getOutputDirectory():
     return os.path.join('_static', 'report_directive')
 
 
-def buildPaths(reference):
+def build_paths(reference):
     '''return paths and filenames for a tracker.
 
     Reference is usually a Tracker such as "Tracker.TrackerImages".
     '''
-    basedir, fname = os.path.split(reference)
-    basename, ext = os.path.splitext(fname)
+    basedir, name = os.path.split(reference)
+    # quote name to filename
+    filename = quote_filename(name)
+    basename, ext = os.path.splitext(filename)
     # note: outdir had basedir at the end?
     outdir = getOutputDirectory()
-    codename = quote_filename(reference) + ".code"
-    notebookname = quote_filename(reference) + ".notebook"
+    codename = os.path.join(basedir, filename) + ".code"
+    notebookname = os.path.join(basedir, filename) + ".notebook"
 
-    return basedir, fname, basename, ext, outdir, codename, notebookname
+    return basedir, filename, basename, ext, outdir, codename, notebookname
 
 NOTEBOOK_TEMPLATE = """
 <!DOCTYPE html>

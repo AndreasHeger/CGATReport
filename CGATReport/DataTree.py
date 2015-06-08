@@ -3,7 +3,6 @@ import itertools
 from logging import debug
 from collections import OrderedDict as odict
 import pandas
-
 from CGATReport import Utils
 
 

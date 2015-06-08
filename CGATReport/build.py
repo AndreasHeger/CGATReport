@@ -298,7 +298,7 @@ def cleanTrackers(rst_files, options, args):
 
         new_codehash = hashlib.md5("".join(code)).hexdigest()
         (basedir, fname, basename, ext,
-         outdir, codename, notebookname) = report_directive.buildPaths(
+         outdir, codename, notebookname) = Utils.build_paths(
              reference)
         codefilename = os.path.join(outdir, codename)
         ntested += 1
