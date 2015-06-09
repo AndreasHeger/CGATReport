@@ -218,10 +218,7 @@ hash -r
 # install cgat environment
 conda update -q conda --yes
 conda info -a
-conda create -q -n $CONDA_INSTALL_TYPE $CONDA_INSTALL_TYPE gcc=4.8.3 --override-channels --channel https://conda.binstar.org/cgat --channel defaults --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes
-
-# add CGATReport specific packages
-conda install -y Pillow seaborn
+conda create -q -n $CONDA_INSTALL_TYPE $CONDA_INSTALL_TYPE gcc=4.8.3 --override-channels --channel https://conda.binstar.org/cgat --channel defaults --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes Pillow seaborn
 
 # The following packages will be pulled in through pip:
 # mpld3
@@ -241,40 +238,6 @@ if [ "$OS" != "travis" ] ; then
       export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include
       export LIBRARY_PATH=$LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib/R/lib
-
-      # get latest version from Git Hub
-      git clone https://github.com/CGATOxford/cgat.git $CGAT_HOME/cgat-code
-      cd $CGAT_HOME/cgat-code
-
-      # Python preparation
-      python setup.py develop
-
-      if [ ! $? -eq 0 ] ; then
-         echo
-         echo " There was a problem doing: 'python setup.py develop' "
-         echo " Installation did not finish properly. "
-         echo 
-         echo " Please submit this issue via Git Hub: "
-         echo " https://github.com/CGATOxford/cgat/issue "
-         echo 
-      fi # if-$?
-
-      # get latest version from Git Hub
-      git clone https://github.com/CGATOxford/CGATPipelines.git $CGAT_HOME/cgat-pipelines
-      cd $CGAT_HOME/cgat-pipelines
-
-      # Python preparation
-      python setup.py develop
-
-      if [ ! $? -eq 0 ] ; then
-         echo
-         echo " There was a problem doing: 'python setup.py develop' "
-         echo " Installation did not finish properly. "
-         echo 
-         echo " Please submit this issue via Git Hub: "
-         echo " https://github.com/CGATOxford/cgat/issue "
-         echo 
-      fi # if-$?
 
    fi # if INSTALL_DEVEL
 
@@ -323,7 +286,7 @@ if [ "$OS" == "travis" ] ; then
    export LIBRARY_PATH=$LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib
    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib/R/lib   
 
-   echo "Setting up CGAT Pipelines code"
+   echo "Setting up CGATReport"
    # setup CGATPipelines
    cd $TRAVIS_BUILD_DIR
    python setup.py develop
