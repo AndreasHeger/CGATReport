@@ -215,10 +215,10 @@ bash Miniconda-latest-Linux-x86_64.sh -b -p $CONDA_INSTALL_DIR
 export PATH="$CONDA_INSTALL_DIR/bin:$PATH"
 hash -r
 
-# install cgat environment
+# install cgat environment and additional packages: Pillow, seaborn
 conda update -q conda --yes
 conda info -a
-conda create -q -n $CONDA_INSTALL_TYPE $CONDA_INSTALL_TYPE gcc=4.8.3 --override-channels --channel https://conda.binstar.org/cgat --channel defaults --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes Pillow seaborn
+conda create -q -n $CONDA_INSTALL_TYPE --override-channels --channel https://conda.binstar.org/cgat --channel defaults --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes $CONDA_INSTALL_TYPE gcc=4.8.3 Pillow seaborn
 
 # The following packages will be pulled in through pip:
 # mpld3
