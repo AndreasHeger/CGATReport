@@ -8,7 +8,7 @@ class ReturnValue(Tracker):
     tracks = ("track1", "track2", "track3")
 
     def __call__(self, track):
-        return randint(0,100)
+        return randint(0, 100)
 
 
 class ReturnValueWithSlice(Tracker):
@@ -16,7 +16,7 @@ class ReturnValueWithSlice(Tracker):
     slices = ("slice1", "slice2")
 
     def __call__(self, track, slice):
-        return randint(0,100)
+        return randint(0, 100)
 
 
 class ReturnValueInDictionary(Tracker):
@@ -26,12 +26,12 @@ class ReturnValueInDictionary(Tracker):
     def __call__(self, track, slice):
 
         if slice == "slice1":
-            return odict((("column1", randint(0,100)),
-                          ("column2", randint(0,100)),))
+            return odict((("column1", randint(0, 100)),
+                          ("column2", randint(0, 100)),))
         elif slice == "slice2":
-            return odict((("column1", randint(0,100)),
-                          ("column2", randint(0,100)),
-                          ("column3", randint(0,100)),))
+            return odict((("column1", randint(0, 100)),
+                          ("column2", randint(0, 100)),
+                          ("column3", randint(0, 100)),))
 
 class ReturnArray(Tracker):
     tracks = ("track1", "track2", "track3")
@@ -42,6 +42,7 @@ class ReturnArray(Tracker):
 
 class ReturnVariableLengthArray(Tracker):
     tracks = ("track1", "track2", "track3")
+
     def __call__(self, track):
         lengths = {'track1': 10,
                    'track2': 12,
@@ -55,6 +56,14 @@ class ReturnArrayWithSlice(Tracker):
 
     def __call__(self, track, slice=None):
         return [randint(0, 20) for x in range(10)]
+
+
+class ReturnArrayWithSliceAsDataframe(Tracker):
+    tracks = ("track1", "track2", "track3")
+    slices = ("slice1", "slice2")
+
+    def __call__(self, track, slice=None):
+        return pandas.DataFrame({'value': [randint(0, 20) for x in range(10)]})
 
 
 class ReturnVariableLengthArrayWithSlice(Tracker):
@@ -101,6 +110,3 @@ class ReturnDataFrameWithIndex(Tracker):
         return pandas.DataFrame(
             [randint(0, 20) for x in range(20)],
             index=['index_%s' % track for x in range(20)])
-
-
-

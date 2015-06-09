@@ -230,10 +230,11 @@ def listAsDataFrame(data, index_title='names',
                                name=index_title))
     return df
 
+
 def concatDataFrames(dataframes, index_tuples):
 
     df = pandas.concat(dataframes, keys=index_tuples)
-    
+
     # concat is akin to an SQL join operation and will
     # sort the columns lexicographically.
     # For matrices that could result in the columns not
@@ -273,9 +274,9 @@ def asDataFrame(data):
 
     Leaves are multiple arrays of the same size
 
-        The assumption is that the data is coordinate type
-        data (x,y,z values). Leaves will be added to a dataframe
-        as additional columns.
+        The data is assumed to be coordinate type data (x,y,z
+        values). Leaves will be added to a dataframe as multiple
+        columns.
 
     Leaves are a single array or arrays with dissimilar size
 
@@ -284,6 +285,7 @@ def asDataFrame(data):
         and the data frame has a single column with the value.
 
     Leaf is a dataframe
+
         Dataframes will be concatenated. Existing indices
         of the dataframes will be preserved with the exception
         of the trivial index for the row numbers.
