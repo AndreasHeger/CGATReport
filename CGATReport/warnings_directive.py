@@ -13,7 +13,8 @@ from docutils import nodes
 
 from sphinx.locale import _
 from sphinx.environment import NoUri
-from sphinx.util.compat import Directive, make_admonition
+from sphinx.util.compat import Directive
+from docutils.parsers.rst.directives.admonitions import BaseAdmonition
 
 
 class cgatreportwarning_node(nodes.warning, nodes.Element):
@@ -24,54 +25,34 @@ class cgatreportwarninglist(nodes.General, nodes.Element):
     pass
 
 
-class CGATReportWarning(Directive):
+class CGATReportWarning(BaseAdmonition):
 
-    """
-    A cgatreportwarning entry, displayed (if configured) in the form of an admonition.
-    """
+    node_class = cgatreportwarning_node
 
-    has_content = True
-    required_arguments = 0
+    # accept error as an optional argument
     optional_arguments = 1
-    final_argument_whitespace = False
-    option_spec = {}
 
     def run(self):
-        env = self.state.document.settings.env
-        targetid = "cgatreportwarning-%s" % env.new_serialno(
-            'cgatreportwarning')
-        # env.index_num += 1
-        targetnode = nodes.target('', '', ids=[targetid])
 
-        # this sets the formatting
-        self.options["class"] = "critical"
+        r = BaseAdmonition.run(self)
 
         if len(self.arguments) > 0:
             warningclass = self.arguments[0]
         else:
             warningclass = "generic"
 
-        ad = make_admonition(cgatreportwarning_node,
-                             self.name,
-                             [_('CGATReportWarning')],
-                             self.options,
-                             self.content, self.lineno, self.content_offset,
-                             self.block_text, self.state, self.state_machine)
-
-        # Attach a list of all cgatreportwarnings to the environment,
-        # the cgatreportwarninglist works with the collected
-        # cgatreportwarning nodes
+        env = self.state.document.settings.env
         if not hasattr(env, 'cgatreportwarning_all_cgatreportwarnings'):
             env.cgatreportwarning_all_cgatreportwarnings = []
+
         env.cgatreportwarning_all_cgatreportwarnings.append({
             'docname': env.docname,
             'lineno': self.lineno,
-            'cgatreportwarning': ad[0].deepcopy(),
+            'cgatreportwarning': r[0].deepcopy(),
             'warningclass': warningclass,
-            'target': targetnode,
         })
 
-        return [targetnode] + ad
+        return r
 
 
 class CGATReportWarningList(Directive):
@@ -87,8 +68,9 @@ class CGATReportWarningList(Directive):
     option_spec = {}
 
     def run(self):
-        # Simply insert an empty cgatreportwarninglist node which will be replaced later
-        # when process_cgatreportwarning_nodes is called
+        # Simply insert an empty cgatreportwarninglist node which will
+        # be replaced later when process_cgatreportwarning_nodes is
+        # called
         return [cgatreportwarninglist('')]
 
 
@@ -97,9 +79,9 @@ def process_cgatreportwarning_nodes(app, doctree, fromdocname):
         for node in doctree.traverse(cgatreportwarning_node):
             node.parent.remove(node)
 
-    # Replace all cgatreportwarninglist nodes with a list of the collected cgatreportwarnings.
-    # Augment each cgatreportwarning with a backlink to the original
-    # location.
+    # Replace all cgatreportwarninglist nodes with a list of the
+    # collected cgatreportwarnings.  Augment each cgatreportwarning
+    # with a backlink to the original location.
     env = app.builder.env
 
     if not hasattr(env, 'cgatreportwarning_all_cgatreportwarnings'):
@@ -117,9 +99,6 @@ def process_cgatreportwarning_nodes(app, doctree, fromdocname):
         para += nodes.Text("There are %i warnings" %
                            len(env.cgatreportwarning_all_cgatreportwarnings))
         content.append(para)
-
-        #table = nodes.enumerated_list()
-        #table['enumtype'] = 'arabic'
 
         for cgatreportwarning_info in env.cgatreportwarning_all_cgatreportwarnings:
 
@@ -140,11 +119,10 @@ def process_cgatreportwarning_nodes(app, doctree, fromdocname):
             newnode = nodes.reference('', '')
             innernode = nodes.emphasis(_(location_str), _(location_str))
             newnode['refdocname'] = cgatreportwarning_info['docname']
+
             try:
                 newnode['refuri'] = app.builder.get_relative_uri(
                     fromdocname, cgatreportwarning_info['docname'])
-                newnode['refuri'] += '#' + \
-                    cgatreportwarning_info['target']['refid']
             except NoUri:
                 # ignore if no URI can be determined, e.g. for LaTeX output
                 pass
@@ -154,22 +132,14 @@ def process_cgatreportwarning_nodes(app, doctree, fromdocname):
             para += nodes.Text(description_str, description_str)
             para += nodes.Text("\n", "\n")
 
-            # could not get a list to work - the list was created
-            # with the correct numbers of items, but there was no
-            # text.
-            # i= nodes.list_item("sthtsnh")
-
             # (Recursively) resolve references in the cgatreportwarning content
             cgatreportwarning_entry = cgatreportwarning_info[
                 'cgatreportwarning']
-            env.resolve_references(cgatreportwarning_entry, cgatreportwarning_info['docname'],
+            env.resolve_references(cgatreportwarning_entry,
+                                   cgatreportwarning_info['docname'],
                                    app.builder)
 
-            # add item to table
-            # table += i
             content.append(para)
-
-        # content.append(table)
 
         node.replace_self(content)
 
@@ -177,8 +147,10 @@ def process_cgatreportwarning_nodes(app, doctree, fromdocname):
 def purge_cgatreportwarnings(app, env, docname):
     if not hasattr(env, 'cgatreportwarning_all_cgatreportwarnings'):
         return
-    env.cgatreportwarning_all_cgatreportwarnings = [cgatreportwarning for cgatreportwarning in env.cgatreportwarning_all_cgatreportwarnings
-                                                        if cgatreportwarning['docname'] != docname]
+    env.cgatreportwarning_all_cgatreportwarnings = \
+        [cgatreportwarning for cgatreportwarning in
+         env.cgatreportwarning_all_cgatreportwarnings
+         if cgatreportwarning['docname'] != docname]
 
 
 def visit_cgatreportwarning_node(self, node):
@@ -197,8 +169,10 @@ def setup(app):
                  html=(visit_cgatreportwarning_node,
                        depart_cgatreportwarning_node),
                  latex=(
-                     visit_cgatreportwarning_node, depart_cgatreportwarning_node),
-                 text=(visit_cgatreportwarning_node, depart_cgatreportwarning_node))
+                     visit_cgatreportwarning_node,
+                     depart_cgatreportwarning_node),
+                 text=(visit_cgatreportwarning_node,
+                       depart_cgatreportwarning_node))
 
     app.add_directive('warning', CGATReportWarning)
     app.add_directive('warninglist', CGATReportWarningList)
