@@ -9,6 +9,7 @@
 :license: BSD, see LICENSE for details.
 """
 
+import logging
 from docutils import nodes
 
 from sphinx.locale import _
@@ -51,6 +52,8 @@ class CGATReportWarning(BaseAdmonition):
             'cgatreportwarning': r[0].deepcopy(),
             'warningclass': warningclass,
         })
+
+        logging.warn("CGATReport-Warning: %s" % warningclass)
 
         return r
 

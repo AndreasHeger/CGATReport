@@ -10,6 +10,7 @@
 """
 
 from docutils import nodes
+import logging
 
 from sphinx.locale import _
 from sphinx.environment import NoUri
@@ -51,6 +52,8 @@ class CGATReportError(BaseAdmonition):
             'cgatreporterror': r[0].deepcopy(),
             'errorclass': errorclass,
         })
+
+        logging.error("CGATReport-Warning: %s" % errorclass)
 
         return r
 
