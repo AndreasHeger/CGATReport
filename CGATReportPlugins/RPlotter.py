@@ -17,7 +17,7 @@ from CGATReport import Stats, Utils
 try:
     from rpy2.robjects import r as R
     import rpy2.robjects as ro
-    import rpy2.robjects.pandas2ri
+    import rpy2.robjects.py2ri
     rpy2.robjects.pandas2ri.activate()
     import rpy2.robjects.numpy2ri
     rpy2.robjects.numpy2ri.activate()
@@ -443,7 +443,7 @@ class GGPlot(Renderer, Plotter):
         # add all indices as columns
         dataframe.reset_index(inplace=True)
 
-        rframe = rpy2.robjects.pandas2ri.pandas2ri(dataframe)
+        rframe = rpy2.robjects.pandas2ri.py2ri(dataframe)
 
         # for the issue below, see:
         # http://stackoverflow.com/questions/12865218/getting-rid-of-asis-class-attribute
