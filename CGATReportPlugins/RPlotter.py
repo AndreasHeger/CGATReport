@@ -17,7 +17,7 @@ from CGATReport import Stats, Utils
 try:
     from rpy2.robjects import r as R
     import rpy2.robjects as ro
-    import rpy2.robjects.py2ri
+    import rpy2.robjects.pandas2ri
     rpy2.robjects.pandas2ri.activate()
     import rpy2.robjects.numpy2ri
     rpy2.robjects.numpy2ri.activate()
