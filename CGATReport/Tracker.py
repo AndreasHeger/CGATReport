@@ -139,7 +139,6 @@ def getTableColumns(db, tablename, attach=None):
 
 
 class Tracker(object):
-
     """
     Base class for trackers. User trackers should be derived from this class.
 
@@ -163,6 +162,12 @@ class Tracker(object):
        tracker("car", "blue")
 
     would return the lengths of blue cars.
+
+    This class accepts the following user arguments:
+
+    datadir : string (optional)
+       root directory in which data for this report is located.
+
     """
 
     mMinData = 1
@@ -176,7 +181,16 @@ class Tracker(object):
     # paths = []
 
     def __init__(self, *args, **kwargs):
-        pass
+
+        # directory where data for report is located
+        if "datadir" in kwargs:
+            self.datadir = kwargs["datadir"]
+        elif "datadir" in Utils.PARAM:
+            self.datadir = Utils.PARAMS["report_datadir"]
+        else:
+            self.datadir = "."
+
+        self.datadir = os.path.abspath(self.datadir)
 
     # def getTracks(self):
     #     """return a list of all tracks that this tracker provides."""
@@ -241,10 +255,6 @@ class Tracker(object):
             return dict(l, **locals)
         else:
             return l
-
-###########################################################################
-###########################################################################
-###########################################################################
 
 
 class TrackerSingleFile(Tracker):
@@ -462,7 +472,6 @@ class TrackerImages(Tracker):
 
 
 class TrackerSQL(Tracker):
-
     """Base class for trackers that fetch data from an SQL database.
 
     The basic tracker identifies tracks as tables that match a
@@ -476,6 +485,12 @@ class TrackerSQL(Tracker):
 
     If:attr:`as_tables` is set, the full table names will be returned.
     The default is to apply:attr:`pattern` and return the result.
+
+    This class accepts the following user arguments:
+
+    sql_backend : string (optional)
+       SQL backend to use. The default is ``sqlite:///./csvdb``.
+
     """
 
     pattern = None
@@ -493,13 +508,19 @@ class TrackerSQL(Tracker):
         # attach to additional tables
         self.attach = attach
 
+        # set backend
         if backend is not None:
-            # backend given - use it
+            # backend given to constructor
             self.backend = backend
-        else:
+        elif "sql_backend" in kwargs:
+            # backend given by user parameter in report directive
+            self.backend = kwargs["sql_backend"]
+        elif not hasattr(self, "backend"):
             # not defined previously (by mix-in class) get default
-            if not hasattr(self, "backend"):
-                self.backend = Utils.PARAMS["report_sql_backend"]
+            self.backend = Utils.PARAMS["report_sql_backend"]
+        else:
+            # default is sqlite in current directory
+            self.backend = "sqlite:///./csvdb"
 
         # patch for mPattern and mAsTables for backwards-compatibility
         if hasattr(self, "mPattern"):
