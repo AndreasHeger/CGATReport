@@ -185,7 +185,7 @@ class Tracker(object):
         # directory where data for report is located
         if "datadir" in kwargs:
             self.datadir = kwargs["datadir"]
-        elif "datadir" in Utils.PARAM:
+        elif "report_datadir" in Utils.PARAMS:
             self.datadir = Utils.PARAMS["report_datadir"]
         else:
             self.datadir = "."

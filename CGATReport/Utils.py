@@ -9,7 +9,7 @@ import math
 import glob
 import pkgutil
 
-from logging import debug, warn
+from logging import debug, warn, critical
 
 # Python 2/3 Compatibility
 try:

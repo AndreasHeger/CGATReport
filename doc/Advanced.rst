@@ -74,13 +74,13 @@ example, to show to tables from two different reports::
 
    .. report:: pipeline_docs.pipeline_mapping.trackers.MappingSummary
       :render: table
-      :sql_backend: ../mapping_sensitive
+      :sql_backend: sqlite:///../mapping_sensitive/csvdb
 
       Mapping summary using sensitive mapping parameters
 
    .. report:: pipeline_docs.pipeline_mapping.trackers.MappingSummary
       :render: table
-      :sql_backend: ../mapping_strict
+      :sql_backend: sqlite:///../mapping_strict/csvdb
 
       Mapping summary using strict mapping parameters
 
