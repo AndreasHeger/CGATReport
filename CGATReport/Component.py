@@ -123,6 +123,7 @@ def getOptionMap():
         options["tracker"] = {
             'regex': directives.unchanged,
             'glob': directives.unchanged,
+            'sql_backend': directives.unchanged,
         }
 
         options["display"] = {

@@ -471,8 +471,15 @@ def getModule(name):
     try:
         (modulefile, pathname, description) = imp.find_module(name, path)
     except ImportError as msg:
-        warn("could not find module %s: msg=%s" % (name, msg))
-        raise ImportError("could not find module %s: msg=%s" % (name, msg))
+        warn("could not find module %s in %s: msg=%s" % (name, path, msg))
+        raise ImportError(
+            "could not find module %s in %s: msg=%s" % (name, path, msg))
+
+    if modulefile is None:
+        warn("could not find module %s in %s" % (name, path))
+        raise ImportError(
+            "find_module returned None for %s in %s" %
+            (name, path))
 
     stdout = sys.stdout
     sys.stdout = io.StringIO()
@@ -588,7 +595,7 @@ def makeObject(path, args=(), kwargs={}):
 def makeTracker(path, args=(), kwargs={}):
     """retrieve an instantiated tracker and its associated code.
 
-    returns a tuple (code, tracker).
+    returns a tuple (code, tracker, pathname).
     """
     obj, module, pathname, cls = makeObject(path, args, kwargs)
     code = getCode(cls, pathname)
