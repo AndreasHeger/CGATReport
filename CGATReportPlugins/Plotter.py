@@ -2392,8 +2392,12 @@ class GalleryPlot(PlotByRow):
         rst_text = '''.. figure:: %(filename)s
 '''
 
-        rst_link = '''* `%(title)s <%(absfn)s>`_
-'''
+        # Do not use a link here as this can be invalid
+        # if a report is moved.
+        # rst_link = '''* `%(title)s <%(absfn)s>`_
+# '''
+
+        rst_link = '''* `%(title)s`'''
 
         plts = []
 
