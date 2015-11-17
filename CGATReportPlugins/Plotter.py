@@ -2392,12 +2392,10 @@ class GalleryPlot(PlotByRow):
         rst_text = '''.. figure:: %(filename)s
 '''
 
-        # Do not use a link here as this can be invalid
+        # Warning: the link here will be invalid
         # if a report is moved.
-        # rst_link = '''* `%(title)s <%(absfn)s>`_
-# '''
-
-        rst_link = '''* `%(title)s`'''
+        rst_link = '''* `%(title)s <%(absfn)s>`_
+'''
 
         plts = []
 
@@ -2438,7 +2436,7 @@ class GalleryPlot(PlotByRow):
         blocks = ResultBlocks(ResultBlock("\n".join(
             ("#$mpl %i$#" % (self.mFigure),
              "",
-             "* `%(title)s <%(absfn)s>`_" % locals(),
+             "",
              )),
             title=path2str(path)))
 
