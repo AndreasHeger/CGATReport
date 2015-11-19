@@ -263,6 +263,8 @@ setup(name='CGATReport',
               'CGATReportPlugins.Plotter:VennPlot',
               'render-ggplot='
               'CGATReportPlugins.GGPlotter:GGPlot',
+              'render-pdplot='
+              'CGATReportPlugins.PandasPlotter:PandasPlot',
               'render-r-line-plot='
               'CGATReportPlugins.RPlotter:LinePlot',
               'render-r-box-plot='

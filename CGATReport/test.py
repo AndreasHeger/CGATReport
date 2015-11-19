@@ -310,16 +310,18 @@ def main(argv=None, **kwargs):
                       help="do not render, start ipython interpreter "
                       "[default=%default].")
 
-    parser.add_option("--workdir", dest="workdir", type="string",
-                      help="working directory - change to this directory "
-                      "before executing "
-                      "[default=%default]")
+    parser.add_option(
+        "--workdir", dest="workdir", type="string",
+        help="working directory - change to this directory "
+        "before executing "
+        "[default=%default]")
 
-    parser.add_option("--hardcopy", dest="hardcopy", type="string",
-                      help="output images of plots. The parameter should "
-                      "contain one or more %s "
-                      "The suffix determines the type of plot. "
-                      "[default=%default].")
+    parser.add_option(
+        "--hardcopy", dest="hardcopy", type="string",
+        help="output images of plots. The parameter should "
+        "contain one or more %s "
+        "The suffix determines the type of plot. "
+        "[default=%default].")
 
     parser.set_defaults(
         loglevel=1,
