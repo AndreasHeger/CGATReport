@@ -428,7 +428,6 @@ class TrackerMatrices(TrackerMultipleFiles):
 
 
 class TrackerDataframes(TrackerMultipleFiles):
-
     '''return dataframe from files.
 
     By default, the dataframe has no row names.
@@ -829,15 +828,13 @@ class TrackerSQL(Tracker):
         '''
         return self.execute(stmt)
 
-    def getDataFrame(self, stmt):
-        '''return results of SQL statement as an pandas dataframe.
+    def getDataFrame(self, stmt, **kwargs):
+        '''return results of SQL statement as a pandas dataframe.
+
         '''
-        e = self.execute(self.buildStatement(stmt))
-        # the conversion to a list incurs a performance penalty
-        # but pandas requires a __len__ method.
-        return pandas.DataFrame.from_records(
-            list(e),
-            columns=e.keys())
+        return pandas.read_sql(self.buildStatement(stmt),
+                               self.db,
+                               **kwargs)
 
     # # -------------------------------------
     # # Direct access functios for return to CGATReport
