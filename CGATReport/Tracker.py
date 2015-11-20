@@ -832,6 +832,7 @@ class TrackerSQL(Tracker):
         '''return results of SQL statement as a pandas dataframe.
 
         '''
+        self.connect()
         return pandas.read_sql(self.buildStatement(stmt),
                                self.db,
                                **kwargs)
