@@ -2486,8 +2486,6 @@ class ScatterPlot(Renderer, Plotter):
 
     def render(self, dataframe, path):
 
-        self.startPlot()
-
         nplotted = 0
 
         plts, legend = [], []
@@ -2501,6 +2499,7 @@ class ScatterPlot(Renderer, Plotter):
 
         level = Utils.getGroupLevels(dataframe)
         xcolumn = columns[0]
+        started = False
 
         for key, work in dataframe.groupby(
                 level=level):
@@ -2508,11 +2507,15 @@ class ScatterPlot(Renderer, Plotter):
 
                 # remove missing data points
                 xvalues, yvalues = Stats.filterMissing(
-                    (dataframe[xcolumn], dataframe[column]))
+                    (work[xcolumn], work[column]))
 
                 # remove columns with all NaN
                 if len(xvalues) == 0 or len(yvalues) == 0:
                     continue
+
+                if not started:
+                    self.startPlot()
+                    started = True
 
                 marker = self.format_markers[
                     nplotted % len(self.format_markers)]
