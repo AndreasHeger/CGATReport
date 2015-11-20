@@ -440,6 +440,11 @@ def asDataFrame(data):
         assert min(path_lengths) == max(path_lengths)
         assert min(levels) == max(levels)
 
+        # if only a single dataframe without given
+        # tracks, return dataframe
+        if index_tuples == ["all"]:
+            return dataframes[0]
+
         expected_levels = min(path_lengths) + min(levels)
         df = concatDataFrames(dataframes, index_tuples)
 
