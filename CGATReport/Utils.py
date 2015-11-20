@@ -9,7 +9,7 @@ import math
 import glob
 import pkgutil
 
-from logging import debug, warn
+from logging import debug, warn, critical
 
 # Python 2/3 Compatibility
 try:
@@ -128,13 +128,17 @@ def quote_rst(text):
 
 def quote_filename(text):
     '''quote filename for use as link in restructured text (remove spaces,
-    quotes, etc).
+    quotes, slashes, etc).
 
     latex does not permit a "." for image files.
 
+    Note that the quoting removes slashes and backslashes and thus removes
+    any path information.
+
     Replace all with "_"
+
     '''
-    return re.sub(r"""[ '"()\[\].]""", r"_", str(text))
+    return re.sub(r"""[ '"()\[\]./]""", r"_", str(text))
 
 
 def getDataFrameLevels(dataframe,
@@ -467,8 +471,15 @@ def getModule(name):
     try:
         (modulefile, pathname, description) = imp.find_module(name, path)
     except ImportError as msg:
-        warn("could not find module %s: msg=%s" % (name, msg))
-        raise ImportError("could not find module %s: msg=%s" % (name, msg))
+        warn("could not find module %s in %s: msg=%s" % (name, path, msg))
+        raise ImportError(
+            "could not find module %s in %s: msg=%s" % (name, path, msg))
+
+    if modulefile is None:
+        warn("could not find module %s in %s" % (name, path))
+        raise ImportError(
+            "find_module returned None for %s in %s" %
+            (name, path))
 
     stdout = sys.stdout
     sys.stdout = io.StringIO()
@@ -584,7 +595,7 @@ def makeObject(path, args=(), kwargs={}):
 def makeTracker(path, args=(), kwargs={}):
     """retrieve an instantiated tracker and its associated code.
 
-    returns a tuple (code, tracker).
+    returns a tuple (code, tracker, pathname).
     """
     obj, module, pathname, cls = makeObject(path, args, kwargs)
     code = getCode(cls, pathname)
@@ -950,19 +961,21 @@ def getOutputDirectory():
     return os.path.join('_static', 'report_directive')
 
 
-def buildPaths(reference):
+def build_paths(reference):
     '''return paths and filenames for a tracker.
 
     Reference is usually a Tracker such as "Tracker.TrackerImages".
     '''
-    basedir, fname = os.path.split(reference)
-    basename, ext = os.path.splitext(fname)
+    basedir, name = os.path.split(reference)
+    # quote name to filename
+    filename = quote_filename(name)
+    basename, ext = os.path.splitext(filename)
     # note: outdir had basedir at the end?
     outdir = getOutputDirectory()
-    codename = quote_filename(reference) + ".code"
-    notebookname = quote_filename(reference) + ".notebook"
+    codename = os.path.join(basedir, filename) + ".code"
+    notebookname = os.path.join(basedir, filename) + ".notebook"
 
-    return basedir, fname, basename, ext, outdir, codename, notebookname
+    return basedir, filename, basename, ext, outdir, codename, notebookname
 
 NOTEBOOK_TEMPLATE = """
 <!DOCTYPE html>

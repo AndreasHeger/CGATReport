@@ -22,6 +22,7 @@ that are included in cgatreport.
    GalleryScatterPlots.rst
    GalleryVenn.rst
    GalleryGGPlot.rst
+   GalleryPDPlot.rst
    GalleryConfig.rst
    GalleryStatus.rst
    GalleryGallery.rst

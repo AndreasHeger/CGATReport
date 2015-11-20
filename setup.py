@@ -112,7 +112,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='CGATReport',
-      version='0.2.1',
+      version='0.2.2',
       description='CGATReport : a report generator in python based on sphinx',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',
@@ -263,6 +263,8 @@ setup(name='CGATReport',
               'CGATReportPlugins.Plotter:VennPlot',
               'render-ggplot='
               'CGATReportPlugins.GGPlotter:GGPlot',
+              'render-pdplot='
+              'CGATReportPlugins.PandasPlotter:PandasPlot',
               'render-r-line-plot='
               'CGATReportPlugins.RPlotter:LinePlot',
               'render-r-box-plot='

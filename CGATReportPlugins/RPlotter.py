@@ -14,14 +14,13 @@ from CGATReportPlugins.Renderer import Renderer, NumpyMatrix
 from CGATReport.DataTree import path2str
 from CGATReport import Stats, Utils
 
-import pandas.rpy.common
-
 try:
     from rpy2.robjects import r as R
     import rpy2.robjects as ro
+    import rpy2.robjects.pandas2ri
+    rpy2.robjects.pandas2ri.activate()
     import rpy2.robjects.numpy2ri
     rpy2.robjects.numpy2ri.activate()
-    import rpy2.robjects.lib.ggplot2 as ggplot2
 except ImportError:
     R = None
 
@@ -288,9 +287,6 @@ class BoxPlot(Renderer, Plotter):
 
         dataseries = Utils.toMultipleSeries(dataframe)
 
-        # import pdb; pdb.set_trace()
-        # rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
-        # R.boxplot(rframe)
         names = [path2str(x[0]) for x in dataseries]
         data = [x[1] for x in dataseries]
         R.boxplot(data, names=names)
@@ -447,7 +443,7 @@ class GGPlot(Renderer, Plotter):
         # add all indices as columns
         dataframe.reset_index(inplace=True)
 
-        rframe = pandas.rpy.common.convert_to_r_dataframe(dataframe)
+        rframe = rpy2.robjects.pandas2ri.py2ri(dataframe)
 
         # for the issue below, see:
         # http://stackoverflow.com/questions/12865218/getting-rid-of-asis-class-attribute

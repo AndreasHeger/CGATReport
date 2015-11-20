@@ -626,6 +626,20 @@ class Table(TableBase):
         row_headers = dataframe.index
         col_headers = dataframe.columns
 
+        # as of sphinx 1.3.1, tables with more than 100 columns cause an
+        # error:
+        # Exception occurred:
+        # File "/ifs/apps/apps/python-2.7.9/lib/python2.7/site-packages/docutils/writers/html4css1/__init__.py", line 642, in write_colspecs
+        # colwidth = int(node['colwidth'] * 100.0 / width + 0.5)
+        # ZeroDivisionError: float division by zero
+        #
+        # Thus, for table with more than 100 columns, force will be
+        # disabled and max_cols set to a low value in order to make
+        # sure the table is not displayed inline
+        if len(col_headers) >= 90:
+            self.force = False
+            self.max_cols = 10
+
         # do not output large matrices as rst files
         if self.separate or (not self.force and
                              (len(row_headers) > self.max_rows or

@@ -63,7 +63,7 @@ def run(arguments,
     tracker_name = directives.uri(arguments[0])
 
     (basedir, fname, basename, ext, outdir,
-     codename, notebookname) = Utils.buildPaths(tracker_name)
+     codename, notebookname) = Utils.build_paths(tracker_name)
 
     # get the directory of the rst file
     # state_machine.document.attributes['source'])

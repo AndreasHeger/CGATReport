@@ -3,16 +3,20 @@
 # message to display when the OS is not correct
 sanity_check_os() {
    echo
-   echo " Unsupported operating system "
-   echo " " $OS
-   echo " Installation aborted "
+   echo " Unsupported operating system: $OS"
+   echo " Installation aborted."
+   echo 
+   echo " Supported operating systems are: "
+   echo " Ubuntu 12.x"
+   echo " CentOS 6.x"
+   echo " Scientific Linux 6.x"
    echo
    exit 1;
 } # sanity_check_os
 
 
 # function to detect the Operating System
-detect_os(){
+detect_os() {
 
 if [ -f /etc/os-release ]; then
 
@@ -20,10 +24,8 @@ if [ -f /etc/os-release ]; then
    if [ "$OS" != "12" ] ; then
 
       echo       
-      echo " Ubuntu version not supported "
+      echo " Sorry, this version of Ubuntu has not been tested. Only Ubuntu 12.x is supported so far. "
       echo
-      echo " Only Ubuntu 12.x has been tested so far "
-      echo 
       exit 1;
 
    fi
@@ -32,17 +34,30 @@ if [ -f /etc/os-release ]; then
 
 elif [ -f /etc/system-release ]; then
 
-   OS=$(cat /etc/system-release | awk ' {print $4;}' | awk '{sub("\\."," "); print $1;}')
-   if [ "$OS" != "6" ] ; then
-      echo
-      echo " Scientific Linux version not supported "
-      echo
-      echo " Only 6.x Scientific Linux has been tested so far "
-      echo
-      exit 1;
+   OP=$(cat /etc/system-release | awk ' {print $1;}')
+   if [ "$OP" == "Scientific" ] ; then
+      OP=$(cat /etc/system-release | awk ' {print $4;}' | awk '{sub("\\."," "); print $1;}')
+      if [ "$OP" != "6" ] ; then
+         echo
+         echo " Sorry, this version of Scientific Linux has not been tested. Only 6.x versions are supported so far. "
+         echo
+         exit 1;
+      else
+         OS="sl"
+      fi
+   elif [ "$OP" == "CentOS" ] ; then
+      OP=$(cat /etc/system-release | awk ' {print $3;}' | awk '{sub("\\."," "); print $1;}')
+      if [ "$OP" != "6" ] ; then
+         echo
+         echo " Sorry, this version of CentOS has not been tested. Only 6.x versions are supported so far. "
+         echo
+         exit 1;
+      else
+         OS="centos"
+      fi
+   else
+      sanity_check_os
    fi
-
-   OS="sl"
 
 else
 
@@ -52,28 +67,34 @@ fi
 } # detect_os
 
 
-# function to install operating system dependencies
+# install operating system dependencies
 install_os_packages() {
 
-if [ "$OS" == "ubuntu" -o "$OS" == "travis" ] ; then
+detect_os
+
+if [ "$OS" == "ubuntu" ] || [ "$OS" == "travis" ] ; then
 
    echo
    echo " Installing packages for Ubuntu "
    echo
 
-   sudo apt-get install -y gcc g++ zlib1g-dev libssl-dev libbz2-dev libfreetype6-dev libpng12-dev libblas-dev libatlas-dev liblapack-dev gfortran libpq-dev r-base-dev libreadline-dev libmysqlclient-dev libboost-dev libsqlite3-dev mercurial;
+   sudo apt-get --quiet install -y gcc g++ zlib1g-dev libssl-dev libssl1.0.0 libbz2-dev libfreetype6-dev libpng12-dev libblas-dev libatlas-dev liblapack-dev gfortran libpq-dev r-base-dev libreadline-dev libmysqlclient-dev libboost-dev libsqlite3-dev;
 
-elif [ "$OS" == "sl" ] ; then
+elif [ "$OS" == "sl" ] || [ "$OS" == "centos" ] ; then
 
    echo 
-   echo " Installing packages for Scientific Linux "
+   echo " Installing packages for Scientific Linux / CentOS "
    echo
 
-   yum -y install gcc zlib-devel openssl-devel bzip2-devel gcc-c++ freetype-devel libpng-devel blas atlas lapack gcc-gfortran postgresql-devel R-core-devel readline-devel mysql-devel boost-devel sqlite-devel mercurial
+   yum -y install gcc zlib-devel openssl-devel bzip2-devel gcc-c++ freetype-devel libpng-devel blas atlas lapack gcc-gfortran postgresql-devel R-core-devel readline-devel mysql-devel boost-devel sqlite-devel
 
-   # additional configuration for scipy
+   # additional configuration for scipy (Scientific Linux only)
+   if [ "$OS" == "sl" ] ; then
+      ln -s /usr/lib64/libatlas.so.3 /usr/lib64/libatlas.so
+   fi
+
+   # additional configuration for blas and lapack
    ln -s /usr/lib64/libblas.so.3 /usr/lib64/libblas.so
-   ln -s /usr/lib64/libatlas.so.3 /usr/lib64/libatlas.so
    ln -s /usr/lib64/liblapack.so.3 /usr/lib64/liblapack.so;
 
 else
@@ -83,186 +104,366 @@ else
 fi # if-OS
 } # install_os_packages
 
-# funcion to install Python dependencies
-install_python_deps() {
 
-if [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
+# detect CGAT installation
+detect_cgat_installation() {
+
+RESULT=0
+
+if [ -z "$CGAT_HOME" ] ; then
+
+   if [ -d "$HOME/cgat-install/conda-install" ] ; then
+      UNINSTALL_DIR="$HOME/cgat-install"
+      RESULT=1
+   fi
+
+
+else
+
+   if [ -d "$CGAT_HOME/conda-install" ] ; then
+      UNINSTALL_DIR="$CGAT_HOME"
+      RESULT=1
+   fi
+
+fi
+
+return $RESULT
+
+}
+
+# Travis installations are running out of RAM
+# with large conda installations. Issue has been submitted here:
+# https://github.com/conda/conda/issues/1197
+# While we wait for a response, we'll try to clean up the conda
+# installation folder as much as possible
+conda_cleanup() {
+conda clean --index-cache
+conda clean --lock
+conda clean --tarballs -y
+conda clean --packages -y
+}
+
+# proceed with conda installation
+conda_install() {
+
+detect_cgat_installation
+
+if [ ! -z "$UNINSTALL_DIR" ] ; then
 
    echo
-   echo " Installing Python dependencies for $1 "
+   echo " An installation of the CGAT code was found in: $UNINSTALL_DIR"
+   echo " Please use --location to install CGAT code in a different location "
+   echo " or uninstall the current version before proceeding."
    echo
+   echo " Installation is aborted."
+   echo
+   exit 1
+
+fi
+
+# check installation type
+if [ "$OS" != "travis" ] ; then
+   if [ "$INSTALL_SCRIPTS" == "1" ] ; then
+      if [ "$INSTALL_LITE" == "1" ] ; then
+         CONDA_INSTALL_TYPE="cgat-scripts-lite"
+      elif [ "$INSTALL_DEVEL" == "1" ] ; then
+         CONDA_INSTALL_TYPE="cgat-scripts"
+      else
+         CONDA_INSTALL_TYPE="cgat-scripts"
+      fi
+   elif [ "$INSTALL_DEVEL" == "1" ] ; then
+      if [ "$INSTALL_LITE" == "1" ] ; then
+         CONDA_INSTALL_TYPE="cgat-devel-lite"
+      elif [ "$INSTALL_DEVEL" == "1" ] ; then
+         CONDA_INSTALL_TYPE="cgat-devel"
+      else
+         CONDA_INSTALL_TYPE="cgat-devel"
+      fi
+   else
+      echo
+      echo " Wrong installation type! "
+      echo " Installation aborted. "
+      echo
+      exit 1
+   fi # if install type
+fi # if travis install
+
+# check installation target
+if [ "$OS" == "travis" ] ; then
+
+   CONDA_INSTALL_TYPE="cgat-devel"
+   export CONDA_INSTALL_DIR=$TRAVIS_BUILD_DIR/conda-install
+   cd $TRAVIS_BUILD_DIR
+
+else
 
    # Go to CGAT_HOME to continue with installation
    if [ -z "$CGAT_HOME" ] ; then
       # install in default location
-      CGAT_HOME=$HOME/CGATREPORT
+      export CGAT_HOME=$HOME/cgat-install
+      mkdir -p $CGAT_HOME
    fi
 
-   # Build Python 2.7.5
-   mkdir -p $CGAT_HOME
+   export CONDA_INSTALL_DIR=$CGAT_HOME/conda-install
    cd $CGAT_HOME
-   mkdir python_build
-   cd python_build
-   wget http://www.python.org/ftp/python/2.7.5/Python-2.7.5.tgz
-   tar xzvf Python-2.7.5.tgz
-   rm Python-2.7.5.tgz
-   cd Python-2.7.5
-   ./configure --prefix=$CGAT_HOME/Python-2.7.5
-   make
-   make install
-   cd $CGAT_HOME
-   rm -rf python_build/
-
-   # Create virtual environment
-   wget --no-check-certificate https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.10.1.tar.gz
-   tar xvfz virtualenv-1.10.1.tar.gz
-   rm virtualenv-1.10.1.tar.gz
-   cd virtualenv-1.10.1
-   $CGAT_HOME/Python-2.7.5/bin/python virtualenv.py cgat-venv
-   source cgat-venv/bin/activate
-
-   # Install Python prerequisites
-   echo "installing cython"
-   pip -q install cython
-   echo "installing numpy"
-   pip -q install numpy
-   echo "installing matplotlib"
-   pip -q install matplotlib
-   echo "installing scipy"
-   # do not go quiet, as it takes too long and travis aborts
-   pip -q install scipy
-   echo "installing patsy"
-   pip -q install patsy
-   echo "installing pandas"
-   pip -q install pandas
-   echo "installing remaining dependencies"
-   pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
-   echo "upgrading setuptools"
-   pip -q install --upgrade setuptools ;
-   echo "installing ipython"
-   pip install ipython
-
-   sudo Rscript install.R
-
-   # Print help message
-   echo
-   echo
-   echo "To start using the Python virtual environment with the CGAT code collection, type:"
-   echo "-> source $CGAT_HOME/virtualenv-1.10.1/cgat-venv/bin/activate"
-   echo "-> cgat --help"
-   echo
-   echo "To finish the Python virtual environment, type:"
-   echo "->deactivate"
-   echo
-   echo ;
-
-elif [ "$OS" == "travis" ] ; then
-   # Travis-CI provides a virtualenv with Python 2.7
-   echo 
-   echo " Installing Python dependencies in travis "
-   echo
-
-   # do not go quiet, as travis aborts if no output from script
-   # for 10 mins.
-
-   # Install Python prerequisites
-   echo "installing cython"
-   pip install cython
-   echo "installing numpy"
-   pip install numpy
-   echo "installing matplotlib"
-   pip install matplotlib
-   echo "installing scipy"
-
-   pip install scipy
-   echo "installing patsy"
-   pip install patsy
-   echo "installing pandas"
-   pip install pandas
-   echo "installing remaining dependencies"
-   pip install -r https://raw.github.com/AndreasHeger/sphinx-report/master/requires.txt
-   echo "upgrading setuptools"
-   pip install --upgrade setuptools ;
-   echo "installing ipython"
-   pip install ipython
-
-   sudo Rscript install.R
-
-
-else
-
-   sanity_check_os $OS
 
 fi # if-OS
-} # install_python_deps
 
-# function to run tests
-run_tests() {
+# download and install conda
+wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+bash Miniconda-latest-Linux-x86_64.sh -b -p $CONDA_INSTALL_DIR
+export PATH="$CONDA_INSTALL_DIR/bin:$PATH"
+hash -r
 
+# install cgat environment and additional packages: Pillow, seaborn
+conda update -q conda --yes
+conda info -a
+conda create -q -n $CONDA_INSTALL_TYPE --override-channels --channel https://conda.binstar.org/cgat --channel defaults --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes $CONDA_INSTALL_TYPE gcc=4.8.3 Pillow seaborn
+
+# The following packages will be pulled in through pip:
+# mpld3
+
+# if installation is 'devel' (outside of travis), checkout latest version from github
+if [ "$OS" != "travis" ] ; then
+
+   if [ "$INSTALL_DEVEL" == "1" ] ; then
+
+      # activate cgat environment
+      source $CONDA_INSTALL_DIR/bin/activate $CONDA_INSTALL_TYPE
+
+      # Set up other environment variables
+      export CFLAGS=$CFLAGS" -I/usr/include/x86_64-linux-gnu -I$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include -L/usr/lib/x86_64-linux-gnu -L$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib"
+      export CPATH=$CPATH" -I/usr/include/x86_64-linux-gnu -I$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include -L/usr/lib/x86_64-linux-gnu -L$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib"
+      export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include
+      export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include
+      export LIBRARY_PATH=$LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib/R/lib
+
+   fi # if INSTALL_DEVEL
+
+   clear
+   echo 
+   echo " The CGAT code and pipelines was successfully installed!"
+   echo
+   echo " To activate the CGAT environment type: "
+   echo " $ source $CONDA_INSTALL_DIR/bin/activate $CONDA_INSTALL_TYPE"
+   [ "$INSTALL_SCRIPTS" == "1" ] && echo " cgat --help"
+   echo
+   echo " To deactivate the environment, use:"
+   echo " $ source deactivate"
+   echo
+
+fi
+
+} # conda install
+
+
+# test code with conda install
+conda_test() {
+
+# setup environment and run tests
 if [ "$OS" == "travis" ] ; then
 
-   python setup.py install
-   cd doc
-   # make html	
+   CONDA_INSTALL_DIR=$TRAVIS_BUILD_DIR/conda-install
 
-elif [ "$OS" == "ubuntu" -o "$OS" == "sl" ] ; then
+   # activate cgat environment
+   if [ "$INSTALL_LITE" == "1" ] ; then
+      source $CONDA_INSTALL_DIR/bin/activate cgat-devel-lite
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_INSTALL_DIR/envs/cgat-devel-lite/lib/R/lib
+   elif [ "$INSTALL_FULL" == "1" ] ; then
+      source $CONDA_INSTALL_DIR/bin/activate cgat-devel
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_INSTALL_DIR/envs/cgat-devel/lib/R/lib
+   else
+      source $CONDA_INSTALL_DIR/bin/activate cgat-devel
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_INSTALL_DIR/envs/cgat-devel/lib/R/lib
+   fi
 
-   # prepare external dependencies
-   tests_external_deps $OS
+   # configure environment
+   export CFLAGS=$CFLAGS" -O0 -I/usr/include/x86_64-linux-gnu -I$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include -L/usr/lib/x86_64-linux-gnu -L$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib"
+   export CPATH=$CPATH" -I/usr/include/x86_64-linux-gnu -I$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include -L/usr/lib/x86_64-linux-gnu -L$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib"
+   export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include
+   export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/include
+   export LIBRARY_PATH=$LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib/R/lib   
 
-   # Set up other environment variables
-   source $CGAT_HOME/virtualenv-1.10.1/cgat-venv/bin/activate
+   echo "Setting up CGATReport"
+   # setup CGATPipelines
+   cd $TRAVIS_BUILD_DIR
+   python setup.py develop
 
-   python setup.py install
-   cd doc
-   # make html
+   # run tests
+   # the current test is simply - does it install
 
 else
 
-   sanity_check_os $OS
+   detect_cgat_installation
+
+   if [ -z "$UNINSTALL_DIR" ] ; then
+
+      echo
+      echo " The location of the CGAT code was not found. "
+      echo " Please install before testing."
+      echo
+      exit 1
+
+   fi
+   
+   if [ -z "$CGAT_HOME" ] ; then
+      # default location for cgat installation
+      export CGAT_HOME=$HOME/cgat-install
+   fi
+
+   CONDA_INSTALL_DIR=$CGAT_HOME/conda-install
+   CONDA_INSTALL_TYPE=`ls $CONDA_INSTALL_DIR/envs`
+   cd $CGAT_HOME
+
+   if [ "$CONDA_INSTALL_TYPE" == "cgat-scripts-lite" ] || [ "$CONDA_INSTALL_TYPE" == "cgat-scripts" ] ; then
+      wget https://github.com/CGATOxford/cgat/archive/v0.2.3.tar.gz
+      tar xzf v0.2.3.tar.gz 
+      rm v0.2.3.tar.gz
+      cd cgat-0.2.3/
+      OUTPUT_DIR=`pwd`
+   elif [ "$CONDA_INSTALL_TYPE" == "cgat-devel-lite" ] || [ "$CONDA_INSTALL_TYPE" == "cgat-devel" ] ; then
+      cd cgat-code
+      OUTPUT_DIR=`pwd`
+   else
+      echo
+      echo " There was an error running the tests. "
+      echo " Execution aborted. "
+      echo
+      exit 1
+   fi
+
+   # activate cgat environment
+   source $CONDA_INSTALL_DIR/bin/activate $CONDA_INSTALL_TYPE
+
+   # Set up other environment variables
+   export CFLAGS=$CFLAGS" -I/usr/include/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu"
+   export C_INCLUDE_PATH=$C_INCLUDE_PATH:"/usr/include/x86_64-linux-gnu"
+   export LIBRARY_PATH=$LIBRARY_PATH:"/usr/lib/x86_64-linux-gnu"
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_INSTALL_DIR/envs/$CONDA_INSTALL_TYPE/lib/R/lib
+
+   # Python preparation
+   python setup.py develop
 
 fi # if-OS
 
-} # run_tests
+} # conda_test
+
+
+# update conda installation
+conda_update() {
+
+detect_cgat_installation
+
+if [ -z "$UNINSTALL_DIR" ] ; then
+
+   echo
+   echo " The location of the CGAT code was not found. "
+   echo " Please install before updating."
+   echo
+   exit 1
+
+fi
+
+if [ -z "$CGAT_HOME" ] ; then
+   # default location for cgat installation
+   export CGAT_HOME=$HOME/cgat-install
+fi
+
+CONDA_INSTALL_DIR=$CGAT_HOME/conda-install
+CONDA_INSTALL_TYPE=`ls $CONDA_INSTALL_DIR/envs`
+cd $CGAT_HOME
+
+source $CGAT_HOME/conda-install/bin/activate $CONDA_INSTALL_TYPE
+conda update --all
+
+if [ ! $? -eq 0 ] ; then
+
+   echo
+   echo " There was a problem updating the installation. "
+   echo 
+   echo " Please submit this issue via Git Hub: "
+   echo " https://github.com/CGATOxford/cgat/issue "
+   echo 
+
+else 
+
+   echo
+   echo " All packages were succesfully updated. "
+   echo 
+
+fi 
+
+} # conda_update
+
+
+# unistall CGAT code collection
+uninstall() {
+
+detect_cgat_installation
+
+if [ -z "$UNINSTALL_DIR" ] ; then
+
+   echo
+   echo " The location of the CGAT code was not found. "
+   echo " Please uninstall manually."
+   echo
+   exit 1
+    
+else
+
+   rm -rf $UNINSTALL_DIR
+   if [ $? -eq 0 ] ; then
+      echo
+      echo " CGAT code successfully uninstalled."
+      echo 
+      exit 0
+   else
+      echo
+      echo " There was a problem uninstalling the CGAT code."
+      echo " Please uninstall manually."
+      echo
+      exit 1
+   fi
+fi
+
+}
+
 
 # function to display help message
 help_message() {
 echo
-echo " Use this script as follows: "
+echo " This script uses Conda to install the CGAT Code Collection:"
+echo " https://www.cgat.org/downloads/public/cgat/documentation/"
 echo
-echo " 1) Become root and install the operating system* packages: "
-echo " ./install-CGAT-tools.sh --install-os-packages"
+echo " If you only need to use the scripts published here:"
+echo "   https://www.cgat.org/downloads/public/cgat/documentation/cgat.html"
+echo " type:"
+echo " ./install-CGAT-tools.sh --cgat-scripts [--location <path/to/folder>]"
 echo
-echo " 2) Now, as a normal user (non root), install the Python dependencies** in the default folder ($HOME/CGAT-DEPS): "
-echo " ./install-CGAT-tools.sh --install-python-deps"
+echo " The default location is: $HOME/cgat-install"
 echo
-echo " or specify a custom folder with --cgat-deps-dir option, as follows: "
-echo " ./install-CGAT-tools.sh --install-python-deps --cgat-deps-dir /path/to/folder"
+echo " Otherwise, if you prefer to use the scripts and the pipelines altogether instead, type:"
+echo " ./install-CGAT-tools.sh --cgat-devel [--location <path/to/folder>]"
 echo
-echo " At this stage the CGAT Code Collection is ready to go and you do not need further steps. Please type the following for more information:"
-if [ -z "$CGAT_HOME" ] ; then
-   echo " source $HOME/CGAT-DEPS/virtualenv-1.10.1/cgat-venv/bin/activate"
-else
-   echo " source $CGAT_HOME/virtualenv-1.10.1/cgat-venv/bin/activate"
-fi 
-echo " cgat --help "
-echo
-echo " The CGAT Code Collection tests the software with tests. If you are interested in running those, please continue with the following steps:"
-echo
-echo " 3) Become root to install external tools and set up the environment: "
-echo " ./install-CGAT-tools.sh --install-tests-deps"
-echo
-echo " 4) Then, back again as a normal user (non root), run tests as follows:"
-echo " ./install-CGAT-tools.sh --run-tests"
+echo " Both installations create a new Conda environment ready to run the CGAT code."
+echo " On the other hand, if you are looking for other advanced installation options please visit:"
+echo " https://www.cgat.org/downloads/public/cgat/documentation/CGATInstallation.html"
 echo 
-echo " This will clone the CGAT repository from GitHub to: $HOME/CGAT-GITHUB by default. If you want to change that use --git-hub-dir as follows:"
-echo " ./install-CGAT-tools.sh --run-tests --git-hub-dir /path/to/folder"
+echo " To test the installation:"
+echo " ./install-CGAT-tools.sh --test [--location <path/to/folder>]"
 echo
-echo " NOTES: "
-echo " * Supported operating systems: Ubuntu 12.x and Scientific Linux 6.x "
-echo " ** An isolated virtual environment will be created to install Python dependencies "
+echo " To update the Conda packages:"
+echo " ./install-CGAT-tools.sh --update [--location <path/to/folder>]"
+echo 
+echo " To uninstall the CGAT code:"
+echo " ./install-CGAT-tools.sh --uninstall [--location <path/to/folder>]"
 echo
-exit 1;
+echo " Please submit any issues via Git Hub:"
+echo " https://github.com/CGATOxford/cgat/issues"
+echo
+exit 1
 } # help_message
 
 # the script starts here
@@ -275,65 +476,92 @@ fi
 
 # these variables will store the information about input parameters
 # travis execution
-TRAVIS=
+TRAVIS_INSTALL=
 # install operating system's dependencies
 OS_PKGS=
-# install Python dependencies
-PY_PKGS=
-# install dependencies to run tests
-NT_PKGS=
-# run tests
-NT_RUN=
-# variable to actually store the input parameters
-INPUT_ARGS=$(getopt -n "$0" -o ht1234g:c: --long "help,
+# conda installation type
+INSTALL_SCRIPTS=
+INSTALL_DEVEL=
+# is installation lite or full?
+INSTALL_LITE=
+INSTALL_FULL=
+# test current installation
+INSTALL_TEST=
+# update current installation
+INSTALL_UPDATE=
+# uninstall CGAT code
+UNINSTALL=
+UNINSTALL_DIR=
+# where to install CGAT code
+CGAT_HOME=
+# variable to store input parameters
+INPUT_ARGS=$(getopt -n "$0" -o h0123456789: --long "help,
                                                   travis,
                                                   install-os-packages,
-                                                  install-python-deps,
-                                                  install-tests-deps,
-                                                  run-tests,
-                                                  git-hub-dir:,
-                                                  cgat-deps-dir:"  -- "$@")
+                                                  cgat-scripts,
+                                                  cgat-devel,
+                                                  lite,
+                                                  full,
+                                                  test,
+                                                  update,
+						  uninstall,
+                                                  location:"  -- "$@")
 eval set -- "$INPUT_ARGS"
 
 # process all the input parameters first
 while [ "$1" != "--" ]
 do
 
-  if [ "$1" == "-h" -o "$1" == "--help" ] ; then
+  if [ "$1" == "-h" ] || [ "$1" == "--help" ] ; then
 
     help_message
 
-  elif [ "$1" == "-t" -o "$1" == "--travis" ] ; then
+  elif [ "$1" == "--travis" ] ; then
       
-      TRAVIS=1
+      TRAVIS_INSTALL=1
       shift ;
 
-  elif [ "$1" == "-1" -o "$1" == "--install-os-packages" ] ; then
+  elif [ "$1" == "--install-os-packages" ] ; then
       
       OS_PKGS=1
       shift ;
 
-  elif [ "$1" == "-2" -o "$1" == "--install-python-deps" ] ; then
+  elif [ "$1" == "--cgat-scripts" ] ; then
       
-      PY_PKGS=1
+      INSTALL_SCRIPTS=1
       shift ;
 
-  elif [ "$1" == "-3" -o "$1" == "--install-tests-deps" ] ; then
+  elif [ "$1" == "--cgat-devel" ] ; then
 
-      NT_PKGS=1
+      INSTALL_DEVEL=1
       shift ;
 
-  elif [ "$1" == "-4" -o "$1" == "--run-tests" ] ; then
+  elif [ "$1" == "--lite" ] ; then
 
-      NT_RUN=1
+      INSTALL_LITE=1
       shift ;
 
-  elif [ "$1" == "-g" -o "$1" == "--git-hub-dir" ] ; then
+  elif [ "$1" == "--full" ] ; then
 
-      CGAT_GITHUB="$2"
-      shift 2 ;
+      INSTALL_FULL=1
+      shift ;
 
-  elif [ "$1" == "-c" -o "$1" == "--cgat-deps-dir" ] ; then
+  elif [ "$1" == "--test" ] ; then
+
+      INSTALL_TEST=1
+      shift ;
+
+  elif [ "$1" == "--update" ] ; then
+
+      INSTALL_UPDATE=1
+      shift ;
+
+  elif [ "$1" == "--uninstall" ] ; then
+
+      UNINSTALL=1
+      shift ; 
+
+  elif [ "$1" == "--location" ] ; then
 
       CGAT_HOME="$2"
       shift 2 ;
@@ -347,42 +575,54 @@ do
 
 done # while-loop
 
+# sanity checks
+if [ "$INSTALL_LITE" == "1" ] && [ "$INSTALL_FULL" == "1" ] ; then
+
+   echo 
+   echo " Incorrect input arguments: mixing --full and --lite options is not permitted."
+   echo " Installation aborted. Please run -h option."
+   echo
+   exit 1
+
+elif [ "$INSTALL_SCRIPTS" == "1" ] && [ "$INSTALL_DEVEL" == "1" ] ; then
+
+   echo
+   echo " Incorrect input arguments: mixing --cgat-scripts and --cgat-devel is not permitted."
+   echo " Installation aborted. Please run -h option."
+   echo
+   exit 1
+
+fi
+
+
 # perform actions according to the input parameters processed
-if [ "$TRAVIS" == "1" ] ; then
+if [ "$TRAVIS_INSTALL" == "1" ] ; then
 
   OS="travis"
-  install_os_packages
-  install_python_deps
-  run_tests
+  conda_install
+  conda_test
 
 else 
 
-  detect_os
-  
   if [ "$OS_PKGS" == "1" ] ; then
-
-    install_os_packages
-
+     install_os_packages
   fi
 
-  if [ "$PY_PKGS" == "1" ] ; then
-
-    install_python_deps
-
+  if [ "$INSTALL_SCRIPTS" == "1" ] || [ "$INSTALL_DEVEL" == "1" ] ; then
+     conda_install
   fi
 
-  if [ "$NT_PKGS" == "1" ] ; then
-
-    install_tests_deps
-
+  if [ "$INSTALL_TEST" == "1" ] ; then
+     conda_test
   fi
 
-  if [ "$NT_RUN" == "1" ] ; then
-
-    run_tests
-
+  if [ "$INSTALL_UPDATE" == "1" ] ; then
+     conda_update
   fi
 
+  if [ "$UNINSTALL" == "1" ] ; then
+     uninstall
+  fi
 
 fi # if-variables
 

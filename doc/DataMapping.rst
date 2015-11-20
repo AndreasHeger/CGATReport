@@ -104,8 +104,8 @@ x, y and z values. The resultant dataframe will have multiple columns:
    Tracker returning an array
 
 Note that coordinate data need not be actual coordinates, they could
-equally be multiple observations on a sample. The assumption is that
-the arrays are ordered.
+equally be multiple observations on a sample. As all arrays have the
+same size the implicit assumption is that the arrays are ordered.
 
 .. literalinclude:: trackers/DataMapping.py
    :pyobject: ReturnArrayWithSlice
@@ -132,6 +132,26 @@ a treatment and a control group of individuals.
    :tail: 5
 
    Tracker returning an array
+
+Sometimes arrays might have the same length but are not coordinate
+data. In order to prevent these data from being treated as coordinate
+data, the following workarounds are possible:
+
+1. use the :ref:`melt` transformer
+   (:class:`CGATReportPlugins.Transformer.TransformerMelt`)
+2. return a DataFrame instead of a list of values, for example:
+
+.. literalinclude:: trackers/DataMapping.py
+   :pyobject: ReturnArrayWithSliceAsDataframe
+
+.. report:: DataMapping.ReturnArrayWithSliceAsDataframe
+   :render: dataframe
+   :groupby: all
+   :head: 10
+   :tail: 10
+
+   Tracker returning an array as dataframe and thus preventing it
+   from being treated as coordinate data.
 
 Dataframes
 ==========

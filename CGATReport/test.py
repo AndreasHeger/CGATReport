@@ -97,23 +97,17 @@ import os
 import re
 import glob
 import optparse
-import code
 import tempfile
+import logging as L
 
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
 
-from CGATReport.Component import *
-from CGATReport.DataTree import asDataFrame
 from CGATReport import Utils
 
 import CGATReport.clean
 from CGATReport.Dispatcher import Dispatcher
-
-try:
-    from multiprocessing import Process
-except ImportError:
-    from threading import Thread as Process
+from CGATReport.Component import getOptionMap
 
 # import conf.py
 if os.path.exists("conf.py"):
@@ -160,6 +154,7 @@ def getTrackers(fullpath):
 
     for name in dir(module):
         obj = getattr(module, name)
+
         try:
             if Utils.isClass(obj):
                 trackers.append((name, obj, module_name, True))
@@ -315,16 +310,18 @@ def main(argv=None, **kwargs):
                       help="do not render, start ipython interpreter "
                       "[default=%default].")
 
-    parser.add_option("--workdir", dest="workdir", type="string",
-                      help="working directory - change to this directory "
-                      "before executing "
-                      "[default=%default]")
+    parser.add_option(
+        "--workdir", dest="workdir", type="string",
+        help="working directory - change to this directory "
+        "before executing "
+        "[default=%default]")
 
-    parser.add_option("--hardcopy", dest="hardcopy", type="string",
-                      help="output images of plots. The parameter should "
-                      "contain one or more %s "
-                      "The suffix determines the type of plot. "
-                      "[default=%default].")
+    parser.add_option(
+        "--hardcopy", dest="hardcopy", type="string",
+        help="output images of plots. The parameter should "
+        "contain one or more %s "
+        "The suffix determines the type of plot. "
+        "[default=%default].")
 
     parser.set_defaults(
         loglevel=1,
@@ -376,10 +373,10 @@ def main(argv=None, **kwargs):
     # configure options
     options.trackerdir = os.path.abspath(
         os.path.expanduser(options.trackerdir))
-    if not os.path.exists(options.trackerdir):
-        raise IOError("directory %s does not exist" % options.trackerdir)
-
-    sys.path.insert(0, options.trackerdir)
+    if os.path.exists(options.trackerdir):
+        sys.path.insert(0, options.trackerdir)
+    else:
+        L.warn("directory %s does not exist" % options.trackerdir)
 
     ######################################################
     # test plugins
@@ -435,13 +432,6 @@ def main(argv=None, **kwargs):
     # build from tracker
     if options.tracker:
 
-        trackers = []
-
-        for filename in glob.glob(os.path.join(options.trackerdir, "*.py")):
-            modulename = os.path.basename(filename)
-            trackers.extend(
-                [x for x in getTrackers(modulename) if x[0] not in exclude])
-
         if "." in options.tracker:
             parts = options.tracker.split(".")
             tracker_modulename = ".".join(parts[:-1])
@@ -450,34 +440,50 @@ def main(argv=None, **kwargs):
             tracker_modulename = None
             tracker_name = options.tracker
 
-        for name, tracker, modulename, is_derived in trackers:
-            if name == tracker_name:
-                if tracker_modulename is not None:
-                    if modulename == tracker_modulename:
+        try:
+            code, tracker, tracker_path = Utils.makeTracker(
+                options.tracker, (), kwargs)
+        except ImportError:
+            # try to find class in module
+            trackers = []
+
+            for filename in glob.glob(
+                    os.path.join(options.trackerdir, "*.py")):
+                modulename = os.path.basename(filename)
+                trackers.extend(
+                    [x for x in getTrackers(modulename)
+                     if x[0] not in exclude])
+
+            for name, tracker_class, modulename, is_derived in trackers:
+                if name == tracker_name:
+                    if tracker_modulename is not None:
+                        if modulename == tracker_modulename:
+                            break
+                    else:
                         break
-                else:
-                    break
-        else:
-            available_trackers = set([x[0] for x in trackers if x[3]])
-            print("unknown tracker '%s': possible trackers are\n  %s" %
-                  (options.tracker, "\n  ".join(sorted(available_trackers))))
-            print("(the list above does not contain functions).")
-            sys.exit(1)
+            else:
+                available_trackers = set([x[0] for x in trackers if x[3]])
+                print(
+                    "unknown tracker '%s': possible trackers are\n  %s" %
+                    (options.tracker, "\n  ".join(sorted(available_trackers))))
+                print(
+                    "(the list above does not contain functions).")
+                sys.exit(1)
+
+            # instantiate functors
+            if is_derived:
+                tracker = tracker_class(**kwargs)
+            #  but not functions
+            else:
+                tracker = tracker_class
 
         # remove everything related to that tracker for a clean slate
         if options.force:
-            removed = CGATReport.clean.removeTracker(name)
+            removed = CGATReport.clean.removeTracker(tracker_name)
             print("removed all data for tracker %s: %i files" %
-                  (name, len(removed)))
+                  (tracker_name, len(removed)))
 
-        # instantiate functors
-        if is_derived:
-            t = tracker(**kwargs)
-        # but not functions
-        else:
-            t = tracker
-
-        dispatcher = Dispatcher(t, renderer, transformers)
+        dispatcher = Dispatcher(tracker, renderer, transformers)
 
         if renderer is None:
             # dispatcher.parseArguments(**kwargs)
@@ -502,7 +508,8 @@ def main(argv=None, **kwargs):
                          renderer_options,
                          transformer_options,
                          display_options,
-                         modulename, name)
+                         tracker_modulename,
+                         tracker_name)
             elif options.language == "notebook":
                 writeNotebook(sys.stdout,
                               options,
@@ -510,7 +517,8 @@ def main(argv=None, **kwargs):
                               renderer_options,
                               transformer_options,
                               display_options,
-                              modulename, name)
+                              tracker_modulename,
+                              tracker_name)
 
             sys.stdout.write("\n.. Template end\n")
 
