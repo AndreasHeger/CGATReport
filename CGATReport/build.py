@@ -32,13 +32,7 @@ import subprocess
 import logging
 import time
 import collections
-USAGE = """python %s [OPTIONS] args
-
-build a sphinx report.
-
-Building proceeds in three phases.
-
-"""
+from sphinx.util.osutil import cd
 
 from CGATReport import report_directive, gallery, clean, Utils
 
@@ -52,9 +46,7 @@ try:
 except ImportError:
     from threading import Thread as Process
 
-# import conf.py for source_suffix
-if not os.path.exists("conf.py"):
-    raise IOError("could not find conf.py")
+source_suffix = ".rst"
 
 exec(compile(open("conf.py").read(), "conf.py", 'exec'))
 
@@ -358,7 +350,8 @@ def main(argv=None):
     print("CGATReport: version %s started" % str("$Id$"))
     t = time.time()
 
-    parser = optparse.OptionParser(version="%prog version: $Id$", usage=USAGE)
+    parser = optparse.OptionParser(version="%prog version: $Id$",
+                                   usage=globals()["__doc__"])
 
     parser.add_option("-a", "--num-jobs", dest="num_jobs", type="int",
                       help="number of parallel jobs to run [default=%default]")
@@ -398,6 +391,14 @@ def main(argv=None):
     (sphinx_options, sphinx_args) = sphinx_parser.parse_args(args[1:])
 
     sourcedir = sphinx_args[0]
+    # import conf.py for source_suffix
+    config_file = os.path.join(sourcedir, "conf.py")
+    if not os.path.exists(config_file):
+        raise IOError("could not find {}".format(config_file))
+    config = {"__file__": config_file}
+    with cd(sourcedir):
+        exec(compile(open(os.path.join(sourcedir, "conf.py")).read(),
+                     "conf.py", 'exec'), config)
 
     rst_files = getDirectives(options, args, sourcedir)
 
