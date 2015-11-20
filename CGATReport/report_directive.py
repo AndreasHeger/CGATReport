@@ -74,7 +74,7 @@ def run(arguments,
 
     # build directory
     if builddir is None:
-        builddir = setup.confdir
+        builddir = setup.builddir
 
     # remove symbolic links
     srcdir, builddir, rstdir = [
@@ -492,6 +492,7 @@ def setup(app):
     setup.config = app.config
     setup.confdir = app.confdir
     setup.srcdir = app.srcdir
+    setup.builddir = os.getcwd()
     app.add_directive('report', report_directive)
 
 directives.register_directive('report', report_directive)
