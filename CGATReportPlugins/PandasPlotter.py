@@ -24,13 +24,6 @@ class PandasPlot(Renderer, Plotter):
 
         self.statement = kwargs.get('statement')
 
-        # at most 6 lines per plot - limit of colours
-        # in ggplot
-        if self.split_at == 0:
-            self.split_at = 6
-        else:
-            self.split_at = min(self.split_at, 6)
-
     def render(self, dataframe, path):
 
         # the index in the dataframe is reset in order
@@ -47,7 +40,7 @@ class PandasPlot(Renderer, Plotter):
             exec s in globals(), locals()
         except Exception, msg:
             raise Exception(
-                "ggplot raised error for statement '%s': msg=%s" %
+                "pandas.plot() raised error for statement '%s': msg=%s" %
                 (s, msg))
 
         self.mFigure += 1
