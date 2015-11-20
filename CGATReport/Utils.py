@@ -859,6 +859,7 @@ def layoutBlocks(blocks, layout="column"):
                 warn("report_directive.layoutBlocks: missing title")
 
             lines.extend(block.text.split("\n"))
+            lines.extend(block.postamble.split("\n"))
 
         lines.append("")
 
@@ -911,6 +912,9 @@ def layoutBlocks(blocks, layout="column"):
 
         for xx in range(nblock, min(nblock + ncols, len(blocks))):
             txt, col = blocks[xx].text.split("\n"), xx % ncols
+            txt = blocks[xx].text.split("\n") + \
+                  blocks[xx].postamble.split("\n")
+            col = xx % ncols
 
             max_width = columnwidths[col]
 
