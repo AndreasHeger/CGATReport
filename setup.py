@@ -189,6 +189,8 @@ setup(name='CGATReport',
               # 'transform-combine=CGATReportPlugins.Transformer:TransformerCombinations',
               # 'transform-tolist=CGATReportPlugins.Transformer:TransformerToList',
               # 'transform-toframe=CGATReportPlugins.Transformer:TransformerToDataFrame',
+              'transform-pandas='
+              'CGATReportPlugins.Transformer:TransformerPandas',
               'transform-melt='
               'CGATReportPlugins.Transformer:TransformerMelt',
               'transform-pivot='

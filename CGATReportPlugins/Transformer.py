@@ -339,6 +339,29 @@ class Transformer(Component):
 # Filtering transformers
 ########################################################################
 ########################################################################
+class TransformerPandas(Transformer):
+    '''apply pandas dataframe methods to dataframe.
+
+    '''
+
+    nlevels = None
+    default = 0
+
+    options = Transformer.options +\
+        (('tf-statement', directives.unchanged),)
+
+    def __init__(self, *args, **kwargs):
+        Transformer.__init__(self, *args, **kwargs)
+
+        try:
+            self.statement = kwargs["tf-statement"]
+        except KeyError:
+            raise KeyError("TransformerPandas requires the "
+                           "`tf-statement` option to be set.")
+
+    def transform(self, data):
+        exec "data = data.{}".format(self.statement)
+        return data
 
 
 class TransformerFilter(Transformer):
