@@ -4,11 +4,12 @@ import os
 import random
 import glob
 import itertools
+import pandas
 import numpy
+import collections
 
 from CGATReport.Tracker import Tracker, Status
 from collections import OrderedDict as odict
-import collections
 
 
 def BarData():
@@ -230,6 +231,36 @@ class MultipleColumnDataFullExample(Tracker):
             for x in range(len(self.mColumns)):
                 data.append([y + random.gauss(0, 0.5) for y in range(20)])
         return odict(zip(self.mColumns, data))
+
+
+class DeepLevelNestedIndexExample(Tracker):
+    '''multiple columns each with a column with data.'''
+
+    def __call__(self):
+
+        index = pandas.MultiIndex.from_product(
+            [list(x) for x in ["ABC", "DEF", "HIJ", "KLM", "XYZ"]])
+        df = pandas.DataFrame()
+        df["x"] = [y + random.gauss(0, 0.2) for y in range(len(index))]
+        df["y"] = [y + random.gauss(0, 0.2) for y in range(len(index))]
+        df.index = index
+        return df
+
+
+class DeepLevelNamedNestedIndexExample(Tracker):
+    '''multiple columns each with a column with data.'''
+
+    def __call__(self):
+
+        index = pandas.MultiIndex.from_product(
+            [list(x) for x in ["ABC", "DEF", "HIJ", "KLM", "XYZ"]],
+            names=["level%i" % x for x in range(5)])
+        df = pandas.DataFrame()
+        df["x"] = [y + random.gauss(0, 0.2) for y in range(len(index))]
+        df["y"] = [y + random.gauss(0, 0.2) for y in range(len(index))]
+        df.index = index
+        
+        return df
 
 
 class ErrorInTracker1(Tracker):

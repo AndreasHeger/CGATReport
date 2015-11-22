@@ -13,11 +13,11 @@ but a bar-plot with 100 bars is difficult to interprete.
 Sphinx-report provides several mechanisms to deal with data sets
 of varying sizes.
 
-1. Some :term:`Renderers` such as :ref:`table` have built-in 
-   thresholds that will change the how the data is displayed dependend on the size
-   of the data set. For example, a small table will be inserted inside
-   the document, while a large table will be displayed in a separate
-   page.
+1. Some :term:`Renderers` such as :ref:`table` have built-in
+   thresholds that will change the how the data is displayed dependend
+   on the size of the data set. For example, a small table will be
+   inserted inside the document, while a large table will be displayed
+   in a separate page.
 
    The thresholds can usually be changed through options. For example,
    the option :term:`force` will force a renderer to ignore such
@@ -33,19 +33,19 @@ of varying sizes.
    level at which data is grouped is determined by a particular
    :term:`Renderer`. For example, a :term:`Renderer` with a level of 1
    expects only a flat list of data labels (``track1``, ``track2``,
-   ...), while a :term:`Renderer` with a level of 2 expects two
-   levels (``track1/slice1``, ``track1/slice2``, ``track2/slice1``.
-   If the data frame to be rendered has a higher number of levels than the 
+   ...), while a :term:`Renderer` with a level of 2 expects two levels
+   (``track1/slice1``, ``track1/slice2``, ``track2/slice1``.  If the
+   data frame to be rendered has a higher number of levels than the
    :term:`Renderer` expects, the data will be grouped by the lowest
-   level accepted by the :term:`Renderer` and the
-   :term:`Renderer` will be called with each group separately.
-   A :term:`Renderer` without a group-level can display a data frame
-   with any level of its index. 
+   level accepted by the :term:`Renderer` and the :term:`Renderer`
+   will be called with each group separately.  A :term:`Renderer`
+   without a group-level can display a data frame with any level of
+   its index.
 
    To enforce grouping with these kind, the group-level can be
-   specified explicitely using the :term:`groupby` option. If 
-   there are not enough levels present, additional levels will be
-   added to the data in order to allow grouping.
+   specified explicitely using the :term:`groupby` option. If there
+   are not enough levels present, additional levels will be added to
+   the data in order to allow grouping.
   
 4. Some :term:`Renderers` such as :ref:`ggplot` have additional
    abilities to create trellis plots, plots subdivided into separated
@@ -190,3 +190,71 @@ data tree.
 
    No grouping: ``:groupby: none``
 
+Grouping options
+----------------
+
+.. report:: Trackers.DeepLevelNestedIndexExample
+   :render: dataframe
+   :groupby: track
+   :layout: row
+
+   Group by track
+
+.. report:: Trackers.DeepLevelNestedIndexExample
+   :render: dataframe
+   :groupby: slice
+   :layout: row
+
+   Group by slice
+
+Using numbers to the group-by option groups by the first
+number of levels.
+
+.. report:: Trackers.DeepLevelNestedIndexExample
+   :render: dataframe
+   :groupby: 0
+   :layout: row
+
+   Group by first level
+
+.. report:: Trackers.DeepLevelNestedIndexExample
+   :render: dataframe
+   :groupby: 1
+   :layout: row
+
+   Group by first two levels
+
+.. report:: Trackers.DeepLevelNestedIndexExample
+   :render: dataframe
+   :groupby: 2
+   :layout: row
+
+   Group by first three levels
+
+
+Grouping by named levels
+------------------------
+
+If the index has names, grouping can be done by names of the 
+indices.
+
+.. report:: Trackers.DeepLevelNamedNestedIndexExample
+   :render: dataframe
+   :groupby: level0
+   :layout: row
+
+   Group by first level
+
+.. report:: Trackers.DeepLevelNamedNestedIndexExample
+   :render: dataframe
+   :groupby: level1
+   :layout: row
+
+   Group by first two levels
+
+.. report:: Trackers.DeepLevelNamedNestedIndexExample
+   :render: dataframe
+   :groupby: level2
+   :layout: row
+
+   Group by first three levels

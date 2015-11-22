@@ -454,7 +454,9 @@ class Plotter(object):
                 elif self.xticks_action == "number":
                     f = lambda x, txt: str(x)
 
-                new_labels = [f(x, y) for x, y in enumerate(xlabels)]
+                # Use chars starting at 'A' for labels
+                new_labels = [f(chr(65 + x), y) for x, y in enumerate(xlabels)]
+                # new_labels = [f(x, y) for x, y in enumerate(xlabels)]
                 postamble = "\n" + "\n".join(
                     ["* %s: %s" % (x, y)
                      for x, y in zip(new_labels, xlabels)])
@@ -1714,7 +1716,7 @@ class BarPlot(TableMatrix, Plotter):
             # is not a multi-index object, no need to unstack
             df = dataframe
 
-        self.rows = list(df.index)
+        self.rows = [path2str(x) for x in list(df.index)]
         self.columns = list(df.columns)
         self.data_matrix = df.as_matrix()
 
@@ -1816,7 +1818,8 @@ class BarPlot(TableMatrix, Plotter):
                                    **kwargs)[0])
 
             if self.label and self.label_matrix is not None:
-                self.addLabels(xvals, vals, self.label_matrix[:, column])
+                self.addLabels(xvals, vals,
+                               self.label_matrix[:, column])
 
             y += 1
 

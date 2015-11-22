@@ -8,6 +8,28 @@ Transformers change data before rendering. They are called by the
 ``:transform:`` option. Transformers can be combined in a
 comma-separated list.
 
+.. _pandas:
+
+pandas
+======
+
+The :class:`CGATReportPlugins.Transformer.Pandas` applies pandas
+dataframe methods to the current data frame::
+
+  .. report:: Tracker.MultipleColumnDataExample
+     :render: debug
+     :transform: pandas
+     :tf-statement: reset_index().set_index('slice','track')
+
+     use pandas methods to reorder the index.
+
+.. report:: Transformers.MultipleColumnDataExample
+   :render: debug
+   :transform: pandas
+   :tf-statement: reset_index().set_index('slice','track')
+
+   use pandas methods to reorder the index.
+
 .. _stats:
 
 stats

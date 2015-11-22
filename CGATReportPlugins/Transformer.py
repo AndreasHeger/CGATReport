@@ -1187,7 +1187,7 @@ class TransformerPivot(Transformer):
          )
 
     pivot_index = None
-    pivot_columns = None
+    pivot_column = None
     pivot_value = None
 
     def __init__(self, *args, **kwargs):

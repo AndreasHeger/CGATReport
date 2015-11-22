@@ -1,18 +1,17 @@
 #!/bin/env python
 
-"""
-cgatreport-build
+"""cgatreport-build
 ==================
 
 :command:`cgatreport-build` is a pre-processor for restructured
-texts. It implements parallel data gathering to speed up the
-sphinx document creation process. It is invoked by simply prefixing
+texts. It implements parallel data gathering to speed up the sphinx
+document creation process. It is invoked by simply prefixing
 the:command:`sphinx` command line::
 
    cgatreport-build [OPTIONS] sphinx [SPHINX-OPTIONS]
 
-The full list of command line options is listed by suppling:option:`-h/--help`
-on the command line.
+The full list of command line options is listed by
+suppling:option:`-h/--help` on the command line.
 
 **-a/--num-jobs** number of jobs
     Number of jobs to start for parallel pre-processing.
@@ -371,7 +370,9 @@ def main(argv=None):
         "sphinx-build"), "command line should contain sphinx-build"
 
     sphinx_parser = optparse.OptionParser(
-        version="%prog version: $Id$", usage=USAGE)
+        version="%prog version: $Id$",
+        usage=globals()["__doc__"])
+
     sphinx_parser.add_option("-b", type="string")
     sphinx_parser.add_option("-a")
     sphinx_parser.add_option("-E")

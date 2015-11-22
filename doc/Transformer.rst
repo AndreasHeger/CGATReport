@@ -176,6 +176,28 @@ Transformer
 
       TransformerGroup
 
+TransformerPandas
+-----------------------
+
+Before transformation:
+
+.. report:: Tracker.MultipleColumnDataExample
+   :render: debug
+   :transform: pandas
+   :tf-statement: reset_index().set_index('slice','track')
+
+   TransformerPandas
+
+After transformation:
+
+.. report:: Transformers.TrackerStats
+   :render: debug
+   :transform: pandas
+   :tf-statement: reset_index().set_index('slice','track')
+
+   TransformerPandas
+
+
 TransformerStats
 -----------------------
 
