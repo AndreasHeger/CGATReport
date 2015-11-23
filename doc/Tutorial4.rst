@@ -1,7 +1,7 @@
 .. _Tutorial4:
 
 ========================
-Tutorial 4: Using slices
+Using slices
 ========================
 
 Functors of type :class:`Tracker` can provide subsets of tracks. Each subset is a :term:`slice`.

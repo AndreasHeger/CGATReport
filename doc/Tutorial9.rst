@@ -1,7 +1,7 @@
 .. _Tutorial9:
 
 ==================================
-Tutorial 9: Plotting with R
+Plotting with R
 ==================================
 
 The principal plotting engine in CGATReport is matplotlib. However, it

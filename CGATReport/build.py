@@ -31,37 +31,16 @@ import subprocess
 import logging
 import time
 import collections
+from multiprocessing import Pool, Queue
+from CGATReport.Component import LOGFILE, LOGGING_FORMAT
+from logging import debug, warn, info, error
+
 from sphinx.util.osutil import cd
 
-from CGATReport import report_directive, gallery, clean, Utils
-
-from CGATReport.Component import *
-
+from CGATReport import report_directive, clean, Utils
 from CGATReport import Logger
 
-try:
-    from multiprocessing import Process
-    from multiprocessing import Pool, Queue
-except ImportError:
-    from threading import Thread as Process
-
 source_suffix = ".rst"
-
-exec(compile(open("conf.py").read(), "conf.py", 'exec'))
-
-RST_TEMPLATE = """.. _%(label)s:
-
-.. render:: %(tracker)s
-:render: %(renderer)s
-   %(options)s
-
-   %(caption)s
-"""
-
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     format='%(asctime)s %(levelname)s %(message)s',
-#     stream = open(Component.LOGFILE, "a") )
 
 
 class ReportBlock:
@@ -281,7 +260,8 @@ def cleanTrackers(rst_files, options, args):
     for reference in trackers:
 
         try:
-            code, tracker, tracker_path = report_directive.makeTracker(reference)
+            code, tracker, tracker_path = report_directive.makeTracker(
+                reference)
         except AttributeError:
             # ignore missing trackers
             nskipped += 1
@@ -313,30 +293,15 @@ def runCommand(command):
         retcode = subprocess.call(command, shell=True)
         if retcode < 0:
             warn("child was terminated by signal %i" % -retcode)
-    except OSError(msg):
-        fail("execution of %s failed: %s" % (cmd, msg))
+    except OSError as msg:
+        error("execution of %s failed: %s" % (command, msg))
         raise
-
-
-@timeit("buildGallery")
-def buildGallery(options, args):
-    """construct the gallery page.
-    """
-    gallery.main()
 
 
 @timeit("buildDocument")
 def buildDocument(options, args):
     """construct the documents. This is simply done
     by calling sphinx-build.
-    """
-    runCommand("%s" % " ".join(args))
-
-
-@timeit("buildLog")
-def buildLog(options, args):
-    """construct pages with the error log, stats
-    and the build history.
     """
     runCommand("%s" % " ".join(args))
 
@@ -352,7 +317,7 @@ def main(argv=None):
     parser = optparse.OptionParser(version="%prog version: $Id$",
                                    usage=globals()["__doc__"])
 
-    parser.add_option("-a", "--num-jobs", dest="num_jobs", type="int",
+    parser.add_option("-j", "-a", "--num-jobs", dest="num_jobs", type="int",
                       help="number of parallel jobs to run [default=%default]")
 
     parser.add_option("-v", "--verbose", dest="loglevel", type="int",
@@ -388,6 +353,7 @@ def main(argv=None):
     sphinx_parser.add_option("-w", type="string")
     sphinx_parser.add_option("-W")
     sphinx_parser.add_option("-P")
+    sphinx_parser.add_option("-j", dest="num_jobs", type="int")
 
     sphinx_parser.set_defaults(
         confdir=None)
@@ -397,9 +363,9 @@ def main(argv=None):
     sourcedir = sphinx_args[0]
     # local conf.py overrides anything
     if os.path.exists("conf.py"):
-        options.confdir = "."
+        sphinx_options.confdir = "."
     elif sphinx_options.confdir is None:
-        options.confdir = sourcedir
+        sphinx_options.confdir = sourcedir
 
     # import conf.py for source_suffix
     config_file = os.path.join(sphinx_options.confdir, "conf.py")
@@ -407,7 +373,7 @@ def main(argv=None):
         raise IOError("could not find {}".format(config_file))
 
     config = {"__file__": config_file}
-    with cd(options.confdir):
+    with cd(sphinx_options.confdir):
         exec(compile(open(os.path.join(config_file)).read(),
                      "conf.py", 'exec'), config)
 
@@ -416,10 +382,6 @@ def main(argv=None):
     cleanTrackers(rst_files, options, args)
 
     buildPlots(rst_files, options, args, sourcedir)
-
-    # buildGallery(options, args)
-
-    # buildLog(options, args)
 
     buildDocument(options, args)
 

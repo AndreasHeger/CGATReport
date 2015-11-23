@@ -16,14 +16,14 @@ pandas
 The :class:`CGATReportPlugins.Transformer.Pandas` applies pandas
 dataframe methods to the current data frame::
 
-  .. report:: Tracker.MultipleColumnDataExample
+  .. report:: Trackers.MultipleColumnDataExample
      :render: debug
      :transform: pandas
      :tf-statement: reset_index().set_index('slice','track')
 
      use pandas methods to reorder the index.
 
-.. report:: Transformers.MultipleColumnDataExample
+.. report:: Trackers.MultipleColumnDataExample
    :render: debug
    :transform: pandas
    :tf-statement: reset_index().set_index('slice','track')

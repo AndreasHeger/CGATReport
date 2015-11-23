@@ -1,7 +1,7 @@
 .. _Tutorial10:
 
 ==================================
-Tutorial 10: Using dates
+Using dates
 ==================================
 
 This tutorial demonstrates how to use date formatting in plots.

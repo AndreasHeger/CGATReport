@@ -1,7 +1,7 @@
 .. _Tutorial12:
 
 =================================
-Tutorial 12: Plotting with ggplot
+Plotting with ggplot
 =================================
 
 ..

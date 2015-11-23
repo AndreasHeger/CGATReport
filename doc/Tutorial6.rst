@@ -1,7 +1,7 @@
 .. _Tutorial6:
 
 =============================
-Tutorial 6: Customizing plots
+Customizing plots
 =============================
 
 Plots are customized by options supplied to the ``:report:``

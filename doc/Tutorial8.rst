@@ -1,7 +1,7 @@
 .. _Tutorial8:
 
 ==================================
-Tutorial 8: Extending CGATReport
+Extending CGATReport
 ==================================
 
 cgatreport can be extended via plugins.  Extension points are
@@ -9,8 +9,8 @@ available to add new Renderers and Transformers.
 
 There is a quick-and-dirty way and a more principled way.
 
-Quick and dirty extension
-=========================
+Simple extension
+================
 
 .. report:: Tracker.Empty
    :render: MyPlots.ExampleWithoutData

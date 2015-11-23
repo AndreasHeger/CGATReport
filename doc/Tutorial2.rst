@@ -1,7 +1,7 @@
 .. _Tutorial2:
 
 ==========================
- Tutorial 2: Using tracks
+Using tracks
 ==========================
 
 The previous tutorial created a simple bar-plot of a single data

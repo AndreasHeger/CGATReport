@@ -1,7 +1,7 @@
 .. _Tutorial14:
 
 ===============================================
-Tutorial 14: Plotting with the ipython notebook
+Plotting with the ipython notebook
 ===============================================
 
 Introduction

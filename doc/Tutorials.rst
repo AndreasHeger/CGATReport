@@ -7,6 +7,8 @@ Tutorials
 The tutorials provide step-by-step introductions to the 
 main features of cgatreport.
 
+
+
 Tutorials
 =========
 
@@ -17,7 +19,7 @@ Tutorials
    Tutorial2.rst 
    Tutorial3.rst 
    Tutorial4.rst 
-   Tutorial5.rst 
+   Tutorial5.rst
    Tutorial6.rst 
    Tutorial7.rst 
    Tutorial8.rst

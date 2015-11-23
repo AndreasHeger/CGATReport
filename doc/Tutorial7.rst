@@ -1,7 +1,7 @@
 .. _Tutorial7:
 
 =================================
-Tutorial 7: Adding active content
+Adding active content
 =================================
 
 Per default, cgatreport`Sphinx` builds static documents. If the document

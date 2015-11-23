@@ -1,7 +1,7 @@
 .. _Tutorial13:
 
 ==========================
-Tutorial 13: Grouping data
+Grouping data
 ==========================
 
 A general problem in automated report generation is that 

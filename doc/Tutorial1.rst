@@ -1,7 +1,7 @@
 .. _Tutorial1:
 
 ***********************
-Tutorial 1: First steps
+Starting a report
 ***********************
 
 This first tutorial shows step-by-step how a new plot

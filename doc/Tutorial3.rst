@@ -1,7 +1,7 @@
 .. _Tutorial3:
 
 ===============================
- Tutorial 3: Using transformers
+Using transformers
 ===============================
 
 This tutorial introduces ``Transformers``. A :class:`Transformer`

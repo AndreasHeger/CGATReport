@@ -1,8 +1,8 @@
 .. _Tutorial5:
 
-======================
-Tutorial 5: Using SQL
-======================
+================================
+Getting data from a SQL database
+================================
 
 Trackers allow you to use all the flexibility of python to generate
 data sources. In the previous Tutorial :ref:`Tutorial4` the data was

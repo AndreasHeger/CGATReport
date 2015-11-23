@@ -1,8 +1,6 @@
 '''basic module for CGATReport actors.
 '''
 
-import os
-import sys
 import pkg_resources
 from logging import warn, debug, info, critical, error
 import logging

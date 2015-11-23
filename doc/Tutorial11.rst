@@ -1,7 +1,7 @@
 .. _Tutorial11:
 
 ====================================
-Tutorial 11: Plotting Venn diagrams
+Plotting Venn diagrams
 ====================================
 
 A simple example
