@@ -2,33 +2,33 @@
 Example Use Case
 =====================
 
-This document explains how to use cgatreport by building a report
-using an example database.
+This section demonstrates the typical CGATReport workflow by building
+a report from a relational database.
 
 This is a typical use case. Usually you would have some automated
-process or pipeline that generates data. CGATReport can then be
-used to write interactively an reproducible report on the data. 
+process or pipeline that generates data. CGATReport is then used
+to produce a report from the data.
 
 Background
 ==========
 
-The database is from a short-read mapping experiment.
+The database is from a short-read mapping experiment. You can download and
+restore the example database from::
 
-Download the datab for this use case from:
+   wget http://www.cgat.org/~andreas/documentation/CGATReportExamples/data/usecase1/csvdb.dump.gz
+   zcat csvdb.dump.gz | sqlite3 csvdb
 
-   wget http://www.cgat.org/~andreas/documentation/CGATReportExamples/data/usecase1/csvdb
-
-The file :file:`csvdb` is an sqlite database. It contains summary data
-created by the CGAT short read mapping pipeline. 
+The file :file:`csvdb` is an sqlite_ database. It contains summary
+data created by the CGAT short read mapping pipeline.
 
 There are two kinds of tables in the database. Track tables contain
-data for a particular dataset. For example, the table
+data for a particular data-set. For example, the table
 ``UHR_F1_R1_bowtie_transcript_counts`` contains ``transcript count``
-data for the track (or data set) ``UHR_F1_R1_bowtie``. The data set
-is derived by mapping short reads in the UHR_F1_R1 data set
-using bowtie_.
+data for the track (or data set) ``UHR_F1_R1_bowtie``. The data set is
+derived by mapping short reads in the UHR_F1_R1 data set using
+bowtie_.
 
-The various tales are
+The various tables are
 
 intron_counts
 	reads overlapping introns
@@ -48,7 +48,7 @@ bam_stats
 bam_stats_nh
 	summary statistics of :term:`bam` files - number of hits
 bam_stats_nm
-	summary statisticts of :term:`bam` files - number of mismatches
+	summary statistics of :term:`bam` files - number of mismatches
 context_stats
 	overlap statistics of reads with various genomic regions
 exon_validation
@@ -111,7 +111,7 @@ To begin, let us display a table with the number of reads input.
 To do this, we need to define a data source. Open the 
 :file:`trackers/Tracker.py` and add the following lines::
 
-   class ReadsSummary( SingleTableTrackerRows ):
+   class ReadsSummary(SingleTableTrackerRows):
       table = 'reads_summary'
 
 This short statement creates a new :term:`Tracker`. It is derived
@@ -160,15 +160,16 @@ Now paste the following into :file:`analysis/Results.rst`::
 Now we want to make a notice of the minimum and maximum number of reads
 input. We add the following two trackers::
 
-    class MinReadsInput( TrackerSQL ):
+    class MinReadsInput(TrackerSQL):
        def __call__(self):
-	  return self.getValue( 'SELECT min(total_reads) FROM reads_summary' ) 
+	  return self.getValue('SELECT min(total_reads) FROM reads_summary') 
 
-    class MaxReadsInput( TrackerSQL ):
+    class MaxReadsInput(TrackerSQL):
        def __call__(self):
-	  return self.getValue( 'SELECT max(total_reads) FROM reads_summary' ) 
+	  return self.getValue('SELECT max(total_reads) FROM reads_summary') 
 
-We can now add these to our report. Add the following to :file:`analysis/Results.rst`::
+We can now add these to our report. Add the following to
+:file:`analysis/Results.rst`::
 
    Good heavens, I exclaimed, I mapped between
    :value:`Trackers.MinReadsInput` and :value:`Trackers.MaxReadsInput` reads.
@@ -188,53 +189,78 @@ writing a report with cgatreport:
       macro to display data supporting the text.
 
 What seems like a lot of effort to create a table, bar-chart and an
-observation will pay off once a report gets larger. The report as
-it is can be updated if the underlying data has changed with a single
-command. The report can also be re-used on a different data just
-by simply pointing to a different database.
+observation will pay off once a report gets larger. The report as it
+is can be updated if the underlying data has changed with a single
+command. The report can also be re-used on a different data just by
+simply pointing to a different database.
 
-.. note::
+Working with data frames
+========================
 
-   In order to work effectively, I have usually several windows open:
+The underlying data structure in CGATReport is the pandas_
+dataframe. There are multiple ways to create, interact and visualize
+the dataframe directly.
 
-   1. An editor (such as emacs) with multiple buffers open (rst-file,
-      python-file with trackers, ...) - usually side-by-side in 
-      a split window.
-   2. A command line shell for testing with :ref:`cgatreport-test`
-      and exploring the database via SQL commands.
-   3. A web browser (firefox) with multiple tabs pointed at the
-      various parts of the report that are in progress.
+To easily create a dataframe, the :mod:`.Tracker` module provides
+classes to derive your own :term:`trackers` from. For example,
+:class:`.TrackerDataframes` builds dataframes from multiple
+tab-separated files on disk. :class:`.TrackerSQL` has a method
+:meth:`.getDataFrame` to return a dataframe from the result of an SQL
+query.
 
-   My windows environment is set up with multiple virtual desktops 
-   and allows easy (keyboard) switching between applications.
+The :term:`renderer` :ref:`dataframe` displays a dataframe and can
+be used by :term:`cgatreport-test` to see the data structure.
+
+The :term:`transformer` :ref:`pandas` applies any pandas dataframe
+transformations such as melt, pivot, stack, etc.
+
+The :term:`renderer` :ref:`pdplot` produces plots implemented in
+pandas.
+
+
+
+Notes
+=====
+
+In order to work effectively, the following setup works quite well:
+
+1. An editor (such as emacs) with multiple buffers open (rst-file,
+   python-file with trackers, ...) - usually side-by-side in 
+   a split window.
+2. A command line shell for testing with :ref:`cgatreport-test`
+   and exploring the database via SQL commands.
+3. A web browser (firefox) with multiple tabs pointed at the
+   various parts of the report that are in progress.
+
 
 Tracks and slices
 =================
 
 Now that we now where we started, let us add some results. In this
-section we introduce :term:`tracks` and :term:`slices` more thoroughly. 
+section we introduce :term:`tracks` and :term:`slices` more
+thoroughly.
 
-:term:`tracks` and :term:`slices` are cgatreport
-terminology. An alternative labeling would be as ``track=dataset`` and
-``slice=measurement``. For example, :term:`tracks` or data sets could be ``mouse``,
-``human``, ``rabbit`` and :term:`slices` or measurements could be ``height`` and
-``weight``. This nomenclature explains why default
-grouping in plots is by :term:`slice` - the above :term:`tracks` and
-:term:`slices` would be displayed as two plots for ``height`` and
-``weight`` contrasting the various heights and weights for the three
-species. 
+:term:`tracks` and :term:`slices` are cgatreport terminology. An
+alternative labeling would be as ``track=dataset`` and
+``slice=measurement``. For example, :term:`tracks` or data sets could
+be ``mouse``, ``human``, ``rabbit`` and :term:`slices` or measurements
+could be ``height`` and ``weight``. This nomenclature explains why
+default grouping in plots is by :term:`slice` - the above
+:term:`tracks` and :term:`slices` would be displayed as two plots for
+``height`` and ``weight`` contrasting the various heights and weights
+for the three species.
 
 
-The aligned reads are stored in :term:`bam` formatted files and the table
-``bam_stats`` contains some summary statistics on these :term:`bam`
-files. 
+The aligned reads are stored in :term:`bam` formatted files and the
+table ``bam_stats`` contains some summary statistics on these
+:term:`bam` files.
 
 To start with, we will add another :term:`Tracker`. As with the table
 ``reads_summary``, the table ``bam_stats`` is a multi-track
-table. Thus, the following tracker is sufficient to give us access 
-to all the data::
+table. Thus, the following tracker is sufficient to give us access to
+all the data::
 
-   class BamStats( SingleTableTrackerRows ):
+   class BamStats(SingleTableTrackerRows):
       '''bam file summary statistics.'''
       table = 'bam_stats'
 
@@ -251,14 +277,14 @@ Wait, no table? The output you will see is::
     `60 x 27 table <#$html $#>`__
 
 By default, cgatreport puts large tables into a separate file and
-links to it. In order to see it on the command line or force entering it into the
-main page, add the ``force`` option::
+links to it. In order to see it on the command line or force entering
+it into the main page, add the ``force`` option::
 
    cgatreport-test -r table -t BamStats -o force
 
 Now we get the table, but we feel it is too large to enter into the
-report. Let us enter just the slices we are interested in, such as
-the reads in the :term:`bam` file and the number of mapped reads::
+report. Let us enter just the slices we are interested in, such as the
+reads in the :term:`bam` file and the number of mapped reads::
 
    cgatreport-test -r table -t BamStats -o force -o slices=reads_total,reads_mapped
 
@@ -266,7 +292,8 @@ Again, we would prefer displaying the data as a bar plot::
 
    cgatreport-test -r interleaved-bar-plot -t BamStats -o force -o slices=reads_total,reads_mapped
 
-Copy the template into :file:`analysis/Results.rst`, maybe with some text::
+Copy the template into :file:`analysis/Results.rst`, maybe with some
+text::
 
    Ere I mapped:
 
@@ -298,18 +325,19 @@ We now want to examine what percentage of reads mapped. Unfortunately,
 this is beyond :class:`SingleTableTrackerRows` and we need to write
 our own tracker::
 
-    class BamStatsPercentMappedReads( TrackerSQL ):
+    class BamStatsPercentMappedReads(TrackerSQL):
 
        def getTracks( self ):
-          return self.getValues( """SELECT DISTINCT track FROM bam_stats""")
+          return self.getValues("SELECT DISTINCT track FROM bam_stats")
 
        def __call__(self, track ):
-          return self.getValue( """SELECT 100.0 * reads_mapped/reads_total 
-   			FROM bam_stats WHERE track = '%(track)s'""")
+          return self.getValue(
+	      "SELECT 100.0 * reads_mapped/reads_total "
+   	      FROM bam_stats WHERE track = '%(track)s'")
 
 As before, try out the tracker on the command line and fine-tune the
-representation with :ref:`cgatreport-test`. Once happy, enter into
-the report::
+representation with :ref:`cgatreport-test`. Once happy, enter into the
+report::
 
     Quoth the star (in percent):
 
@@ -323,32 +351,33 @@ Using transformers
 ===================
 
 So far we have only looked at single tables that contained multiple
-tracks. Now we will look at more complex processing where 
-the data is arranged in multiple tables and needs to be processed
-in order to generate a plot.
+tracks. Now we will look at more complex processing where the data is
+arranged in multiple tables and needs to be processed in order to
+generate a plot.
 
 Let us say we are interested to plot the distribution of coverag
 transcripts have achieved by short-read data. The data has
 conveniently been computed in our analysis pipeline and is in the
-tables ``<track>_transcript_counts``. The columns we are interested
-in are the columns ``coverage_sense_pcovered``,
-``coverage_antisense_pcovered`` and ``coverage_anysense_pcovered``
-for percent coverage by reads in sense, antisense or any direction.
+tables ``<track>_transcript_counts``. The columns we are interested in
+are the columns ``coverage_sense_pcovered``,
+``coverage_antisense_pcovered`` and ``coverage_anysense_pcovered`` for
+percent coverage by reads in sense, antisense or any direction.
 
-The :term:`tracker` is now derived from :class:`TrackerSQL`. Add the 
+The :term:`tracker` is now derived from :class:`TrackerSQL`. Add the
 following to :file:`Trackers.py`::
 
-    class TranscriptCoverage( TrackerSQL ):
+    class TranscriptCoverage(TrackerSQL):
        '''transcript coverage.'''
 
        pattern = '(.*)_transcript_counts$'
 
-       slices = ( 'coverage_anysense_pcovered',
-		  'coverage_antisense_pcovered',
-		  'coverage_sense_pcovered' )
+       slices = ('coverage_anysense_pcovered',
+                 'coverage_antisense_pcovered',
+                 'coverage_sense_pcovered')
 
        def __call__(self,track,slice):
-	  return self.getValues( '''SELECT %(slice)s FROM %(track)s_transcript_counts''')
+	  return self.getValues(
+	      "SELECT %(slice)s FROM %(track)s_transcript_counts")
 
 TrackerSQL provides a connection to the database together whether
 some convenience functions. The attribute :term:`pattern` allows you to define
@@ -361,7 +390,8 @@ substitution. ``%(slice)s`` and ``%(track)s`` will be replaced by the
 contents of the variable names ``track`` and ``slice``.
 
 Now that we have the data, we can test the tracker. A good way to do
-this is by using the :class:`Debug` renderer. Type on the command line::
+this is by using the :class:`Debug` renderer. Type on the command
+line::
 
    cgatreport-test -r debug -t TranscriptCoverage
 
@@ -382,11 +412,11 @@ following to :file:`analysis/Results.rst`::
 
 Let us say we wanted to display the densities. To do this we need to
 transform the data points into a histogram. This conversion could be
-encoded into a separate tracker, but in order to permit re-use of trackers
-as much as possible, cgatreport allows you to add transformations
-to data before it is rendered. The transformer we need here is 
-:class:`TransformerHistogram`. Again, the :class:`Debug` renderer can
-show us what is happening::
+encoded into a separate tracker, but in order to permit re-use of
+trackers as much as possible, cgatreport allows you to add
+transformations to data before it is rendered. The transformer we need
+here is :class:`TransformerHistogram`. Again, the :class:`Debug`
+renderer can show us what is happening::
 
    cgatreport-test -r debug -t TranscriptCoverage -m histogram
 
@@ -412,7 +442,7 @@ Conclusions
 ===========
 
 In this worked example we have introduced how cgatreport can be used
-to perform interactive and reproducible analysis. 
+to perform interactive and reproducible analysis.
 
 Further on
 ==========
