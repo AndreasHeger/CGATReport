@@ -378,7 +378,7 @@ def main(argv=None):
     sphinx_parser.add_option("-E")
     sphinx_parser.add_option("-t", type="string")
     sphinx_parser.add_option("-d", type="string")
-    sphinx_parser.add_option("-c", type="string")
+    sphinx_parser.add_option("-c", dest="confdir", type="string")
     sphinx_parser.add_option("-C")
     sphinx_parser.add_option("-D", type="string")
     sphinx_parser.add_option("-A", type="string")
@@ -389,16 +389,26 @@ def main(argv=None):
     sphinx_parser.add_option("-W")
     sphinx_parser.add_option("-P")
 
+    sphinx_parser.set_defaults(
+        confdir=None)
+
     (sphinx_options, sphinx_args) = sphinx_parser.parse_args(args[1:])
 
     sourcedir = sphinx_args[0]
+    # local conf.py overrides anything
+    if os.path.exists("conf.py"):
+        options.confdir = "."
+    elif sphinx_options.confdir is None:
+        options.confdir = sourcedir
+
     # import conf.py for source_suffix
-    config_file = os.path.join(sourcedir, "conf.py")
+    config_file = os.path.join(sphinx_options.confdir, "conf.py")
     if not os.path.exists(config_file):
         raise IOError("could not find {}".format(config_file))
+
     config = {"__file__": config_file}
-    with cd(sourcedir):
-        exec(compile(open(os.path.join(sourcedir, "conf.py")).read(),
+    with cd(options.confdir):
+        exec(compile(open(os.path.join(config_file)).read(),
                      "conf.py", 'exec'), config)
 
     rst_files = getDirectives(options, args, sourcedir)
