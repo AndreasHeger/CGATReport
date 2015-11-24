@@ -444,7 +444,11 @@ def asDataFrame(data):
         # if only a single dataframe without given
         # tracks, return dataframe
         if index_tuples == ["all"]:
-            return dataframes[0]
+            df = dataframes[0]
+            # if index is a simple numeric list, change to "all"
+            if isinstance(df.index, pandas.Int64Index):
+                df.index = ["all" * len(df)]
+            return df
 
         expected_levels = min(path_lengths) + min(levels)
         df = concatDataFrames(dataframes, index_tuples)
