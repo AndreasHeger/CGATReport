@@ -518,9 +518,6 @@ class TrackerSQL(Tracker):
         elif not hasattr(self, "backend"):
             # not defined previously (by mix-in class) get default
             self.backend = Utils.PARAMS["report_sql_backend"]
-        else:
-            # default is sqlite in current directory
-            self.backend = "sqlite:///./csvdb"
 
         # patch for mPattern and mAsTables for backwards-compatibility
         if hasattr(self, "mPattern"):
