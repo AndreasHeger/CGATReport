@@ -2535,7 +2535,7 @@ class ScatterPlot(Renderer, Plotter):
                     linewidths=self.markeredgewidth,
                     s=self.markersize))
 
-                label = path2str(key) + "/" + column
+                label = path2str(key) + "/" + path2str(column)
                 legend.append(label)
 
                 if self.regression:
@@ -2552,7 +2552,7 @@ class ScatterPlot(Renderer, Plotter):
                 nplotted += 1
 
         plt.xlabel(xcolumn)
-        plt.ylabel(":".join(columns[1:]))
+        plt.ylabel(":".join(map(str, columns[1:])))
 
         return self.endPlot(plts, legend, path)
 

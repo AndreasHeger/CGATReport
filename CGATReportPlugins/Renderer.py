@@ -557,6 +557,9 @@ class Table(TableBase):
         '''modify table if required, for example adding percentages.
         '''
 
+        if self.head > 0:
+            dataframe = dataframe[:self.head]
+
         if self.add_percent:
             columns = dataframe.columns
             parts = self.add_percent.split(";")
