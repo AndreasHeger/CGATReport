@@ -447,15 +447,12 @@ class GGPlot(Renderer, Plotter):
 
         # for the issue below, see:
         # http://stackoverflow.com/questions/12865218/getting-rid-of-asis-class-attribute
-        unAsIs = R('''function (x) {
-                         if(typeof(x) %in% c("integer","double")) {
-                             class(x) <- "numeric"
-                             return (x)}
-                         else if (typeof(x) == "character") {
-                             class(x) <- "character"
-                             return (x) }
-                         else {
-                             return(x) } }''')
+        unAsIs =  R('''function (x) {
+                      if("AsIs" %in% class(x)) {
+                          class(x) <- class(x)[-match("AsIs", class(x))]
+                      }
+                      return (x) } ''')
+
 
         rframe = R["as.data.frame"](R.lapply(rframe, unAsIs))
         R.assign("rframe", rframe)
