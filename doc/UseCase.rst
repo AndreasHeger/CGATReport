@@ -217,8 +217,6 @@ transformations such as melt, pivot, stack, etc.
 The :term:`renderer` :ref:`pdplot` produces plots implemented in
 pandas.
 
-
-
 Notes
 =====
 

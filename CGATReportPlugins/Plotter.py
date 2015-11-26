@@ -2361,6 +2361,104 @@ class DensityPlot(DataSeriesPlot):
         return plts
 
 
+class HeatmapPlot(TableMatrixPlot):
+    """Render a matrix as a heatmap using seaborn.
+
+    This class adds the following options to the:term:`report` directive:
+
+    """
+    options = TableMatrix.options + PlotterMatrix.options
+
+    # column to use for error bars
+    colour = None
+
+    def __init__(self, *args, **kwargs):
+        TableMatrix.__init__(self, *args, **kwargs)
+        PlotterMatrix.__init__(self, *args, **kwargs)
+        
+    def plotMatrix(self, matrix, row_headers, col_headers,
+                   vmin, vmax,
+                   color_scheme=None):
+
+        self.debug("plot matrix started")
+        data = pandas.DataFrame(matrix,
+                              columns=col_headers,
+                              index=row_headers)
+        plot = seaborn.heatmap(data,
+                               vmin=vmin,
+                               vmax=vmax,
+                               cmap=color_scheme)
+        self.debug("plot matrix finished")
+
+        return plot
+
+
+class HeatmapPlot(TableMatrixPlot):
+    """Render a matrix as a heatmap using seaborn.
+    """
+    options = TableMatrix.options + PlotterMatrix.options +\
+              (('kwargs', directives.unchanged),)
+    
+    kwargs = None
+
+    def __init__(self, *args, **kwargs):
+        TableMatrix.__init__(self, *args, **kwargs)
+        PlotterMatrix.__init__(self, *args, **kwargs)
+        
+        self.kwargs = kwargs.get("kwargs", None)
+
+    def addColourBar(self):
+        pass
+        
+    def plotMatrix(self, matrix, row_headers, col_headers,
+                   vmin, vmax,
+                   color_scheme=None):
+
+        self.debug("plot matrix started")
+        data = pandas.DataFrame(matrix,
+                                columns=col_headers,
+                                index=row_headers)
+        plot = seaborn.heatmap(data,
+                               vmin=vmin,
+                               vmax=vmax,
+                               cmap=color_scheme)
+        self.debug("plot matrix finished")
+
+        return plot
+
+
+class ClustermapPlot(TableMatrixPlot):
+    """Render a matrix as a heatmap using seaborn.
+    """
+    options = TableMatrix.options + PlotterMatrix.options
+
+    # column to use for error bars
+    colour = None
+
+    def __init__(self, *args, **kwargs):
+        TableMatrix.__init__(self, *args, **kwargs)
+        PlotterMatrix.__init__(self, *args, **kwargs)
+        
+    def addColourBar(self):
+        pass
+
+    def plotMatrix(self, matrix, row_headers, col_headers,
+                   vmin, vmax,
+                   color_scheme=None):
+
+        self.debug("plot matrix started")
+        data = pandas.DataFrame(matrix,
+                              columns=col_headers,
+                              index=row_headers)
+        plot = seaborn.clustermap(data,
+                                  vmin=vmin,
+                                  vmax=vmax,
+                                  cmap=color_scheme)
+        self.debug("plot matrix finished")
+
+        return plot
+
+
 class GalleryPlot(PlotByRow):
 
     '''Plot an image.

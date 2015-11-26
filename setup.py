@@ -267,6 +267,10 @@ setup(name='CGATReport',
               'CGATReportPlugins.GGPlotter:GGPlot',
               'render-pdplot='
               'CGATReportPlugins.PandasPlotter:PandasPlot',
+              'render-heatmap-plot='
+              'CGATReportPlugins.Plotter:HeatmapPlot',
+              'render-clustermap-plot='
+              'CGATReportPlugins.Plotter:ClustermapPlot',
               'render-r-line-plot='
               'CGATReportPlugins.RPlotter:LinePlot',
               'render-r-box-plot='
