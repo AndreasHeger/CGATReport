@@ -447,7 +447,7 @@ def asDataFrame(data):
             df = dataframes[0]
             # if index is a simple numeric list, change to "all"
             if isinstance(df.index, pandas.Int64Index):
-                df.index = ["all" * len(df)]
+                df.index = ["all"] * len(df)
             return df
 
         expected_levels = min(path_lengths) + min(levels)
