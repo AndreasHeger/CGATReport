@@ -1031,6 +1031,8 @@ class Status(TrackerSQL):
 
         status, value = getattr(self, "test%s" % slice)(track)
         description = getattr(self, "test%s" % slice).__doc__
+        if description is None:
+            description = ""
 
         return odict(
             (('name', slice),
