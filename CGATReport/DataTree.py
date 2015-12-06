@@ -446,7 +446,8 @@ def asDataFrame(data):
         if index_tuples == ["all"]:
             df = dataframes[0]
             # if index is a simple numeric list, change to "all"
-            if isinstance(df.index, pandas.Int64Index):
+            if isinstance(df.index, pandas.Int64Index) and \
+               df.index.name is None:
                 df.index = ["all"] * len(df)
             return df
 
