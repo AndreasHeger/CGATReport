@@ -5,32 +5,16 @@ Renderers
 =========
 
 The section contains an overview of all the plots
-that are included in cgatreport.
+that are included in cgatreport. CGATReport includes
+access to several plotting frontends.
 
 .. toctree::
    :maxdepth: 2
 
-   GalleryTables.rst
-   GalleryMatrices.rst
-   GalleryBarplots.rst
-   GalleryPiePlots.rst
-   GalleryLinePlots.rst
-   GalleryHistograms.rst
-   GalleryBoxPlots.rst
-   GalleryViolinPlots.rst
-   GalleryDensityPlots.rst
-   GalleryScatterPlots.rst
-   GalleryVenn.rst
+   GalleryTabular.rst
+   GallerySeaborn.rst
    GalleryGGPlot.rst
    GalleryPDPlot.rst
-   GalleryConfig.rst
-   GalleryStatus.rst
-   GalleryGallery.rst
-   GallerySlideShowPlot.rst
-   GalleryUser.rst
-   GalleryRPlots.rst
-   GalleryDebug.rst
-   GalleryDataframe.rst
-   GalleryLegends.rst
-   GalleryOptions.rst
+   GalleryR.rst
    GalleryBokeh.rst
+   GallerySpecial.rst

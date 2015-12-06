@@ -230,8 +230,9 @@ setup(name='CGATReport',
               'CGATReportPlugins.Renderer:Status',
               'render-line-plot='
               'CGATReportPlugins.Plotter:LinePlot',
+              # for backwards compatibility
               'render-density-plot='
-              'CGATReportPlugins.Plotter:DensityPlot',
+              'CGATReportPlugins.Seaborn:KdePlot',
               'render-histogram-plot='
               'CGATReportPlugins.Plotter:HistogramPlot',
               # 'render-histogram-gradient-plot='
@@ -257,20 +258,30 @@ setup(name='CGATReport',
               'CGATReportPlugins.Plotter:StackedBarPlot',
               'render-interleaved-bar-plot='
               'CGATReportPlugins.Plotter:InterleavedBarPlot',
-              'render-box-plot='
-              'CGATReportPlugins.Plotter:BoxPlot',
-              'render-violin-plot='
-              'CGATReportPlugins.Plotter:ViolinPlot',
               'render-venn-plot='
               'CGATReportPlugins.Plotter:VennPlot',
+              # ggplot
               'render-ggplot='
               'CGATReportPlugins.GGPlotter:GGPlot',
+              # pandas plotting
               'render-pdplot='
               'CGATReportPlugins.PandasPlotter:PandasPlot',
-              'render-heatmap-plot='
-              'CGATReportPlugins.Plotter:HeatmapPlot',
-              'render-clustermap-plot='
-              'CGATReportPlugins.Plotter:ClustermapPlot',
+              # seaborn plots
+              'render-sb-box-plot='
+              'CGATReportPlugins.Seaborn:BoxPlot',
+              'render-sb-violin-plot='
+              'CGATReportPlugins.Seaborn:ViolinPlot',
+              'render-sb-kde-plot='
+              'CGATReportPlugins.Seaborn:KdePlot',
+              'render-sb-pair-plot='
+              'CGATReportPlugins.Seaborn:PairPlot',
+              'render-sb-dist-plot='
+              'CGATReportPlugins.Seaborn:DistPlot',
+              'render-sb-heatmap-plot='
+              'CGATReportPlugins.Seaborn:HeatmapPlot',
+              'render-sb-clustermap-plot='
+              'CGATReportPlugins.Seaborn:ClustermapPlot',
+              # R plots
               'render-r-line-plot='
               'CGATReportPlugins.RPlotter:LinePlot',
               'render-r-box-plot='
@@ -281,8 +292,14 @@ setup(name='CGATReport',
               'CGATReportPlugins.RPlotter:HeatmapPlot',
               'render-r-ggplot='
               'CGATReportPlugins.RPlotter:GGPlot',
+              # Bokeh plots
               'render-b-line-plot='
               'CGATReportPlugins.BokehPlotter:LinePlot',
+              # backwards compatibility
+              'render-box-plot='
+              'CGATReportPlugins.Seaborn:BoxPlot',
+              'render-violin-plot='
+              'CGATReportPlugins.Seaborn:ViolinPlot',
           ]
       },)
 

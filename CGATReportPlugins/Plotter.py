@@ -2062,8 +2062,8 @@ class MultipleSeriesPlot(Renderer, Plotter):
 
     """Plot data according to different orientations.
 
-    If the dataframe has only a single column, create a single plot with
-    row names as keys and the column as values.
+    If the dataframe has only a single column, create a single plot
+    with row names as keys and the column as values.
 
     If the dataframe has multiple columns, create one plot
     for each row with the column headers as keys and the
@@ -2267,198 +2267,6 @@ class HintonPlot(TableMatrix, PlotterHinton):
         return self.plot(matrix, rows, columns, path)
 
 
-class BoxPlot(DataSeriesPlot):
-
-    """Write a set of box plots.
-
-    This:class:`Renderer` requires two levels.
-
-    labels[dict] / data[array]
-    """
-
-    def __init__(self, *args, **kwargs):
-        DataSeriesPlot.__init__(self, *args, **kwargs)
-
-    def plotData(self, data, melted):
-        if melted:
-            return [seaborn.boxplot(data.value,
-                                    groupby=data.label)]
-        else:
-            return [seaborn.boxplot(data)]
-
-
-class ViolinPlot(BoxPlot):
-
-    """Write a set of violin plots.
-
-    This:class:`Renderer` requires two levels.
-
-    labels[dict] / data[array]
-    """
-
-    def __init__(self, *args, **kwargs):
-        BoxPlot.__init__(self, *args, **kwargs)
-
-    def plotData(self, data, melted):
-        if melted:
-            return [seaborn.violinplot(data.value,
-                                       groupby=data.label)]
-        else:
-            return [seaborn.violinplot(data)]
-
-
-class DensityPlot(DataSeriesPlot):
-
-    """Write a set of density plots.
-
-    The data series is converted to a kernel density
-    estimate.
-
-    This:class:`Renderer` requires two levels.
-
-    labels[dict] / data[array]
-    """
-    options = DataSeriesPlot.options +\
-        (('shade', directives.flag),
-         ('vertical', directives.flag),
-         ('kernel', directives.unchanged),
-         ('bw', directives.unchanged),
-         ('gridsize', directives.unchanged),
-         ('cut', directives.unchanged),
-         ('clip', directives.unchanged),
-         )
-
-    def __init__(self, *args, **kwargs):
-        DataSeriesPlot.__init__(self, *args, **kwargs)
-
-        self.shade = kwargs.get('shade', False)
-        self.vertical = kwargs.get('shade', False)
-        self.kernel = kwargs.get('kernel', 'gau')
-        self.bw = kwargs.get('bw', 'scott')
-        self.gridsize = int(kwargs.get('gridsize', 100))
-        self.cut = int(kwargs.get('cut', 3))
-        if 'clip' in kwargs:
-            self.clip = map(int, kwargs['clip'].split(','))
-
-    def plotData(self, dataframe, melted):
-        plts = []
-        if melted:
-            for key, group in dataframe.groupby(dataframe.label):
-                plts.append(seaborn.kdeplot(
-                    numpy.array(dataframe.value, dtype=numpy.float),
-                    label=key,
-                    shade=self.shade,
-                    vertical=self.vertical,
-                    kernel=self.kernel))
-        else:
-            for column in dataframe.columns:
-                plts.append(seaborn.kdeplot(
-                    numpy.array(dataframe[column], dtype=numpy.float),
-                    label=column,
-                    shade=self.shade,
-                    vertical=self.vertical,
-                    kernel=self.kernel))
-        return plts
-
-
-class HeatmapPlot(TableMatrixPlot):
-    """Render a matrix as a heatmap using seaborn.
-
-    This class adds the following options to the:term:`report` directive:
-
-    """
-    options = TableMatrix.options + PlotterMatrix.options
-
-    # column to use for error bars
-    colour = None
-
-    def __init__(self, *args, **kwargs):
-        TableMatrix.__init__(self, *args, **kwargs)
-        PlotterMatrix.__init__(self, *args, **kwargs)
-        
-    def plotMatrix(self, matrix, row_headers, col_headers,
-                   vmin, vmax,
-                   color_scheme=None):
-
-        self.debug("plot matrix started")
-        data = pandas.DataFrame(matrix,
-                              columns=col_headers,
-                              index=row_headers)
-        plot = seaborn.heatmap(data,
-                               vmin=vmin,
-                               vmax=vmax,
-                               cmap=color_scheme)
-        self.debug("plot matrix finished")
-
-        return plot
-
-
-class HeatmapPlot(TableMatrixPlot):
-    """Render a matrix as a heatmap using seaborn.
-    """
-    options = TableMatrix.options + PlotterMatrix.options +\
-              (('kwargs', directives.unchanged),)
-    
-    kwargs = None
-
-    def __init__(self, *args, **kwargs):
-        TableMatrix.__init__(self, *args, **kwargs)
-        PlotterMatrix.__init__(self, *args, **kwargs)
-        
-        self.kwargs = kwargs.get("kwargs", None)
-
-    def addColourBar(self):
-        pass
-        
-    def plotMatrix(self, matrix, row_headers, col_headers,
-                   vmin, vmax,
-                   color_scheme=None):
-
-        self.debug("plot matrix started")
-        data = pandas.DataFrame(matrix,
-                                columns=col_headers,
-                                index=row_headers)
-        plot = seaborn.heatmap(data,
-                               vmin=vmin,
-                               vmax=vmax,
-                               cmap=color_scheme)
-        self.debug("plot matrix finished")
-
-        return plot
-
-
-class ClustermapPlot(TableMatrixPlot):
-    """Render a matrix as a heatmap using seaborn.
-    """
-    options = TableMatrix.options + PlotterMatrix.options
-
-    # column to use for error bars
-    colour = None
-
-    def __init__(self, *args, **kwargs):
-        TableMatrix.__init__(self, *args, **kwargs)
-        PlotterMatrix.__init__(self, *args, **kwargs)
-        
-    def addColourBar(self):
-        pass
-
-    def plotMatrix(self, matrix, row_headers, col_headers,
-                   vmin, vmax,
-                   color_scheme=None):
-
-        self.debug("plot matrix started")
-        data = pandas.DataFrame(matrix,
-                              columns=col_headers,
-                              index=row_headers)
-        plot = seaborn.clustermap(data,
-                                  vmin=vmin,
-                                  vmax=vmax,
-                                  cmap=color_scheme)
-        self.debug("plot matrix finished")
-
-        return plot
-
-
 class GalleryPlot(PlotByRow):
 
     '''Plot an image.
@@ -2553,8 +2361,8 @@ class ScatterPlot(Renderer, Plotter):
     This:class:`Renderer` requires two levels:
     track[dict] / coords[dict]
 
-:regression:
-       int
+    :regression:
+    int
 
        add linear regression function of a certain degree
        (straight line is degree 1).
