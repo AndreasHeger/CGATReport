@@ -121,9 +121,7 @@ TRACKERDIR = "trackers"
 if "docsdir" in locals():
     TRACKERDIR = os.path.join(docsdir, "trackers")
 
-RST_TEMPLATE = """.. _%(label)s:
-
-.. report:: %(tracker)s
+RST_TEMPLATE = """.. report:: %(tracker)s
    :render: %(renderer)s
    %(options)s
 
@@ -187,7 +185,6 @@ def writeRST(outfile, options, kwargs,
 
     params = {"tracker": "%s.%s" % (modulename, name),
               "renderer": options.renderer,
-              "label": options.label,
               "options": ("\n   ").join(options_rst),
               "caption": options.caption}
     if options.transformers:
@@ -335,7 +332,6 @@ def main(argv=None, **kwargs):
         do_print=True,
         force=False,
         trackerdir=TRACKERDIR,
-        label="GenericLabel",
         caption="add caption here",
         start_interpreter=False,
         start_ipython=False,
@@ -460,6 +456,7 @@ def main(argv=None, **kwargs):
                         if modulename == tracker_modulename:
                             break
                     else:
+                        tracker_modulename = modulename
                         break
             else:
                 available_trackers = set([x[0] for x in trackers if x[3]])
@@ -499,7 +496,7 @@ def main(argv=None, **kwargs):
 
         if options.do_print:
 
-            sys.stdout.write(".. Template start\n\n")
+            sys.stdout.write(".. ---- TEMPLATE START --------\n\n")
 
             if options.language == "rst":
                 writeRST(sys.stdout,
@@ -520,7 +517,9 @@ def main(argv=None, **kwargs):
                               tracker_modulename,
                               tracker_name)
 
-            sys.stdout.write("\n.. Template end\n")
+            sys.stdout.write("\n.. ---- TEMPLATE END ----------\n")
+
+        sys.stdout.write("\n.. ---- OUTPUT-----------------\n")
 
         if result and renderer is not None:
             if options.layout is not None:
