@@ -75,22 +75,25 @@ restructured text document. Behind the scenes, cgatreport`sphinx` will
 call the cgatreport extension and request a barplot. The cgatreport in
 turn will look for a data source :meth:`MyDataFunction` in the module
 :file:`Tutorial1.py` that should be somewhere in your
-:env:`PYTHONPATH` or added in :file:`conf.py`.  The default location
-for these is in the :file:`python` subdirectory under the main
-installation directory. The content of the :term:`report` directive is
-the figure or table caption.
+:env:`PYTHONPATH` or added in :file:`conf.py`.  
 
-Add a link in the :file:`contents.rst` by appending a line immediately
-after the following::
+.. note:: 
+   `Tutorial1.py` or `MyDataFunction` are python module and function
+   names and are thus case sensitive.
 
-   :maxdepth: 2
-   analysis.rst
+The default location for these is in the :file:`python` subdirectory
+under the main installation directory. The content of the
+:term:`report` directive is the figure or table caption.
+
+Add a link in the :file:`contents.rst` by adding our newly created
+page to the table of contents::
 
 to make it look like::
 
-   :maxdepth: 2
-   analysis.rst
-   Tutorial1.rst
+   .. toctree::
+      :maxdepth: 2
+
+      Tutorial1.rst
 
 and rebuild the sources::
 
@@ -102,13 +105,6 @@ like.
 
 The next Tutorial (:ref:`Tutorial2`) will cover more complex
 data sources and plots.
-
-
-
-
-
-
-
 
 
 
