@@ -1113,8 +1113,6 @@ def buildRstWithImage(outname,
                                     rst2srcdir,
                                     outname))
 
-    linked_text = relative_imagepath + ".txt"
-
     urls = asList(PARAMS["report_urls"])
 
     image_options = getImageOptions(display_options, indent=6)
@@ -1173,7 +1171,7 @@ def buildRstWithImage(outname,
         extra_images = []
         for id, format, dpi in additional_formats:
             extra_images.append(
-                "`%(id)s <%(relative_imagepath)s.%(format)s>`__" %
+                ":download:`%(id)s <%(relative_imagepath)s.%(format)s>`" %
                 locals())
         if extra_images:
             extra_images = " " + " ".join(extra_images)
@@ -1183,16 +1181,16 @@ def buildRstWithImage(outname,
         # construct additional urls
         code_url, data_url, rst_url, nb_url = "", "", "", ""
         if "code" in urls:
-            code_url = "`code <%(code_url)s>`__" % links
+            code_url = ":download:`code <%(code_url)s>`" % links
 
         if "notebook" in urls:
-            nb_url = '`nb <%(notebook_url)s>`__' % links
+            nb_url = ":download:`nb <%(notebook_url)s>`" % links
 
         if "data" in urls:
-            data_url = "`data </data/%(tracker_id)s>`__" % locals()
+            data_url = ":download:`data </data/%(tracker_id)s>`" % locals()
 
-        if "rst" in urls:
-            rst_url = "`rst <%(linked_text)s>`__" % locals()
+        if "rst" in urls and links["rst_url"] is not None:
+            rst_url = ":download:`rst <%(rst_url)s>`" % links
 
         rst_output += template % locals()
 
