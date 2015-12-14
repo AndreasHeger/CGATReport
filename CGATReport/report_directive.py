@@ -187,7 +187,7 @@ def run(arguments,
             Config.SEPARATOR.join((tracker_name, renderer_name,
                                    options_hash)))
         filename_text = os.path.join(outdir, "%s.txt" % (template_name))
-
+        rstname = os.path.basename(filename_text)
         notebookname += options_hash
 
         logging.debug("report_directive.run: options_hash=%s" % options_hash)
@@ -335,7 +335,7 @@ def run(arguments,
 
     ########################################################
     # write code output
-    linked_codename = re.sub("\\\\", "/", os.path.join(rst2srcdir, codename))
+    linked_codename = re.sub("\\\\", "/", os.path.join(rst2builddir, codename))
     if code and basedir != outdir:
         with open(os.path.join(outdir, codename), "w") as outfile:
             for line in code:
@@ -344,7 +344,7 @@ def run(arguments,
     ########################################################
     # write notebook snippet
     linked_notebookname = re.sub(
-        "\\\\", "/", os.path.join(rst2srcdir, notebookname))
+        "\\\\", "/", os.path.join(rst2builddir, notebookname))
     if basedir != outdir and tracker_id is not None:
         with open(os.path.join(outdir, notebookname), "w") as outfile:
             Utils.writeNoteBookEntry(outfile,
@@ -356,11 +356,18 @@ def run(arguments,
                                      tracker_options.items() +
                                      transformer_options.items())
 
+    if filename_text is not None:
+        linked_rstname = re.sub(
+            "\\\\", "/", os.path.join(rst2builddir, rstname))
+    else:
+        linked_rstname = None
+
     ###########################################################
     # collect images
     ###########################################################
     map_figure2text = {}
     links = {'code_url': linked_codename,
+             'rst_url': linked_rstname,
              'notebook_url': linked_notebookname}
     try:
         for collector in collectors:
