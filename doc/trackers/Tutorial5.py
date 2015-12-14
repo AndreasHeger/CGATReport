@@ -6,12 +6,6 @@ class ExpressionLevel(TrackerSQL):
     """Expression level measurements."""
     pattern = "(.*)_data$"
 
-    def __init__(self, *args, **kwargs):
-        TrackerSQL.__init__(self,
-                            *args,
-                            backend="sqlite:///./csvdb",
-                            **kwargs)
-
     def __call__(self, track):
         statement = "SELECT expression FROM %s_data" % track
         data = self.getValues(statement)

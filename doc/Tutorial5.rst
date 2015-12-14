@@ -14,6 +14,9 @@ SQL database.
 The tutorial assumes that `sqlite <http://www.sqlite.org/>`_ has been
 installed.
 
+For a complete reference on how to work with SQL databases, see
+:ref:`sqltrackers`.
+
 Setting up the database
 =======================
 
@@ -34,26 +37,18 @@ regulatory functions.
 Building a tracker
 ==================
 
-Create the file :file:`Tutorial5.py` in the :file:`python`
+In order to use data from a database, a connection needs to be
+established. This can be done by providing a URL to connect to the
+database in a configuration file within the current directory. For
+example, create the file :file:`report.ini`:
+
+.. literalinclude:: report.ini
+
+Next, create the file :file:`Tutorial5.py` in the :file:`python`
 subdirectory and add the following code:
 
 .. literalinclude:: trackers/Tutorial5.py
-   :lines: 1-19
-
-In order to use data from a database, a connection needs to be
-established. This can be done by providing a URL to connect
-to the database in a configuration file. For example, in
-the :file:`report.ini` file:
-
-.. literalinclude: report.ini
-
-Alternatively, a ``backend`` option to the constructor:
-
-.. literalinclude:: trackers/Tutorial5.py
-   :lines: 9-13
-
-This will connect to an sqlite database called :file:`csvdb`
-in the current directory.
+   :lines: 1-13
 
 Note that this tracker is derived from
 :class:`Tracker.TrackerSQL`. The base class provides two options. It
@@ -61,8 +56,8 @@ implements a :meth:`tracks` property that automatically queries the
 database for tables matching the pattern in ``pattern``. It also
 defines convenience functions such as :meth:`getValues`.
 :meth:`getValues` executes an SQL statement that returns rows of
-single values and converts these to a python list. The outcome is
-the following dataframe:
+single values and converts these to a python list. The outcome is the
+following dataframe:
 
 .. report:: Tutorial5.ExpressionLevel
    :render: dataframe
