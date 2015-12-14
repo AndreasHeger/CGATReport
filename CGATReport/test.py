@@ -360,9 +360,16 @@ def main(argv=None, **kwargs):
                 setattr(options, keyword, value)
                 del kwargs[keyword]
 
+        # change some kwarguments
+        if options.transformers:
+            for keyword, value in kwargs.items():
+                if keyword.startswith("tf"):
+                    kwargs["tf-{}".format(keyword[2:])] = value
+
     if options.workdir is not None:
         savedir = os.getcwd()
         os.chdir(options.workdir)
+        Utils.getParameters(sorted(glob.glob("*.ini")))
     else:
         savedir = None
 
