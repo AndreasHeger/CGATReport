@@ -99,6 +99,7 @@ import glob
 import optparse
 import tempfile
 import logging as L
+import code
 
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
@@ -437,7 +438,7 @@ def main(argv=None, **kwargs):
             tracker_name = options.tracker
 
         try:
-            code, tracker, tracker_path = Utils.makeTracker(
+            _code, tracker, tracker_path = Utils.makeTracker(
                 options.tracker, (), kwargs)
         except ImportError:
             # try to find class in module
@@ -625,7 +626,6 @@ def main(argv=None, **kwargs):
         #         print ("could not push %s: %s" % (k,msg))
         #         pass
         # print ("----------------------------------------")
-
         if options.start_interpreter:
             print ("--> cgatreport - available data structures <--")
             print ("    datatree=%s" % type(datatree))
