@@ -44,6 +44,10 @@ class GGPlot(Renderer, Plotter):
         # see this thread: https://github.com/yhat/ggplot/issues/285
 
         dataframe.reset_index(inplace=True)
+
+        if len(dataframe.dropna()) == 0:
+            return []
+
         s = "p = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
 
         try:
@@ -57,5 +61,12 @@ class GGPlot(Renderer, Plotter):
         self.mFigure += 1
         if self.title:
             plt.title(self.title)
-        plts = [p.draw()]
+
+        try:
+            plts = [p.draw()]
+        except Exception, msg:
+            raise Exception(
+                "ggplot raised error for statement '%s': msg=%s" %
+                (s, msg))
+
         return self.endPlot(plts, None, path)
