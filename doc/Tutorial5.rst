@@ -41,8 +41,13 @@ subdirectory and add the following code:
    :lines: 1-19
 
 In order to use data from a database, a connection needs to be
-established. This is done by providing a value for the ``backend``
-option to the constructor:
+established. This can be done by providing a URL to connect
+to the database in a configuration file. For example, in
+the :file:`report.ini` file:
+
+.. literalinclude: report.ini
+
+Alternatively, a ``backend`` option to the constructor:
 
 .. literalinclude:: trackers/Tutorial5.py
    :lines: 9-13
@@ -70,7 +75,7 @@ Testing this data source you should see one plot::
 
    cgatreport-test -t ExpressionLevel -m histogram -o range=0,100,4 -r line-plot
 
-The plots show a bi-modal distribution in the two experiments.
+The plots show a bi-modal distributions in the two experiments.
 
 Adding slices
 =============
@@ -80,7 +85,6 @@ statements. Add the following data source:
 
 .. literalinclude:: trackers/Tutorial5.py
     :lines: 21-
-
 
 Testing this data source you should now see two plots by function::
 

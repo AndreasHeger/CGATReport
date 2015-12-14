@@ -4,8 +4,10 @@
 pdplot
 ======
 
-The :class:`CGATReportPlugins.PandasPlotter.PandasPlot` displays
-a dataframe using the pandas plot() method.
+The :class:`CGATReportPlugins.PandasPlotter.PandasPlot` displays a
+dataframe using the pandas_ `plot
+<http://pandas.pydata.org/pandas-docs/stable/visualization.html>`_
+method.
 
 .. report:: Trackers.MultipleColumnDataExample
    :render: pdplot

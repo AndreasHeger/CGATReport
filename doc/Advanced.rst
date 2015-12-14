@@ -48,13 +48,13 @@ your :file:`conf.py` configuration file::
 
     extensions = [ ..., 'sphinx.ext.intersphinx', ...]
 
-    intersphinx_mapping = {'<identifier>': ('<>', None) }
+    intersphinx_mapping = {'<identifier>': ('<path>', None) }
 
-where identifier is a suitable identifier and ``absolute path name to
-html`` is the absolute location of the html build of the sphinx
-document you want to refer to. This directory should contain the
-:file:`objects.inv` file. The file is automatically created by sphinx,
-but sphinx needs to be run at least once.
+where identifier is a suitable identifier and ``path`` is the absolute
+location of the html build of the sphinx document you want to refer
+to. This directory should contain the :file:`objects.inv` file. The
+file is automatically created by sphinx, but sphinx needs to be run at
+least once.
 
 To refer to the other documentation, type::
 
