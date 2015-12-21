@@ -1171,7 +1171,7 @@ def buildRstWithImage(outname,
         extra_images = []
         for id, format, dpi in additional_formats:
             extra_images.append(
-                ":download:`%(id)s <%(relative_imagepath)s.%(format)s>`" %
+                ":download:`%(id)s <%(imagepath)s.%(format)s>`" %
                 locals())
         if extra_images:
             extra_images = " " + " ".join(extra_images)
