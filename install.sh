@@ -218,7 +218,7 @@ hash -r
 # install cgat environment and additional packages: Pillow, seaborn
 conda update -q conda --yes
 conda info -a
-conda create -q -n $CONDA_INSTALL_TYPE --override-channels --channel https://conda.binstar.org/cgat --channel defaults --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes $CONDA_INSTALL_TYPE gcc=4.8.3 Pillow seaborn
+conda create -q -n $CONDA_INSTALL_TYPE --override-channels --channel https://conda.binstar.org/cgat --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes $CONDA_INSTALL_TYPE gcc=4.8.3 Pillow seaborn
 
 # The following packages will be pulled in through pip:
 # mpld3
