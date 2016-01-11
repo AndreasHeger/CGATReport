@@ -2151,6 +2151,12 @@ class PiePlot(MultipleSeriesPlot):
 
     def plot(self, keys, values, path):
 
+        # If there is only a single column, keys will be
+        # the sample, not the category
+        if len(keys) == 1:
+            if self.mFirstIsTotal:
+                keys = [self.mFirstIsTotal]
+
         for x in keys:
             if x not in self.sorted_keys:
                 self.sorted_keys[x] = len(self.sorted_keys)
@@ -2175,7 +2181,7 @@ class PiePlot(MultipleSeriesPlot):
             return self.endPlot(None, None, path)
 
         # subtract others from total - rest
-        if self.mFirstIsTotal:
+        if self.mFirstIsTotal and len(sorted_vals) > 1:
             sorted_vals[0] -= sum(sorted_vals[1:])
             if sorted_vals[0] < 0:
                 raise ValueError(
