@@ -1193,16 +1193,25 @@ class TransformerPivot(Transformer):
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        self.pivot_index = kwargs.get("pivot-index", None)
-        self.pivot_column = kwargs.get("pivot-column", None)
-        self.pivot_value = kwargs.get("pivot-value", None)
 
-        if self.pivot_index is None:
+        # convert to string, otherwise it is
+        # docutils.nodes.reprunicode which does not evaluate as a
+        # scalar in numpy and causes df.pivot() to fail.
+        if "pivot-index" not in kwargs:
             raise ValueError('pivot requires a column to use as index')
-        if self.pivot_column is None:
+        else:
+            self.pivot_index = str(kwargs["pivot-index"])
+
+        if "pivot-column" not in kwargs:
             raise ValueError('pivot requires a column to use as column')
-        if self.pivot_value is None:
-            raise ValueError('pivot requires a column to use as value')
+        else:
+            self.pivot_column = str(kwargs["pivot-column"])
+
+        if "pivot-value" not in kwargs:
+            raise ValueError('pivot requires a value to use as value')
+        else:
+            self.pivot_value = str(kwargs["pivot-value"])
+
 
     def __call__(self, data):
         ''' returns a melted table'''
