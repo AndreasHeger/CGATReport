@@ -1218,7 +1218,8 @@ class TransformerPivot(Transformer):
         # merge index into dataframe
         # pivot
 
-        return data.reset_index().pivot(
+        return pandas.pivot_table(
+            data.reset_index(),
             index=self.pivot_index,
             columns=self.pivot_column,
             values=self.pivot_value)

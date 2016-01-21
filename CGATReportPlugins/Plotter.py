@@ -96,8 +96,11 @@ class Plotter(object):
 :term:`yrange`: restrict plot a part of the y-axis
 
 :term:`function`: add a function to the plot. Multiple
-          functions can be supplied as a ,-separated list.
-
+          functions can be supplied as a comma-separated list.
+          If functions are separated by a |, then they will
+          be plotted on each separately in order, recycling if
+          necessary
+    
 :term:`vline`: add one or more vertical lines to the
           plot.
 
@@ -204,8 +207,15 @@ class Plotter(object):
         self.tight_layout = 'tight' in kwargs
 
         if self.functions:
+            if "," in self.functions and "|" in self.functions:
+                raise ValueError("functions need to be separated by , or |, not both")
+                
+            self.all_functions_per_plot = True
             if "," in self.functions:
                 self.functions = self.functions.split(",")
+            elif "|" in self.functions:
+                self.all_functions_per_plot = False
+                self.functions = self.functions.split("|")
             else:
                 self.functions = [self.functions]
 
@@ -371,7 +381,15 @@ class Plotter(object):
         if self.functions:
             xstart, xend = ax.get_xlim()
             increment = (xend - xstart) / 100.0
-            for function in self.functions:
+
+            if self.all_functions_per_plot:
+                for function in self.functions:
+                    f = eval("lambda x: %s" % function)
+                    xvals = numpy.arange(xstart, xend, increment)
+                    yvals = [f(x) for x in xvals]
+                    plt.plot(xvals, yvals)
+            else:
+                function = self.functions[(self.mFigure - 1) % len(self.functions)]
                 f = eval("lambda x: %s" % function)
                 xvals = numpy.arange(xstart, xend, increment)
                 yvals = [f(x) for x in xvals]
