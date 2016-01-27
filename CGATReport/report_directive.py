@@ -78,7 +78,7 @@ def run(arguments,
 
     # remove symbolic links
     srcdir, builddir, rstdir = [
-        os.path.realpath(x) for x in (srcdir, builddir, rstdir)]
+        os.path.abspath(os.path.realpath(x)) for x in (srcdir, builddir, rstdir)]
 
     # there are three directories:
     # builddir = directory where document is built in
@@ -345,6 +345,7 @@ def run(arguments,
     # write notebook snippet
     linked_notebookname = re.sub(
         "\\\\", "/", os.path.join(rst2builddir, notebookname))
+
     if basedir != outdir and tracker_id is not None:
         with open(os.path.join(outdir, notebookname), "w") as outfile:
             Utils.writeNoteBookEntry(outfile,
@@ -399,10 +400,10 @@ def run(arguments,
     urls = Utils.asList(Utils.PARAMS["report_urls"])
     code_url, nb_url = "", ""
     if "code" in urls:
-        code_url = "`code <%(code_url)s>`__" % links
+        code_url = ":download:`code <%(code_url)s>`" % links
 
     if "notebook" in urls:
-        nb_url = '`nb <%(notebook_url)s>`__' % links
+        nb_url = ":download:`nb <%(notebook_url)s>`" % links
 
     map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
     map_figure2text["default-suffix"] = ""
