@@ -10,8 +10,7 @@ from CGATReportPlugins.Plotter import Plotter
 
 class SeabornPlot(object):
 
-    options =  (('kwargs', directives.unchanged),)
-    
+    options = (('kwargs', directives.unchanged),)
     kwargs = ""
 
     def __init__(self, *args, **kwargs):
@@ -41,13 +40,14 @@ class PairPlot(Renderer, Plotter, SeabornPlot):
         Renderer.__init__(self, *args, **kwargs)
         Plotter.__init__(self, *args, **kwargs)
         SeabornPlot.__init__(self, *args, **kwargs)
-        
+
     def render(self, dataframe, path):
 
         statement = ("seaborn.pairplot(dataframe)")
         plot = self.execute(statement, globals(), locals())
 
         return self.endPlot([plot], [], path)
+
 
 class BoxPlot(DataSeriesPlot, SeabornPlot):
 
@@ -147,7 +147,6 @@ class KdePlot(DataSeriesPlot, SeabornPlot):
 
 
 class DistPlot(DataSeriesPlot, SeabornPlot):
-
     """Write a set of density plots.
 
     The data series is converted to a kernel density
@@ -182,14 +181,19 @@ class DistPlot(DataSeriesPlot, SeabornPlot):
 
 
 class SeabornMatrixPlot(TableMatrixPlot, SeabornPlot):
-    
+
     def __init__(self, *args, **kwargs):
         TableMatrixPlot.__init__(self, *args, **kwargs)
         SeabornPlot.__init__(self, *args, **kwargs)
 
     def addColourBar(self):
         pass
-        
+
+    def startPlot(self, **kwargs):
+
+        # seaborn will create figure, so do not create one.
+        self.mFigure += 1
+
     def plotMatrix(self, matrix, row_headers, col_headers,
                    vmin, vmax,
                    color_scheme=None):
@@ -198,7 +202,6 @@ class SeabornMatrixPlot(TableMatrixPlot, SeabornPlot):
         data = pandas.DataFrame(matrix,
                                 columns=col_headers,
                                 index=row_headers)
-        
         statement = self.buildStatement(data, color_scheme)
         self.debug("seaborn: executing statement '%s'" % statement)
         plot = self.execute(statement, globals(), locals())
@@ -222,8 +225,6 @@ class ClustermapPlot(SeabornMatrixPlot):
 
         if data.isnull().any().any():
             raise ValueError("dataframe contains NaN")
-        
+
         return("plot = seaborn.clustermap(data, "
                "cmap=color_scheme)")
-
-
