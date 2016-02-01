@@ -1193,16 +1193,17 @@ class TransformerPivot(Transformer):
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        self.pivot_index = kwargs.get("pivot-index", None)
-        self.pivot_column = kwargs.get("pivot-column", None)
-        self.pivot_value = kwargs.get("pivot-value", None)
+        def _get_value(name):
+            v = kwargs.get("pivot-{}".format(name), None)
+            if v is None:
+                raise ValueError('pivot requires a column to use as {}'.format(name))
+            if "," in v:
+                v = [x.strip() for x in v.split(",")]
+        return v
 
-        if self.pivot_index is None:
-            raise ValueError('pivot requires a column to use as index')
-        if self.pivot_column is None:
-            raise ValueError('pivot requires a column to use as column')
-        if self.pivot_value is None:
-            raise ValueError('pivot requires a column to use as value')
+        self.pivot_index = _get_value("index")
+        self.pivot_index = _get_value("column")
+        self.pivot_index = _get_value("value")
 
     def __call__(self, data):
         ''' returns a melted table'''
