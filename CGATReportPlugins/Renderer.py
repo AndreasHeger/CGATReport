@@ -1201,6 +1201,10 @@ class Status(Renderer):
     the status report.
     '''
 
+    options = Renderer.options +\
+        (('no-legend', directives.unchanged),)
+
+
     # read complete data
     nlevels = -1
 
@@ -1213,6 +1217,14 @@ class Status(Renderer):
                       'NA': "not_available.png",
                       'WARNING': "warning.png",
                       'WARN': "warning.png"}
+
+    display_legend = True
+
+    def __init__(self, *args, **kwargs):
+        
+        Renderer.__init__(self, *args, **kwargs)
+        if "no-legend" in kwargs:
+            self.display_legend = False
 
     def __call__(self, dataframe, path):
 
@@ -1256,12 +1268,13 @@ class Status(Renderer):
 
         lines.append("")
 
-        lines.append(".. glossary::")
-        lines.append("")
+        if self.display_legend:
+            lines.append(".. glossary::")
+            lines.append("")
 
-        for test, description in descriptions.items():
-            lines.append('%s\n%s\n' % (Utils.indent(test, 3),
-                                       Utils.indent(description, 6)))
+            for test, description in descriptions.items():
+                lines.append('%s\n%s\n' % (Utils.indent(test, 3),
+                                           Utils.indent(description, 6)))
 
         return ResultBlocks(ResultBlock("\n".join(lines), title=""))
 

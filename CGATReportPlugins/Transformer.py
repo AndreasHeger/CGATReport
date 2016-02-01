@@ -1171,7 +1171,7 @@ class TransformerMelt(Transformer):
 
 
 class TransformerPivot(Transformer):
-    '''pivot a table.
+    '''pivot a table using pandas.pivot_table.
 
     Requires to define three columns in the
     dataframe to determine the row labels,
@@ -1194,23 +1194,26 @@ class TransformerPivot(Transformer):
         Transformer.__init__(self, *args, **kwargs)
 
         def _get_value(name):
-            v = kwargs.get("pivot-{}".format(name), None)
-            if v is None:
-                raise ValueError('pivot requires a column to use as {}'.format(name))
+
+            c = "pivot-{}".format(name)
+            if c not in kwargs:
+                raise ValueError('pivot requires a column to use as {} (--{})'
+                                 .format(name, c))
+            # convert to string, otherwise it is
+            # docutils.nodes.reprunicode which does not evaluate as a
+            # scalar in numpy and causes df.pivot() to fail.
+            v = str(kwargs[c])
             if "," in v:
                 v = [x.strip() for x in v.split(",")]
-        return v
+            return v
 
         self.pivot_index = _get_value("index")
         self.pivot_index = _get_value("column")
         self.pivot_index = _get_value("value")
 
     def __call__(self, data):
-        ''' returns a melted table'''
-        # merge index into dataframe
-        # pivot
-
-        return data.reset_index().pivot(
+        return pandas.pivot_table(
+            data.reset_index(),
             index=self.pivot_index,
             columns=self.pivot_column,
             values=self.pivot_value)

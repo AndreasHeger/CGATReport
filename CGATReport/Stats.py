@@ -750,12 +750,15 @@ def doMannWhitneyUTest(xvals, yvals):
     if len(xvals) == 0 or len(yvals) == 0:
         result = Result()
     else:
-        r_result = R['wilcox.test'](xvals, yvals, paired=False)
-        result = Result().fromR(
-            (("pvalue", 'p.value'),
-             ('alternative', None),
-             ('method', None)),
-            r_result)
+        if R:
+            r_result = R['wilcox.test'](xvals, yvals, paired=False)
+            result = Result().fromR(
+                (("pvalue", 'p.value'),
+                 ('alternative', None),
+                 ('method', None)),
+                r_result)
+        else:
+            raise ValueError("rpy2 not available")
 
     result.xobservations = len(xvals)
     result.yobservations = len(yvals)

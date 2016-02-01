@@ -36,6 +36,14 @@ optional pdf support
 Release Notes
 =============
 
+Version 0.3
+===========
+
+Numerous changes and bugfixes, such as:
+ 
+* ipython notebook integration
+* switch to pandas dataframes for data manipulation
+
 Version 0.2.1
 =============
 

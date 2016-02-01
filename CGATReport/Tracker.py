@@ -22,12 +22,6 @@ import sqlalchemy
 import sqlalchemy.exc as exc
 import sqlalchemy.engine
 
-# for rpy2 for data frames
-try:
-    from rpy2.robjects import r as R
-except ImportError:
-    R = None
-
 from CGATReport import Utils
 from CGATReport import Stats
 
