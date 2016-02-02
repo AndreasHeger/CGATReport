@@ -426,6 +426,8 @@ def asDataFrame(data):
         path_lengths = []
         levels = []
         for path, dataframe in leaves:
+            if len(dataframe) == 0:
+                continue
             path_lengths.append(len(path))
             if len(path) == 1:
                 # if only one level, do not use tuple

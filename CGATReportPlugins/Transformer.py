@@ -1208,8 +1208,8 @@ class TransformerPivot(Transformer):
             return v
 
         self.pivot_index = _get_value("index")
-        self.pivot_index = _get_value("column")
-        self.pivot_index = _get_value("value")
+        self.pivot_column = _get_value("column")
+        self.pivot_value = _get_value("value")
 
     def __call__(self, data):
         return pandas.pivot_table(

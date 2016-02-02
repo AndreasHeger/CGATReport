@@ -1202,8 +1202,8 @@ class Status(Renderer):
     '''
 
     options = Renderer.options +\
-        (('no-legend', directives.unchanged),)
-
+        (('columns', directives.unchanged),
+         ('no-legend', directives.unchanged),)
 
     # read complete data
     nlevels = -1
@@ -1220,11 +1220,15 @@ class Status(Renderer):
 
     display_legend = True
 
+    columns = ["track", "test", "image", "status", "info"]
+
     def __init__(self, *args, **kwargs):
-        
+
         Renderer.__init__(self, *args, **kwargs)
         if "no-legend" in kwargs:
             self.display_legend = False
+        if "columns" in kwargs:
+            self.columns = [x.strip() for x in kwargs["columns"].split(",")]
 
     def __call__(self, dataframe, path):
 
@@ -1246,27 +1250,32 @@ class Status(Renderer):
         lines.append(".. csv-table:: %s" % "table")
         lines.append('   :header: "Track", "Test", "", "Status", "Info"')
         lines.append('')
-
+        rows = []
         for index, values in dataframe.iterrows():
             testname = values['name']
-            description = values['description']
-            info = values['info']
             status = values['status']
-            track = path2str(index)
-
-            descriptions[testname] = description
-
             try:
-                image = ".. image:: %s" %\
-                    os.path.join(dirname, self.map_code2image[status.upper()])
+                image = ".. image:: {}\n    :width: 32".format(
+                    os.path.join(dirname,
+                                 self.map_code2image[status.upper()]))
             except KeyError:
                 image = ""
 
-            lines.append(
-                '   "%(track)s", ":term:`%(testname)s`", "%(image)s", "%(status)s", "%(info)s"' %
-                locals())
+            rows.append({
+                "test": testname,
+                "description": values["description"],
+                "info": values['info'],
+                "status": status,
+                "track": path2str(index),
+                "image": image,
+            })
+            descriptions[testname] = values["description"]
 
-        lines.append("")
+        # filter and sort table
+        table = [self.columns]
+        table.extend([[row[x] for x in self.columns] for row in rows])
+
+        lines = Utils.table2rst(table).split("\n")
 
         if self.display_legend:
             lines.append(".. glossary::")
