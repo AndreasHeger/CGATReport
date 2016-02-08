@@ -12,6 +12,7 @@ access to several plotting frontends.
    :maxdepth: 2
 
    GalleryTabular.rst
+   GalleryMatplotlibPlots.rst
    GallerySeaborn.rst
    GalleryGGPlot.rst
    GalleryPDPlot.rst

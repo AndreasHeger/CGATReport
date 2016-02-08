@@ -107,6 +107,7 @@ def getOptionMap():
                     options[section].update(dict(cls.options))
                 except AttributeError:
                     pass
+
         options["dispatch"] = {
             'groupby': directives.unchanged,
             'tracks': directives.unchanged,
@@ -137,6 +138,9 @@ def getOptionMap():
             'transform': directives.unchanged,
             'display': directives.unchanged,
             'extra-formats': directives.unchanged,
+            'no-caption': directives.flag,
+            'no-title': directives.flag,
+            'no-links': directives.flag,
         }
 
     return options
@@ -145,7 +149,8 @@ def getOptionMap():
 def getOptionSpec():
     '''build option spec for sphinx
 
-    This method returns a flattened:var:`options`.
+    This method returns a flattened :var:`options`
+    dictionary.
     '''
     o = getOptionMap()
     r = {}
@@ -155,5 +160,4 @@ def getOptionSpec():
     # add the primary actor options
     r["render"] = directives.unchanged
     r["transform"] = directives.unchanged
-
     return r

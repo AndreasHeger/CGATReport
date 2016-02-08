@@ -5,7 +5,7 @@ XVFB=xvfb-run -a
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = $(BINDIR)build.py --num-jobs=4 sphinx-build
+SPHINXBUILD   = $(BINDIR)build.py --num-jobs=4 sphinx-build -j 4
 SPHINXCLEAN   = $(BINDIR)clean.py
 PAPER         =
 

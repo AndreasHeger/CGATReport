@@ -117,7 +117,7 @@ Bar-Plot
    :width: 200
    :groupby: slice
 
-   Group by slice (default)
+   Group by track
 
 .. report:: Trackers.LabeledDataExample
    :render: interleaved-bar-plot
@@ -125,7 +125,7 @@ Bar-Plot
    :width: 200
    :groupby: track
 
-   Group by track
+   Group by slice
 
 .. report:: Trackers.LabeledDataExample
    :render: interleaved-bar-plot
@@ -230,7 +230,6 @@ number of levels.
    :layout: row
 
    Group by first three levels
-
 
 Grouping by named levels
 ------------------------

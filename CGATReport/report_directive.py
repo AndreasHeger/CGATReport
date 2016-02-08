@@ -137,9 +137,7 @@ def run(arguments,
     transformer_names = []
     renderer_name = None
 
-    # get layout option
     layout = options.get("layout", "column")
-
     option_map = Component.getOptionMap()
     renderer_options = Utils.selectAndDeleteOptions(
         options, option_map["render"])
@@ -179,7 +177,8 @@ def run(arguments,
             str(transformer_options) +\
             str(dispatcher_options) +\
             str(tracker_options) +\
-            str(transformer_names)
+            str(transformer_names) +\
+            str(content)
 
         options_hash = hashlib.md5(options_key.encode()).hexdigest()
 
@@ -411,14 +410,14 @@ def run(arguments,
 
     # render the output taking into account the layout
     lines = Utils.layoutBlocks(blocks, layout)
+    lines.append("")
 
     # add caption
-    if content:
+    import pdb; pdb.set_trace()
+    if content and "no-caption" not in display_options:
         lines.extend(['::', ''])
         lines.extend(['    %s' % row.strip() for row in content])
         lines.append("")
-
-    lines.append("")
 
     # output rst text for this renderer
     if filename_text:
@@ -501,6 +500,8 @@ def setup(app):
     setup.srcdir = app.srcdir
     setup.builddir = os.getcwd()
     app.add_directive('report', report_directive)
+
+    return {'parallel_read_safe': True}
 
 directives.register_directive('report', report_directive)
 

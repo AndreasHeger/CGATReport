@@ -75,6 +75,23 @@ directive.
       define and optional keyword argument options. Note that 
       using this option will bypass caching.
 
+    no-caption
+      flag
+
+      do not add the figure caption to the output.
+
+    no-title
+      flag
+
+      do not plot title to the output.
+
+    no-link-bar
+      flag
+
+      do not output the link bar for a plot.
+
+
+
 
 
 .. _Common plot options:
