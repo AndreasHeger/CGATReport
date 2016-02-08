@@ -24,7 +24,7 @@ from CGATReport.ResultBlock import ResultBlocks
 CGATREPORT_DEBUG = "CGATREPORT_DEBUG" in os.environ
 
 TEMPLATE_TEXT = """
-.. htmlonly::
+.. only:: html
 
    [%(code_url)s %(nb_url)s]
 
@@ -411,11 +411,10 @@ def run(arguments,
 
     # render the output taking into account the layout
     lines = Utils.layoutBlocks(blocks, layout)
-    lines.append("")
 
     # add caption
-    lines.extend(['::', ''])
     if content:
+        lines.extend(['::', ''])
         lines.extend(['    %s' % row.strip() for row in content])
         lines.append("")
 

@@ -582,7 +582,7 @@ class Plotter(object):
         if len(labels) == 0:
             return
 
-        maxlen = max([len(x) for x in labels])
+        maxlen = max([len(str(x)) for x in labels])
         if maxlen > cliplen:
             currentAxes = plt.gca()
             currentAxesPos = currentAxes.get_position()

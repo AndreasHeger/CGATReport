@@ -1129,7 +1129,7 @@ def buildRstWithImage(outname,
         if text is not None:
 
             template = '''
-.. htmlonly::
+.. only:: html
 
    .. raw:: html
 
@@ -1137,7 +1137,7 @@ def buildRstWithImage(outname,
          %(outname)s
       <p><div>
 
-   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
+   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s %(extra_images)s]
 '''
             # put text in outname
             outname = indent(text, 6)
@@ -1145,12 +1145,12 @@ def buildRstWithImage(outname,
         elif is_html:
             # put in html
             template = '''
-.. htmlonly::
+.. only:: html
 
    .. raw:: html
       :file: %(outname)s
 
-   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
+   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s %(extra_images)s]
 '''
             # use absolute path for html file
             outname = os.path.abspath(os.path.join(outdir, outname)) + ".html"
@@ -1158,12 +1158,17 @@ def buildRstWithImage(outname,
         else:
             # put in image directive
             template = '''
-.. htmlonly::
+.. only:: html
 
    .. image:: %(linked_image)s
 %(image_options)s
 
-   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s  %(extra_images)s]
+   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s %(extra_images)s]
+
+.. only:: pdf
+
+   .. image:: %(linked_image)s
+%(image_options)s
 '''
             linked_image = imagepath + ".%s" % format
         #######################################################
@@ -1198,7 +1203,7 @@ def buildRstWithImage(outname,
     if CGATReport.Config.LATEX_IMAGE_FORMAT:
         id, format, dpi = CGATReport.Config.LATEX_IMAGE_FORMAT
         template = '''
-.. latexonly::
+.. only:: latex
 
    .. image:: %(linked_image)s
 %(image_options)s

@@ -369,7 +369,7 @@ class PlainSlideShow(Renderer):
         lines.append("""</div>""")
 
         lines = "\n".join(lines).split("\n")
-        lines = [".. htmlonly::\n"] +\
+        lines = [".. only::html\n"] +\
             ["   .. raw:: html\n"] +\
             ["      " + x for x in lines]
 
