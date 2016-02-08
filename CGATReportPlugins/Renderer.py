@@ -461,8 +461,9 @@ class TableBase(Renderer):
                             c = ws.cell(row=row + 2,
                                         column=column + 2)
                             c.value = value
-                # patch: maximum title length seems to be 31
-                ws.title = re.sub("/", "_", title)[:30]
+                if title:
+                    # patch: maximum title length seems to be 31
+                    ws.title = re.sub("/", "_", title)[:30]
 
         if len(wb.worksheets) == 0:
             wb.create_sheet()
@@ -705,7 +706,7 @@ class XlsTable(Table):
         col_headers = dataframe.columns
         results.append(self.asSpreadSheet(dataframe, row_headers,
                                           col_headers, title))
-
+        
         return results
 
 
