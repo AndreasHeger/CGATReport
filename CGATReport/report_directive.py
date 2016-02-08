@@ -504,7 +504,7 @@ def setup(app):
     setup.builddir = os.getcwd()
     app.add_directive('report', report_directive)
 
-    return {'parallel_read_safe': True}
+    # return {'parallel_read_safe': True}
 
 directives.register_directive('report', report_directive)
 
