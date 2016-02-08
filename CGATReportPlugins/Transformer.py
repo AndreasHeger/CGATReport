@@ -1184,11 +1184,13 @@ class TransformerPivot(Transformer):
         (('pivot-index', directives.unchanged),
          ('pivot-column', directives.unchanged),
          ('pivot-value', directives.unchanged),
+         ('missing-value', directives.unchanged),
          )
 
     pivot_index = None
     pivot_column = None
     pivot_value = None
+    missing_value = None
 
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
@@ -1210,10 +1212,21 @@ class TransformerPivot(Transformer):
         self.pivot_index = _get_value("index")
         self.pivot_index = _get_value("column")
         self.pivot_index = _get_value("value")
+        self.missing_value = kwargs.get("missing-value", None)
 
     def __call__(self, data):
-        return pandas.pivot_table(
+
+        df = pandas.pivot_table(
             data.reset_index(),
             index=self.pivot_index,
             columns=self.pivot_column,
             values=self.pivot_value)
+
+        if self.missing_value is not None:
+            try:
+                v = float(self.missing_value)
+            except ValueError:
+                v = self.missing_value
+            df.fillna(v, inplace=True)
+
+        return df
