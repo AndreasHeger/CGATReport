@@ -22,7 +22,7 @@ For example, see the layout of the plot below:
    :width: 200
    :groupby: track
 
-   This is the caption.
+   Default plot layout.
 
 The flag :term:`no-caption` turns off the caption of a
 plot.
@@ -32,6 +32,7 @@ plot.
    :layout: row
    :width: 200
    :groupby: track
+   :no-caption:
 
    This is the caption, but it will not be shown.
 
@@ -45,7 +46,7 @@ individual plot elements.
    :groupby: track
    :no-title:
 
-   This is the caption.
+   Plots without title bars.
 
 The flag :term:`no-links` turns off the links associated
 with a particular plot.
@@ -57,4 +58,4 @@ with a particular plot.
    :groupby: track
    :no-links:
 
-   This is the caption.
+   Plots without link element.

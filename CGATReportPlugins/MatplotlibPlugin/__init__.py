@@ -162,5 +162,5 @@ class MatplotlibPlugin(Component):
                 text=script_text)
 
             map_figure2text["#$mpl %i$#" % figid] = rst_output
-
+            
         return map_figure2text

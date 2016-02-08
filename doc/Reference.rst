@@ -85,14 +85,10 @@ directive.
 
       do not plot title to the output.
 
-    no-link-bar
+    no-links
       flag
 
       do not output the link bar for a plot.
-
-
-
-
 
 .. _Common plot options:
 

@@ -34,6 +34,10 @@ DictionaryTypes = (dict, odict)
 # This is important for the User Tracker
 TrackerKeywords = set(("text", "rst", "xls",))
 
+# Options for rst image directive that will get passed through
+# unchanged.
+ImageOptions = set(("alt", "height", "width", "scale", "class"))
+
 # Taken from numpy.scalartype, but removing the types object and unicode
 # None is allowed to represent missing values. numpy.float128 is a recent
 # numpy addition.
@@ -402,7 +406,7 @@ def getImageOptions(display_options=None, indent=0):
         return "\n".join(
             ['%s:%s: %s' % (indent, key, val)
              for key, val in display_options.items()
-             if key not in ('format', 'extra-formats', 'display')])
+             if key in ImageOptions])
     else:
         return ''
 
@@ -1165,6 +1169,9 @@ def buildRstWithImage(outname,
 
     image_options = getImageOptions(display_options, indent=6)
 
+    url_template = ("[%(code_url)s %(nb_url)s %(rst_url)s "
+                    "%(data_url)s %(extra_images)s]")
+    
     if CGATReport.Config.HTML_IMAGE_FORMAT:
 
         if default_format:
@@ -1185,7 +1192,7 @@ def buildRstWithImage(outname,
          %(outname)s
       <p><div>
 
-   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s %(extra_images)s]
+   %(url)s
 '''
             # put text in outname
             outname = indent(text, 6)
@@ -1198,7 +1205,7 @@ def buildRstWithImage(outname,
    .. raw:: html
       :file: %(outname)s
 
-   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s %(extra_images)s]
+   %(url)s
 '''
             # use absolute path for html file
             outname = os.path.abspath(os.path.join(outdir, outname)) + ".html"
@@ -1211,7 +1218,7 @@ def buildRstWithImage(outname,
    .. image:: %(linked_image)s
 %(image_options)s
 
-   [%(code_url)s %(nb_url)s %(rst_url)s %(data_url)s %(extra_images)s]
+   %(url)s
 
 .. only:: pdf
 
@@ -1245,6 +1252,11 @@ def buildRstWithImage(outname,
         if "rst" in urls and links["rst_url"] is not None:
             rst_url = ":download:`rst <%(rst_url)s>`" % links
 
+        if "no-links" not in display_options:
+            url = url_template % locals()
+        else:
+            url = ""
+        
         rst_output += template % locals()
 
     # treat latex separately

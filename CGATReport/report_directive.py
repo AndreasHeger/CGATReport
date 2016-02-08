@@ -404,8 +404,12 @@ def run(arguments,
     if "notebook" in urls:
         nb_url = ":download:`nb <%(notebook_url)s>`" % links
 
-    map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
+    map_figure2text["default-prefix"] = ""
     map_figure2text["default-suffix"] = ""
+
+    if "no-links" not in display_options:
+        map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
+
     blocks.updatePlaceholders(map_figure2text)
 
     # render the output taking into account the layout
@@ -413,7 +417,6 @@ def run(arguments,
     lines.append("")
 
     # add caption
-    import pdb; pdb.set_trace()
     if content and "no-caption" not in display_options:
         lines.extend(['::', ''])
         lines.extend(['    %s' % row.strip() for row in content])
