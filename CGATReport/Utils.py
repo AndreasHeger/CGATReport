@@ -817,6 +817,54 @@ def getTemplatesDir():
     return os.path.join(os.path.dirname(__file__), "templates")
 
 
+def normalize_cell(s, length):
+    return s + ((length - len(s)) * ' ')
+
+
+def table_div(num_cols, col_width, header_flag):
+    if header_flag == 1:
+        return num_cols*('+' + (col_width)*'=') + '+\n'
+    else:
+        return num_cols*('+' + (col_width)*'-') + '+\n'
+
+
+def table2rst(table):
+    """convert a table (list of lists) to rst table.
+    """
+    cell_width = 2 + max(
+        reduce(lambda x,y: x+y,
+               [[max(map(len, str(item).split('\n'))) for item in row]
+                for row in table], []))
+    num_cols = len(table[0])
+    rst = table_div(num_cols, cell_width, 0)
+    header_flag = 1
+    for row in table:
+        split_row = [str(cell).split('\n') for cell in row]
+        lines_remaining = 1
+
+        while lines_remaining > 0:
+            normalized_cells = []
+            lines_remaining = 0
+            for cell in split_row:
+                lines_remaining += len(cell)
+
+                if len(cell) > 0:
+                    normalized_cell = normalize_cell(
+                        str(cell.pop(0)), cell_width - 1)
+                else:
+                    normalized_cell = normalize_cell(
+                        '', cell_width - 1)
+
+                normalized_cells.append(normalized_cell)
+
+            rst = rst + '| ' + '| '.join(normalized_cells) + '|\n'
+
+        rst = rst + table_div(num_cols, cell_width, header_flag)
+        header_flag = 0
+
+    return rst
+
+
 def layoutBlocks(blocks, layout="column"):
     """layout blocks of rst text.
 
