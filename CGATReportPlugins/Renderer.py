@@ -773,7 +773,6 @@ class GlossaryTable(Table):
 
 
 class MatrixBase:
-
     '''base class for matrices.
 
     This base class provides utility functions for rectangular 2D matrices.
@@ -1128,7 +1127,8 @@ class TableMatrix(TableBase, MatrixBase):
     group_level = "all"
 
     options = TableBase.options +\
-        (('transform-matrix', directives.unchanged),)
+              (('full-row-labels', directives.unchanged),
+               ('transform-matrix', directives.unchanged),)
 
     # wether or not to convert matrix to float
     tofloat = False
@@ -1137,6 +1137,8 @@ class TableMatrix(TableBase, MatrixBase):
 
         TableBase.__init__(self, *args, **kwargs)
         MatrixBase.__init__(self, *args, **kwargs)
+
+        self.normalize_row_labels = "full-row-labels" not in kwargs
 
     def buildMatrix(self,
                     dataframe,
@@ -1148,7 +1150,14 @@ class TableMatrix(TableBase, MatrixBase):
         This method will also apply conversions if apply_transformations
         is set.
         """
-        rows = map(path2str, dataframe.index)
+        
+        if self.normalize_row_labels:
+            drop = [x for x, y in enumerate(dataframe.index.labels)
+                    if len(set(y)) == 1]
+            rows = map(path2str, dataframe.index.droplevel(drop))
+        else:
+            rows = map(path2str, dataframe.index)
+
         columns = list(dataframe.columns)
         # use numpy.matrix - permits easier broadcasting
         # for normalization.
@@ -1309,13 +1318,14 @@ class User(DataTreeRenderer):
 
     """Renderer for user-implemented rendering.
 
-    The renderer itself creates no output, but returns the results
-    of the tracker.
+    The renderer itself creates no output, but returns the results of
+    the tracker.
 
     When called, a Renderer and its subclasses will return blocks of
-    restructured text. Images are automatically collected from matplotlib
-    and other renderers from active graphics devices and inserted at
-    the place-holders.
+    restructured text. Images are automatically collected from
+    matplotlib and other renderers from active graphics devices and
+    inserted at the place-holders.
+
     """
 
     def __init__(self, *args, **kwargs):
