@@ -51,16 +51,19 @@ class RPlotData(Tracker):
         # do the plotting
         R.x11()
         R.plot(s, s)
-        return odict((("text", "#$rpl %i$#" % getCurrentRDevice()),))
+        r = {"text": "#$rpl %i$#" % getCurrentRDevice()}
+        return r
 
 IMAGEDIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "images")
 
 
 class Images(Tracker):
+
     tracks = glob.glob(os.path.join(IMAGEDIR, "*.png"))
 
     def __call__(self, track, slice=None):
+
         rst_text = '''
 This is a preface
 
@@ -68,7 +71,7 @@ This is a preface
 
 Some more text for the figure\n''' % track
 
-        return odict((("rst", rst_text),))
+        return {"rst": rst_text}
 
 
 class Images2(Tracker):
@@ -81,10 +84,11 @@ class Images2(Tracker):
 
         block = '''
 .. figure:: %(image)s
-:height: 300
+   :height: 300
 '''
         for image in glob.glob(os.path.join(IMAGEDIR, "*.png")):
             blocks.append(ResultBlock(text=block % locals(),
                                       title="image"))
 
-        return odict((("rst", "\n".join(Utils.layoutBlocks(blocks, layout="columns-2"))),))
+        return odict((("rst", "\n".join(
+            Utils.layoutBlocks(blocks, layout="columns-2"))),))

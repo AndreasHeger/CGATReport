@@ -48,7 +48,7 @@ class RPlotPlugin(Component):
         returns a map of place holder to placeholder text.
         '''
         # disable plotting if no rpy installed
-        if R == None:
+        if R is None:
             return {}
 
         map_figure2text = {}

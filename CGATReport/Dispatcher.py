@@ -41,11 +41,14 @@ class Dispatcher(Component.Component):
 
     """
 
-    def __init__(self, tracker, renderer,
+    def __init__(self,
+                 tracker,
+                 renderer,
                  transformers=None):
-        '''render images using an instance of a:class:`Tracker.Tracker`
-        to obtain data, an optional:class:`Transformer` to transform
-        the data and a:class:`Renderer.Renderer` to render the output.
+        '''render images using an instance of a:class:`Tracker.Tracker` to
+        obtain data, an optional:class:`Transformer` to transform the
+        data and a:class:`Renderer.Renderer` to render the output.
+
         '''
         Component.Component.__init__(self)
 
@@ -83,6 +86,11 @@ class Dispatcher(Component.Component):
         # 1: group on second level ('groupby=slice')
         # n: group on n-th level
         self.group_level = 0
+
+        # no caching for user renderers, figure needs
+        # to be created for collection.
+        if isinstance(renderer, Renderer.User):
+            self.nocache = True
 
     def __del__(self):
         pass
@@ -134,7 +142,8 @@ class Dispatcher(Component.Component):
         self.tracker_options = kwargs.get("tracker", None)
 
     def getData(self, path):
-        """get data for track and slice. Save data in persistent cache for further use.
+        """get data for track and slice. Save data in persistent cache for
+        further use.
 
         For functions, path should be an empty tuple.
         """

@@ -33,6 +33,8 @@ The plots are inserted  within a document as::
 
 .. report:: UserTrackers.MatplotlibData
    :render: user
+   :layout: column-3
+   :nocache:
 
    Plot using matplotlib
 
@@ -52,6 +54,7 @@ the current plot. Note the use of the convenience function
 
 .. report:: UserTrackers.RPlotData
    :render: user
+   :layout: column-3
 
    Plot using R
 

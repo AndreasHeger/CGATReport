@@ -54,7 +54,8 @@ def ExampleWithData(data, path):
     N = 5
     ind = np.arange(N)    # the x locations for the groups
     width = 0.35       # the width of the bars: can also be len(x) sequence
-
+    
+    ax = plt.figure()
     p1 = plt.bar(ind,
                  data["menMeans"],
                  width,
@@ -75,5 +76,5 @@ def ExampleWithData(data, path):
 
     # return a place holder for this figure
     return ResultBlocks(
-        ResultBlock("#$mpl 0$#\n", ""),
+        ResultBlock("#$mpl 1$#\n", ""),
         title="MyTitle")

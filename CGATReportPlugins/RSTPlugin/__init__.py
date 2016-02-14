@@ -70,7 +70,6 @@ class RSTPlugin(Component):
                 n = []
                 for l in lines:
                     ll = l
-
                     for x in self.rx_img.finditer(ll):
                         directive, filename = x.groups()
                         relpath = os.path.relpath(

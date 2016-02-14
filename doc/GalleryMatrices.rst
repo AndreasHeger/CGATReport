@@ -39,8 +39,7 @@ following options:
       * *sort* : sort matrix rows and columns alphanumerically.
       * *filter-by-rows*: only keep columns that are also present in rows
       * *filter-by-cols*: only keep columns that are also present in cols
-      * *square*: make matrix square by only keeping rows that
-	 are also columns and vice versa.
+      * *square*: make matrix square, select only subset of shared rows/columns.
       * *add-row-total* : add the row total as as another column
       * *add-column-total* : add the row total as another row
 
@@ -50,6 +49,13 @@ following options:
       show table, even if it is very large. By default, large
       tables are displayed in a separate page and only a link
       is inserted into the document.
+
+   full-row-labels
+      flag
+
+      by default, row names are normalized to remove those levels
+      that contain only a single value. Setting full-row-labels
+      will retain these levels.
 
 .. _matrix-plot:
 
@@ -105,6 +111,19 @@ Options
       flag
 
       produce plot without annotting the row or column axes.
+
+Normalization of row names
+--------------------------
+
+.. report:: Trackers.LabeledDataExample
+   :render: matrix-plot
+   :layout: row
+   :width: 200
+   :groupby: track
+   :layout: column-3
+
+   Split matrix by track. Note that row labels are shortened.
+
 
 Plotting large matrices
 -----------------------
