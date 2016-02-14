@@ -230,7 +230,7 @@ class Plotter(object):
         self.xformat = kwargs.get("xformat", None)
         self.yformat = kwargs.get("yformat", None)
 
-        self.xticks_max_length = int(kwargs.get('xticks_max_length',
+        self.xticks_max_length = int(kwargs.get('xticks-max-chars',
                                                 self.xticks_max_length))
         self.xticks_action = kwargs.get('xticks_action',
                                         'number')
