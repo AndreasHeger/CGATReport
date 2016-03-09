@@ -228,6 +228,8 @@ setup(name='CGATReport',
               'CGATReportPlugins.Renderer:NumpyMatrix',
               'render-status='
               'CGATReportPlugins.Renderer:Status',
+              'render-status-matrix='
+              'CGATReportPlugins.Renderer:StatusMatrix',
               'render-line-plot='
               'CGATReportPlugins.Plotter:LinePlot',
               # for backwards compatibility

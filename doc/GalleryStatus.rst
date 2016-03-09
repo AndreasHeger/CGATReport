@@ -75,3 +75,49 @@ Options
       also determines the order. Valid columns are
       "track", "test", "image", "status" and "info".
 
+
+.. _status-matrix:
+
+=============
+status-matrix
+=============
+
+:class:`CGATReportPlugins.Renderer.StatusMatrix` outputs a condensed
+version of the :term:`status` table.
+
+.. report:: Trackers.StatusTracker 
+   :render: status-matrix
+
+   A simple status report.
+
+The table can be compacted by grouping with ``:groupby: all``.
+
+.. report:: Trackers.StatusTracker 
+   :render: status-matrix
+   :groupby: all
+
+   The whole matrix grouped.
+
+The table can be rotated using the :term:`transpose` option:
+
+.. report:: Trackers.StatusTracker 
+   :render: status-matrix
+   :groupby: all
+   :transpose:
+
+   The table transposed.
+
+Options
+-------
+
+:class:`CGATReportPlugins.Renderer.Status` understands the 
+:ref:`common plot options` and the following options:
+
+.. glossary::
+   :sorted:
+
+   :transpose:
+      flag
+
+      Transpose the matrix before outputting.
+

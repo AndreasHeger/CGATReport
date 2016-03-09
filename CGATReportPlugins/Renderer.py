@@ -278,6 +278,7 @@ class TableBase(Renderer):
          ('large-rows', directives.length_or_unitless),
          ('max-cols', directives.length_or_unitless),
          ('large-html-class', directives.unchanged),
+         ('add-rowindex', directives.unchanged),
          ('html-class', directives.unchanged))
 
     max_rows = 50
@@ -290,6 +291,7 @@ class TableBase(Renderer):
         self.separate = "separate" in kwargs
         self.max_rows = kwargs.get("max-rows", 50)
         self.max_cols = kwargs.get("max-cols", 20)
+        self.add_rowindex = "add-rowindex" in kwargs
         self.html_class = kwargs.get(
             'html-class',
             Utils.PARAMS.get('report_table_class',
@@ -533,7 +535,6 @@ class Table(TableBase):
     '''
     options = TableBase.options +\
         (('transpose', directives.unchanged),
-         ('add-rowindex', directives.unchanged),
          ('add-percent', directives.unchanged),
          ('head', directives.length_or_unitless),
          ('large', directives.unchanged),
@@ -548,7 +549,6 @@ class Table(TableBase):
         TableBase.__init__(self, *args, **kwargs)
 
         self.transpose = "transpose" in kwargs
-        self.add_rowindex = "add-rowindex" in kwargs
         self.large = kwargs.get("large", "html")
         self.preview = "preview" in kwargs
         self.add_percent = kwargs.get('add-percent', None)
@@ -1201,7 +1201,6 @@ class NumpyMatrix(TableMatrix, MatrixBase):
 
 
 class Status(Renderer):
-
     '''Renders a status report.
 
     A status report is a two element table containing
@@ -1296,6 +1295,57 @@ class Status(Renderer):
                                            Utils.indent(description, 6)))
 
         return ResultBlocks(ResultBlock("\n".join(lines), title=""))
+
+
+class StatusMatrix(Status, TableBase):
+    '''Renders a status matrix.
+
+    A status matrix is a rectangular matrix displaying icons for
+    status flags ('PASS', 'FAIL', 'WARNING', 'NA').
+
+    '''
+    options = Status.options + TableBase.options +\
+              (('transpose', directives.unchanged),)
+
+    # For backwards compatibility, group by slice (test function)
+    # and not track (data track) by default.
+    group_level = None
+
+    transpose = False
+
+    def __init__(self, *args, **kwargs):
+        TableBase.__init__(self, *args, **kwargs)
+        Status.__init__(self, *args, **kwargs)
+
+        self.transpose = "transpose" in kwargs
+
+    def __call__(self, dataframe, path):
+
+        dirname = os.path.join(os.path.dirname(
+            sys.modules["CGATReport"].__file__), "images")
+
+        dataframe["status"] = [
+            ".. image:: {}\n    :width: 32".format(
+                os.path.join(dirname,
+                             self.map_code2image.get(x.upper(), "NA")))
+            for x in dataframe["status"]]
+            
+        table = dataframe.reset_index().pivot(
+            index="track",
+            columns="slice",
+            values="status")
+
+        if self.transpose:
+            table = table.transpose()
+            # flatten the column index if it is hierarchical
+            is_hierarchical = isinstance(table.columns,
+                                         pandas.core.index.MultiIndex)
+            if is_hierarchical:
+                table.columns = ["/".join(x) for x in table.columns]
+
+        results = ResultBlocks()
+        results.append(self.asCSV(table, [], [], path2str(path)))
+        return results
 
 
 class DataTreeRenderer(object):
