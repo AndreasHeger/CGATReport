@@ -404,3 +404,18 @@ class VennTracker(Tracker):
                     '011': 10, '110': 20 * f, '101': 5 * f,
                     '111': 10,
                     'labels': ("SetA", "SetB", "SetC")}
+
+class ImageOnly(Tracker):
+    
+    def __call__(self):
+        return {'filename': ["images/figure1.png", 
+                             "images/figure2.png"]}
+
+
+class ImageWithName(Tracker):
+    
+    def __call__(self):
+        return {'filename': ["images/figure1.png", 
+                             "images/figure2.png"],
+                'name': ['image A', 'image B']}
+    

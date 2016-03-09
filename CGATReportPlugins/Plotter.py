@@ -2315,13 +2315,6 @@ class GalleryPlot(PlotByRow):
                 "no 'filename' key in path %s" % (path2str(path)))
             return blocks
 
-        try:
-            # return value is a series
-            name = dataseries['name']
-        except KeyError:
-            self.warn("no 'name' key in path %s" % (path2str(path)))
-            return blocks
-
         rst_text = '''.. figure:: %(filename)s
 '''
 
@@ -2365,6 +2358,9 @@ class GalleryPlot(PlotByRow):
 
             plts.append(plt.imshow(data))
             ax.set_position([0, 0, 1, 1])
+
+        if "name" in dataseries:
+            path = dataseries['name']
 
         blocks = ResultBlocks(ResultBlock("\n".join(
             ("#$mpl %i$#" % (self.mFigure),

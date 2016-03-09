@@ -461,7 +461,7 @@ class TrackerImages(Tracker):
 
     def __call__(self, track, **kwargs):
         """return a data structure for track:param: track and slice:slice:"""
-        return odict((('name', track), ('filename', track)))
+        return {'filename': track}
 
 
 class TrackerSQL(Tracker):
