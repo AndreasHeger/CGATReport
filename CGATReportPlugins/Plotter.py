@@ -10,7 +10,7 @@ import pandas
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
-from CGATReport.DataTree import path2str
+from CGATReport.DataTree import path2str, str2path
 from CGATReport import DataTree, Stats, Utils
 
 from collections import OrderedDict as odict
@@ -66,6 +66,24 @@ def parseRanges(r):
     return r
 
 
+def normalize_legends(original_legends):
+
+    s = [path2str(x) for x in original_legends]
+    paths = [str2path(x) for x in s]
+
+    lengths = [len(x) for x in paths]
+    assert min(lengths) == max(lengths)
+
+    levels = zip(*paths)
+    pruned_levels = [x for x in levels if len(set(x)) > 1]
+    
+    new_legends = [path2str(x) for x in zip(*pruned_levels)]
+    if len(new_legends) != len(original_legends):
+        return old_legends
+    else:
+        return new_legends
+
+
 class Plotter(object):
 
     """Base class for Renderers that do simple 2D plotting.
@@ -79,37 +97,37 @@ class Plotter(object):
 
     This class adds the following options to the:term:`report` directive:
 
-:term:`logscale`: apply logscales one or more axes.
+    :term:`logscale`: apply logscales one or more axes.
 
-:term:`xtitle`: add a label to the X axis
+    :term:`xtitle`: add a label to the X axis
+    
+    :term:`ytitle`: add a label to the Y axis
+    
+    :term:`title`:  title of the plot
 
-:term:`ytitle`: add a label to the Y axis
+    :term:`add-title`: add title to each plot
 
-:term:`title`:  title of the plot
+    :term:`legend-location`: specify the location of the legend
 
-:term:`add-title`: add title to each plot
+    :term:`xrange`: restrict plot a part of the x-axis
 
-:term:`legend-location`: specify the location of the legend
+    :term:`yrange`: restrict plot a part of the y-axis
 
-:term:`xrange`: restrict plot a part of the x-axis
-
-:term:`yrange`: restrict plot a part of the y-axis
-
-:term:`function`: add a function to the plot. Multiple
+    :term:`function`: add a function to the plot. Multiple
           functions can be supplied as a comma-separated list.
           If functions are separated by a |, then they will
           be plotted on each separately in order, recycling if
           necessary
     
-:term:`vline`: add one or more vertical lines to the
+    :term:`vline`: add one or more vertical lines to the
           plot.
 
-:term:`xformat`: label for X axis
+    :term:`xformat`: label for X axis
 
-:term:`yformat`: label for Y axis
+    :term:`yformat`: label for Y axis
 
-:term:`no-tight`: do not attempt a tight layout
-    (see ``matplotlib.pyplot.tight_layout()``)
+    :term:`no-tight`: do not attempt a tight layout
+        (see ``matplotlib.pyplot.tight_layout()``)
 
     With some plots default layout options will result in plots
     that are misaligned (legends truncated, etc.). To fix this it might
@@ -117,26 +135,26 @@ class Plotter(object):
     The following options will be passed on the matplotlib to permit
     this control.
 
-:term:`mpl-figure`: options for matplotlib
+    :term:`mpl-figure`: options for matplotlib
            ``figure`` calls().
 
-:term:`mpl-legend`: options for matplotlib
+    :term:`mpl-legend`: options for matplotlib
            ``legend`` calls().
 
-:term:`mpl-subplot`: options for matplotlib
+    :term:`mpl-subplot`: options for matplotlib
            ``subplots_adjust`` calls().
 
-:term:`mpl-rc`: general environment settings for matplotlib.
-          See the matplotlib documentation. Multiple options can be
-          separated by ;, for example
-          ``:mpl-rc: figure.figsize=(20,10);legend.fontsize=4``
+    :term:`mpl-rc`: general environment settings for matplotlib.
+    See the matplotlib documentation. Multiple options can be
+    separated by ;, for example
+    ``:mpl-rc: figure.figsize=(20,10);legend.fontsize=4``
 
-:term:`xticks-max-chars`: if the number of characters on the
+    :term:`xticks-max-chars`: if the number of characters on the
     tick-labels on the X-axis exceed this value, the labels
     will be replaced by shorter version. See :term:`xticks-action`.
     If set to 0, no truncation will be performed.
 
-:term:`xticks-action`: action to perform it tick-labels are to long.
+    :term:`xticks-action`: action to perform it tick-labels are to long.
     Valid values are ``truncate-start`` and ``truncate-end`` to truncate
     from the start or end of the label, respectively; ``numbers`` to
     replace the values with numbers.
@@ -325,15 +343,16 @@ class Plotter(object):
     def endPlot(self, plts, legends, path):
         """close plots.
 
-        This method performs common post-processing options on matplotlib
-        rendered plots:
+        This method performs common post-processing options on
+        matplotlib rendered plots:
 
            * rescaling the axes
-           * legend placement
+           * legend placement and formatting
            * adding a function to the plot
 
         returns blocks of restructured text with place holders for the
         figure.
+
         """
 
         if not plts:
@@ -499,7 +518,7 @@ class Plotter(object):
 
         # convert to string
         if legends:
-            legends = map(str, legends)
+            legends = normalize_legends(legends)
 
         if self.legend_location != "none" and plts and legends:
 

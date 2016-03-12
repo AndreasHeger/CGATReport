@@ -26,6 +26,12 @@ def path2str(path):
         return str(path)
 
 
+def str2path(s):
+    '''convert printable string to path.'''
+    if Utils.isString(s):
+        return s.split("/")
+    return [s]
+
 # This module needs to be properly refactored to use
 # proper tree traversal algorithms. It currently is
 # a collection of not very efficient hacks.
