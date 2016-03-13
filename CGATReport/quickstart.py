@@ -74,7 +74,6 @@ def main(argv=None):
         copy(f, "cgat")
 
     for f in ("cgat.css_t",
-              'js/jquery.min.js',
               "js/sorttable.js",
               "js/jquery.dataTables.min.js",
               "js/notebook.js",
