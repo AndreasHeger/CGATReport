@@ -21,15 +21,14 @@ from CGATReport import CorrespondenceAnalysis
 
 
 class Renderer(Component.Component):
-
     """Base class of renderers that render data into restructured text.
 
     The subclasses define how to render the data by overloading the
     :meth:`render` method.
 
     When called, a Renderer and its subclasses will return blocks of
-    restructured text. Images are automatically collected from matplotlib
-    and inserted at place-holders.
+    restructured text. Images are automatically collected from
+    matplotlib and inserted at place-holders.
 
     """
     # plugin fields
@@ -1305,7 +1304,8 @@ class StatusMatrix(Status, TableBase):
 
     '''
     options = Status.options + TableBase.options +\
-              (('transpose', directives.unchanged),)
+              (('row-column', directives.unchanged),
+               ('transpose', directives.unchanged),)
 
     # For backwards compatibility, group by slice (test function)
     # and not track (data track) by default.
@@ -1313,11 +1313,14 @@ class StatusMatrix(Status, TableBase):
 
     transpose = False
 
+    row_column = "track"
+
     def __init__(self, *args, **kwargs):
         TableBase.__init__(self, *args, **kwargs)
         Status.__init__(self, *args, **kwargs)
 
         self.transpose = "transpose" in kwargs
+        self.row_column = kwargs.get("row-column", "track")
 
     def __call__(self, dataframe, path):
 
@@ -1331,7 +1334,7 @@ class StatusMatrix(Status, TableBase):
             for x in dataframe["status"]]
             
         table = dataframe.reset_index().pivot(
-            index="track",
+            index=self.row_column,
             columns="slice",
             values="status")
 

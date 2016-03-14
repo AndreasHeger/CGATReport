@@ -656,6 +656,10 @@ class Dispatcher(Component.Component):
         # merge all data to hierarchical indexed dataframe
         self.data = DataTree.asDataFrame(self.tree)
 
+        if self.data is None:
+            self.info("%s: no data after conversion" % self.tracker)
+            return None
+
         self.debug("dataframe memory usage: total=%i,data=%i,index=%i,col=%i" %
                    (self.data.values.nbytes +
                     self.data.index.nbytes +

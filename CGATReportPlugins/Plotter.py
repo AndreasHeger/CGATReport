@@ -79,7 +79,7 @@ def normalize_legends(original_legends):
     
     new_legends = [path2str(x) for x in zip(*pruned_levels)]
     if len(new_legends) != len(original_legends):
-        return old_legends
+        return original_legends
     else:
         return new_legends
 

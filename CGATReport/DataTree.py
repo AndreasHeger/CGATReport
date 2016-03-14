@@ -446,6 +446,9 @@ def asDataFrame(data):
                 dataframe,
                 test_for_trivial=True))
 
+        if len(path_lengths) == 0:
+            return None
+
         assert min(path_lengths) == max(path_lengths)
         assert min(levels) == max(levels)
 

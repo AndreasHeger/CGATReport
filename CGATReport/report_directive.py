@@ -404,17 +404,17 @@ def run(arguments,
         urls.append(":download:`code <%(code_url)s>`" % links)
 
     if "notebook" in requested_urls:
-        urls.apppend(":download:`nb <%(notebook_url)s>`" % links)
-
+        urls.append(":download:`nb <%(notebook_url)s>`" % links)
+    
     map_figure2text["default-prefix"] = ""
     map_figure2text["default-suffix"] = ""
 
-    if "no-links" not in display_options:
-        if urls:
-            urls = "[{}]".format(" ".join(urls))
-        else:
-            urls = ""
-        map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
+    if urls and "no-links" not in display_options:
+        url_template = "[{}]".format(" ".join(urls))
+    else:
+        url_template = ""
+
+    map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
 
     blocks.updatePlaceholders(map_figure2text)
 
