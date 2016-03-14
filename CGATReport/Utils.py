@@ -120,7 +120,11 @@ def is_numeric(obj):
 def asList(param):
     '''return a param as a list'''
     if type(param) not in (list, tuple):
-        return [x.strip() for x in param.split(",")]
+        p = param.strip()
+        if p:
+            return [x.strip() for x in p.split(",")]
+        else:
+            return []
     else:
         return param
 
@@ -352,7 +356,7 @@ def getImageFormats(display_options=None):
     format).
     '''
 
-    def _toFormat(format):
+    def _toFormat(data):
         if len(data) == 1:
             return (data[0], data[0], 100)
         elif len(data) == 2:
@@ -361,7 +365,8 @@ def getImageFormats(display_options=None):
             return (data[0], data[1], int(data[2]))
         else:
             raise ValueError(
-                ":format: option expects one to three params, not %s" % data)
+                ":format: option expects one to three params, "
+                "got {}".format(data))
 
     if "display" in display_options:
         all_data = [x.strip() for x in display_options["display"].split(";")]
@@ -370,6 +375,8 @@ def getImageFormats(display_options=None):
                  display_options["display"])
         data = asList(all_data[0])
         default_format = _toFormat(data)
+    elif "report_default_format" in PARAMS:
+        default_format = _toFormat(PARAMS["report_default_format"].split(","))
     else:
         default_format = CGATReport.Config.HTML_IMAGE_FORMAT
 
@@ -379,7 +386,8 @@ def getImageFormats(display_options=None):
         data = asList(PARAMS["report_images"])
         if len(data) % 3 != 0:
             raise ValueError(
-                "need multiple of 3 number of arguments to report_images option")
+                "need multiple of 3 number of arguments to report_images "
+                "option, got {}".format(data))
         for x in range(0, len(data), 3):
             additional_formats.append((data[x], data[x + 1], int(data[x + 2])))
     else:
@@ -397,6 +405,16 @@ def getImageFormats(display_options=None):
         additional_formats.append(CGATReport.Config.LATEX_IMAGE_FORMAT)
 
     return default_format, additional_formats
+
+
+def get_default_display_options():
+    """return dictionary with default display options from the config file.
+    """
+    
+    display_options = {}
+    if "report_default_width" in PARAMS:
+        display_options["width"] = PARAMS["report_default_width"]
+    return display_options
 
 
 def getImageOptions(display_options=None, indent=0):
@@ -1169,9 +1187,6 @@ def buildRstWithImage(outname,
 
     image_options = getImageOptions(display_options, indent=6)
 
-    url_template = ("[%(code_url)s %(nb_url)s %(rst_url)s "
-                    "%(data_url)s %(extra_images)s]")
-    
     if CGATReport.Config.HTML_IMAGE_FORMAT:
 
         if default_format:
@@ -1239,20 +1254,19 @@ def buildRstWithImage(outname,
             extra_images = ""
 
         # construct additional urls
-        code_url, data_url, rst_url, nb_url = "", "", "", ""
+        urls = []
         if "code" in urls:
-            code_url = ":download:`code <%(code_url)s>`" % links
-
+            urls.append(":download:`code <%(code_url)s>`" % links)
         if "notebook" in urls:
-            nb_url = ":download:`nb <%(notebook_url)s>`" % links
-
+            urls.append(":download:`nb <%(notebook_url)s>`" % links)
         if "data" in urls:
-            data_url = ":download:`data </data/%(tracker_id)s>`" % locals()
-
+            urls.append(":download:`data </data/%(tracker_id)s>`" % locals())
         if "rst" in urls and links["rst_url"] is not None:
-            rst_url = ":download:`rst <%(rst_url)s>`" % links
+            urls.append(":download:`rst <%(rst_url)s>`" % links)
+        if extra_images:
+            urls.append(extra_images)
 
-        if "no-links" not in display_options:
+        if urls and "no-links" not in display_options:
             url = url_template % locals()
         else:
             url = ""

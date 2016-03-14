@@ -26,7 +26,7 @@ CGATREPORT_DEBUG = "CGATREPORT_DEBUG" in os.environ
 TEMPLATE_TEXT = """
 .. only:: html
 
-   [%(code_url)s %(nb_url)s]
+   %(urls)s
 
 """
 
@@ -147,8 +147,9 @@ def run(arguments,
         options, option_map["dispatch"])
     tracker_options = Utils.selectAndDeleteOptions(
         options, option_map["tracker"])
-    display_options = Utils.selectAndDeleteOptions(
-        options, option_map["display"])
+    display_options = Utils.get_default_display_options()
+    display_options.update(Utils.selectAndDeleteOptions(
+        options, option_map["display"]))
 
     logging.debug("report_directive.run: renderer options: %s" %
                   str(renderer_options))
@@ -396,18 +397,23 @@ def run(arguments,
     # replace place holders or add text
     ###########################################################
     # add default for text-only output
-    urls = Utils.asList(Utils.PARAMS["report_urls"])
-    code_url, nb_url = "", ""
-    if "code" in urls:
-        code_url = ":download:`code <%(code_url)s>`" % links
+    requested_urls = Utils.asList(Utils.PARAMS["report_urls"])
 
-    if "notebook" in urls:
-        nb_url = ":download:`nb <%(notebook_url)s>`" % links
+    urls = []
+    if "code" in requested_urls:
+        urls.append(":download:`code <%(code_url)s>`" % links)
+
+    if "notebook" in requested_urls:
+        urls.apppend(":download:`nb <%(notebook_url)s>`" % links)
 
     map_figure2text["default-prefix"] = ""
     map_figure2text["default-suffix"] = ""
 
     if "no-links" not in display_options:
+        if urls:
+            urls = "[{}]".format(" ".join(urls))
+        else:
+            urls = ""
         map_figure2text["default-prefix"] = TEMPLATE_TEXT % locals()
 
     blocks.updatePlaceholders(map_figure2text)
