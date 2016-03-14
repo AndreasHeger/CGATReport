@@ -168,7 +168,8 @@ def getDataFrameLevels(dataframe,
         nlevels = len(index.levels)
     except AttributeError:
         nlevels = 1
-        if test_for_trivial and isinstance(index, pandas.Int64Index):
+        if test_for_trivial and isinstance(index, pandas.Int64Index) \
+           and index.name is None:
             nlevels = 0
     return nlevels
 
@@ -1267,7 +1268,7 @@ def buildRstWithImage(outname,
             urls.append(extra_images)
 
         if urls and "no-links" not in display_options:
-            url = url_template % locals()
+            url = "[{}]".format(" ".join(urls))
         else:
             url = ""
         

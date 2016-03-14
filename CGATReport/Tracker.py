@@ -292,9 +292,9 @@ class TrackerMultipleFiles(Tracker):
     cache = False
 
     def getTracks(self, subset=None):
-        files = sorted(glob.glob(self.glob))
+
         self.mapTrack2File = {}
-        for f in files:
+        for f in glob.glob(self.glob):
             try:
                 track = self.regex.search(f).groups()[0]
             except AttributeError:
@@ -302,7 +302,7 @@ class TrackerMultipleFiles(Tracker):
                     "filename %s does not match regular expression" % f)
 
             self.mapTrack2File[track] = f
-        return self.mapTrack2File.keys()
+        return sorted(self.mapTrack2File.keys())
 
     def __init__(self, *args, **kwargs):
         Tracker.__init__(self, *args, **kwargs)
