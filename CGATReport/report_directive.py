@@ -26,7 +26,7 @@ CGATREPORT_DEBUG = "CGATREPORT_DEBUG" in os.environ
 TEMPLATE_TEXT = """
 .. only:: html
 
-   %(urls)s
+   %(url_template)s
 
 """
 
@@ -179,8 +179,8 @@ def run(arguments,
             str(dispatcher_options) +\
             str(tracker_options) +\
             str(transformer_names) +\
-            str(content)
-
+            re.sub("\s", "", "".join(content))
+                
         options_hash = hashlib.md5(options_key.encode()).hexdigest()
 
         template_name = Utils.quote_filename(
@@ -198,8 +198,8 @@ def run(arguments,
         # for presence/absence of text element and if all figures
         # mentioned in the text element are present
         ###########################################################
-        queries = [re.compile("%s(%s\S+.%s)" %
-                              (root2builddir, outdir, suffix))
+        queries = [re.compile("%s/(\S+.%s)" %
+                              (root2builddir, suffix))
                    for suffix in ("png", "pdf", "svg")]
 
         logging.debug("report_directive.run: checking for changed files.")
@@ -207,7 +207,8 @@ def run(arguments,
         # check if text element exists
         if os.path.exists(filename_text):
 
-            lines = [x[:-1] for x in open(filename_text, "r").readlines()]
+            with open(filename_text, "r") as inf:
+                lines = [x[:-1] for x in inf]
             filenames = []
 
             # check if all figures are present
@@ -216,6 +217,8 @@ def run(arguments,
                     x = query.search(line)
                     if x:
                         filenames.extend(list(x.groups()))
+
+            filenames = [os.path.join(outdir, x) for x in filenames]
 
             logging.debug(
                 "report_directive.run: %s: checking for %s" %

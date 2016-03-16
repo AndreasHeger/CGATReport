@@ -1012,7 +1012,7 @@ def layoutBlocks(blocks, layout="column"):
                 txt, col = blocks[xx].title.split("\n"), xx % ncols
 
                 max_width = columnwidths[col]
-                # add missig lines
+                # add missing lines
                 txt.extend([""] * (max_height - len(txt)))
                 # extend lines
                 txt = [x + " " * (max_width - len(x)) for x in txt]
@@ -1184,7 +1184,7 @@ def buildRstWithImage(outname,
                                     rst2srcdir,
                                     outname))
 
-    urls = asList(PARAMS["report_urls"])
+    requested_urls = asList(PARAMS["report_urls"])
 
     image_options = getImageOptions(display_options, indent=6)
 
@@ -1256,13 +1256,13 @@ def buildRstWithImage(outname,
 
         # construct additional urls
         urls = []
-        if "code" in urls:
+        if "code" in requested_urls:
             urls.append(":download:`code <%(code_url)s>`" % links)
-        if "notebook" in urls:
+        if "notebook" in requested_urls:
             urls.append(":download:`nb <%(notebook_url)s>`" % links)
-        if "data" in urls:
+        if "data" in requested_urls:
             urls.append(":download:`data </data/%(tracker_id)s>`" % locals())
-        if "rst" in urls and links["rst_url"] is not None:
+        if "rst" in requested_urls and links["rst_url"] is not None:
             urls.append(":download:`rst <%(rst_url)s>`" % links)
         if extra_images:
             urls.append(extra_images)

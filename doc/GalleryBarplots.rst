@@ -127,8 +127,9 @@ The option :term:`first-is-offset` can be used to create Gantt-like charts:
 Adding error bars and labels
 ============================
 
-The :class:`CGATReportPlugins.Plotter.InterleavedBarPlot` class presents :term:`labeled values`
-as interleaved bars. Both *interleaved-bars* and *bars* can be used.
+The :class:`CGATReportPlugins.Plotter.InterleavedBarPlot` class
+presents :term:`labeled values` as interleaved bars. Both
+*interleaved-bars* and *bars* can be used.
 
 .. report:: Trackers.LabeledDataWithErrorsAndLabelsExample
    :render: bar-plot

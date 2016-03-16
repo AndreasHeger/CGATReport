@@ -329,7 +329,7 @@ def main(argv=None):
 
     parser.disable_interspersed_args()
 
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args(argv[1:])
 
     assert args[0].endswith(
         "sphinx-build"), "command line should contain sphinx-build"
