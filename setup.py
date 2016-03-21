@@ -125,7 +125,7 @@ setup(name='CGATReport',
           './templates/Makefile',
           './templates/js/*',
           './images/*']},
-      license="BSD",
+      license="MIT",
       platforms=["any"],
       keywords="report generator sphinx matplotlib sql",
       long_description='CGATReport : a report generator in python based '

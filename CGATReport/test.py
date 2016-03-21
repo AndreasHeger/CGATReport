@@ -369,7 +369,7 @@ def main(argv=None, **kwargs):
     if options.workdir is not None:
         savedir = os.getcwd()
         os.chdir(options.workdir)
-        Utils.getParameters(sorted(glob.glob("*.ini")))
+        Utils.get_parameters(sorted(glob.glob("*.ini")))
     else:
         savedir = None
 

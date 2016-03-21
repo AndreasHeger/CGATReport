@@ -299,12 +299,12 @@ def configToDictionary(config):
     return p
 
 
-def getParameters(filenames):
-    '''read a config file and return as a dictionary.
+def update_parameters(filenames):
+    '''read one or more config files and update parameter
+    dictionary.
 
-    Sections and keys are combined with an underscore. If
-    a key without section does not exist, it will be added
-    plain.
+    Sections and keys are combined with an underscore. If a key
+    without section does not exist, it will be added plain.
 
     For example::
 
@@ -320,6 +320,7 @@ def getParameters(filenames):
     This function also updates the module-wide parameter map.
 
     The section [DEFAULT] is equivalent to [general].
+
     '''
 
     global CONFIG
@@ -335,8 +336,10 @@ def getParameters(filenames):
 # DEFAULT: read parameters from config files
 # in the current directory sorted by name
 # If 'inifile' is in conf.py, read it first.
-getParameters(filenames=[getattr(CGATReport.Config, 'inifile', None)] +
-              sorted(glob.glob("*.ini")))
+def get_parameters():
+    return update_parameters(
+        filenames=[getattr(CGATReport.Config, 'inifile', None)] +
+        sorted(glob.glob("*.ini")))
 
 
 def selectAndDeleteOptions(options, select):

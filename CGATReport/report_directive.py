@@ -513,11 +513,16 @@ def setup(app):
     setup.builddir = os.getcwd()
     app.add_directive('report', report_directive)
 
+    # update global parameters in Utils module.
+    Utils.get_parameters()
+
+    setup.logger = logging.getLogger(
+        "cgatreport",
+        level=logging.DEBUG,
+        format='%(asctime)s %(levelname)s %(message)s',
+        stream=open(Component.LOGFILE, "a"))
+
     # return {'parallel_read_safe': True}
 
 directives.register_directive('report', report_directive)
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(message)s',
-    stream=open(Component.LOGFILE, "a"))
