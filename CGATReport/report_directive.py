@@ -523,7 +523,7 @@ def setup(app):
         Component.LOGFILE,
         mode="a")
     formatter = logging.Formatter(
-        format='%(asctime)s %(levelname)s %(message)s')
+        '%(asctime)s %(levelname)s %(message)s')
     fh.setFormatter(formatter)
     setup.logger.addHandler(fh)
 
