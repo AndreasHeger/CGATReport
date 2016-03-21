@@ -517,10 +517,15 @@ def setup(app):
     Utils.get_parameters()
 
     setup.logger = logging.getLogger(
-        "cgatreport",
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s %(message)s',
-        stream=open(Component.LOGFILE, "a"))
+        "cgatreport")
+    setup.logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(
+        Component.LOGFILE,
+        mode="a")
+    formatter = logging.Formatter(
+        format='%(asctime)s %(levelname)s %(message)s')
+    fh.setFormatter(formatter)
+    setup.logger.addHandler(fh)
 
     # return {'parallel_read_safe': True}
 
