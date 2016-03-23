@@ -15,6 +15,7 @@ import os
 import hashlib
 import re
 import logging
+import collections
 
 from docutils.parsers.rst import directives
 
