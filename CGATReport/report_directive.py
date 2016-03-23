@@ -514,7 +514,8 @@ def setup(app):
     app.add_directive('report', report_directive)
 
     # update global parameters in Utils module.
-    Utils.get_parameters()
+    PARAMS = Utils.get_parameters()
+    app.add_config_value('PARAMS', collections.defaultdict(), 'env')
 
     setup.logger = logging.getLogger(
         "cgatreport")

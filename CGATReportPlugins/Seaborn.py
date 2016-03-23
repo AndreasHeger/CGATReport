@@ -18,7 +18,6 @@ class SeabornPlot(object):
 
     def execute(self, statement, g, l):
         """execute seaborn statement. Inserts kwargs."""
-
         statement = statement.strip()
         assert statement.endswith(")")
         if self.kwargs:
@@ -221,10 +220,40 @@ class HeatmapPlot(SeabornMatrixPlot):
 class ClustermapPlot(SeabornMatrixPlot):
     """Render a matrix as a heatmap using seaborn.
     """
+
+    options = (('row-regex', directives.unchanged),
+               ('col-regex', directives.unchanged),
+    ) + SeabornMatrixPlot.options
+
+    row_regex = None
+    col_regex = None
+
+    def __init__(self, *args, **kwargs):
+        SeabornMatrixPlot.__init__(self, *args, **kwargs)
+        self.row_regex = kwargs.get("row-regex", None)
+        self.col_regex = kwargs.get("col-regex", None)
+
     def buildStatement(self, data, color_scheme):
 
         if data.isnull().any().any():
             raise ValueError("dataframe contains NaN")
 
+        extra_options = []
+        if self.row_regex:
+            row_names = data.index.str.extract(self.row_regex)
+            factors = list(set(row_names))
+            colors = matplotlib.cm.rainbow(numpy.linspace(0, 1, len(factors)))
+            factor2color = dict([(y, x) for x, y in enumerate(factors)])
+            row_colors = [colors[factor2color[x]] for x in row_names]
+
+            extra_options.append(
+                "row_colors={}".format(str(row_colors)))
+
+        if extra_options:
+            extra_options = "," + ",".join(extra_options)
+        else:
+            extra_options = ""
+
         return("plot = seaborn.clustermap(data, "
-               "cmap=color_scheme)")
+               "cmap=color_scheme "
+               "{})".format(extra_options))
