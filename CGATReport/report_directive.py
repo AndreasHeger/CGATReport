@@ -15,6 +15,7 @@ import os
 import hashlib
 import re
 import logging
+import collections
 
 from docutils.parsers.rst import directives
 
@@ -514,11 +515,8 @@ def setup(app):
     app.add_directive('report', report_directive)
 
     # update global parameters in Utils module.
-    params = Utils.get_parameters()
-    # add config values to sphinx so that they are
-    # available for ifconfig.
-    for key, value in params.items():
-        app.add_config_value(key, value, 'env')
+    PARAMS = Utils.get_parameters()
+    app.add_config_value('PARAMS', collections.defaultdict(), 'env')
 
     setup.logger = logging.getLogger(
         "cgatreport")
