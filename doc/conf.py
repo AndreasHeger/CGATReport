@@ -15,6 +15,14 @@
 
 import sys, os
 
+# add CGATReport config variables
+import CGATReport.Utils
+
+print CGATReport.Utils
+PARAMS = CGATReport.Utils.get_parameters()
+
+sys.exit(0)
+
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
 # is relative to the documentation root, use os.path.abspath to make

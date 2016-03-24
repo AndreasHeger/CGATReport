@@ -514,7 +514,11 @@ def setup(app):
     app.add_directive('report', report_directive)
 
     # update global parameters in Utils module.
-    Utils.get_parameters()
+    params = Utils.get_parameters()
+    # add config values to sphinx so that they are
+    # available for ifconfig.
+    for key, value in params.items():
+        app.add_config_value(key, value, 'env')
 
     setup.logger = logging.getLogger(
         "cgatreport")
