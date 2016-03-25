@@ -1,6 +1,8 @@
 '''Test cases for transformers.'''
 from CGATReport.Tracker import *
 
+import pandas
+
 
 def TrackerFilter():
     return {'a': {'x': 1, 'y': 2},
@@ -74,3 +76,12 @@ def TrackerAggregate():
     return {
         'x': [1., 1.8, 2.6, 3.4, 4.2],
         'frequency': [5, 3, 0, 2, 1]}
+
+
+def TrackerHistogramStats():
+    return pandas.DataFrame.from_records(
+        [(1, 2, 3, 0,),
+         (2, 3, 4, 1),
+         (3, 4, 2, 1),
+         (4, 1, 1, 0)],
+        columns=["bins", "A", "B", "C"])

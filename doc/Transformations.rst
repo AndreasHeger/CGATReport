@@ -52,6 +52,31 @@ summary statistics of a :term:`numerical array`::
 
 .. _correlation:
 
+.. _stats:
+
+histogram-stats
+===============
+
+The :class:`CGATReportPlugins.Transformer.HistogramStats` class computes
+summary statistics from :term:`numerical arrays`, where the first
+array is assumed to be bins and remaining columns are counts. Values
+are only exact for integer valued bins and where all values correspond
+to bins::
+
+  .. report:: Transformers.TrackerHistogramStats
+     :render: table
+     :transform: histogram-stats
+
+     A table.
+
+.. report:: Transformers.TrackerHistogramStats
+   :render: table
+   :transform: histogram-stats
+
+   A table.
+
+.. _correlation:
+
 correlation
 ===========
 

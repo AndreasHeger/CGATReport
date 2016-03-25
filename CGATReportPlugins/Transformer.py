@@ -1,13 +1,13 @@
-from logging import warn, log, debug, info
 import itertools
 import numpy
 import pandas
+import math
 
 # used in evals for computing bins in histograms
 from numpy import arange
 
 from collections import OrderedDict as odict
-from CGATReport.Component import *
+from CGATReport.Component import Component
 from CGATReport import Stats, DataTree, Utils
 
 from docutils.parsers.rst import directives
@@ -52,7 +52,7 @@ class Transformer(Component):
     prune_dataframe = True
 
     def __init__(self, *args, **kwargs):
-        pass
+        Component.__init__(self, *args, **kwargs)
 
     def __call__(self, data):
 
@@ -67,7 +67,7 @@ class Transformer(Component):
         )
 
         for key, group in data.groupby(level=group_levels):
-            debug('applying transformation on group %s' % str(key))
+            self.debug('applying transformation on group %s' % str(key))
             df = self.transform(group)
             if df is not None:
                 dataframes.append(df)
@@ -79,7 +79,7 @@ class Transformer(Component):
             # reset dataframe index - keep the same levels
             Utils.pruneDataFrameIndex(df, original=data)
 
-        debug("transform: finished")
+        self.debug("transform: finished")
 
         return df
 
@@ -122,7 +122,7 @@ class Transformer(Component):
 #         self.labels = kwargs.get("tf-labels", None)
 
 #     def transform(self, data, path):
-#         debug("%s: called" % str(self))
+#         self.debug("%s: called" % str(self))
 
 #         if len(data) == 0:
 #             return data
@@ -176,7 +176,7 @@ class Transformer(Component):
 #         Transformer.__init__(self, *args, **kwargs)
 
 #     def transform(self, data, path):
-#         debug("%s: called" % str(self))
+#         self.debug("%s: called" % str(self))
 
 #         lists = odict()
 
@@ -217,7 +217,7 @@ class Transformer(Component):
 #         Transformer.__init__(self, *args, **kwargs)
 
 #     def transform(self, data, path):
-#         debug("%s: called" % str(self))
+#         self.debug("%s: called" % str(self))
 
 #         t = odict()
 #         for minor_key, values in data.items():
@@ -289,7 +289,7 @@ class Transformer(Component):
 #             pass
 
 #     def transform(self, data, path):
-#         debug("%s: called" % str(self))
+#         self.debug("%s: called" % str(self))
 
 #         vals = data[self.filter]
 #         return odict(list(zip(vals, [1] * len(vals))))
@@ -327,7 +327,7 @@ class Transformer(Component):
 #             pass
 
 #     def transform(self, data, path):
-#         debug("%s: called" % str(self))
+#         self.debug("%s: called" % str(self))
 
 #         for v in list(data.keys()):
 #             data[v] = len(data[v])
@@ -387,7 +387,7 @@ class TransformerFilter(Transformer):
                            "`tf-fields` option to be set.")
 
     def transform(self, data):
-        debug("%s: called" % str(self))
+        self.debug("%s: called" % str(self))
         return data[self.filter]
 
 
@@ -426,7 +426,7 @@ class TransformerFilter(Transformer):
 #                            "`tf-fields` option to be set.")
 
 #     def transform(self, data, path):
-#         debug("%s: called" % str(self))
+#         self.debug("%s: called" % str(self))
 
 #         nfound = 0
 #         for v in list(data.keys()):
@@ -535,7 +535,7 @@ class TransformerFilter(Transformer):
 #         self.field = self.fields[0]
 
 #     def transform(self, data, path):
-#         debug("%s: called" % str(self))
+#         self.debug("%s: called" % str(self))
 
 #         new_data = odict()
 
@@ -600,7 +600,7 @@ class TransformerFilter(Transformer):
 #         self.nlevels = int(kwargs.get("tf-level", self.nlevels))
 
 #     def transform(self, data, path):
-#         debug("%s: called" % str(self))
+#         self.debug("%s: called" % str(self))
 
 #         vals = list(data.keys())
 #         new_data = odict()
@@ -661,8 +661,60 @@ class TransformerStats(Transformer):
         Transformer.__init__(self, *args, **kwargs)
 
     def transform(self, data):
-        debug("%s: called" % str(self))
+        self.debug("%s: called" % str(self))
         return data.describe().transpose()
+
+
+class TransformerHistogramStats(Transformer):
+
+    # make sure that at least one grouping is done.
+    nlevels = -1
+
+    # keep row names (samples)
+    prune_dataframe = False
+
+    def __init__(self, *args, **kwargs):
+        Transformer.__init__(self, *args, **kwargs)
+
+    def transform(self, data):
+        self.debug("%s: called" % str(self))
+        if len(data.columns) < 2:
+            raise ValueError("expected at least two columns")
+        
+        bins = data.iloc[:, 0]
+        records = []
+        for column in data.columns[1:]:
+            counts = data[column]
+            for x, c in enumerate(counts):
+                if c != 0:
+                    break
+            min_v = bins[x]
+            for x, c in enumerate(counts[::-1]):
+                if c != 0:
+                    break
+            x += 1
+            max_v = bins[-x]
+            sums = bins * counts
+            mean_v = float(sum(sums)) / sum(counts)
+
+            cumul = counts.cumsum()
+            nvalues = cumul.iloc[-1]
+            median_value = nvalues // 2
+            idx = cumul.searchsorted(median_value)[0]
+            if cumul.iloc[idx] == median_value:
+                median_v = (bins.iloc[idx] + bins.iloc[idx + 1]) / 2.0
+            else:
+                median_v = bins.iloc[idx]
+
+            squared_diffs = (bins - mean_v) * (bins - mean_v) * counts
+            std_v = math.sqrt(sum(squared_diffs) / nvalues)
+            records.append(
+                (nvalues, mean_v, std_v, min_v, median_v, max_v))
+
+        return pandas.DataFrame.from_records(
+            records,
+            index=data.columns[1:],
+            columns=["count", "mean", "std", "min", "50%", "max"])
 
 
 class TransformerPairwise(Transformer):
@@ -683,7 +735,7 @@ class TransformerPairwise(Transformer):
         Transformer.__init__(self, *args, **kwargs)
 
     def transform(self, data):
-        debug("%s: called" % str(self))
+        self.debug("%s: called" % str(self))
 
         if len(data.columns) < 2:
             raise ValueError("expected at least two columns, "
@@ -979,7 +1031,7 @@ class TransformerAggregate(Transformer):
         return data[::-1].cumsum()[::-1]
 
     def transform(self, data):
-        debug("%s: called" % str(self))
+        self.debug("%s: called" % str(self))
 
         if len(data.columns) < 2:
             raise ValueError(
@@ -1047,7 +1099,7 @@ class TransformerHistogram(TransformerAggregate):
         '''compute the histogram.'''
 
         if len(data) == 0:
-            warn("empty histogram")
+            self.warn("empty histogram")
             return None
 
         binsize = None
@@ -1143,7 +1195,7 @@ class TransformerHistogram(TransformerAggregate):
         return df
 
     def transform(self, data):
-        debug("%s: called" % (str(self)))
+        self.debug("%s: called" % (str(self)))
 
         df = self.toHistogram(data)
         df = df.set_index("bin", append=True)
@@ -1151,7 +1203,7 @@ class TransformerHistogram(TransformerAggregate):
             df = df.apply(converter, axis=0)
 
         df.reset_index(level="bin", inplace=True)
-        debug("%s: completed" % (str(self)))
+        self.debug("%s: completed" % (str(self)))
         return df
 
 

@@ -178,6 +178,8 @@ setup(name='CGATReport',
               'CGATReportPlugins.Transformer:TransformerAggregate',
               'transform-histogram='
               'CGATReportPlugins.Transformer:TransformerHistogram',
+              'transform-histogram-stats='
+              'CGATReportPlugins.Transformer:TransformerHistogramStats',
               # 'transform-tolabels=CGATReportPlugins.Transformer:TransformerToLabels',
               'transform-filter='
               'CGATReportPlugins.Transformer:TransformerFilter',
