@@ -16,11 +16,12 @@ from math import log
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReport.DataTree import path2str
-from CGATReport import Utils, DataTree, Component
+from CGATReport import Utils, DataTree
+from CGATReport.Component import Component
 from CGATReport import CorrespondenceAnalysis
 
 
-class Renderer(Component.Component):
+class Renderer(Component):
     """Base class of renderers that render data into restructured text.
 
     The subclasses define how to render the data by overloading the
@@ -80,6 +81,7 @@ class Renderer(Component.Component):
         """create an Renderer object using an instance of
         a:class:`Tracker.Tracker`.
         """
+        Component.__init__(self, *args, **kwargs)
 
         self.debug("%s: starting renderer '%s'" %
                    (id(self), str(self)))

@@ -98,17 +98,19 @@ import re
 import glob
 import optparse
 import tempfile
-import logging as L
+import logging
 import code
 
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
 
 from CGATReport import Utils
+from CGATReport import Component
 
 import CGATReport.clean
 from CGATReport.Dispatcher import Dispatcher
 from CGATReport.Component import getOptionMap
+
 
 # import conf.py
 if os.path.exists("conf.py"):
@@ -245,6 +247,8 @@ def main(argv=None, **kwargs):
 
     If argv is not None, command line parsing will be performed.
     '''
+    logger = Component.get_logger()
+
     parser = optparse.OptionParser(version="%prog version: $Id$",
                                    usage=globals()["__doc__"])
 
@@ -381,7 +385,7 @@ def main(argv=None, **kwargs):
     if os.path.exists(options.trackerdir):
         sys.path.insert(0, options.trackerdir)
     else:
-        L.warn("directory %s does not exist" % options.trackerdir)
+        logger.warn("directory %s does not exist" % options.trackerdir)
 
     ######################################################
     # test plugins

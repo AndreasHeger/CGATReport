@@ -2,7 +2,6 @@
 '''
 
 import pkg_resources
-from logging import warn, debug, info, critical, error
 import logging
 import collections
 from docutils.parsers.rst import directives
@@ -10,10 +9,21 @@ from docutils.parsers.rst import directives
 LOGFILE = "cgatreport.log"
 LOGGING_FORMAT = '%(asctime)s %(levelname)s %(message)s'
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format=LOGGING_FORMAT,
-    stream=open(LOGFILE, "a"))
+def get_logger():
+
+    logger = logging.getLogger(
+        "cgatreport")
+
+    if not len(logger.handlers):
+        logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(
+            LOGFILE,
+            mode="a")
+        formatter = logging.Formatter(LOGGING_FORMAT)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    return logger
 
 
 class Component(object):
@@ -25,22 +35,22 @@ class Component(object):
     options = ()
 
     def __init__(self, *args, **kwargs):
-        pass
+        self.logger = get_logger()
 
     def debug(self, msg):
-        debug("disp%s: %s" % (id(self), msg))
+        self.logger.debug("disp%s: %s" % (id(self), msg))
 
     def warn(self, msg):
-        warn("disp%s: %s" % (id(self), msg))
+        self.logger.warn("disp%s: %s" % (id(self), msg))
 
     def info(self, msg):
-        logging.info("disp%s: %s" % (id(self), msg))
+        self.logger.info("disp%s: %s" % (id(self), msg))
 
     def error(self, msg):
-        error("disp%s: %s" % (id(self), msg))
+        self.logger.error("disp%s: %s" % (id(self), msg))
 
     def critical(self, msg):
-        critical("disp%s: %s" % (id(self), msg))
+        self.logger.critical("disp%s: %s" % (id(self), msg))
 
 # plugins are only initialized once they are called
 # for in order to remove problems with cyclic imports
@@ -51,7 +61,9 @@ ENTRYPOINT = 'CGATReport.plugins'
 
 def init_plugins():
 
-    info("initialising plugins")
+    logger = get_logger()
+
+    logger.info("initialising plugins")
     try:
         pkg_resources.working_set.add_entry(cgatreport_plugins)
         pkg_env = pkg_resources.Environment(cgatreport_plugins)
@@ -72,10 +84,11 @@ def init_plugins():
                 plugins[c][name] = cls
 
     if len(plugins) == 0:
-        warn("did not find any plugins")
+        logger.warn("did not find any plugins")
     else:
-        debug("found plugins: %i capabilites and %i plugins" %
-              (len(plugins), sum([len(x) for x in list(plugins.values())])))
+        logger.debug(
+            "found plugins: %i capabilites and %i plugins" %
+            (len(plugins), sum([len(x) for x in list(plugins.values())])))
 
     return plugins
 

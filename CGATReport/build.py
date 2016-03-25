@@ -32,8 +32,7 @@ import logging
 import time
 import collections
 from multiprocessing import Pool, Queue
-from CGATReport.Component import LOGFILE, LOGGING_FORMAT
-from logging import debug, warn, info, error
+from CGATReport import Component
 
 from sphinx.util.osutil import cd
 
@@ -70,11 +69,11 @@ class ReportBlock:
 def run(work):
     """run a set of worker jobs.
     """
-
+    logger = Component.get_logger()
     try:
         for f, lineno, b, srcdir, builddir in work:
             ff = os.path.abspath(f)
-            debug("build.run: profile: started: rst: %s:%i" % (ff, lineno))
+            logger.debug("build.run: profile: started: rst: %s:%i" % (ff, lineno))
 
             report_directive.run(b.mArguments,
                                  b.mOptions,
@@ -85,7 +84,7 @@ def run(work):
                                  srcdir=srcdir,
                                  builddir=builddir)
 
-            debug("build.run: profile: finished: rst: %s:%i" % (ff, lineno))
+            logger.debug("build.run: profile: finished: rst: %s:%i" % (ff, lineno))
 
         return None
     except:
@@ -175,7 +174,8 @@ def buildPlots(rst_files, options, args, sourcedir):
 
     This can be done in parallel to some extent.
     '''
-    info("building plot elements started")
+    logger = Component.get_logger()
+    logger.info("building plot elements started")
 
     # build work. Group trackers of the same name together as
     # the python shelve module does not allow concurrent write
@@ -196,21 +196,22 @@ def buildPlots(rst_files, options, args, sourcedir):
     if len(work) == 0:
         return
 
+    logger = Component.get_logger()
+    logger.setLevel(options.loglevel)
+
     if options.num_jobs > 1:
         logQueue = Queue(100)
         handler = Logger.MultiProcessingLogHandler(
-            logging.FileHandler(os.path.abspath(LOGFILE), "w"), logQueue)
-    else:
-        handler = logging.FileHandler(os.path.abspath(LOGFILE), "w")
+            logging.FileHandler(
+                os.path.abspath(Component.LOGFILE), "a"), logQueue)
+        handler.setFormatter(
+            logging.Formatter(Component.LOGGING_FORMAT))
+        logger.addHandler(handler)
 
-    handler.setFormatter(
-        logging.Formatter(LOGGING_FORMAT))
-
-    logging.getLogger('').addHandler(handler)
-    logging.getLogger('').setLevel(options.loglevel)
-
-    info('starting %i jobs on %i work items' % (options.num_jobs, len(work)))
-    debug("build.py: profile: started: 0 seconds")
+    logger.info(
+        "starting %i jobs on %i work items" % (options.num_jobs, len(work)))
+    logger.debug(
+        "build.py: profile: started: 0 seconds")
 
     if options.num_jobs > 1:
         pool = Pool(options.num_jobs)
@@ -294,7 +295,8 @@ def runCommand(command):
         if retcode < 0:
             warn("child was terminated by signal %i" % -retcode)
     except OSError as msg:
-        error("execution of %s failed: %s" % (command, msg))
+        Component.get_logger().error(
+            "execution of %s failed: %s" % (command, msg))
         raise
 
 
@@ -308,6 +310,8 @@ def buildDocument(options, args):
 
 def main(argv=None):
 
+
+    logger = Component.get_logger()
     if argv is None:
         argv = sys.argv
 
@@ -387,7 +391,8 @@ def main(argv=None):
 
     print("CGATReport: finished in %i seconds" % (time.time() - t))
 
-    debug("build.py: profile: finished: %i seconds" % (time.time() - t))
+    logger.debug(
+        "build.py: profile: finished: %i seconds" % (time.time() - t))
 
 if __name__ == "__main__":
     sys.exit(main())

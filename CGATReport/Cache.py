@@ -29,6 +29,8 @@ class Cache(Component):
 
     def __init__(self, cache_name, mode="a"):
 
+        Component.__init__(self)
+
         self.cache_filename = None
         self._cache = None
         self.cache_name = cache_name

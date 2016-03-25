@@ -18,6 +18,7 @@ import logging
 import collections
 
 from docutils.parsers.rst import directives
+from docutils.parsers.rst import Directive
 
 from CGATReport import Config, Dispatcher, Utils, Cache, Component
 from CGATReport.ResultBlock import ResultBlocks
@@ -57,7 +58,9 @@ def run(arguments,
 
     tag = "%s:%i" % (str(document), lineno)
 
-    logging.debug("report_directive.run: profile: started: rst: %s" % tag)
+    logger = Component.get_logger()
+
+    logger.debug("report_directive.run: profile: started: rst: %s" % tag)
 
     # sort out the paths
     # reference is used for time-stamping
@@ -98,7 +101,7 @@ def run(arguments,
     root2builddir = os.path.join(
         os.path.relpath(builddir, start=srcdir), outdir)
 
-    logging.debug(
+    logger.debug(
         "report_directive.run: arguments=%s, options=%s, lineno=%s, "
         "content=%s, document=%s" %
         (str(arguments),
@@ -106,11 +109,11 @@ def run(arguments,
          str(lineno),
          str(content),
          str(document)))
-    logging.debug(
+    logger.debug(
         "report_directive.run: plotdir=%s, basename=%s, ext=%s, "
         "fname=%s, rstdir=%s, srcdir=%s, builddir=%s" %
         (tracker_name, basename, ext, fname, rstdir, srcdir, builddir))
-    logging.debug(
+    logger.debug(
         "report_directive.run: tracker_name=%s, basedir=%s, "
         "rst2src=%s, root2build=%s, outdir=%s, codename=%s" %
         (tracker_name, basedir, rst2srcdir, rst2builddir, outdir, codename))
@@ -131,9 +134,9 @@ def run(arguments,
     try:
         options = Utils.updateOptions(options)
     except ValueError as msg:
-        logging.warn("failure while updating options: %s" % msg)
+        logger.warn("failure while updating options: %s" % msg)
 
-    logging.debug("report_directive.run: options=%s" % (str(options),))
+    logger.debug("report_directive.run: options=%s" % (str(options),))
 
     transformer_names = []
     renderer_name = None
@@ -152,15 +155,15 @@ def run(arguments,
     display_options.update(Utils.selectAndDeleteOptions(
         options, option_map["display"]))
 
-    logging.debug("report_directive.run: renderer options: %s" %
+    logger.debug("report_directive.run: renderer options: %s" %
                   str(renderer_options))
-    logging.debug("report_directive.run: transformer options: %s" %
+    logger.debug("report_directive.run: transformer options: %s" %
                   str(transformer_options))
-    logging.debug("report_directive.run: dispatcher options: %s" %
+    logger.debug("report_directive.run: dispatcher options: %s" %
                   str(dispatcher_options))
-    logging.debug("report_directive.run: tracker options: %s" %
+    logger.debug("report_directive.run: tracker options: %s" %
                   str(tracker_options))
-    logging.debug("report_directive.run: display options: %s" %
+    logger.debug("report_directive.run: display options: %s" %
                   str(display_options))
 
     if "transform" in display_options:
@@ -191,7 +194,7 @@ def run(arguments,
         rstname = os.path.basename(filename_text)
         notebookname += options_hash
 
-        logging.debug("report_directive.run: options_hash=%s" % options_hash)
+        logger.debug("report_directive.run: options_hash=%s" % options_hash)
 
         ###########################################################
         # check for existing files
@@ -203,7 +206,7 @@ def run(arguments,
                               (root2builddir, suffix))
                    for suffix in ("png", "pdf", "svg")]
 
-        logging.debug("report_directive.run: checking for changed files.")
+        logger.debug("report_directive.run: checking for changed files.")
 
         # check if text element exists
         if os.path.exists(filename_text):
@@ -221,17 +224,17 @@ def run(arguments,
 
             filenames = [os.path.join(outdir, x) for x in filenames]
 
-            logging.debug(
+            logger.debug(
                 "report_directive.run: %s: checking for %s" %
                 (tag, str(filenames)))
             for filename in filenames:
                 if not os.path.exists(filename):
-                    logging.info(
-                        "report_directive.run: %s: redo: %s missing" %
+                    logger.info(
+                        "report_directive.run: %s: redo: file %s is missing" %
                         (tag, filename))
                     break
             else:
-                logging.info(
+                logger.info(
                     "report_directive.run: %s: noredo: all files are present" %
                     tag)
                 # all is present - save text and return
@@ -240,7 +243,7 @@ def run(arguments,
                         lines, state_machine.input_lines.source(0))
                 return []
         else:
-            logging.debug(
+            logger.debug(
                 "report_directive.run: %s: no check performed: %s missing" %
                 (tag, str(filename_text)))
     else:
@@ -260,35 +263,35 @@ def run(arguments,
     try:
         ########################################################
         # find the tracker
-        logging.debug(
+        logger.debug(
             "report_directive.run: collecting tracker %s with options %s " %
             (tracker_name, tracker_options))
         code, tracker, tracker_path = Utils.makeTracker(
             tracker_name, (), tracker_options)
         if not tracker:
-            logging.error(
+            logger.error(
                 "report_directive.run: no tracker - no output from %s " %
                 str(document))
             raise ValueError("tracker `%s` not found" % tracker_name)
 
-        logging.debug(
+        logger.debug(
             "report_directive.run: collected tracker %s" % tracker_name)
 
         tracker_id = Cache.tracker2key(tracker)
 
         ########################################################
         # determine the transformer
-        logging.debug("report_directive.run: creating transformers")
+        logger.debug("report_directive.run: creating transformers")
 
         transformers = Utils.getTransformers(
             transformer_names, transformer_options)
 
         ########################################################
         # determine the renderer
-        logging.debug("report_directive.run: creating renderer.")
+        logger.debug("report_directive.run: creating renderer.")
 
         if renderer_name is None:
-            logging.error(
+            logger.error(
                 "report_directive.run: no renderer - no output from %s" %
                 str(document))
             raise ValueError("the report directive requires a renderer")
@@ -304,7 +307,7 @@ def run(arguments,
 
         ########################################################
         # create and call dispatcher
-        logging.debug("report_directive.run: creating dispatcher")
+        logger.debug("report_directive.run: creating dispatcher")
 
         dispatcher = Dispatcher.Dispatcher(tracker,
                                            renderer,
@@ -325,7 +328,7 @@ def run(arguments,
 
     except:
 
-        logging.warn(
+        logger.warn(
             "report_directive.run: exception caught at %s:%i - see document" %
             (str(document), lineno))
 
@@ -334,7 +337,7 @@ def run(arguments,
         code = None
         tracker_id = None
 
-    logging.debug(
+    logger.debug(
         "report_directive.run: profile: started: collecting: %s" % tag)
 
     ########################################################
@@ -389,7 +392,7 @@ def run(arguments,
                 links=links))
     except:
 
-        logging.warn("report_directive.run: exception caught while "
+        logger.warn("report_directive.run: exception caught while "
                      "collecting with %s at %s:%i - see document" %
                      (collector, str(document), lineno))
         blocks = ResultBlocks(ResultBlocks(
@@ -446,40 +449,13 @@ def run(arguments,
         state_machine.insert_input(
             lines, state_machine.input_lines.source(0))
 
-    logging.debug(
+    logger.debug(
         "report_directive.run: profile: finished: collecting: %s" % tag)
-    logging.debug(
+    logger.debug(
         "report_directive.run: profile: finished: rst: %s:%i" %
         (str(document), lineno))
 
     return []
-
-# try:
-#    from docutils.parsers.rst import Directive
-# except ImportError:
-#     from docutils.parsers.rst.directives import _directives
-
-#     def report_directive(name,
-#                          arguments,
-#                          options,
-#                          content, lineno,
-#                          content_offset,
-#                          block_text,
-#                          state,
-#                          state_machine):
-#         return run(arguments, options, lineno, content, state_machine)
-
-#     report_directive.__doc__ = __doc__
-#     report_directive.arguments = (1, 0, 1)
-#     report_directive.options = dict(Config.RENDER_OPTIONS.items() +\
-# Config.TRANSFORM_OPTIONS.items() +\
-#                                          Config.DISPLAY_OPTIONS.items() +\
-#                                          Config.DISPATCHER_OPTIONS.items())
-
-#     _directives['report'] = report_directive
-# else:
-
-from docutils.parsers.rst import Directive
 
 
 class report_directive(Directive):
@@ -493,7 +469,8 @@ class report_directive(Directive):
 
     def run(self):
         document = self.state.document.current_source
-        logging.info("report_directive: starting: %s:%i" %
+        logger = Component.get_logger()
+        logger.info("report_directive: starting: %s:%i" %
                      (str(document), self.lineno))
 
         return run(self.arguments,
@@ -502,8 +479,6 @@ class report_directive(Directive):
                    self.content,
                    self.state_machine,
                    document)
-
-# directives.register_directive('report', report_directive)
 
 
 def setup(app):
@@ -518,16 +493,7 @@ def setup(app):
     PARAMS = Utils.get_parameters()
     app.add_config_value('PARAMS', collections.defaultdict(), 'env')
 
-    setup.logger = logging.getLogger(
-        "cgatreport")
-    setup.logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(
-        Component.LOGFILE,
-        mode="a")
-    formatter = logging.Formatter(
-        '%(asctime)s %(levelname)s %(message)s')
-    fh.setFormatter(formatter)
-    setup.logger.addHandler(fh)
+    setup.logger = Component.get_logger()
 
     # return {'parallel_read_safe': True}
 

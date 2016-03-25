@@ -1,10 +1,9 @@
 import collections
 import itertools
-from logging import debug
 from collections import OrderedDict as odict
 import pandas
 from CGATReport import Utils
-
+from CGATReport import Component
 
 def unique(iterables):
     s = set()
@@ -40,7 +39,6 @@ def str2path(s):
 # - a nested dictionary was more general from a user
 # point of view.
 class DataTree(object):
-
     '''a DataTree.
 
     A data tree is a nested dictionary. A branch or
@@ -56,7 +54,6 @@ class DataTree(object):
     slots = "_data"
 
     def __init__(self, data=None):
-
         if not data:
             data = odict()
         object.__setattr__(self, "_data", data)
@@ -321,6 +318,8 @@ def asDataFrame(data):
     if data is None or len(data) == 0:
         return None
 
+    logger = Component.get_logger()
+
     levels = getDepths(data)
     mi, ma = min(levels), max(levels)
     if mi != ma:
@@ -397,7 +396,7 @@ def asDataFrame(data):
                 break
 
         if is_coordinate:
-            debug('dataframe conversion: from array - coordinates')
+            logger.debug('dataframe conversion: from array - coordinates')
             for path, leaves in branches:
                 # skip empty leaves
                 if len(leaves) == 0:
@@ -405,7 +404,7 @@ def asDataFrame(data):
                 dataframes.append(pandas.DataFrame(leaves))
                 index_tuples.append(path)
         else:
-            debug('dataframe conversion: from array - series')
+            logger.debug('dataframe conversion: from array - series')
             # arrays of unequal length are measurements
             # build a melted data frame with a single column
             # given by the name of the path.
@@ -421,7 +420,7 @@ def asDataFrame(data):
         df = concatDataFrames(dataframes, index_tuples)
 
     elif Utils.isDataFrame(leaf):
-        debug('dataframe conversion: from dataframe')
+        logger.debug('dataframe conversion: from dataframe')
 
         # build dataframe from list of dataframes
         # by concatenation.
@@ -466,7 +465,7 @@ def asDataFrame(data):
         df = concatDataFrames(dataframes, index_tuples)
 
     else:
-        debug('dataframe conversion: from values')
+        logger.debug('dataframe conversion: from values')
         if len(labels) == 1:
             # { 'x': 1, 'y': 2 } -> DF with one row and two columns (x, y)
             df = pandas.DataFrame(data.values(), index=data.keys())
@@ -806,6 +805,7 @@ def tree2table(data, transpose=False, head=None):
 
     returns matrix, row_headers, col_headers
     """
+    logger = Component.get_logger()
 
     labels = getPaths(data)
 
@@ -824,8 +824,9 @@ def tree2table(data, transpose=False, head=None):
     header_offset = effective_cols
     matrix = []
 
-    debug("Datatree.buildTable: creating table with %i columns" %
-          (len(col_headers)))
+    logger.debug(
+        "Datatree.buildTable: creating table with %i columns" %
+        (len(col_headers)))
 
     # the following can be made more efficient
     # by better use of indices
