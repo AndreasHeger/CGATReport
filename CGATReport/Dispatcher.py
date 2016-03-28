@@ -102,6 +102,18 @@ class Dispatcher(Component.Component):
     def parseArguments(self, *args, **kwargs):
         '''argument parsing.'''
 
+        def as_list(arg):
+            if arg is None:
+                return arg
+
+            return [x.strip() for x in arg.split(",")]
+
+        def as_set(arg):
+            if arg is None:
+                return arg
+            else:
+                return set([x.strip() for x in arg.split(",")])
+
         self.groupby = kwargs.get("groupby", "default")
         try:
             self.groupby = int(self.groupby)
@@ -110,34 +122,14 @@ class Dispatcher(Component.Component):
 
         self.nocache = "nocache" in kwargs
 
-        try:
-            self.mInputTracks = [x.strip()
-                                 for x in kwargs["tracks"].split(",")]
-        except KeyError:
-            self.mInputTracks = None
-
-        try:
-            self.mInputSlices = [x.strip()
-                                 for x in kwargs["slices"].split(",")]
-        except KeyError:
-            self.mInputSlices = None
-
-        try:
-            self.restrict_paths = [x.strip()
-                                   for x in kwargs["restrict"].split(",")]
-        except KeyError:
-            self.restrict_paths = None
-
-        try:
-            self.exclude_paths = [x.strip()
-                                  for x in kwargs["exclude"].split(",")]
-        except KeyError:
-            self.exclude_paths = None
-
-        try:
-            self.mColumns = [x.strip() for x in kwargs["columns"].split(",")]
-        except KeyError:
-            self.mColumns = None
+        self.mInputTracks = as_list(kwargs.get("tracks", None))
+        self.mInputSlices = as_list(kwargs.get("slices", None))
+        self.restrict_paths = as_list(kwargs.get("restrict", None))
+        self.exclude_paths = as_list(kwargs.get("exclude", None))
+        self.mColumns = as_list(kwargs.get("columns", None))
+        self.exclude_columns = as_set(kwargs.get("exclude-columns", None))
+        self.include_columns = as_list(kwargs.get("include-columns", None))
+        self.set_index = as_list(kwargs.get("set-index", None))
 
         self.tracker_options = kwargs.get("tracker", None)
 
@@ -439,12 +431,13 @@ class Dispatcher(Component.Component):
         If grouping by "track" is set, additional level will be added
         to ensure that grouping will happen.
 
-        If grouping by "slice" is set, the first two levels will
-        be swopped.
+        If grouping by "slice" is set, the first two levels will be
+        swopped.
 
-        The group level indicates at which level in the nested dictionary
-        the data will be grouped with 0 indicating that everything will
-        grouped together.
+        The group level indicates at which level in the nested
+        dictionary the data will be grouped with 0 indicating that
+        everything will grouped together.
+
         '''
 
         nlevels = Utils.getDataFrameLevels(self.data)
@@ -491,8 +484,9 @@ class Dispatcher(Component.Component):
         else:
             self.group_level = 0
 
-        self.debug("grouping: nlevel=%i, groupby=%s, default=%s, group=%i" %
-                   (nlevels, groupby, str(default_level), self.group_level))
+        self.debug(
+            "grouping: nlevel=%i, groupby=%s, default=%s, group=%i" %
+            (nlevels, groupby, str(default_level), self.group_level))
 
         return self.data
 
@@ -527,12 +521,37 @@ class Dispatcher(Component.Component):
                 inplace=True)
 
             for level, label in pruned:
-                self.debug("pruned level %i from data tree: label='%s'" %
-                           (level, label))
+                self.debug(
+                    "pruned level %i from data tree: label='%s'" %
+                    (level, label))
 
             # save for conversion
             self.pruned = pruned
 
+    def reframe(self):
+        """set index and drop columns of dataframe"""
+        dataframe = self.data
+
+        if not (self.set_index or self.include_columns or self.exclude_columns):
+            return
+
+        if self.set_index is None:
+            index_columns = dataframe.index.levels
+        else:
+            index_columns = self.set_index
+
+        dataframe.reset_index(inplace=True)
+        if self.include_columns:
+            new_columns = self.include_columns
+        else:
+            new_columns = [x for x in dataframe.columns if x not in index_columns]
+
+        if self.exclude_columns:
+            new_columns = [x for x in new_columns if x not in self.exclude_columns]
+
+        dataframe.set_index(index_columns, inplace=True)
+        self.data = dataframe[new_columns]
+        
     def render(self):
         '''supply the:class:`Renderer.Renderer` with the data to render.
 
@@ -548,8 +567,6 @@ class Dispatcher(Component.Component):
         results = ResultBlocks(title="")
 
         dataframe = self.data
-
-        # dataframe.write_csv("test.csv")
 
         if dataframe is None:
             self.warn("%s: no data after conversion" % self)
@@ -712,6 +729,12 @@ class Dispatcher(Component.Component):
         # except:
         #     self.error("%s: exception in pruning" % self)
         #     return ResultBlocks(ResultBlocks(Utils.buildException("pruning")))
+
+        try:
+            self.reframe()
+        except:
+            self.error("%s: exception in reframing" % self)
+            return ResultBlocks(ResultBlocks(Utils.buildException("reframing")))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after pruning: %i data_paths: %s" %

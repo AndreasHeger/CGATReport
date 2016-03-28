@@ -123,6 +123,9 @@ def getOptionMap():
 
         options["dispatch"] = {
             'groupby': directives.unchanged,
+            'set-index': directives.unchanged,
+            'include-columns': directives.unchanged,
+            'exclude-columns': directives.unchanged,
             'tracks': directives.unchanged,
             'slices': directives.unchanged,
             'layout': directives.unchanged,
