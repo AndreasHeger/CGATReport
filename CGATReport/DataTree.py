@@ -321,6 +321,9 @@ def asDataFrame(data):
     logger = Component.get_logger()
 
     levels = getDepths(data)
+    if len(levels) == 0:
+        return None
+
     mi, ma = min(levels), max(levels)
     if mi != ma:
         raise NotImplementedError(
