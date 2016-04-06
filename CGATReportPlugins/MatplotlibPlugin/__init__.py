@@ -10,18 +10,18 @@ from CGATReport import Utils
 
 try:
     import mpld3
-    USE_MPLD3 = Utils.PARAMS.get('report_mpl', None) == 'mpld3'
+    HAVE_MPLD3 = True
 except ImportError:
-    USE_MPLD3 = False
+    HAVE_MPLD3 = False
 
 try:
     import bokeh.plotting
     import bokeh.embed
     import bokeh.mpl
     import bokeh.mplexporter.exporter
-    USE_BOKEH = Utils.PARAMS.get('report_mpl', None) == 'bokeh'
+    HAVE_BOKEH = True
 except ImportError:
-    USE_BOKEH = False
+    HAVE_BOKEH = False
 
 
 class MatplotlibPlugin(Component):
@@ -98,7 +98,8 @@ class MatplotlibPlugin(Component):
             # insert display figure
             is_html = False
             script_text = None
-            if USE_MPLD3:
+            if HAVE_MPLD3 and \
+               Utils.PARAMS.get("report_mpl", None) == "mpld3":
                 outpath = os.path.join(
                     outdir,
                     '%s.html' % (outname))
@@ -109,7 +110,9 @@ class MatplotlibPlugin(Component):
                     outf.write(mpld3.fig_to_html(figure))
                 is_html = True
 
-            elif USE_BOKEH:
+            elif HAVE_BOKEH and \
+                 Utils.PARAMS.get("report_mpl", None) == "bokeh":
+
                 outpath = os.path.join(
                     outdir,
                     '%s.html' % (outname))
