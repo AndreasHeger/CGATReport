@@ -40,6 +40,12 @@ def writeCode(class_name, code, inliner):
     # output code
     linked_codename = re.sub("\\\\", "/", os.path.join(rst2srcdir, codename))
     if code and basedir != outdir:
+        # patch, something is wrong with paths, files do not end up
+        # in build directory, but in current directory because outdir
+        # only has the last path components (_static/report_directive)
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+
         outfile = open(os.path.join(outdir, codename), "w")
         for line in code:
             outfile.write(line)
