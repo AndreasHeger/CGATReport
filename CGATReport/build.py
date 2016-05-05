@@ -383,6 +383,8 @@ def main(argv=None):
 
     rst_files = getDirectives(options, args, sourcedir)
 
+    Utils.get_parameters()
+
     cleanTrackers(rst_files, options, args)
 
     buildPlots(rst_files, options, args, sourcedir)
