@@ -1334,11 +1334,13 @@ class StatusMatrix(Status, TableBase):
                 os.path.join(dirname,
                              self.map_code2image.get(x.upper(), "NA")))
             for x in dataframe["status"]]
-            
-        table = dataframe.reset_index().pivot(
-            index=self.row_column,
+
+        table = pandas.pivot_table(
+            dataframe.reset_index(),
+            index=[self.row_column],
             columns="slice",
-            values="status")
+            values="status",
+            aggfunc = lambda x: x)
 
         if self.transpose:
             table = table.transpose()
