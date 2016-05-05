@@ -7,6 +7,26 @@ from docutils.parsers.rst import directives
 import matplotlib.pyplot as plt
 import pandas
 
+import ggplot.components.shapes
+
+# see matplotlib.markers.
+# Note that not all shapes work in legend (+, x, 1, 2, 4, 8)
+ggplot.components.shapes.SHAPES = [
+    'o',#circle
+    '^',#triangle up
+    '<',
+    '>',
+    'D',#diamond
+    'v',#triangle down
+    's',#square
+    '*',#star
+    'p',#pentagon
+    '*',#octagon
+    'h',
+    'H',
+    'd',
+]
+
 # import all into namespace for eval
 from ggplot import *
 
