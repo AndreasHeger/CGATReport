@@ -942,17 +942,26 @@ class TransformerAggregate(Transformer):
         add value of first bin to all other bins
         and set first bin to 0.
 
+    smooth
+        smooth histogram.
+
+    rarify
+        take only a subset of columns from a histogram.
+        Use with smoothing to visualize dense noisy histograms.
     '''
 
     nlevels = 0
 
     options = Transformer.options +\
-        (('tf-aggregate', directives.unchanged),)
+        (('tf-aggregate', directives.unchanged),
+         ('tf-smooth-window-size', directives.length_or_unitless),
+         ('tf-rarify', directives.unchanged))
 
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
 
-        self.mConverters = []
+        self.column_converters = []
+        self.histogram_converters = []
         self.mFormat = "%i"
         self.mBinMarker = "left"
 
@@ -962,30 +971,40 @@ class TransformerAggregate(Transformer):
             "cumulative": self.cumulate,
             "reverse-cumulative": self.reverse_cumulate,
             "relevel-with-first": self.relevel_with_first,
+            "smooth": self.smooth_histogram,
+        }
+
+        self.map_histogram_converters = {
+            "rarify": self.rarify,
+            "fill_range_with_zeros": self.fill_range_with_zeros,
         }
 
         if "tf-aggregate" in kwargs:
             for x in kwargs["tf-aggregate"].split(","):
-                try:
-                    self.mConverters.append(self.mMapKeyword[x])
-                except KeyError:
+                if x in self.mMapKeyword:
+                    self.column_converters.append(self.mMapKeyword[x])
+                elif x in self.map_histogram_converters:
+                    self.histogram_converters.append(self.map_histogram_converters[x])
+                else:
                     raise KeyError("unknown keyword `%s`" % x)
 
-        if self.normalize_total in self.mConverters or \
-           self.normalize_max in self.mConverters:
+        if self.normalize_total in self.column_converters or \
+           self.normalize_max in self.column_converters:
             self.mFormat = "%6.4f"
 
         self.mBins = kwargs.get("tf-bins", "100")
         self.mRange = kwargs.get("tf-range", None)
+        self.smooth_window_size = int(kwargs.get("tf-smooth-window-size", 11))
+        self.rarify_ratio = float(kwargs.get("tf-rarify", 0.01))
 
         f = []
-        if self.normalize_total in self.mConverters:
+        if self.normalize_total in self.column_converters:
             f.append("relative")
         else:
             f.append("absolute")
-        if self.cumulate in self.mConverters:
+        if self.cumulate in self.column_converters:
             f.append("cumulative")
-        if self.reverse_cumulate in self.mConverters:
+        if self.reverse_cumulate in self.column_converters:
             f.append("cumulative")
         f.append("frequency")
 
@@ -1000,6 +1019,10 @@ class TransformerAggregate(Transformer):
         data = data.astype(numpy.float)
         # numpy does not throw at division by zero, but sets values to Inf
         return data / m
+
+    def smooth_histogram(self, data):
+        r = Stats.smooth(data, window_len=self.smooth_window_size)
+        return r[:len(data)]
 
     def relevel_with_first(self, data):
         """re-level data - add value of first bin to all other bins
@@ -1030,6 +1053,29 @@ class TransformerAggregate(Transformer):
     def reverse_cumulate(self, data):
         return data[::-1].cumsum()[::-1]
 
+    def rarify(self, data):
+        if self.rarify_ratio < 1:
+            window = min(1, int(math.floor(len(data) * self.rarify_ratio)))
+        else:
+            window = min(1, int(math.floor(float(len(data)) / self.rarify_ratio)))
+        return data.ix[range(0, len(data), window)]
+
+    def fill_range_with_zeros(self, data):
+        min_range = data.ix[:, 0].min()
+        max_range = data.ix[:, 0].max()
+        df = pandas.DataFrame(0,
+                              index=numpy.arange(min_range, max_range),
+                              columns=data.columns[1:]).reset_index()
+        df.columns = data.columns
+        merged = pandas.merge(df, data, on=data.columns[0], how="left").fillna(0)
+        merged[data.columns[1]] = merged[data.columns[1] + "_x"] + merged[data.columns[1]+"_y"]
+        merged = merged[data.columns]
+        keys = tuple(data.groupby(by=data.index).groups.keys()[0])
+        merged.index = pandas.MultiIndex.from_tuples(
+            [keys] * len(merged),
+            names=data.index.names)
+        return merged
+
     def transform(self, data):
         self.debug("%s: called" % str(self))
 
@@ -1039,8 +1085,11 @@ class TransformerAggregate(Transformer):
                 str(data.columns))
 
         for column in data.columns[1:]:
-            for converter in self.mConverters:
+            for converter in self.column_converters:
                 data.loc[:, column] = converter(data[column])
+
+        for converter in self.histogram_converters:
+            data = converter(data)
 
         return data
 
@@ -1074,13 +1123,13 @@ class TransformerHistogram(TransformerAggregate):
         self.max_bins = int(kwargs.get("max-bins", "1000"))
 
         f = []
-        if self.normalize_total in self.mConverters:
+        if self.normalize_total in self.column_converters:
             f.append("relative")
         else:
             f.append("absolute")
-        if self.cumulate in self.mConverters:
+        if self.cumulate in self.column_converters:
             f.append("cumulative")
-        if self.reverse_cumulate in self.mConverters:
+        if self.reverse_cumulate in self.column_converters:
             f.append("cumulative")
         f.append("frequency")
 
@@ -1199,7 +1248,7 @@ class TransformerHistogram(TransformerAggregate):
 
         df = self.toHistogram(data)
         df = df.set_index("bin", append=True)
-        for converter in self.mConverters:
+        for converter in self.column_converters:
             df = df.apply(converter, axis=0)
 
         df.reset_index(level="bin", inplace=True)
