@@ -75,6 +75,33 @@ Options
 
       See :ref:`matrix` if you want to normalize across rows or
       columns across a table.
+
+   format-columns
+      string
+
+      pretty format columns. Without option or if ``auto``, all
+      columns will be auto-formated. Otherwise, the option takes a
+      list column names separated by ``,``.
+      
+Formatting tables
+-----------------
+
+.. report:: Trackers.TableDataExample
+   :render: table
+
+   Unformatted table
+
+.. report:: Trackers.TableDataExample
+   :render: table
+   :format-columns:
+
+   Auto formatted table
+
+.. report:: Trackers.TableDataExample
+   :render: table
+   :format-columns: bigint, bigfloat
+
+   Selected columns formatted
       
 Grouping tables
 ---------------

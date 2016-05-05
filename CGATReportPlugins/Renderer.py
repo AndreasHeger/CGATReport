@@ -539,6 +539,7 @@ class Table(TableBase):
          ('add-percent', directives.unchanged),
          ('head', directives.length_or_unitless),
          ('large', directives.unchanged),
+         ('format-columns', directives.unchanged),
          ('preview', directives.unchanged))
 
     # By default, group everything together
@@ -552,6 +553,24 @@ class Table(TableBase):
         self.transpose = "transpose" in kwargs
         self.large = kwargs.get("large", "html")
         self.preview = "preview" in kwargs
+
+        if "format-columns" in kwargs:
+            self.format_columns = kwargs.get("format-columns",
+                                             None)
+            if self.format_columns is None:
+                self.format_columns = "auto"
+            else:
+                columns = self.format_columns.split(",")
+                self.format_columns = {}
+                for column in columns:
+                    if "=" in column:
+                        column, formt = column.split("=")
+                    else:
+                        frmt = "auto"
+                    self.format_columns[column] = frmt
+        else:
+            self.format_columns = None
+        
         self.add_percent = kwargs.get('add-percent', None)
         self.head = int(kwargs.get('head', 0))
 
@@ -606,6 +625,26 @@ class Table(TableBase):
             if is_hierarchical:
                 dataframe.columns = ["/".join(x) for x in dataframe.columns]
 
+        if self.format_columns is not None:
+            for column in dataframe.columns:
+                if self.format_columns == "auto":
+                    fmt = "auto"
+                elif column in self.format_columns:
+                    fmt = self.format_columns[column]
+                else:
+                    continue
+
+                cc = dataframe[column]
+                if cc.dtype == numpy.float:
+                    mi, ma = cc.min(), cc.max()
+                    if mi >= 0 and ma <= 1.0:
+                        # convert to percent
+                        dataframe[column] = (100.0 * cc).map('{:,.2f}'.format)
+                    else:
+                        dataframe[column] = cc.map('{:,.2f}'.format)
+                elif cc.dtype == numpy.int:
+                    dataframe[column] = cc.map('{:,}'.format)
+                    
         # if index is not hierarchical, but contains tuples,
         # split tuples in index to build a new (hierarchical) index
         is_hierarchical = isinstance(dataframe.index,

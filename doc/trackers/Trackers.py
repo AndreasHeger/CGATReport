@@ -419,3 +419,17 @@ class ImageWithName(Tracker):
                              "images/figure2.png"],
                 'name': ['image A', 'image B']}
     
+
+class TableDataExample(Tracker):
+    """return array with multiple data types for pretty formatting."""
+
+    def __call__(self):
+        
+        df = pandas.DataFrame(
+            data = {
+                "percent": [0.5, 0.1, 1.0],
+                "bigfloat": [0.5, 1.2, 10000.3],
+                "bigint": [10000, 100000, 10]}
+            )
+        
+        return df
