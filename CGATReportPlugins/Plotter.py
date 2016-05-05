@@ -250,10 +250,11 @@ class Plotter(object):
 
         self.xticks_max_length = int(kwargs.get('xticks-max-chars',
                                                 self.xticks_max_length))
-        self.xticks_action = kwargs.get('xticks_action',
+        self.xticks_action = kwargs.get('xticks-action',
                                         'number')
 
-        if self.xticks_action not in ('number', 'truncate-start',
+        if self.xticks_action not in ('number',
+                                      'truncate-start',
                                       'truncate-end'):
             raise ValueError(
                 "unknown option for xticks-action: '%s'" %
@@ -484,16 +485,20 @@ class Plotter(object):
 
             if max_len > self.xticks_max_length:
 
-                if self.xticks_action == "truncate-end":
-                    f = lambda x, txt: txt[:self.xticks_max_length]
-                elif self.xticks_action == "truncate-start":
-                    f = lambda x, txt: txt[-self.xticks_max_length:]
-                elif self.xticks_action == "number":
-                    f = lambda x, txt: str(x)
+                if self.xticks_action.startswith("truncate"):
 
-                # Use chars starting at 'A' for labels
-                new_labels = [f(chr(65 + x), y) for x, y in enumerate(xlabels)]
-                # new_labels = [f(x, y) for x, y in enumerate(xlabels)]
+                    if self.xticks_action == "truncate-end":
+                        f = lambda x, txt: txt[:self.xticks_max_length]
+                    elif self.xticks_action == "truncate-start":
+                        f = lambda x, txt: txt[-self.xticks_max_length:]
+                    new_labels = [f(x, y) for x, y in enumerate(xlabels)]
+
+                elif self.xticks_action == "number":
+                    # Use chars starting at 'A' for labels
+                    new_labels = [(chr(65 + x), y) for x, y in enumerate(xlabels)]
+                else:
+                    raise ValueError("unkown xtick-action: {}".format(self.xticks_action))
+
                 postamble = "\n" + "\n".join(
                     ["* %s: %s" % (x, y)
                      for x, y in zip(new_labels, xlabels)])
@@ -1342,7 +1347,6 @@ class LinePlot(Renderer, Plotter):
                 'require at least two columns, got %i' % len(columns))
 
         level = Utils.getGroupLevels(dataframe)
-
         for key, work in dataframe.groupby(
                 level=level):
             xvalues = work[columns[0]]
