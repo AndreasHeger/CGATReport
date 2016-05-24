@@ -33,6 +33,7 @@ class PandasPlot(Renderer, Plotter):
         # see this thread: https://github.com/yhat/ggplot/issues/285
 
         dataframe.reset_index(inplace=True)
+
         p = None
         s = "p = dataframe.plot(%s)" % self.statement
 

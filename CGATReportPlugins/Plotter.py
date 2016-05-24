@@ -495,9 +495,14 @@ class Plotter(object):
 
                 elif self.xticks_action == "number":
                     # Use chars starting at 'A' for labels
-                    new_labels = [(chr(65 + x), y) for x, y in enumerate(xlabels)]
+                    nchars = int(math.ceil(len(xlabels) / 26.0))
+                    new_labels = ["".join(x) for x in itertools.product(
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                        repeat=nchars)]
+                    new_labels = new_labels[:len(xlabels)]
                 else:
-                    raise ValueError("unkown xtick-action: {}".format(self.xticks_action))
+                    raise ValueError(
+                        "unkown xtick-action: {}".format(self.xticks_action))
 
                 postamble = "\n" + "\n".join(
                     ["* %s: %s" % (x, y)
@@ -661,8 +666,8 @@ class PlotterMatrix(Plotter):
     options = Plotter.options +\
         (('palette', directives.unchanged),
          ('reverse-palette', directives.flag),
-         ('max-rows', directives.unchanged),
-         ('max-cols', directives.unchanged),
+         ('split-rows', directives.unchanged),
+         ('split-cols', directives.unchanged),
          ('colorbar-format', directives.unchanged),
          ('nolabel-rows', directives.flag),
          ('nolabel-cols', directives.flag),
@@ -673,15 +678,21 @@ class PlotterMatrix(Plotter):
 
         self.mBarFormat = kwargs.get("colorbar-format", "%1.1f")
         self.mPalette = kwargs.get("palette", "jet")
-        self.mMaxRows = int(kwargs.get("max-rows", 0))
-        self.mMaxCols = int(kwargs.get("max-cols", 0))
+        self.split_rows = kwargs.get("split-rows", 0)
+        self.split_cols = kwargs.get("split-cols", 0)
 
         self.mReversePalette = "reverse-palette" in kwargs
         self.label_rows = "nolabel-rows" not in kwargs
         self.label_cols = "nolabel-cols" not in kwargs
 
-    def addColourBar(self):
-        plt.colorbar(format=self.mBarFormat)
+    def addColourBar(self, ax=None):
+        if ax is None:
+            plt.colorbar(format=self.mBarFormat)
+        else:
+            fig = ax.figure
+            fig.subplots_adjust(right=0.8)
+            cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+            fig.colorbar(ax, cax=cbar_ax, format=self.mBarFormat)
 
     def buildWrappedHeaders(self, headers):
         """build headers. Long headers are split using
@@ -822,8 +833,25 @@ class PlotterMatrix(Plotter):
 
         plots, labels = [], []
 
-        split_row = self.mMaxRows > 0 and nrows > self.mMaxRows
-        split_col = self.mMaxCols > 0 and ncols > self.mMaxCols
+        if self.split_cols == "auto":
+            self.split_cols = int(ncols / math.sqrt(ncols / nrows))
+        else:
+            self.split_cols = int(self.split_cols)
+
+        if self.split_rows == "auto":
+            self.split_rows = int(nrows / math.sqrt(nrows / ncols))
+        else:
+            self.split_rows = int(self.split_rows)
+            
+        split_row = self.split_rows > 0 and nrows > self.split_rows
+        split_col = (self.split_cols > 0 and ncols > self.split_cols) or \
+                    (self.split_cols == "auto")
+        
+        if split_row or split_col:
+            if vmin is None:
+                vmin = matrix.min()
+            if vmax is None:
+                vmax = matrix.max()
 
         if (split_row and split_col) or not (split_row or split_col):
             self.debug("not splitting matrix")
@@ -835,43 +863,20 @@ class PlotterMatrix(Plotter):
             # plots, labels = None, None
             self.rescaleForVerticalLabels(col_headers, cliplen=12)
             self.addColourBar()
-            if False:
-                plot_nrows = int(math.ceil(float(nrows) / self.mMaxRows))
-                plot_ncols = int(math.ceil(float(ncols) / self.mMaxCols))
-                new_row_headers = row_headers
-                new_col_headers = col_headers
-                nplot = 1
-                for row in range(plot_nrows):
-                    for col in range(plot_ncols):
-                        plt.subplot(plot_nrows, plot_ncols, nplot)
-                        nplot += 1
-                        row_start = row * self.mMaxRows
-                        row_end = row_start + min(plot_nrows, self.mMaxRows)
-                        col_start = col * self.mMaxRows
-                        col_end = col_start + min(plot_ncols, self.mMaxCols)
-                        self.plotMatrix(
-                            matrix[row_start:row_end, col_start:col_end],
-                            new_row_headers[row_start:row_end],
-                            new_col_headers[col_start:col_end],
-                            vmin, vmax,
-                            color_scheme)
-
-                labels = ["%s: %s" % x for x in zip(new_row_headers,
-                                                    row_headers)]
-                self.legend_location = "extra"
-                plt.subplots_adjust(**self.mMPLSubplotOptions)
 
         elif split_row:
-            self.debug("splitting matrix at row")
+            nplots = int(math.ceil(float(nrows) / self.split_rows))
 
-            nplots = int(math.ceil(float(nrows) / self.mMaxRows))
+            self.debug("splitting matrix at rows: {} * {} x {}".format(
+                nplots, self.split_rows, ncols))
+            
             # not sure why this switch to numbers - disable
             # new_headers = ["%s" % (x + 1) for x in range(len(row_headers))]
             new_headers = row_headers
             for x in range(nplots):
                 plt.subplot(1, nplots, x + 1)
-                start = x * self.mMaxRows
-                end = start + min(nrows, self.mMaxRows)
+                start = x * self.split_rows
+                end = start + min(nrows, self.split_rows)
                 cax = self.plotMatrix(matrix[start:end, :],
                                       new_headers[start:end],
                                       col_headers,
@@ -885,15 +890,17 @@ class PlotterMatrix(Plotter):
             self.addColourBar()
 
         elif split_col:
-            self.debug("splitting matrix at column")
-            nplots = int(math.ceil(float(ncols) / self.mMaxCols))
+            nplots = int(math.ceil(float(ncols) / self.split_cols))
+            self.debug("splitting matrix at columns: {} * {} x {}".format(
+                nplots, nrows, self.split_cols))
+
             # not sure why this switch to numbers - disable
             # new_headers = ["%s" % (x + 1) for x in range(len(col_headers))]
             new_headers = col_headers
             for x in range(nplots):
                 plt.subplot(nplots, 1, x + 1)
-                start = x * self.mMaxCols
-                end = start + min(ncols, self.mMaxCols)
+                start = x * self.split_cols
+                end = start + min(ncols, self.split_cols)
                 cax = self.plotMatrix(matrix[:, start:end],
                                       row_headers,
                                       new_headers[start:end],
@@ -904,7 +911,7 @@ class PlotterMatrix(Plotter):
 
             self.legend_location = "extra"
             plt.subplots_adjust(**self.mMPLSubplotOptions)
-            self.addColourBar()
+            self.addColourBar(ax=cax)
 
         self.debug("plot finished")
 

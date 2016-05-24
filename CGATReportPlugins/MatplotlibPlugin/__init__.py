@@ -82,11 +82,20 @@ class MatplotlibPlugin(Component):
 
                 outpath = os.path.join(outdir, '%s.%s' % (outname, format))
 
+                # sanitize figure size for Agg.
+                if figure.get_figwidth() > 32768 or figure.get_figheight() > 32768:
+                    warnings.warn(
+                        "figure size unexpected large {} x {}, "
+                        "patching to 10x10 inches".format(
+                            figure.get_figwidth(), figure.get_figheight()))
+                    figure.set_size_inches(10, 10)
+
                 try:
                     figman.canvas.figure.savefig(outpath, dpi=dpi)
-                except:
+                except Exception as ex:
                     s = Utils.collectExceptionAsString(
-                        "exception raised while building plot '%s'" % outpath)
+                        "exception raised while building plot '%s': %s" %
+                        (outpath, str(ex)))
                     warnings.warn(s)
                     continue
                 has_output = True

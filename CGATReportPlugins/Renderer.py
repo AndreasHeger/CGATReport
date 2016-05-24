@@ -557,17 +557,17 @@ class Table(TableBase):
         if "format-columns" in kwargs:
             self.format_columns = kwargs.get("format-columns",
                                              None)
-            if self.format_columns is None:
+            if not self.format_columns:
                 self.format_columns = "auto"
             else:
                 columns = self.format_columns.split(",")
                 self.format_columns = {}
                 for column in columns:
                     if "=" in column:
-                        column, formt = column.split("=")
+                        column, fmt = column.split("=")
                     else:
-                        frmt = "auto"
-                    self.format_columns[column] = frmt
+                        fmt = "auto"
+                    self.format_columns[column] = fmt
         else:
             self.format_columns = None
         

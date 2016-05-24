@@ -536,7 +536,10 @@ class Dispatcher(Component.Component):
             return
 
         if self.set_index is None:
-            index_columns = dataframe.index.levels
+            try:
+                index_columns = dataframe.index.levels
+            except AttributeError:
+                index_columns = [dataframe.index.name]
         else:
             index_columns = self.set_index
 
@@ -644,8 +647,8 @@ class Dispatcher(Component.Component):
         # collecting data
         try:
             self.collect()
-        except:
-            self.error("%s: exception in collection" % self)
+        except Exception as ex:
+            self.error("%s: exception in collection: %s" % (self, str(ex)))
             return ResultBlocks(ResultBlocks(
                 Utils.buildException("collection")))
         finally:
