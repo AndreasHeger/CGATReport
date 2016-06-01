@@ -846,12 +846,17 @@ class PlotterMatrix(Plotter):
         split_row = self.split_rows > 0 and nrows > self.split_rows
         split_col = (self.split_cols > 0 and ncols > self.split_cols) or \
                     (self.split_cols == "auto")
-        
+
+        # set consistent min/max values
         if split_row or split_col:
             if vmin is None:
-                vmin = matrix.min()
+                vmin = numpy.nanmin(matrix)
+                if vmin == numpy.inf or vmin == -numpy.inf:
+                    vmin = numpy.nanmin(matrix[matrix != vmin])
             if vmax is None:
-                vmax = matrix.max()
+                vmax = numpy.nanmax(matrix)
+                if vmax == numpy.inf or vmax == -numpy.inf:
+                    vmax = numpy.nanmax(matrix[matrix != vmax])
 
         if (split_row and split_col) or not (split_row or split_col):
             self.debug("not splitting matrix")

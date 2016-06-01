@@ -16,3 +16,28 @@ method.
    :width: 300
 
    A scatter plot
+
+To follow the examples from `here <http://pandas.pydata.org/pandas-docs/stable/visualization.html>`_:
+
+.. report:: Trackers.TableTimeSeries
+   :render: pdplot
+
+   Simple time series
+
+.. report:: Trackers.TableTimeSeries
+   :render: pdplot
+   :statement: kind="kde"
+
+   Density plot
+
+.. report:: Trackers.TableTimeSeries
+   :render: pdplot
+   :statement: subplots=True
+
+   Plotting with subplots
+
+.. report:: Trackers.TableTimeSeries
+   :render: pdplot
+   :statement: kind="area", stacked=False
+
+   Area plots

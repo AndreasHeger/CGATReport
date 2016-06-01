@@ -433,3 +433,16 @@ class TableDataExample(Tracker):
             )
         
         return df
+
+
+class TableTimeSeries(Tracker):
+    
+    def __call__(self):
+        
+         df = pandas.DataFrame(
+             numpy.random.randn(1000, 4),
+             index=pandas.date_range('1/1/2000', periods=1000),
+             columns=list('ABCD')).cumsum()
+
+         return df
+             

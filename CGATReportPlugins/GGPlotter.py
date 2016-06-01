@@ -7,25 +7,28 @@ from docutils.parsers.rst import directives
 import matplotlib.pyplot as plt
 import pandas
 
-import ggplot.components.shapes
+SHAPES = [
+        'o',#circle
+        '^',#triangle up
+        '<',
+        '>',
+        'D',#diamond
+        'v',#triangle down
+        's',#square
+        '*',#star
+        'p',#pentagon
+        '*',#octagon
+        'h',
+        'H',
+        'd',
+    ]
 
-# see matplotlib.markers.
-# Note that not all shapes work in legend (+, x, 1, 2, 4, 8)
-ggplot.components.shapes.SHAPES = [
-    'o',#circle
-    '^',#triangle up
-    '<',
-    '>',
-    'D',#diamond
-    'v',#triangle down
-    's',#square
-    '*',#star
-    'p',#pentagon
-    '*',#octagon
-    'h',
-    'H',
-    'd',
-]
+# ggplot > 0.9
+try:
+    import ggplot.discretemappers
+    ggplot.discretemappers.SHAPES = SHAPES
+except ImportError:
+    pass
 
 # import all into namespace for eval
 from ggplot import *
@@ -62,13 +65,12 @@ class GGPlot(Renderer, Plotter):
 
         # Currently, ggplot is not using hierarchical indices, but
         # see this thread: https://github.com/yhat/ggplot/issues/285
-
         dataframe.reset_index(inplace=True)
 
         if len(dataframe.dropna()) == 0:
             return []
 
-        s = "p = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
+        s = "plot = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
 
         try:
             exec s in globals(), locals()
@@ -77,13 +79,14 @@ class GGPlot(Renderer, Plotter):
                 "ggplot raised error for statement '%s': msg=%s" %
                 (s, msg))
 
-        # p.draw() calls figure() command, so do not call self.startPlot()
         self.mFigure += 1
         if self.title:
             plt.title(self.title)
 
+        # plot.make() calls plt.close() command, so create a dummy to be closed.
+        plt.figure()
         try:
-            plts = [p.draw()]
+            plts = [plot.make()]
         except Exception, msg:
             raise Exception(
                 "ggplot raised error for statement '%s': msg=%s" %

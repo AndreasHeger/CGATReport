@@ -836,6 +836,7 @@ class MatrixBase:
            * *normalized-total*: normalize over whole matrix
            * *normalized-max*: normalize over whole matrix
            * *sort*: sort matrix rows and columns alphanumerically.
+           * *sort-numerically*: sort matrix rows and columns numerically.
            * filter-by-rows: only take columns that are also present in rows
            * filter-by-cols: only take columns that are also present in cols
            * square: make square matrix (only take rows and columns present
@@ -873,6 +874,7 @@ class MatrixBase:
             "add-row-total": self.transformAddRowTotal,
             "add-column-total": self.transformAddColumnTotal,
             "sort": self.transformSort,
+            "sort-numerically": self.transformSortNumerically,
         }
         self.tofloat = False
         self.converters = []
@@ -987,6 +989,38 @@ class MatrixBase:
                                                        col_headers=col_headers)
 
         return matrix, row_headers, col_headers
+
+    def transformSortNumerically(self, matrix, row_headers, col_headers):
+        """apply correspondence analysis to a matrix.
+        """
+
+        def atoi(text):
+            return int(text) if text.isdigit() else text
+
+        def natural_keys(text):
+            '''
+            alist.sort(key=natural_keys) sorts in human order
+            http://nedbatchelder.com/blog/200712/human_sorting.html
+            (See Toothy's implementation in the comments)
+            '''
+            return [atoi(c) for c in re.split('(\d+)', text)]
+            
+        map_row_new2old = [x[0] for x in sorted(
+            enumerate([natural_keys(x) for x in row_headers]),
+            key=lambda x: x[1])]
+
+        map_col_new2old = [x[0] for x in sorted(
+            enumerate([natural_keys(x) for x in col_headers]),
+            key=lambda x: x[1])]
+
+        matrix, row_headers, col_headers = \
+            CorrespondenceAnalysis.GetPermutatedMatrix(matrix,
+                                                       map_row_new2old,
+                                                       map_col_new2old,
+                                                       row_headers=row_headers,
+                                                       col_headers=col_headers)
+
+        return matrix, row_headers, col_headers            
 
     def transformSymmetricMax(self, matrix, rows, cols):
         """symmetrize a matrix.

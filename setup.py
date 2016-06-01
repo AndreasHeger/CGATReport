@@ -112,7 +112,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='CGATReport',
-      version='0.4.6',
+      version='0.4.7',
       description='CGATReport : a report generator in python based on sphinx',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',
