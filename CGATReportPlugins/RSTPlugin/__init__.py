@@ -52,13 +52,23 @@ class RSTPlugin(Component):
             '''replace old with new in s such that length of
             new+spaces is at least that of old+spaces.
 
-            There needs to be enough space for padding.
+            There needs to be enough space for padding. If there is not
+            enough space, the new string will be truncated and an error
+            issued.
             '''
             # do not pad in csv tables
             if not old.endswith('"'):
                 oldlen = len(old)
                 newlen = len(new)
                 new = new + " " * (oldlen - newlen)
+
+            if len(new) > len(old):
+                self.warn("length of substitution string ({}) is "
+                          "longer than original ({}):\n{}\n{}".format(
+                        len(new), len(old),
+                        new, old))
+                new = new[:len[old]]
+
             n = s.replace(old, new)
             return n
 
