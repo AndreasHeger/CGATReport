@@ -4,12 +4,11 @@ from CGATReport.Component import Component
 
 
 class RSTPlugin(Component):
-
     '''collect rst text.
 
-    This plugin looks for image/figure directives in
-    literal text output and changes their path so that
-    they are valid within sphinx.
+    This plugin looks for image/figure directives in literal text
+    output and changes absolute paths to relative paths so that they
+    are valid within sphinx.
 
     images: path relative to rst directory
 
@@ -67,7 +66,7 @@ class RSTPlugin(Component):
                           "longer than original ({}):\n{}\n{}".format(
                         len(new), len(old),
                         new, old))
-                new = new[:len[old]]
+                new = new[:len(old)]
 
             n = s.replace(old, new)
             return n
