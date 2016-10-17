@@ -45,7 +45,7 @@ class TestLabeledValues(unittest.TestCase):
 
     def testEmptyRow(self):
 
-        for row in self.data.keys():
+        for row in list(self.data.keys()):
             dd = deepcopy(self.data)
             dd[row] = odict()
             df = asDataFrame(dd)
@@ -118,7 +118,7 @@ class TestArrayValues(unittest.TestCase):
         
     def testEmptyRow(self):
 
-        for row in self.data.keys():
+        for row in list(self.data.keys()):
             dd = deepcopy(self.data)
             dd[row] = odict()
             df = asDataFrame(dd)

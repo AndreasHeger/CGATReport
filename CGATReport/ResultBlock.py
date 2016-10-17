@@ -4,7 +4,7 @@ import sys
 
 # PYTHON 2/3 compatibility
 if sys.version_info[0] == 3:
-    basestring = str
+    str = str
 
 
 class ResultBlock(object):
@@ -24,10 +24,10 @@ class ResultBlock(object):
 
     def __init__(self, text, title, preamble="", postamble=""):
         assert isinstance(
-            text, basestring), \
+            text, str), \
             "created ResultBlock without text, but %s" % str(type(text))
         assert isinstance(
-            title, basestring), \
+            title, str), \
             "created ResultBlock without title, but %s" % str(title)
         assert title is not None
         assert text is not None
@@ -182,7 +182,7 @@ def flat_iterator(blocks):
     stack = [("", blocks)]
     while stack:
         path, e = stack[-1]
-        for k, v in e.items():
+        for k, v in list(e.items()):
             if isinstance(v, dict):
                 stack.append((path + k, v))
             else:

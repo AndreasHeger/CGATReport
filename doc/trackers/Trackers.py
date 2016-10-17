@@ -120,12 +120,12 @@ class HierarchicalLabeledDataExample(Tracker):
 
         if slice == "slice1":
             for a, b, c in itertools.permutations(
-                    range(nvalues),
+                    list(range(nvalues)),
                     levels):
                 values[a][b][c] = (a + 1) * (b + 1) * (c + 1)
         elif slice == "slice2":
             for a, b, c in itertools.permutations(
-                    range(nvalues),
+                    list(range(nvalues)),
                     levels):
                 values[a][b][c] = (a + 1) * (b + 1) * (c + 1) * 2
 
@@ -154,7 +154,7 @@ class ArrayDataExample(Tracker):
 
         scale = (3 - int(track[-1])) * (2 - int(slice[-1]))
 
-        data = odict((("x", range(0, 10)),
+        data = odict((("x", list(range(0, 10))),
                       ("y", [x * scale for x in range(0, 10)])))
 
         return data
@@ -212,7 +212,7 @@ class MultipleColumnDataExample(Tracker):
         elif slice == "slice2":
             for x in range(len(self.mColumns)):
                 data.append([y + random.gauss(0, 0.5) for y in range(10)])
-        return odict(zip(self.mColumns, data))
+        return odict(list(zip(self.mColumns, data)))
 
 
 class MultipleColumnDataFullExample(Tracker):
@@ -230,7 +230,7 @@ class MultipleColumnDataFullExample(Tracker):
         elif slice == "slice2":
             for x in range(len(self.mColumns)):
                 data.append([y + random.gauss(0, 0.5) for y in range(20)])
-        return odict(zip(self.mColumns, data))
+        return odict(list(zip(self.mColumns, data)))
 
 
 class DeepLevelNestedIndexExample(Tracker):
@@ -282,7 +282,7 @@ class ErrorInTracker2(Tracker):
         raise ValueError("testing: could not build tracks")
 
     def __call__(self, track, slice=None):
-        return odict((("data", range(0, 10)),))
+        return odict((("data", list(range(0, 10))),))
 
 
 class ErrorInTracker3(Tracker):
@@ -355,8 +355,8 @@ class MatrixTracker(Tracker):
 
         matrix.shape = (2, 5)
 
-        r = {'rows': list(map(str, range(0, 2))),
-             'columns': list(map(str, range(0, 5))),
+        r = {'rows': list(map(str, list(range(0, 2)))),
+             'columns': list(map(str, list(range(0, 5)))),
              'matrix': matrix}
 
         return r
@@ -377,7 +377,7 @@ class DataWithImagesExample(Tracker):
         images = glob.glob(os.path.join(IMAGEDIR, "*.png"))
 
         data = odict()
-        data["numbers"] = range(len(images))
+        data["numbers"] = list(range(len(images)))
         data["images"] = [".. image:: %s" % x for x in images]
 
         return data

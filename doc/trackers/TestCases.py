@@ -97,7 +97,7 @@ class MultipleHistogramTest(Tracker):
 
     def __call__(self, track, slice=None):
         return odict((("bin", "value-set1", "value-set2"),
-                      (range(0, self.nsamples),
+                      (list(range(0, self.nsamples)),
                        [random.gauss(0, 1) for x in range(self.nsamples)],
                        [random.gauss(0, 1) for x in range(self.nsamples)])))
 
@@ -114,7 +114,7 @@ class MultiLevelTable(Tracker):
             ["value%i" % y for y in range(self.mNumLevels)]
             for z in range(self.ncols)]
 
-        return odict(zip(["col%i" % x for x in range(self.ncols)], data))
+        return odict(list(zip(["col%i" % x for x in range(self.ncols)], data)))
 
 
 class LargeTable(Tracker):

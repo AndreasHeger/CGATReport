@@ -8,7 +8,7 @@ class TransformerCount( Transformer ):
     nlevels = 0
 
     def transform(self, data, path):
-        for v in data.keys():
+        for v in list(data.keys()):
             data[v] = len( data[v] )
         return data
 

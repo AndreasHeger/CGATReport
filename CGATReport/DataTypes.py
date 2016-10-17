@@ -37,7 +37,7 @@ class DataSimple(object):
         return {"_data": self._data}
 
     def __setstate__(self, dict):
-        for key, val in dict.items():
+        for key, val in list(dict.items()):
             object.__setattr__(self, key, val)
 
     def __iter__(self):
@@ -82,7 +82,7 @@ class Data(object):
         return {"_data": self._data}
 
     def __setstate__(self, dict):
-        for key, val in dict.items():
+        for key, val in list(dict.items()):
             object.__setattr__(self, key, val)
 
     def __iter__(self):

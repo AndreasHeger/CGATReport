@@ -38,10 +38,10 @@ class TransformerHypergeometric(Transformer):
         # sets
         genesets = {}
         nlevels = Utils.getDataFrameLevels(data)
-        for key, group in data.groupby(level=range(nlevels)):
+        for key, group in data.groupby(level=list(range(nlevels))):
             genesets[path2str(key)] = set(group[column])
 
-        keys = genesets.keys()
+        keys = list(genesets.keys())
 
         background = None
         foreground = []
@@ -124,8 +124,8 @@ class TransformerOddsRatio(Transformer):
 
     def transform(self, data):
 
-        keys = data.keys()
-        if len(keys) < 3 or "background" not in data.keys():
+        keys = list(data.keys())
+        if len(keys) < 3 or "background" not in list(data.keys()):
             raise ValueError("Expected at least 3 lists, with one called background, instead got %i lists called %s" % (
                 len(keys), ", ".join(keys)))
 
@@ -250,24 +250,24 @@ class TransformerVenn(Transformer):
         # sets
         genesets = {}
         nlevels = Utils.getDataFrameLevels(data)
-        for key, group in data.groupby(level=range(nlevels)):
+        for key, group in data.groupby(level=list(range(nlevels))):
             if "background" in key and not self.background:
                 continue
             genesets[key] = set(group[column])
             
         values = []
         if len(genesets) == 2:
-            a = set(genesets[genesets.keys()[0]])
-            b = set(genesets[genesets.keys()[1]])
+            a = set(genesets[list(genesets.keys())[0]])
+            b = set(genesets[list(genesets.keys())[1]])
 
             values.append(("10", len(a - b)))
             values.append(("01", len(b - a)))
             values.append(("11", len(a & b)))
-            values.append(("labels", map(path2str, genesets.keys())))
+            values.append(("labels", list(map(path2str, list(genesets.keys())))))
         elif len(genesets) == 3:
-            a = set(genesets[genesets.keys()[0]])
-            b = set(genesets[genesets.keys()[1]])
-            c = set(genesets[genesets.keys()[2]])
+            a = set(genesets[list(genesets.keys())[0]])
+            b = set(genesets[list(genesets.keys())[1]])
+            c = set(genesets[list(genesets.keys())[2]])
 
             values.append(("100", len(a - b - c)))
             values.append(("010", len(b - a - c)))
@@ -276,7 +276,7 @@ class TransformerVenn(Transformer):
             values.append(("101", len((a & c) - b)))
             values.append(("011", len((b & c) - a)))
             values.append(("111", len((a & b) & c)))
-            values.append(("labels", map(path2str, genesets.keys())))
+            values.append(("labels", list(map(path2str, list(genesets.keys())))))
         else:
             raise ValueError(
                 "Can currently only cope with 2 or 3 way intersections")

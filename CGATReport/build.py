@@ -124,15 +124,18 @@ def rst_reader(infile):
 def getBlocksFromRstFile(rst_file):
 
     blocks = []
+
+    logger = Component.get_logger()
+    logger.debug("reading {}".format(rst_file))
+
     try:
-        infile = open(rst_file, "r")
+        with open(rst_file, "r") as infile:
+            for lineno, rst_block in rst_reader(infile):
+                blocks.append((lineno, rst_block))
     except IOError:
-        print("could not open %s - skipped" % rst_file)
+        print(("could not open %s - skipped" % rst_file))
         return blocks
 
-    for lineno, rst_block in rst_reader(infile):
-        blocks.append((lineno, rst_block))
-    infile.close()
     return blocks
 
 
@@ -146,11 +149,11 @@ class timeit:
     def __call__(self, func):
         def wrapped(*args, **kwargs):
             start = time.time()
-            print("CGATReport: phase %s started" % (self.mStage))
+            print(("CGATReport: phase %s started" % (self.mStage)))
             sys.stdout.flush()
             result = func(*args, **kwargs)
-            print("CGATReport: phase %s finished in %i seconds" %
-                  (self.mStage, time.time() - start))
+            print(("CGATReport: phase %s finished in %i seconds" %
+                  (self.mStage, time.time() - start)))
             sys.stdout.flush()
             return result
         return wrapped
@@ -190,7 +193,7 @@ def buildPlots(rst_files, options, args, sourcedir):
                                                    "."))
 
     work = []
-    for tracker, vals in work_per_tracker.items():
+    for tracker, vals in list(work_per_tracker.items()):
         work.append(vals)
 
     if len(work) == 0:
@@ -228,7 +231,7 @@ def buildPlots(rst_files, options, args, sourcedir):
     errors = [e for e in errors if e]
 
     if errors:
-        print("CGATReport caught %i exceptions" % (len(errors)))
+        print(("CGATReport caught %i exceptions" % (len(errors))))
         print("## start of exceptions")
         for exception_name, exception_value, exception_stack in errors:
             print(exception_stack)
@@ -238,13 +241,13 @@ def buildPlots(rst_files, options, args, sourcedir):
     if options.num_jobs > 1:
         counts = handler.getCounts()
 
-        print(("CGATReport: messages: %i critical, %i errors, "
+        print((("CGATReport: messages: %i critical, %i errors, "
                "%i warnings, %i info, %i debug") %
               (counts["CRITICAL"],
                counts["ERROR"],
                counts["WARNING"],
                counts["INFO"],
-               counts["DEBUG"]))
+               counts["DEBUG"])))
 
     logging.shutdown()
 
@@ -282,11 +285,11 @@ def cleanTrackers(rst_files, options, args):
         if new_codehash != old_codehash:
             removed = clean.removeTracker(reference)
             removed.extend(clean.removeText(reference))
-            print("code has changed for %s: %i files removed" %
-                  (reference, len(removed)))
+            print(("code has changed for %s: %i files removed" %
+                  (reference, len(removed))))
             ncleaned += 1
-    print("CGATReport: %i Trackers changed (%i tested, %i skipped)" %
-          (ncleaned, ntested, nskipped))
+    print(("CGATReport: %i Trackers changed (%i tested, %i skipped)" %
+          (ncleaned, ntested, nskipped)))
 
 
 def runCommand(command):
@@ -315,7 +318,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    print("CGATReport: version %s started" % str("$Id$"))
+    print(("CGATReport: version %s started" % str("$Id$")))
     t = time.time()
 
     parser = optparse.OptionParser(version="%prog version: $Id$",
@@ -391,7 +394,7 @@ def main(argv=None):
 
     buildDocument(options, args)
 
-    print("CGATReport: finished in %i seconds" % (time.time() - t))
+    print(("CGATReport: finished in %i seconds" % (time.time() - t)))
 
     logger.debug(
         "build.py: profile: finished: %i seconds" % (time.time() - t))

@@ -572,6 +572,7 @@ def filterNone(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype = nu
     >>> Stats.filterNone(((None,2,3), (4,None,6)))
     [array([ 3.]), array([ 6.])]
     '''
+    args = [numpy.array(x) for x in args]
     mi = min([len(x) for x in args])
     ma = max([len(x) for x in args])
     assert mi == ma, "arrays have unequal length to start with: min=%i, max=%i." % (
@@ -579,7 +580,8 @@ def filterNone(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype = nu
 
     mask = [sum([z in missing for z in x]) for x in zip(*args)]
 
-    return [numpy.array([x[i] for i in range(len(x)) if not mask[i]], dtype=dtype) for x in args]
+    xx = [numpy.array([x[i] for i in range(len(x)) if not mask[i]], dtype=dtype) for x in args]
+    return xx
 
 
 def filterMissing(args,
@@ -847,7 +849,7 @@ def buildMatrixFromEdges(edges,
 
         # for square matrices merge row and column labels
         if is_square:
-            for col_token in map_token2col.keys():
+            for col_token in list(map_token2col.keys()):
                 if col_token not in map_token2row:
                     map_token2row[col_token] = len(map_token2row)
             map_token2col = map_token2row
@@ -882,9 +884,9 @@ def buildMatrixFromEdges(edges,
             "unexpected number of elements in list, expected 3 or 4, "
             "got %i" % (len(edges[0])))
 
-    col_tokens = map_token2col.items()
+    col_tokens = list(map_token2col.items())
     col_tokens.sort(lambda x, y: cmp(x[1], y[1]))
-    row_tokens = map_token2row.items()
+    row_tokens = list(map_token2row.items())
     row_tokens.sort(lambda x, y: cmp(x[1], y[1]))
 
     return matrix, [x[0] for x in row_tokens], [x[0] for x in col_tokens]
@@ -924,16 +926,16 @@ def smooth(x, window_len=11, window='hanning'):
     """
 
     if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays."
+        raise ValueError("smooth only accepts 1 dimension arrays.")
 
     if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
+        raise ValueError("Input vector needs to be bigger than window size.")
 
     if window_len<3:
         return x
 
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+        raise ValueError("Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
 
     s = numpy.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
 

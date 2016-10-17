@@ -12,7 +12,7 @@ import collections
 
 # Python 2/3 Compatibility
 try:
-    import ConfigParser as configparser
+    import configparser as configparser
 except:
     import configparser
 
@@ -404,11 +404,11 @@ class TrackerMatrices(TrackerMultipleFiles):
         # are strings.
         def _convert(l):
             try:
-                return map(int, l)
+                return list(map(int, l))
             except ValueError:
                 pass
             try:
-                return map(float, l)
+                return list(map(float, l))
             except ValueError:
                 pass
             return l
@@ -1050,7 +1050,7 @@ class SQLStatementTracker(TrackerSQL):
         # set index
         try:
             dataframe.set_index(list(self.fields), inplace=True)
-        except KeyError, msg:
+        except KeyError as msg:
             raise KeyError(
                 "%s: have %s" %
                 (msg, dataframe.columns))
@@ -1736,7 +1736,7 @@ class MeltedTableTracker(TrackerSQL):
 
         ref_columns.insert(0, self.column_name)
 
-        return odict(zip(ref_columns, zip(*results)))
+        return odict(list(zip(ref_columns, list(zip(*results)))))
 
 
 class MeltedTableTrackerDataframe(MeltedTableTracker):

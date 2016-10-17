@@ -100,7 +100,7 @@ def getPlugins(capability=None):
     if capability is None:
         return plugins
         result = set()
-        for p in plugins.values():
+        for p in list(plugins.values()):
             for plugin in p:
                 result.add(plugin)
         return list(result)
@@ -113,9 +113,9 @@ def getOptionMap():
 
     if options is None:
         options = {}
-        for section, plugins in getPlugins().items():
+        for section, plugins in list(getPlugins().items()):
             options[section] = {}
-            for name, cls in plugins.items():
+            for name, cls in list(plugins.items()):
                 try:
                     options[section].update(dict(cls.options))
                 except AttributeError:
@@ -170,7 +170,7 @@ def getOptionSpec():
     '''
     o = getOptionMap()
     r = {}
-    for x, xx in o.items():
+    for x, xx in list(o.items()):
         r.update(xx)
 
     # add the primary actor options

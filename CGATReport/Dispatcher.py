@@ -465,7 +465,7 @@ class Dispatcher(Component.Component):
             # rearrange first two levels in data tree
             if nlevels > 1:
                 self.data = self.data.reorder_levels(
-                    [1, 0] + range(2, nlevels))
+                    [1, 0] + list(range(2, nlevels)))
             self.group_level = 0
 
         elif groupby == "all":

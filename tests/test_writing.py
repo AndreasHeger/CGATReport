@@ -39,9 +39,9 @@ def write_png(dpi):
 if __name__ == '__main__':
     import timeit
     for dpi in [50, 100, 200, 300, 400]:
-        print "\t".join(map(
+        print(("\t".join(map(
             str,
             (backend, dpi, timeit.timeit(
             "write_png(dpi={})".format(dpi),
             setup="from __main__ import write_png",
-                number=3))))
+                number=3))))))

@@ -250,7 +250,7 @@ def concatDataFrames(dataframes, index_tuples):
         column_set.update(collections.OrderedDict(
             [(x, 0) for x in d.columns]))
 
-    df = df.reindex_axis(column_set.keys(), axis=1)
+    df = df.reindex_axis(list(column_set.keys()), axis=1)
     return df
 
 
@@ -389,7 +389,7 @@ def asDataFrame(data):
         # All arrays need to have the same length
         is_coordinate = True
         for path, subtree in branches:
-            lengths = [len(x) for x in subtree.values()]
+            lengths = [len(x) for x in list(subtree.values())]
             if len(lengths) == 0:
                 continue
 
@@ -471,7 +471,7 @@ def asDataFrame(data):
         logger.debug('dataframe conversion: from values')
         if len(labels) == 1:
             # { 'x': 1, 'y': 2 } -> DF with one row and two columns (x, y)
-            df = pandas.DataFrame(data.values(), index=data.keys())
+            df = pandas.DataFrame(list(data.values()), index=list(data.keys()))
         elif len(labels) == 2:
             # { 'a': {'x':1, 'y':2}, 'b': {'y',2}
             # -> DF with two columns(x,y) and two rows(a,b)
@@ -550,7 +550,7 @@ def getNodes(work, level=0):
     yields path, value items
     '''
 
-    stack = collections.deque([((), 0, x) for x in work.items()])
+    stack = collections.deque([((), 0, x) for x in list(work.items())])
 
     # BFS
     while stack:
@@ -560,18 +560,18 @@ def getNodes(work, level=0):
         if l == level:
             yield (n, v)
         if isinstance(v, dict):
-            stack.extend([(n, l + 1, x) for x in v.iteritems()])
+            stack.extend([(n, l + 1, x) for x in list(v.items())])
 
 
 def getDepths(work):
     '''return a list of depth of leaves.'''
-    stack = [(0, x) for x in work.values()]
+    stack = [(0, x) for x in list(work.values())]
 
     levels = []
     while stack:
         level, v = stack.pop()
         if isinstance(v, dict):
-            stack.extend([(level + 1, x) for x in v.values()])
+            stack.extend([(level + 1, x) for x in list(v.values())])
         else:
             levels.append(level)
     return levels
@@ -625,7 +625,7 @@ def removeLevel(work, level):
             d = leaf[key]
             del leaf[key]
             try:
-                for subkey, item in d.items():
+                for subkey, item in list(d.items()):
                     leaf[subkey] = item
             except AttributeError:
                 # for items that are not dict
@@ -728,7 +728,7 @@ def removeEmptyLeaves(work):
 
     to_delete = []
     try:
-        for label, w in work.items():
+        for label, w in list(work.items()):
             keep = removeEmptyLeaves(w)
             if not keep:
                 to_delete.append(label)

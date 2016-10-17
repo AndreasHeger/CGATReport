@@ -219,7 +219,7 @@ def main():
 
         if options.dry_run:
             print("the following directories will be deleted:")
-            print("\n".join(dirs))
+            print(("\n".join(dirs)))
         else:
             for d in dirs:
                 if os.path.exists(d):
@@ -230,7 +230,7 @@ def main():
             print("the following files will be deleted:")
 
         for tracker in args:
-            print("cleaning up %s ..." % tracker)
+            print(("cleaning up %s ..." % tracker))
             removed = []
             if not options.sections or "tracker" in options.sections:
                 if options.loglevel >= 2:
@@ -248,16 +248,16 @@ def main():
                 if options.loglevel >= 2:
                     print("removing rst")
                 if options.loglevel >= 2:
-                    print("sourcedir=%s" % options.path)
+                    print(("sourcedir=%s" % options.path))
                 removed.extend(removeText(tracker,
                                           dry_run=options.dry_run,
                                           sourcedir=options.path,
                                           builddir=options.builddir,
                                           suffix=source_suffix))
-            print("%i files (done)" % len(removed))
+            print(("%i files (done)" % len(removed)))
             if options.loglevel >= 3:
-                print("\n".join(removed))
+                print(("\n".join(removed)))
             if options.dry_run:
-                print("\n".join(removed))
+                print(("\n".join(removed)))
 if __name__ == "__main__":
     sys.exit(main())

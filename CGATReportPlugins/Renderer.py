@@ -2,7 +2,7 @@ import os
 import sys
 import re
 import json
-import StringIO
+import io
 from docutils.parsers.rst import directives
 import numpy
 import pandas
@@ -196,6 +196,8 @@ class Renderer(Component):
             return self.format % value
         except TypeError:
             return ""
+        except ValueError:
+            return "nan"
 
     def set_paths(self, rst_dir, src_dir, build_dir):
         '''set document paths. These are relevant to determine the
@@ -306,7 +308,7 @@ class TableBase(Renderer):
     def asCSV(self, dataframe, row_headers, col_headers, title):
         '''save the table using CSV.'''
 
-        out = StringIO.StringIO()
+        out = io.StringIO()
         dataframe.to_csv(out)
         result = []
         result.append(".. csv-table:: %s" % title)
@@ -333,7 +335,7 @@ class TableBase(Renderer):
     def asRST(self, dataframe, row_headers, col_headers, title):
         '''save the table using RST.'''
 
-        out = StringIO.StringIO()
+        out = io.StringIO()
         dataframe.to_csv(out)
         data = [x.split(',') for x in out.getvalue().split('\n')]
         # ignore last element - empty
@@ -373,7 +375,7 @@ class TableBase(Renderer):
 
         r = ResultBlock("\n".join(lines) + "\n", title=title)
 
-        out = StringIO.StringIO()
+        out = io.StringIO()
         dataframe.to_csv(out)
         lines = out.getvalue().split("\n")
 
@@ -474,9 +476,9 @@ class TableBase(Renderer):
         if split:
             # create separate worksheets for nested indices
             nlevels = len(dataframe.index.levels)
-            paths = map(tuple, DataTree.unique(
+            paths = list(map(tuple, DataTree.unique(
                 [x[:nlevels - 1]
-                 for x in dataframe.index.unique()]))
+                 for x in dataframe.index.unique()])))
 
             ws = wb.worksheets[0]
             ws.title = 'Summary'
@@ -1228,9 +1230,9 @@ class TableMatrix(TableBase, MatrixBase):
         if self.normalize_row_labels:
             drop = [x for x, y in enumerate(dataframe.index.labels)
                     if len(set(y)) == 1]
-            rows = map(path2str, dataframe.index.droplevel(drop))
+            rows = list(map(path2str, dataframe.index.droplevel(drop)))
         else:
-            rows = map(path2str, dataframe.index)
+            rows = list(map(path2str, dataframe.index))
 
         columns = list(dataframe.columns)
         # use numpy.matrix - permits easier broadcasting
@@ -1364,7 +1366,7 @@ class Status(Renderer):
             lines.append(".. glossary::")
             lines.append("")
 
-            for test, description in descriptions.items():
+            for test, description in list(descriptions.items()):
                 lines.append('%s\n%s\n' % (Utils.indent(test, 3),
                                            Utils.indent(description, 6)))
 
@@ -1413,7 +1415,7 @@ class StatusMatrix(Status, TableBase):
             index=[self.row_column],
             columns="slice",
             values="status",
-            aggfunc = lambda x: x)
+            aggfunc=lambda x: str(x))
 
         if self.transpose:
             table = table.transpose()

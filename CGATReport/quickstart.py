@@ -84,7 +84,7 @@ def main(argv=None):
     for f in ("Trackers.py", ):
         copy(f, "trackers")
 
-    print("""
+    print(("""
 Welcome to CGATReport.
 
 All files have been successfully copied to `%(dest)s`. In order to build the
@@ -106,7 +106,7 @@ main directory. Add code to collect data to the module 'Trackers.py'
 in the  'trackers' directory. If you don't like the default file layout,
 it can be easily changed.
 
-""" % locals())
+""" % locals()))
 
 
 if __name__ == "__main__":

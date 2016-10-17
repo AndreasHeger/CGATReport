@@ -106,15 +106,15 @@ def main(argv=sys.argv):
     for subdir in ('',):
         thisdir = os.path.join(rootdir, subdir)
         if not os.path.exists(thisdir):
-            print("no directory '%s' - no gallery created" % thisdir)
+            print(("no directory '%s' - no gallery created" % thisdir))
             return
         thumbdir = os.path.join(thisdir, 'thumbnails')
         if not os.path.exists(thumbdir):
-            print("no thumbnail directory '%s' - no gallery created" %
-                  thumbdir)
+            print(("no thumbnail directory '%s' - no gallery created" %
+                  thumbdir))
             return 0
 
-        print("CGATReport: collecting thumbnails from %s" % thumbdir)
+        print(("CGATReport: collecting thumbnails from %s" % thumbdir))
 
         # we search for pdfs here because there is one pdf for each
         # successful image build (2 pngs since one is high res) and the
@@ -139,7 +139,7 @@ def main(argv=sys.argv):
             try:
                 datasource, renderer, options = basename.split(SEPARATOR)
             except ValueError:
-                print("could not parse %s into three components" % basename)
+                print(("could not parse %s into three components" % basename))
                 continue
 
             # print 'datasource=', datasource, "renderer=", renderer, "filename=",filename, "basename=",basename, "ext=",ext
@@ -168,7 +168,7 @@ def main(argv=sys.argv):
 
     rows = []
 
-    print("CGATReport: creating %i thumbnails" % len(data))
+    print(("CGATReport: creating %i thumbnails" % len(data)))
     col = 0
     last_datasource = None
     for (datasource, subdir, thisdir, renderer, basename, pngfile, thumbfile, captionfile) in data:

@@ -360,7 +360,7 @@ class TransformerPandas(Transformer):
                            "`tf-statement` option to be set.")
 
     def transform(self, data):
-        exec "data = data.{}".format(self.statement)
+        exec("data = data.{}".format(self.statement))
         return data
 
 
@@ -1058,7 +1058,7 @@ class TransformerAggregate(Transformer):
             window = min(1, int(math.floor(len(data) * self.rarify_ratio)))
         else:
             window = min(1, int(math.floor(float(len(data)) / self.rarify_ratio)))
-        return data.ix[range(0, len(data), window)]
+        return data.ix[list(range(0, len(data), window))]
 
     def fill_range_with_zeros(self, data):
         min_range = data.ix[:, 0].min()
@@ -1070,7 +1070,7 @@ class TransformerAggregate(Transformer):
         merged = pandas.merge(df, data, on=data.columns[0], how="left").fillna(0)
         merged[data.columns[1]] = merged[data.columns[1] + "_x"] + merged[data.columns[1]+"_y"]
         merged = merged[data.columns]
-        keys = tuple(data.groupby(by=data.index).groups.keys()[0])
+        keys = tuple(list(data.groupby(by=data.index).groups.keys())[0])
         merged.index = pandas.MultiIndex.from_tuples(
             [keys] * len(merged),
             names=data.index.names)
@@ -1238,8 +1238,8 @@ class TransformerHistogram(TransformerAggregate):
 
             # re-build dataframe
             df = pandas.DataFrame.from_items(
-                [('bin', bin_edges)] + zip(
-                    data.columns, all_counts))
+                [('bin', bin_edges)] + list(zip(
+                    data.columns, all_counts)))
 
         return df
 

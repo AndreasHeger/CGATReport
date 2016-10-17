@@ -12,7 +12,7 @@ import collections
 try:
     import queue
 except ImportError:
-    import Queue as queue
+    import queue as queue
 
 from logging import Logger
 
@@ -137,7 +137,7 @@ if __name__ == '__main__':
         logging.debug('done')
         logging.shutdown()
         print("stream output is:")
-        print(stream.getvalue())
+        print((stream.getvalue()))
     else:
         logQueue = multiprocessing.Queue(100)
         handler = MultiProcessingLogHandler(
@@ -161,4 +161,4 @@ if __name__ == '__main__':
         logging.debug('done')
         logging.shutdown()
 
-        print(handler.getCounts())
+        print((handler.getCounts()))

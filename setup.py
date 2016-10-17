@@ -112,7 +112,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='CGATReport',
-      version='0.4.8',
+      version='0.5.0',
       description='CGATReport : a report generator in python based on sphinx',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',
@@ -130,7 +130,7 @@ setup(name='CGATReport',
       keywords="report generator sphinx matplotlib sql",
       long_description='CGATReport : a report generator in python based '
       'on sphinx',
-      classifiers=filter(None, classifiers.split("\n")),
+      classifiers=[_f for _f in classifiers.split("\n") if _f],
       install_requires=install_requires,
       zip_safe=False,
       include_package_data=True,
@@ -325,6 +325,6 @@ if "install" in sys.argv:
     # allows using the install within a virtual environment.
     print ("setting python to /bin/env python")
     statement = 'perl -p -i -e "s/\/ifs\/apps\/apps\/python-2.7.1\/bin\/python2.7/\/bin\/env python/" ' + file_glob
-    print statement
+    print(statement)
     subprocess.call(statement, shell=True)
         

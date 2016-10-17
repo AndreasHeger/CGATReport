@@ -341,7 +341,7 @@ class PlainSlideShow(Renderer):
             values = row.tolist()
             headers = list(row.index)
 
-            dataseries = dict(zip(headers, values))
+            dataseries = dict(list(zip(headers, values)))
             try:
                 # return value is a series
                 filename = dataseries['filename']

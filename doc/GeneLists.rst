@@ -55,7 +55,7 @@ These SQL statements can be defined in three ways:
 1. The first method is to subclass the tracker set the `ListA` and `ListB`
 attributes to the two different SQL statements. You can do this for
 attributes called `ListA`, `ListB`, `ListC` and `background`. Because
-`ListA`, `ListB` etc, isn’t very descriptive, you can give these lists
+`ListA`, `ListB` etc, is not very descriptive, you can give these lists
 names by setting the labels attribute of your Tracker. e.g.::
 
     class MyListsTracker( TrackerMultipleLists ): ListA="SELECT

@@ -182,7 +182,7 @@ class RPlotPlugin(Component):
 
                     try:
                         R.ggsave(outpath, plot=pp, dpi=dpi)
-                    except rpy2.rinterface.RRuntimeError, msg:
+                    except rpy2.rinterface.RRuntimeError as msg:
                         raise
 
                     # width, height = 3 * dpi, 3 * dpi

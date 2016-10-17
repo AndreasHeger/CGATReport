@@ -197,7 +197,7 @@ def value_role(role, rawtext, text, lineno, inliner,
     try:
         value = str(tracker())
     except TypeError as msg:
-        print("python 3 problem: %s: tracker=%s" % (msg, str(tracker())))
+        print(("python 3 problem: %s: tracker=%s" % (msg, str(tracker()))))
 
     linked_codename = writeCode(class_name, code, inliner)
 

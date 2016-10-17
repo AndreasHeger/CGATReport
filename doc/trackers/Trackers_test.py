@@ -31,24 +31,24 @@ def FunctionExample2():
 
 if __name__ == "__main__":
 
-    print (list(SingleColumnDataExample()("track1")))
-    print (list(SingleColumnDataExample()("track2")))
-    print (list(SingleColumnDataExample()("track1")))
+    print((list(SingleColumnDataExample()("track1"))))
+    print((list(SingleColumnDataExample()("track2"))))
+    print((list(SingleColumnDataExample()("track1"))))
 
     a = SingleColumnDataExample()
-    print (list(a("track1")))
-    print (list(a("track2")))
-    print (list(a("track1")))
+    print((list(a("track1"))))
+    print((list(a("track2"))))
+    print((list(a("track1"))))
 
-    print (list(SingleColumnDataExample2()("track1")))
-    print (list(SingleColumnDataExample2()("track2")))
-    print (list(SingleColumnDataExample2()("track1")))
+    print((list(SingleColumnDataExample2()("track1"))))
+    print((list(SingleColumnDataExample2()("track2"))))
+    print((list(SingleColumnDataExample2()("track1"))))
 
     a = SingleColumnDataExample2()
-    print (list(a("track1")))
-    print (list(a("track2")))
-    print (list(a("track1")))
+    print((list(a("track1"))))
+    print((list(a("track2"))))
+    print((list(a("track1"))))
 
-    print (list(FunctionExample1()))
+    print((list(FunctionExample1())))
 
-    print (list(FunctionExample2()))
+    print((list(FunctionExample2())))

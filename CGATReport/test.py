@@ -235,9 +235,9 @@ def writeNotebook(outfile, options, kwargs,
 
 def run(name, t, kwargs):
 
-    print("%s: collecting data started" % name)
+    print(("%s: collecting data started" % name))
     t(**kwargs)
-    print("%s: collecting data finished" % name)
+    print(("%s: collecting data finished" % name))
 
 
 def main(argv=None, **kwargs):
@@ -359,14 +359,14 @@ def main(argv=None, **kwargs):
 
         ######################################################
         # set keyword arguments as options
-        for keyword, value in kwargs.items():
+        for keyword, value in list(kwargs.items()):
             if hasattr(options, keyword):
                 setattr(options, keyword, value)
                 del kwargs[keyword]
 
         # change some kwarguments
         if options.transformers:
-            for keyword, value in kwargs.items():
+            for keyword, value in list(kwargs.items()):
                 if keyword.startswith("tf"):
                     kwargs["tf-{}".format(keyword[2:])] = value
 
@@ -473,9 +473,9 @@ def main(argv=None, **kwargs):
                         break
             else:
                 available_trackers = set([x[0] for x in trackers if x[3]])
-                print(
+                print((
                     "unknown tracker '%s': possible trackers are\n  %s" %
-                    (options.tracker, "\n  ".join(sorted(available_trackers))))
+                    (options.tracker, "\n  ".join(sorted(available_trackers)))))
                 print(
                     "(the list above does not contain functions).")
                 sys.exit(1)
@@ -490,8 +490,8 @@ def main(argv=None, **kwargs):
         # remove everything related to that tracker for a clean slate
         if options.force:
             removed = CGATReport.clean.removeTracker(tracker_name)
-            print("removed all data for tracker %s: %i files" %
-                  (tracker_name, len(removed)))
+            print(("removed all data for tracker %s: %i files" %
+                  (tracker_name, len(removed))))
 
         dispatcher = Dispatcher(tracker, renderer, transformers)
 
@@ -537,15 +537,15 @@ def main(argv=None, **kwargs):
         if result and renderer is not None:
             if options.layout is not None:
                 lines = Utils.layoutBlocks(result, layout=options.layout)
-                print "\n".join(lines)
+                print(("\n".join(lines)))
             else:
                 for r in result:
                     if r.title:
                         print ("")
-                        print ("title: %s" % r.title)
+                        print(("title: %s" % r.title))
                         print ("")
                     for s in r:
-                        print(str(s))
+                        print((str(s)))
 
         if options.hardcopy:
 
@@ -566,11 +566,11 @@ def main(argv=None, **kwargs):
                             import rpy2.rinterface
                             try:
                                 R.plot(r.rggplot)
-                            except rpy2.rinterface.RRuntimeError, msg:
+                            except rpy2.rinterface.RRuntimeError as msg:
                                 if re.search("object.*not found", str(msg)):
-                                    print '%s: available columns in dataframe=%s' % \
+                                    print(('%s: available columns in dataframe=%s' % \
                                         (msg,
-                                          R('''colnames(rframe)'''))
+                                          R('''colnames(rframe)'''))))
 
                 print("press Ctrl-c to stop")
                 while 1:
@@ -586,7 +586,7 @@ def main(argv=None, **kwargs):
                             tmpfile, outpath = tempfile.mkstemp(
                                 dir='.', suffix='.xlsx')
                             os.close(tmpfile)
-                            print ('saving xlsx to %s' % outpath)
+                            print(('saving xlsx to %s' % outpath))
                             r.xls.save(outpath)
                         elif hasattr(r, 'bokeh'):
                             import bokeh.plotting as bk
@@ -640,10 +640,10 @@ def main(argv=None, **kwargs):
         # print ("----------------------------------------")
         if options.start_interpreter:
             print ("--> cgatreport - available data structures <--")
-            print ("    datatree=%s" % type(datatree))
-            print ("    dataframe=%s" % type(dataframe))
+            print(("    datatree=%s" % type(datatree)))
+            print(("    dataframe=%s" % type(dataframe)))
             interpreter = code.InteractiveConsole(
-                dict(globals().items() + locals().items()))
+                dict(list(globals().items()) + list(locals().items())))
             interpreter.interact()
             return dataframe
         elif options.start_ipython:

@@ -38,8 +38,8 @@ class PandasPlot(Renderer, Plotter):
         s = "p = dataframe.plot(%s)" % self.statement
 
         try:
-            exec s in globals(), locals()
-        except Exception, msg:
+            exec(s, globals(), locals())
+        except Exception as msg:
             raise Exception(
                 "pandas.plot() raised error for statement '%s': msg=%s" %
                 (s, msg))

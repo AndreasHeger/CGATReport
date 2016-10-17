@@ -1,6 +1,6 @@
 from docutils.parsers.rst import directives
 
-from Plotter import TableMatrixPlot, DataSeriesPlot
+from .Plotter import TableMatrixPlot, DataSeriesPlot
 import pandas
 import seaborn
 import numpy
@@ -25,8 +25,8 @@ class SeabornPlot(object):
 
         plot = None
         try:
-            exec "plot = %s" % statement in g, l
-        except Exception, msg:
+            exec("plot = %s" % statement, g, l)
+        except Exception as msg:
             raise Exception(
                 "seaborn raised error for statement '%s': msg=%s" %
                 (statement, msg))
@@ -122,7 +122,7 @@ class KdePlot(DataSeriesPlot, SeabornPlot):
         self.gridsize = int(kwargs.get('gridsize', 100))
         self.cut = int(kwargs.get('cut', 3))
         if 'clip' in kwargs:
-            self.clip = map(int, kwargs['clip'].split(','))
+            self.clip = list(map(int, kwargs['clip'].split(',')))
 
     def plotData(self, dataframe, melted):
         plts = []

@@ -10,10 +10,11 @@ import glob
 import pkgutil
 
 from logging import debug, warn, critical
+from functools import reduce
 
 # Python 2/3 Compatibility
 try:
-    import ConfigParser as configparser
+    import configparser as configparser
 except:
     import configparser
 
@@ -109,7 +110,7 @@ def isFloat(obj):
 def isString(obj):
     # Python 3
     # return isinstance(obj, str)
-    return isinstance(obj, basestring)
+    return isinstance(obj, str)
 
 
 def is_numeric(obj):
@@ -198,9 +199,9 @@ def getGroupLevels(dataframe,
             return tuple(range(min(max_level, nlevels)))
         elif modify_levels is not None:
             if modify_levels > 0:
-                l = range(modify_levels, nlevels)
+                l = list(range(modify_levels, nlevels))
             else:
-                l = range(0, nlevels+modify_levels)
+                l = list(range(0, nlevels+modify_levels))
             return tuple(l)
         else:
             return tuple(range(nlevels))
@@ -228,8 +229,8 @@ def pruneDataFrameIndex(dataframe,
         nlevels = dataframe.index.nlevels
         if nlevels > expected_levels:
             dataframe.reset_index(
-                level=range(expected_levels,
-                            nlevels),
+                level=list(range(expected_levels,
+                            nlevels)),
                 drop=True,
                 inplace=True)
 
@@ -293,7 +294,7 @@ def configToDictionary(config):
             if section == "general":
                 p["%s" % (key)] = v
 
-    for key, value in config.defaults().items():
+    for key, value in list(config.defaults().items()):
         p["%s" % (key)] = convertValue(value)
 
     return p
@@ -427,7 +428,7 @@ def getImageOptions(display_options=None, indent=0):
     if display_options:
         return "\n".join(
             ['%s:%s: %s' % (indent, key, val)
-             for key, val in display_options.items()
+             for key, val in list(display_options.items())
              if key in ImageOptions])
     else:
         return ''
@@ -859,7 +860,7 @@ def table2rst(table):
     """
     cell_width = 2 + max(
         reduce(lambda x,y: x+y,
-               [[max(map(len, str(item).split('\n'))) for item in row]
+               [[max(list(map(len, str(item).split('\n')))) for item in row]
                 for row in table], []))
     num_cols = len(table[0])
     rst = table_div(num_cols, cell_width, 0)

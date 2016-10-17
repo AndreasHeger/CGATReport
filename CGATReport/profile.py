@@ -81,7 +81,7 @@ class Counter(object):
     def getDuration(self):
         if self._durations:
             x = None
-            for source, durations in self._durations.items():
+            for source, durations in list(self._durations.items()):
                 if x == None:
                     x = durations[0]
                 for y in durations[1:]:
@@ -95,7 +95,7 @@ class Counter(object):
 
     def getRunning(self):
         '''get numbers of tasks unfinished or still running.'''
-        return len([x for x, y in self._started.items() if y != 0])
+        return len([x for x, y in list(self._started.items()) if y != 0])
 
     duration = property(getDuration)
     calls = property(getCalls)
@@ -166,8 +166,8 @@ def main(argv=None):
                 point = point[1:]
             point = re.sub(rootpath, "", point)
         except (IndexError, ValueError):
-            print(data[5:])
-            print("malformatted line in logfile: %s" % line)
+            print((data[5:]))
+            print(("malformatted line in logfile: %s" % line))
             continue
 
         if section.endswith(":"):
@@ -197,8 +197,8 @@ def main(argv=None):
                 logging.warn("%s: line=%s" % (msg, line))
             except KeyError as msg:
                 print(data)
-                print("error in line: (is_start=%s), msg='%s', %s" %
-                      (is_start, msg, line))
+                print(("error in line: (is_start=%s), msg='%s', %s" %
+                      (is_start, msg, line)))
 
     if options.time == "milliseconds":
         f = lambda d: d.seconds + d.microseconds / 1000
@@ -210,7 +210,7 @@ def main(argv=None):
             ("section", "object", "ncalls", "duration", "percall", "running")) + "\n")
 
         running = []
-        for objct, c in counts[section].items():
+        for objct, c in list(counts[section].items()):
 
             # apply filters
             if options.filter in ("unfinished", "running") and c.running == 0:
@@ -231,10 +231,10 @@ def main(argv=None):
                            c.running,
                            ))))) + "\n")
 
-            running.extend([x for x, y in c._started.items() if y != 0])
+            running.extend([x for x, y in list(c._started.items()) if y != 0])
 
         print("running")
-        print("\n".join(map(str, running)))
+        print(("\n".join(map(str, running))))
         sys.stdout.write("\n" * 3)
 
 if __name__ == "__main__":

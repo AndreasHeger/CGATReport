@@ -513,12 +513,12 @@ def PrintAscii(histogram, step_size=1):
 
     f = 100.0 / m
 
-    print("----> histogram: len=%i, max=%i" % (l, m))
+    print(("----> histogram: len=%i, max=%i" % (l, m)))
     for x in range(1, l, step_size):
         s = "|"
         s += " " * (int(histogram[x] * f) - 1) + "*"
 
-        print("%5i" % x, s)
+        print(("%5i" % x, s))
 
 
 #-------------------------------------------------------------------------

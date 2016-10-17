@@ -360,9 +360,9 @@ def run(arguments,
                                      tracker=tracker_name,
                                      transformers=transformer_names,
                                      tracker_path=tracker_path,
-                                     options=renderer_options.items() +
-                                     tracker_options.items() +
-                                     transformer_options.items())
+                                     options=list(renderer_options.items()) +
+                                     list(tracker_options.items()) +
+                                     list(transformer_options.items()))
 
     if filename_text is not None:
         linked_rstname = re.sub(
@@ -443,7 +443,7 @@ def run(arguments,
 
     if CGATREPORT_DEBUG:
         for x, l in enumerate(lines):
-            print("%5i %s" % (x, l))
+            print(("%5i %s" % (x, l)))
 
     if len(lines) and state_machine:
         state_machine.insert_input(

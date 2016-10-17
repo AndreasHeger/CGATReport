@@ -12,7 +12,7 @@ a dataframe using the python port (ggplot_) of the ggplot2_ package.
    As of pandas 0.16.0, the following error will appear here for older
    versions of ggplot:
 
-   ``pivot_table() got an unexpected keyword argument ‘rows’``
+   ``pivot_table() got an unexpected keyword argument 'rows' ``
 
    Please see: https://github.com/yhat/ggplot/issues/417.
    Make sure you have the latest version (>= 0.6.8) installed.

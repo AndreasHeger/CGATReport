@@ -1,4 +1,5 @@
 '''Plotting using the ggplot module.'''
+import sys
 
 from CGATReportPlugins.Renderer import Renderer
 from CGATReportPlugins.Plotter import Plotter
@@ -6,6 +7,8 @@ from docutils.parsers.rst import directives
 
 import matplotlib.pyplot as plt
 import pandas
+import copy
+
 
 SHAPES = [
         'o',#circle
@@ -69,15 +72,27 @@ class GGPlot(Renderer, Plotter):
 
         if len(dataframe.dropna()) == 0:
             return []
-
+        
         s = "plot = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
-
-        try:
-            exec s in globals(), locals()
-        except Exception, msg:
-            raise Exception(
-                "ggplot raised error for statement '%s': msg=%s" %
-                (s, msg))
+        if sys.version_info[0] >= 3:
+            # exec behaviour different in py3, local variables not automatically
+            # updated.
+            ll = copy.copy(locals())
+            gl = copy.copy(globals())
+            try:
+                exec(s, gl, ll)
+            except Exception as msg:
+                raise Exception(
+                    "ggplot raised error for statement '%s': msg=%s" %
+                    (s, msg))
+            plot = ll["plot"]
+        else:
+            try:
+                exec(s, globals(), locals())
+            except Exception as msg:
+                raise Exception(
+                    "ggplot raised error for statement '%s': msg=%s" %
+                    (s, msg))
 
         self.mFigure += 1
         if self.title:
@@ -87,7 +102,7 @@ class GGPlot(Renderer, Plotter):
         plt.figure()
         try:
             plts = [plot.make()]
-        except Exception, msg:
+        except Exception as msg:
             raise Exception(
                 "ggplot raised error for statement '%s': msg=%s" %
                 (s, msg))

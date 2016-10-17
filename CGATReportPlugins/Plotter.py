@@ -74,7 +74,7 @@ def normalize_legends(original_legends):
     lengths = [len(x) for x in paths]
     assert min(lengths) == max(lengths)
 
-    levels = zip(*paths)
+    levels = list(zip(*paths))
     pruned_levels = [x for x in levels if len(set(x)) > 1]
     
     new_legends = [path2str(x) for x in zip(*pruned_levels)]
@@ -1280,12 +1280,12 @@ class LinePlot(Renderer, Plotter):
         data series *n* within a plot.'''
 
         color = self.format_colors[nplotted % len(self.format_colors)]
-        nplotted /= len(self.format_colors)
+        nplotted //= len(self.format_colors)
         linestyle = self.format_lines[nplotted % len(self.format_lines)]
         if self.as_lines:
             marker = None
         else:
-            nplotted /= len(self.format_lines)
+            nplotted //= len(self.format_lines)
             marker = self.format_markers[nplotted % len(self.format_markers)]
 
         return color, linestyle, marker
@@ -1434,8 +1434,9 @@ class HistogramPlot(LinePlot):
 
         # compute bar widths
         widths = []
-        w = xvalues[0]
-        for x in xvalues[1:]:
+        xv = numpy.array(xvalues)
+        w = xv[0]
+        for x in xv[1:]:
             widths.append(x - w)
             w = x
         widths.append(widths[-1])
@@ -1525,9 +1526,9 @@ class HistogramGradientPlot(LinePlot):
 
         work = dataseries.unstack()
 
-        for line, data in work.items():
+        for line, data in list(work.items()):
 
-            for label, coords in data.items():
+            for label, coords in list(data.items()):
 
                 try:
                     keys = list(coords.keys())
@@ -1604,7 +1605,7 @@ class HistogramGradientPlot(LinePlot):
         ax = plt.gca()
         plt.setp(ax.get_xticklabels(), visible=True)
         increment = len(self.xvals) // 5
-        ax.set_xticks(range(0, len(self.xvals), increment))
+        ax.set_xticks(list(range(0, len(self.xvals), increment)))
         ax.set_xticklabels([self.xvals[x]
                             for x in range(0, len(self.xvals), increment)])
 
@@ -1913,11 +1914,15 @@ class InterleavedBarPlot(BarPlot):
             vals = self.data_matrix[:, column]
             if self.error:
                 error = self.error_matrix[:, column]
+
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
-            if numpy.isnan(vals[0]) or numpy.isinf(vals[0]):
+            if vals[0] is None or numpy.isnan(vals[0]) or numpy.isinf(vals[0]):
                 vals[0] = 0
+                if self.error:
+                    error[0] = 0
+                
             hatch, color, alpha = self.getColour(row, column)
 
             if self.bottom_value is not None:
@@ -1930,7 +1935,7 @@ class InterleavedBarPlot(BarPlot):
                 kwargs['bottom'] = bottom
             else:
                 kwargs['left'] = bottom
- 
+
             plts.append(self.plotf(xvals + offset,
                                    vals,
                                    width,
@@ -2000,8 +2005,10 @@ class StackedBarPlot(BarPlot):
             # patch for wrong ylim. matplotlib will set the yrange
             # inappropriately, if the first value is None or nan
             # set to 0. Nan values elsewhere are fine.
-            if numpy.isnan(vals[0]) or numpy.isinf(vals[0]):
+            if vals[0] is None or numpy.isnan(vals[0]) or numpy.isinf(vals[0]):
                 vals[0] = 0
+                if self.error:
+                    error[0] = 0
 
             kwargs = {}
             if self.orientation == 'vertical':
@@ -2084,7 +2091,7 @@ class DataSeriesPlot(Renderer, Plotter):
                     todrop,
                     drop=True)
                 # convert to single-level index
-                dd.index = map(path2str, dd.index)
+                dd.index = list(map(path2str, dd.index))
             else:
                 dd = dataframe
 
@@ -2341,7 +2348,7 @@ class GalleryPlot(PlotByRow):
     def plot(self, headers, values, path):
 
         blocks = ResultBlocks()
-        dataseries = dict(zip(headers, values))
+        dataseries = dict(list(zip(headers, values)))
         try:
             # return value is a series
             filename = dataseries['filename']
@@ -2666,7 +2673,7 @@ class VennPlot(Renderer, Plotter):
         for column in dataframe.columns:
 
             values = tuple(dataframe[column])
-            subsets = dict(zip(keys, values))
+            subsets = dict(list(zip(keys, values)))
 
             if "labels" in subsets:
                 setlabels = subsets["labels"]
