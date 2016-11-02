@@ -237,9 +237,13 @@ def listAsDataFrame(data, index_title='names',
 def concatDataFrames(dataframes, index_tuples):
 
     # in pandas >0.19.0, keys of length 1 should not be tuples
-    if isinstance(index_tuples[0], tuple) and len(index_tuples[0]) == 1:
-        index_tuples = map(lambda x: x[0], index_tuples)
-
+    if pandas.__version__ == "0.19.0":
+        if isinstance(index_tuples[0], tuple):
+            if len(index_tuples[0]) == 1:
+                index_tuples = map(lambda x: x[0], index_tuples)
+            else:
+                raise NotImplementedError("issue with concatenating dataframes in pandas 0.19.0") 
+        
     df = pandas.concat(dataframes, keys=index_tuples)
 
     # concat is akin to an SQL join operation and will
