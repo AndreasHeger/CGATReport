@@ -12,7 +12,7 @@ import collections
 try:
     import queue
 except ImportError:
-    import queue as queue
+    import Queue as queue
 
 from logging import Logger
 

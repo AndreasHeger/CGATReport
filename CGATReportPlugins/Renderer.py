@@ -2,7 +2,12 @@ import os
 import sys
 import re
 import json
-import io
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 from docutils.parsers.rst import directives
 import numpy
 import pandas
@@ -308,7 +313,7 @@ class TableBase(Renderer):
     def asCSV(self, dataframe, row_headers, col_headers, title):
         '''save the table using CSV.'''
 
-        out = io.StringIO()
+        out = StringIO()
         dataframe.to_csv(out)
         result = []
         result.append(".. csv-table:: %s" % title)
@@ -335,7 +340,7 @@ class TableBase(Renderer):
     def asRST(self, dataframe, row_headers, col_headers, title):
         '''save the table using RST.'''
 
-        out = io.StringIO()
+        out = StringIO()
         dataframe.to_csv(out)
         data = [x.split(',') for x in out.getvalue().split('\n')]
         # ignore last element - empty
@@ -375,7 +380,7 @@ class TableBase(Renderer):
 
         r = ResultBlock("\n".join(lines) + "\n", title=title)
 
-        out = io.StringIO()
+        out = StringIO()
         dataframe.to_csv(out)
         lines = out.getvalue().split("\n")
 

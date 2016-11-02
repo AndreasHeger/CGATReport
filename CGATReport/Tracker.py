@@ -12,7 +12,7 @@ import collections
 
 # Python 2/3 Compatibility
 try:
-    import configparser as configparser
+    import ConfigParser as configparser
 except:
     import configparser
 
