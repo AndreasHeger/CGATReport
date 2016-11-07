@@ -423,7 +423,7 @@ class TableBase(Renderer):
         quick = len(dataframe) > 10000
         if quick and not split:
             # quick writing, only append method works
-            wb = openpyxl.Workbook(write_only=True)
+            wb = openpyxl.Workbook()
 
             def fillWorksheet(ws, dataframe, title):
                 ws.append([""] + list(col_headers))
@@ -435,7 +435,7 @@ class TableBase(Renderer):
 
         else:
             # do it cell-by-cell, this might be slow
-            wb = openpyxl.Workbook(optimized_write=False)
+            wb = openpyxl.Workbook()
 
             def fillWorksheet(ws, dataframe, title):
                 # regex to detect rst hypelinks
