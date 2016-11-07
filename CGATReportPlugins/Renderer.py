@@ -423,7 +423,7 @@ class TableBase(Renderer):
         quick = len(dataframe) > 10000
         if quick and not split:
             # quick writing, only append method works
-            wb = openpyxl.Workbook(optimized_write=True)
+            wb = openpyxl.Workbook(write_only=True)
 
             def fillWorksheet(ws, dataframe, title):
                 ws.append([""] + list(col_headers))

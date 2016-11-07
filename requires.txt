@@ -14,7 +14,7 @@ sphinx>=1.0.5
 sqlalchemy>=0.7.0
 # Optional dependency
 # web.py>=0.37
-openpyxl>=2.0.3
+openpyxl>=2.3.5
 xlwt>=0.7.4
 mpld3>=0.2
 pillow>=2.7.0
