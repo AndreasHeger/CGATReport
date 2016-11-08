@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash -uxe
+
+CONDA_INSTALL_DIR=$(realpath env)
+CONDA_INSTALL_TYPE=basic
 
 # log installation information
 log() {
@@ -109,18 +112,40 @@ fi # if-OS
 } # install_os_packages
 
 # download and install conda
-wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
-bash Miniconda-latest-Linux-x86_64.sh -b -p $CONDA_INSTALL_DIR
-export PATH="$CONDA_INSTALL_DIR/bin:$PATH"
-hash -r
+if [ ! -d $CONDA_INSTALL_DIR ]; then
+    rm -f Miniconda-latest-Linux-x86_64.sh
+    wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+    rm -rf $CONDA_INSTALL_DIR
+    bash Miniconda-latest-Linux-x86_64.sh -b -p $CONDA_INSTALL_DIR
+    hash -r
+fi
 
+export PATH="$CONDA_INSTALL_DIR/bin:$PATH"
+    
 # install cgat environment and additional packages: Pillow, seaborn
-conda update -q conda --yes
+conda update conda --yes
 conda info -a
-conda create -q -n $CONDA_INSTALL_TYPE --override-channels --channel https://conda.binstar.org/cgat --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes $CONDA_INSTALL_TYPE gcc=4.8.3 Pillow seaborn
+
+log "creating conda environment"
+
+if [ `conda env list | grep -q ${CONDA_INSTALL_TYPE} `]; then
+    conda create -n $CONDA_INSTALL_TYPE --override-channels --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes 
+else
+    log "conda environment ${CONDA_INSTALL_TYPE} already exists"
+fi
+
+set +o nounset
+source activate basic
+set -o nounset
+
+conda install --yes Pillow seaborn pandas seaborn scipy numpy matplotlib jpeg bsddb
 
 # The following packages will be pulled in through pip:
 # mpld3
+
+
+
+pip install --upgrade --no-dependencies ggplot
 
 echo "Setting up CGATReport"
 # setup CGATPipelines
