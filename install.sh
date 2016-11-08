@@ -1,6 +1,6 @@
 #!/bin/bash -uxe
 
-CONDA_INSTALL_DIR=$(realpath env)
+CONDA_INSTALL_DIR=$(readlink -f env)
 CONDA_INSTALL_TYPE=basic
 
 # log installation information
