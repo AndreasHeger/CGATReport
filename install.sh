@@ -1,7 +1,11 @@
-#!/bin/bash -uxe
+#!/bin/bash -xe
 
 CONDA_INSTALL_DIR=$(readlink -f env)
 CONDA_INSTALL_TYPE=basic
+
+if [[ -z "$TRAVIS_BUILD_DIR" ]]; then
+    TRAVIS_BUILD_DIR="."
+fi
 
 # log installation information
 log() {
@@ -124,15 +128,10 @@ export PATH="$CONDA_INSTALL_DIR/bin:$PATH"
     
 # install cgat environment and additional packages: Pillow, seaborn
 conda update conda --yes
-conda info -a
+# conda info -a
 
 log "creating conda environment"
-
-if [ ! `conda env list | grep -q ${CONDA_INSTALL_TYPE} `]; then
-    conda create -n $CONDA_INSTALL_TYPE --override-channels --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes 
-else
-    log "conda environment ${CONDA_INSTALL_TYPE} already exists"
-fi
+conda create -n $CONDA_INSTALL_TYPE --override-channels --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes 
 
 set +o nounset
 source activate basic
@@ -151,3 +150,7 @@ echo "Setting up CGATReport"
 # setup CGATPipelines
 cd $TRAVIS_BUILD_DIR
 python setup.py develop
+
+cd doc && make html
+
+cat doc/cgatreport.log | cut -d " " -f 3 | sort | uniq -c
