@@ -128,7 +128,7 @@ conda info -a
 
 log "creating conda environment"
 
-if [ `conda env list | grep -q ${CONDA_INSTALL_TYPE} `]; then
+if [ ! `conda env list | grep -q ${CONDA_INSTALL_TYPE} `]; then
     conda create -n $CONDA_INSTALL_TYPE --override-channels --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes 
 else
     log "conda environment ${CONDA_INSTALL_TYPE} already exists"
