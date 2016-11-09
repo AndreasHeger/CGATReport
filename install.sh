@@ -131,7 +131,13 @@ conda update conda --yes
 # conda info -a
 
 log "creating conda environment"
-conda create -n $CONDA_INSTALL_TYPE --override-channels --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes 
+# conda create -n $CONDA_INSTALL_TYPE --override-channels --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes 
+
+conda create -y -n $CONDA_INSTALL_TYPE 
+conda config --add channels conda-forge
+conda config --add channels defaults
+conda config --add channels r
+conda config --add channels bioconda
 
 set +o nounset
 source activate basic
