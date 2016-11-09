@@ -26,14 +26,8 @@ class PandasPlot(Renderer, Plotter):
 
     def render(self, dataframe, path):
 
-        # the index in the dataframe is reset in order
-        # to add the index as a column.
-
-        # Currently, ggplot is not using hierarchical indices, but
-        # see this thread: https://github.com/yhat/ggplot/issues/285
-
-        dataframe.reset_index(inplace=True)
-
+        # Used to call reset_index() here in order to add
+        # the index as a column, but now let caller do this.
         p = None
         s = "p = dataframe.plot(%s)" % self.statement
 

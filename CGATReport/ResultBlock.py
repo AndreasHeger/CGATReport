@@ -1,10 +1,7 @@
 import re
 import itertools
 import sys
-
-# PYTHON 2/3 compatibility
-if sys.version_info[0] == 3:
-    str = str
+from six import string_types
 
 
 class ResultBlock(object):
@@ -24,10 +21,10 @@ class ResultBlock(object):
 
     def __init__(self, text, title, preamble="", postamble=""):
         assert isinstance(
-            text, str), \
+            text, string_types), \
             "created ResultBlock without text, but %s" % str(type(text))
         assert isinstance(
-            title, str), \
+            title, string_types), \
             "created ResultBlock without title, but %s" % str(title)
         assert title is not None
         assert text is not None

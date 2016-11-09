@@ -8,6 +8,7 @@ import traceback
 import math
 import glob
 import pkgutil
+from six import string_types
 
 from logging import debug, warn, critical
 from functools import reduce
@@ -110,7 +111,7 @@ def isFloat(obj):
 def isString(obj):
     # Python 3
     # return isinstance(obj, str)
-    return isinstance(obj, str)
+    return isinstance(obj, string_types)
 
 
 def is_numeric(obj):

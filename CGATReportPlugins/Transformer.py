@@ -1055,9 +1055,9 @@ class TransformerAggregate(Transformer):
 
     def rarify(self, data):
         if self.rarify_ratio < 1:
-            window = min(1, int(math.floor(len(data) * self.rarify_ratio)))
+            window = max(1, int(math.floor(len(data) * self.rarify_ratio)))
         else:
-            window = min(1, int(math.floor(float(len(data)) / self.rarify_ratio)))
+            window = max(1, int(math.floor(float(len(data)) / self.rarify_ratio)))
         return data.ix[list(range(0, len(data), window))]
 
     def fill_range_with_zeros(self, data):
