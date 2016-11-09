@@ -667,8 +667,7 @@ class TransformerStats(Transformer):
 
 class TransformerHistogramStats(Transformer):
 
-    # make sure that at least one grouping is done.
-    nlevels = -1
+    nlevels = 0
 
     # keep row names (samples)
     prune_dataframe = False
@@ -678,6 +677,7 @@ class TransformerHistogramStats(Transformer):
 
     def transform(self, data):
         self.debug("%s: called" % str(self))
+
         if len(data.columns) < 2:
             raise ValueError("expected at least two columns")
         

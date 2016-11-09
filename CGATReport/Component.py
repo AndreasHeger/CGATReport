@@ -5,6 +5,7 @@ import pkg_resources
 import logging
 import sys
 import collections
+import traceback
 from docutils.parsers.rst import directives
 
 LOGFILE = "cgatreport.log"
