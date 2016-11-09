@@ -142,8 +142,6 @@ conda install --yes Pillow seaborn pandas seaborn scipy numpy matplotlib jpeg bs
 # The following packages will be pulled in through pip:
 # mpld3
 
-
-
 pip install --upgrade --no-dependencies ggplot
 
 echo "Setting up CGATReport"

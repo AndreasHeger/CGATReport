@@ -3,6 +3,7 @@
 
 import pkg_resources
 import logging
+import sys
 import collections
 from docutils.parsers.rst import directives
 
@@ -15,10 +16,10 @@ def get_logger():
         "cgatreport")
 
     if not len(logger.handlers):
-        logger.setLevel(logging.DEBUG)
         fh = logging.FileHandler(
             LOGFILE,
             mode="a")
+        fh.setLevel(logging.INFO)
         formatter = logging.Formatter(LOGGING_FORMAT)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
@@ -47,7 +48,13 @@ class Component(object):
         self.logger.info("disp%s: %s" % (id(self), msg))
 
     def error(self, msg):
-        self.logger.error("disp%s: %s" % (id(self), msg))
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        lines = traceback.format_tb(exceptionTraceback)
+        self.logger.error("disp{}: {}: {}: {} {}\n{}".format(
+            id(self), msg,
+            exceptionType,
+            exceptionValue,
+            lines))
 
     def critical(self, msg):
         self.logger.critical("disp%s: %s" % (id(self), msg))

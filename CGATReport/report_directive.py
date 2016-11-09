@@ -328,7 +328,7 @@ def run(arguments,
 
     except:
 
-        logger.warn(
+        logger.error(
             "report_directive.run: exception caught at %s:%i - see document" %
             (str(document), lineno))
 
