@@ -12,6 +12,8 @@ except for `target` (since plot will add its own target).
 """
 
 import os
+import sys
+import traceback
 import hashlib
 import re
 import logging
@@ -328,9 +330,15 @@ def run(arguments,
 
     except:
 
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        tb = "\n".join(traceback.format_tb(exceptionTraceback))
+
         logger.error(
-            "report_directive.run: exception caught at %s:%i - see document" %
-            (str(document), lineno))
+            "report_directive.run: exception caught at %s:%i: %s %s\n%s\n" %
+            (str(document), lineno,
+             exceptionType,
+             exceptionValue,
+             tb))
 
         blocks = ResultBlocks(ResultBlocks(
             Utils.buildException("invocation")))

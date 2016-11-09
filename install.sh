@@ -137,7 +137,7 @@ set +o nounset
 source activate basic
 set -o nounset
 
-conda install --yes Pillow seaborn pandas seaborn scipy numpy matplotlib jpeg bsddb
+conda install --yes Pillow seaborn pandas seaborn scipy numpy matplotlib jpeg bsddb rpy2
 
 # The following packages will be pulled in through pip:
 # mpld3

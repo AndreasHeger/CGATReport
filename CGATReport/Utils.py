@@ -901,6 +901,8 @@ def layoutBlocks(blocks, layout="column"):
     The layout uses an rst table to arrange elements.
     """
 
+    logger = Component.get_logger()
+
     lines = []
     if len(blocks) == 0:
         return lines
@@ -932,7 +934,7 @@ def layoutBlocks(blocks, layout="column"):
                 lines.extend(block.title.split("\n"))
                 lines.append("")
             else:
-                warn("report_directive.layoutBlocks: missing title")
+                logger.warn("report_directive.layoutBlocks: missing title")
 
             lines.extend(block.text.split("\n"))
             lines.extend(block.postamble.split("\n"))
@@ -960,7 +962,7 @@ def layoutBlocks(blocks, layout="column"):
         raise ValueError("unknown layout %s " % layout)
 
     if ncols == 0:
-        warn("no columns")
+        logger.warn("no columns")
         return lines
 
     # compute column widths
@@ -1121,6 +1123,8 @@ def writeNoteBookEntry(outfile, tracker, renderer, transformers,
     '''output text for pasting into an ipython notebook into *outfile*
     '''
 
+    logger = Component.get_logger()
+
     cmd_options = [
         'do_print = False',
         'tracker="%s"' % tracker,
@@ -1144,7 +1148,7 @@ def writeNoteBookEntry(outfile, tracker, renderer, transformers,
     rendered_options = ",".join(cmd_options + ['renderer="%s"' % renderer])
     data_options = ",".join(cmd_options + ['renderer="none"'])
     if "'" in rendered_options:
-        warn("notebook options contain ': %s" % (rendered_options))
+        logger.warn("notebook options contain ': %s" % (rendered_options))
 
     # no module name in tracker
     # javascript files life in the "_static" directory, while

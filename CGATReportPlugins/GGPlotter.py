@@ -74,25 +74,15 @@ class GGPlot(Renderer, Plotter):
             return []
         
         s = "plot = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
-        if sys.version_info[0] >= 3:
-            # exec behaviour different in py3, local variables not automatically
-            # updated.
-            ll = copy.copy(locals())
-            gl = copy.copy(globals())
-            try:
-                exec(s, gl, ll)
-            except Exception as msg:
-                raise Exception(
-                    "ggplot raised error for statement '%s': msg=%s" %
-                    (s, msg))
-            plot = ll["plot"]
-        else:
-            try:
-                exec(s, globals(), locals())
-            except Exception as msg:
-                raise Exception(
-                    "ggplot raised error for statement '%s': msg=%s" %
-                    (s, msg))
+        ll = copy.copy(locals())
+        gl = copy.copy(globals())
+        try:
+            exec(s, gl, ll)
+        except Exception as msg:
+            raise Exception(
+                "ggplot raised error for statement '%s': msg=%s" %
+                (s, msg))
+        plot = ll["plot"]
 
         self.mFigure += 1
         if self.title:
@@ -104,7 +94,7 @@ class GGPlot(Renderer, Plotter):
             plts = [plot.make()]
         except Exception as msg:
             raise Exception(
-                "ggplot raised error for statement '%s': msg=%s" %
+                "ggplot raised error on rendering for statement '%s': msg=%s" %
                 (s, msg))
 
         return self.endPlot(plts, None, path)
