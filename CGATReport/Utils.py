@@ -114,6 +114,18 @@ def isString(obj):
     return isinstance(obj, string_types)
 
 
+def force_decode(s, encoding="utf-8", errors="replace"):
+    if s is None:
+        return None
+    return s.decode(encoding, errors=errors)
+
+
+def force_encode(s, encoding="utf-8", errors="replace"):
+    if s is None:
+        return None
+    return s.encode(encoding, errors=errors)
+
+
 def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
     return all(hasattr(obj, attr) for attr in attrs)
@@ -416,7 +428,6 @@ def getImageFormats(display_options=None):
 def get_default_display_options():
     """return dictionary with default display options from the config file.
     """
-    
     display_options = {}
     if "report_default_width" in PARAMS:
         display_options["width"] = PARAMS["report_default_width"]

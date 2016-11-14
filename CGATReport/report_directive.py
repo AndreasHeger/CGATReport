@@ -16,7 +16,6 @@ import sys
 import traceback
 import hashlib
 import re
-import logging
 import collections
 
 from docutils.parsers.rst import directives
@@ -443,11 +442,14 @@ def run(arguments,
         lines.extend(['    %s' % row.strip() for row in content])
         lines.append("")
 
+    # encode lines
+    lines = [Utils.force_decode(x) for x in lines]
+
     # output rst text for this renderer
     if filename_text:
-        outfile = open(filename_text, "w")
-        outfile.write("\n".join(lines))
-        outfile.close()
+        with open(filename_text, "w") as outf:
+            txt = "\n".join(lines)
+            outf.write(Utils.force_encode(txt))
 
     if CGATREPORT_DEBUG:
         for x, l in enumerate(lines):
