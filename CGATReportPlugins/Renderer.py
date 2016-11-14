@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import os
 import sys
 import re
@@ -314,10 +316,10 @@ class TableBase(Renderer):
         '''save the table using CSV.'''
 
         out = StringIO()
-        dataframe.to_csv(out)
+        dataframe.to_csv(out, encoding=Utils.get_encoding())
         result = []
         result.append(".. csv-table:: %s" % title)
-        lines = out.getvalue().split("\n")
+        lines = Utils.force_decode(out.getvalue()).split("\n")
 
         if len(lines) > self.large_rows:
             if self.large_html_class is not None:
@@ -341,7 +343,7 @@ class TableBase(Renderer):
         '''save the table using RST.'''
 
         out = StringIO()
-        dataframe.to_csv(out)
+        dataframe.to_csv(out, encoding=Utils.get_encoding())
         data = [x.split(',') for x in out.getvalue().split('\n')]
         # ignore last element - empty
         del data[-1]

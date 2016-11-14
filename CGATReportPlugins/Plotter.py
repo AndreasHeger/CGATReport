@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 """Mixin classes for Renderers that plot.
 """
 

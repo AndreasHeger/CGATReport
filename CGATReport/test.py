@@ -92,14 +92,15 @@ Use this method to see if all:class:`Trackers` can access
 their data sources.
 
 """
+from __future__ import unicode_literals
 import sys
 import os
 import re
 import glob
 import optparse
 import tempfile
-import logging
 import code
+from builtins import str
 
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
@@ -541,11 +542,12 @@ def main(argv=None, **kwargs):
             else:
                 for r in result:
                     if r.title:
-                        print ("")
+                        print("")
                         print(("title: %s" % r.title))
-                        print ("")
+                        print("")
                     for s in r:
-                        print((str(s)))
+                        ss = str(s)
+                        print(Utils.force_encode(ss))
 
         if options.hardcopy:
 

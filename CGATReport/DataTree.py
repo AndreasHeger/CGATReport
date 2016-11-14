@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
 import collections
 import itertools
 from collections import OrderedDict as odict
 import pandas
 from CGATReport import Utils
 from CGATReport import Component
+
 
 def unique(iterables):
     s = set()

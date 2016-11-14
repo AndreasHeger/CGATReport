@@ -1,6 +1,7 @@
+from __future__ import unicode_literals
+
 import re
 import itertools
-import sys
 from six import string_types
 
 
@@ -103,11 +104,18 @@ class ResultBlock(object):
     def clearPreamble(self):
         self.preamble = ""
 
-    def __str__(self):
+    def __unicode__(self):
+        a = [self.title,
+             self.preamble,
+             self.text,
+             self.postamble]
         return "\n\n".join((self.title,
                             self.preamble,
                             self.text,
                             self.postamble))
+
+    def __str__(self):
+        return unicode(self).encode("utf-8")
 
 
 class EmptyResultBlock(ResultBlock):

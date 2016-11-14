@@ -289,6 +289,7 @@ class Dispatcher(Component.Component):
         self.tree = odict()
 
         self.debug("%s: collecting data paths." % (self.tracker))
+
         is_function, datapaths = self.getDataPaths(self.tracker)
         self.debug("%s: collected data paths." % (self.tracker))
 

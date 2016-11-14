@@ -40,6 +40,7 @@ Contents:
    Reference.rst
    Running.rst
    Advanced.rst
+   Unicode.rst
    Glossary.rst
    Developing.rst
    Roadmap.rst

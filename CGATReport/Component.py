@@ -1,5 +1,6 @@
 '''basic module for CGATReport actors.
 '''
+from __future__ import unicode_literals
 
 import pkg_resources
 import logging

@@ -11,6 +11,8 @@ except for `target` (since plot will add its own target).
 
 """
 
+from __future__ import unicode_literals
+
 import os
 import sys
 import traceback
@@ -443,7 +445,7 @@ def run(arguments,
         lines.append("")
 
     # encode lines
-    lines = [Utils.force_decode(x) for x in lines]
+    # lines = [Utils.force_decode(x) for x in lines]
 
     # output rst text for this renderer
     if filename_text:
