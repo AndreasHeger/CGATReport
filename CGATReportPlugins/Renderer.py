@@ -1235,7 +1235,7 @@ class TableMatrix(TableBase, MatrixBase):
         """
         
         if self.normalize_row_labels:
-            drop = [x for x, y in enumerate(dataframe.index.names)
+            drop = [x for x, y in enumerate(dataframe.index.values)
                     if len(set(y)) == 1]
             rows = list(map(path2str, dataframe.index.droplevel(drop)))
         else:

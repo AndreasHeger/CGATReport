@@ -11,6 +11,7 @@ from CGATReport.Component import Component
 from CGATReport import Stats, DataTree, Utils
 
 from docutils.parsers.rst import directives
+from logging import warn
 
 # for rpy2 for data frames
 try:
