@@ -104,4 +104,3 @@ in addition to :ref:`common plot options`.
       data frame.
 
 .. _ggplot2: http://ggplot2.org/
-

@@ -12,19 +12,7 @@ log() {
    echo "# CGATReport log | `hostname` | `date` | $1 "
 }
 
-# message to display when the OS is not correct
-sanity_check_os() {
-   echo
-   echo " Unsupported operating system: $OS"
-   echo " Installation aborted."
-   echo 
-   echo " Supported operating systems are: "
-   echo " Ubuntu 12.x"
-   echo " CentOS 6.x"
-   echo " Scientific Linux 6.x"
-   echo
-   exit 1;
-} # sanity_check_os
+printenv
 
 # function to detect the Operating System
 detect_os() {
@@ -66,15 +54,9 @@ elif [ -f /etc/system-release ]; then
       else
          OS="centos"
       fi
-   else
-      sanity_check_os
    fi
-
-else
-
-   sanity_check_os
-
 fi
+
 } # detect_os
 
 
@@ -89,7 +71,7 @@ if [ "$OS" == "ubuntu" ] || [ "$OS" == "travis" ] ; then
    echo " Installing packages for Ubuntu "
    echo
 
-   sudo apt-get --quiet install -y gcc g++ zlib1g-dev libssl-dev libssl1.0.0 libbz2-dev libfreetype6-dev libpng12-dev libblas-dev libatlas-dev liblapack-dev gfortran libpq-dev r-base-dev libreadline-dev libmysqlclient-dev libboost-dev libsqlite3-dev;
+   sudo apt-get --quiet install -y gcc g++ zlib1g-dev libssl-dev libssl1.0.0 libbz2-dev libfreetype6-dev libpng12-dev libblas-dev libatlas-dev liblapack-dev gfortran libpq-dev r-base-dev libreadline-dev libmysqlclient-dev libboost-dev libsqlite3-dev libcairo2-dev
 
 elif [ "$OS" == "sl" ] || [ "$OS" == "centos" ] ; then
 
@@ -97,7 +79,11 @@ elif [ "$OS" == "sl" ] || [ "$OS" == "centos" ] ; then
    echo " Installing packages for Scientific Linux / CentOS "
    echo
 
-   yum -y install gcc zlib-devel openssl-devel bzip2-devel gcc-c++ freetype-devel libpng-devel blas atlas lapack gcc-gfortran postgresql-devel R-core-devel readline-devel mysql-devel boost-devel sqlite-devel
+   yum -y install gcc zlib-devel openssl-devel bzip2-devel gcc-c++ freetype-devel libpng-devel blas atlas lapack gcc-gfortran postgresql-devel R-core-devel readline-devel mysql-devel boost-devel sqlite-devel xorg-x11-fonts-75dpi xorg-x11-fonts-100dpi org-x11-server-Xvfb cairo-devel
+
+# cairo-dev/libcairo2-dev required for R package svglite
+# 
+
 
    # additional configuration for scipy (Scientific Linux only)
    if [ "$OS" == "sl" ] ; then
@@ -115,6 +101,8 @@ else
 fi # if-OS
 } # install_os_packages
 
+install_os_packages()
+
 # download and install conda
 if [ ! -d $CONDA_INSTALL_DIR ]; then
     rm -f Miniconda-latest-Linux-x86_64.sh
@@ -131,10 +119,10 @@ conda update conda --yes
 # conda info -a
 
 log "creating conda environment"
-# conda create -n $CONDA_INSTALL_TYPE --override-channels --channel defaults --channel https://conda.anaconda.org/bioconda --channel https://conda.binstar.org/r --channel https://conda.binstar.org/asmeurer --yes 
 
-conda create -y -n $CONDA_INSTALL_TYPE 
-conda config --add channels conda-forge
+conda create --yes -n $CONDA_INSTALL_TYPE 
+conda config --add channels asmeurer
+# conda config --add channels conda-forge
 conda config --add channels defaults
 conda config --add channels r
 conda config --add channels bioconda
@@ -143,7 +131,10 @@ set +o nounset
 source activate basic
 set -o nounset
 
-conda install --yes Pillow seaborn pandas seaborn scipy numpy matplotlib jpeg bsddb rpy2
+conda install --yes Pillow seaborn pandas seaborn scipy numpy matplotlib \
+    jpeg bsddb rpy2 r-ggplot2 r-gplots
+
+R -f install.R
 
 # The following packages will be pulled in through pip:
 # mpld3
@@ -157,4 +148,5 @@ python setup.py develop
 
 cd doc && make html
 
+cd $TRAVIS_BUILD_DIR
 cat doc/cgatreport.log | cut -d " " -f 3 | sort | uniq -c

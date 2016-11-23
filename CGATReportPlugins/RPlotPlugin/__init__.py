@@ -144,6 +144,7 @@ class RPlotPlugin(Component):
                                 str(outpath), str(thumbfile), scale=0.3)
                         except AttributeError:
                             pass
+
                     outfile = open(captionfile, "w")
                     outfile.write("\n".join(content) + "\n")
                     outfile.close()
