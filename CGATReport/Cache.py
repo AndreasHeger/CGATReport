@@ -99,6 +99,8 @@ class Cache(Component):
         if self._cache is None:
             raise KeyError("no cache - key `%s` does not exist" % str(key))
 
+        key = Utils.force_encode(key)
+
         try:
             if key in self._cache:
                 result = self._cache[key]
@@ -131,6 +133,7 @@ class Cache(Component):
             # do not store data frames in cache until
             # best method is clear
             try:
+                key = Utils.force_encode(key)
                 self._cache[key] = data
                 self.debug("saved data for key '%s' in cache" % key)
             # except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as

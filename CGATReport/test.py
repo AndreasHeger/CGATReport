@@ -112,14 +112,6 @@ import CGATReport.clean
 from CGATReport.Dispatcher import Dispatcher
 from CGATReport.Component import getOptionMap
 
-
-# import conf.py
-if os.path.exists("conf.py"):
-    try:
-        exec(compile(open("conf.py").read(), "conf.py", 'exec'))
-    except ValueError:
-        pass
-
 # set default directory where trackers can be found
 TRACKERDIR = "trackers"
 if "docsdir" in locals():
