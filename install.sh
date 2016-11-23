@@ -101,15 +101,18 @@ else
 fi # if-OS
 } # install_os_packages
 
-install_os_packages()
+# install_os_packages
 
 # download and install conda
 if [ ! -d $CONDA_INSTALL_DIR ]; then
+    log "installing conda into $CONDA_INSTALL_DIR"
     rm -f Miniconda-latest-Linux-x86_64.sh
     wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
     rm -rf $CONDA_INSTALL_DIR
     bash Miniconda-latest-Linux-x86_64.sh -b -p $CONDA_INSTALL_DIR
     hash -r
+else
+    log "using existing conda enviroment in $CONDA_INSTALL_DIR"
 fi
 
 export PATH="$CONDA_INSTALL_DIR/bin:$PATH"
