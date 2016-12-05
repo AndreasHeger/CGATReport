@@ -131,6 +131,18 @@ def force_encode(s, encoding="utf-8", errors="replace"):
     return s.encode(encoding, errors=errors)
 
 
+def force_dataframe_encode(df, encoding="utf-8"):
+    df = df.reset_index()
+    columns = [x for x, y in zip(df.columns, df.dtypes) if y == object]
+    for col in columns:
+        try:
+            df[col] = df[col].str.decode("unicode-escape").str.encode(encoding)
+        except AttributeError:
+            # non-string columns
+            pass
+    return df
+
+
 def is_numeric(obj):
     attrs = ['__add__', '__sub__', '__mul__', '__div__', '__pow__']
     return all(hasattr(obj, attr) for attr in attrs)

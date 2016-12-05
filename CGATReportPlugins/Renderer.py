@@ -316,7 +316,14 @@ class TableBase(Renderer):
         '''save the table using CSV.'''
 
         out = StringIO()
-        dataframe.to_csv(out, encoding=Utils.get_encoding())
+        try:
+            dataframe.to_csv(out, encoding=Utils.get_encoding())
+        except UnicodeDecodeError:
+            dataframe = Utils.force_dataframe_encode(
+                dataframe.reset_index(),
+                encoding=Utils.get_encoding())
+            dataframe.to_csv(out, encoding=Utils.get_encoding())
+
         result = []
         result.append(".. csv-table:: %s" % title)
         lines = Utils.force_decode(out.getvalue()).split("\n")
