@@ -134,21 +134,25 @@ set +o nounset
 source activate basic
 set -o nounset
 
+log "installing conda dependencies"
+
 conda install --yes Pillow seaborn pandas seaborn scipy numpy matplotlib \
     jpeg bsddb rpy2 r-ggplot2 r-gplots
 
+log "installing R dependencies"
 R -f install.R
 
 # The following packages will be pulled in through pip:
 # mpld3
-
+log "installing ggplot upgrade"
 pip install --upgrade --no-dependencies ggplot
 
-echo "Setting up CGATReport"
+echo "setting up CGATReport"
 # setup CGATPipelines
 cd $TRAVIS_BUILD_DIR
 python setup.py develop
 
+log "building report"
 cd doc && make html
 
 cd $TRAVIS_BUILD_DIR
