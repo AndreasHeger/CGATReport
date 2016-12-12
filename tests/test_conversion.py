@@ -71,7 +71,7 @@ class TestLabeledValues(unittest.TestCase):
                 # first row misses column C, so column B is second
                 self.assertEqual(list(df.columns),
                                  ["colB", "colA", "colC"])
-                
+
             else:
                 self.assertEqual(list(df.columns),
                                  ["colC", "colB", "colA"])
@@ -115,7 +115,7 @@ class TestArrayValues(unittest.TestCase):
                          ["colC", "colB", "colA"])
         self.assertEqual(list(df.index),
                          self.ref)
-        
+
     def testEmptyRow(self):
 
         for row in list(self.data.keys()):
@@ -144,7 +144,7 @@ class TestArrayValues(unittest.TestCase):
                 # first row misses column C, so column B is second
                 self.assertEqual(list(df.columns),
                                  ["colB", "colA", "colC"])
-                
+
             else:
                 self.assertEqual(list(df.columns),
                                  ["colC", "colB", "colA"])
