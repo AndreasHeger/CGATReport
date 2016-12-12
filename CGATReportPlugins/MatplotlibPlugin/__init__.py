@@ -120,7 +120,7 @@ class MatplotlibPlugin(Component):
                 is_html = True
 
             elif HAVE_BOKEH and \
-                 Utils.PARAMS.get("report_mpl", None) == "bokeh":
+                    Utils.PARAMS.get("report_mpl", None) == "bokeh":
 
                 outpath = os.path.join(
                     outdir,
@@ -174,5 +174,5 @@ class MatplotlibPlugin(Component):
                 text=script_text)
 
             map_figure2text["#$mpl %i$#" % figid] = rst_output
-            
+
         return map_figure2text

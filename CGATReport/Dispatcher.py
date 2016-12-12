@@ -364,15 +364,15 @@ class Dispatcher(Component.Component):
             elif s.startswith("r(") and s.endswith(")"):
                     # collect pattern matches:
                     # remove r()
-                    s = s[2:-1]
-                    # remove flanking quotation marks
-                    if s[0] in ('"', "'") and s[-1] in ('"', "'"):
-                        s = s[1:-1]
-                    rx = re.compile(s)
-                    if not Utils.isString(label):
-                        continue
-                    if rx.search(label):
-                        return True
+                s = s[2:-1]
+                # remove flanking quotation marks
+                if s[0] in ('"', "'") and s[-1] in ('"', "'"):
+                    s = s[1:-1]
+                rx = re.compile(s)
+                if not Utils.isString(label):
+                    continue
+                if rx.search(label):
+                    return True
         return False
 
     def filterPaths(self, path_patterns, mode="restrict"):
@@ -548,14 +548,16 @@ class Dispatcher(Component.Component):
         if self.include_columns:
             new_columns = self.include_columns
         else:
-            new_columns = [x for x in dataframe.columns if x not in index_columns]
+            new_columns = [
+                x for x in dataframe.columns if x not in index_columns]
 
         if self.exclude_columns:
-            new_columns = [x for x in new_columns if x not in self.exclude_columns]
+            new_columns = [
+                x for x in new_columns if x not in self.exclude_columns]
 
         dataframe.set_index(index_columns, inplace=True)
         self.data = dataframe[new_columns]
-        
+
     def render(self):
         '''supply the:class:`Renderer.Renderer` with the data to render.
 
@@ -597,7 +599,7 @@ class Dispatcher(Component.Component):
         else:
             level = Utils.getGroupLevels(
                 dataframe,
-                max_level=self.group_level+1)
+                max_level=self.group_level + 1)
 
             self.debug("%s: grouping by levels: %s" %
                        (self, str(level)))
@@ -732,7 +734,7 @@ class Dispatcher(Component.Component):
         #     self.prune()
         # except:
         #     self.error("%s: exception in pruning" % self)
-        #     return ResultBlocks(ResultBlocks(Utils.buildException("pruning")))
+        # return ResultBlocks(ResultBlocks(Utils.buildException("pruning")))
 
         try:
             self.reframe()
@@ -781,7 +783,7 @@ class Dispatcher(Component.Component):
         used for re-constructing call to cache.
         '''
         return self.slices
-        
+
     def getDataTree(self):
         '''return data tree.'''
         return self.tree

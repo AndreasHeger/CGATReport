@@ -484,7 +484,7 @@ def main(argv=None, **kwargs):
         if options.force:
             removed = CGATReport.clean.removeTracker(tracker_name)
             print(("removed all data for tracker %s: %i files" %
-                  (tracker_name, len(removed))))
+                   (tracker_name, len(removed))))
 
         dispatcher = Dispatcher(tracker, renderer, transformers)
 
@@ -562,9 +562,9 @@ def main(argv=None, **kwargs):
                                 R.plot(r.rggplot)
                             except rpy2.rinterface.RRuntimeError as msg:
                                 if re.search("object.*not found", str(msg)):
-                                    print(('%s: available columns in dataframe=%s' % \
-                                        (msg,
-                                          R('''colnames(rframe)'''))))
+                                    print(('%s: available columns in dataframe=%s' %
+                                           (msg,
+                                            R('''colnames(rframe)'''))))
 
                 print("press Ctrl-c to stop")
                 while 1:

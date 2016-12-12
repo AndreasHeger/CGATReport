@@ -254,7 +254,7 @@ class TransformerVenn(Transformer):
             if "background" in key and not self.background:
                 continue
             genesets[key] = set(group[column])
-            
+
         values = []
         if len(genesets) == 2:
             a = set(genesets[list(genesets.keys())[0]])
@@ -263,7 +263,8 @@ class TransformerVenn(Transformer):
             values.append(("10", len(a - b)))
             values.append(("01", len(b - a)))
             values.append(("11", len(a & b)))
-            values.append(("labels", list(map(path2str, list(genesets.keys())))))
+            values.append(
+                ("labels", list(map(path2str, list(genesets.keys())))))
         elif len(genesets) == 3:
             a = set(genesets[list(genesets.keys())[0]])
             b = set(genesets[list(genesets.keys())[1]])
@@ -276,7 +277,8 @@ class TransformerVenn(Transformer):
             values.append(("101", len((a & c) - b)))
             values.append(("011", len((b & c) - a)))
             values.append(("111", len((a & b) & c)))
-            values.append(("labels", list(map(path2str, list(genesets.keys())))))
+            values.append(
+                ("labels", list(map(path2str, list(genesets.keys())))))
         else:
             raise ValueError(
                 "Can currently only cope with 2 or 3 way intersections")

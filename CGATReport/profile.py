@@ -198,7 +198,7 @@ def main(argv=None):
             except KeyError as msg:
                 print(data)
                 print(("error in line: (is_start=%s), msg='%s', %s" %
-                      (is_start, msg, line)))
+                       (is_start, msg, line)))
 
     if options.time == "milliseconds":
         f = lambda d: d.seconds + d.microseconds / 1000

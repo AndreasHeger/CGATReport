@@ -552,7 +552,7 @@ class CorrelationTest(Result):
             self.alternative))
 
 
-def filterMasked(xvals, yvals, missing=("na", "Nan", None, ""), dtype = numpy.float):
+def filterMasked(xvals, yvals, missing=("na", "Nan", None, ""), dtype=numpy.float):
     """convert xvals and yvals to numpy array skipping pairs with
     one or more missing values."""
     xmask = [i in missing for i in xvals]
@@ -561,7 +561,7 @@ def filterMasked(xvals, yvals, missing=("na", "Nan", None, ""), dtype = numpy.fl
             numpy.array([yvals[i] for i in range(len(yvals)) if not ymask[i]], dtype=dtype))
 
 
-def filterNone(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype = numpy.float):
+def filterNone(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype=numpy.float):
     '''convert arrays in 'args' to numpy arrays of 'dtype', skipping where any of
     the columns have a value of missing.
 
@@ -580,13 +580,14 @@ def filterNone(args, missing=("na", "Nan", None, "", 'None', 'none'), dtype = nu
 
     mask = [sum([z in missing for z in x]) for x in zip(*args)]
 
-    xx = [numpy.array([x[i] for i in range(len(x)) if not mask[i]], dtype=dtype) for x in args]
+    xx = [numpy.array([x[i] for i in range(len(x)) if not mask[
+                      i]], dtype=dtype) for x in args]
     return xx
 
 
 def filterMissing(args,
                   missing=("na", "Nan", None, "", 'None', 'none'),
-                  dtype = numpy.float):
+                  dtype=numpy.float):
     '''remove rows in args where at least one of the columns have a
        missing value.'''
 
@@ -931,15 +932,16 @@ def smooth(x, window_len=11, window='hanning'):
     if x.size < window_len:
         raise ValueError("Input vector needs to be bigger than window size.")
 
-    if window_len<3:
+    if window_len < 3:
         return x
 
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError("Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
+        raise ValueError(
+            "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
 
-    s = numpy.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
+    s = numpy.r_[x[window_len - 1:0:-1], x, x[-1:-window_len:-1]]
 
-    if window == 'flat': #moving average
+    if window == 'flat':  # moving average
         w = numpy.ones(window_len, 'd')
     else:
         w = eval('numpy.' + window + '(window_len)')

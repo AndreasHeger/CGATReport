@@ -33,8 +33,9 @@ class XLSPlugin(Component):
             for block in xblocks:
                 if not hasattr(block, "xls"):
                     continue
-                    
-                outname = "%s_%s" % (template_name, re.sub("/", "@", block.title))
+
+                outname = "%s_%s" % (
+                    template_name, re.sub("/", "@", block.title))
                 outputpath = os.path.join(outdir, '%s.%s' %
                                           (outname, extension))
 

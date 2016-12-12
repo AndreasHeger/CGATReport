@@ -40,6 +40,8 @@ def str2path(s):
 # The DataTree data structure is discontinued
 # - a nested dictionary was more general from a user
 # point of view.
+
+
 class DataTree(object):
     '''a DataTree.
 

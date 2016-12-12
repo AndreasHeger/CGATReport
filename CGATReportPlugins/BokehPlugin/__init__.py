@@ -48,7 +48,8 @@ class BokehPlugin(Component):
                     continue
                 figid = block.bokeh._id
                 res = bokeh.resources.CDN
-                script_path = os.path.join('_static/report_directive/', "%s.js" % figid)
+                script_path = os.path.join(
+                    '_static/report_directive/', "%s.js" % figid)
 
                 js_txt, script_txt = bokeh.embed.autoload_static(
                     block.bokeh, res, script_path)

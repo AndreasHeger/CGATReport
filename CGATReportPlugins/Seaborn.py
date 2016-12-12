@@ -223,7 +223,7 @@ class ClustermapPlot(SeabornMatrixPlot):
 
     options = (('row-regex', directives.unchanged),
                ('col-regex', directives.unchanged),
-    ) + SeabornMatrixPlot.options
+               ) + SeabornMatrixPlot.options
 
     row_regex = None
     col_regex = None

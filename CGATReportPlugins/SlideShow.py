@@ -194,7 +194,7 @@ class SlideShowPlot(Renderer):
     The ``style`` option determines the slide show
     type that is returned.
     """
-    
+
     options = Renderer.options +\
         (("autoplay", directives.flag),
          ("style", directives.unchanged),
@@ -382,7 +382,7 @@ class PlainSlideShow(Renderer):
 
 class CaptionSlideShow(PlainSlideShow):
     """A slide show with captions underneath the images."""
-    
+
     def add_image(self, filename, title, description):
 
         html_image_filename = self.import_image(filename)
@@ -443,4 +443,3 @@ class ThumbnailSlideShow(PlainSlideShow):
                 </div>
             </div>
             """ % locals()]
-

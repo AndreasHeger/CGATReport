@@ -75,7 +75,7 @@ class Transformer(Component):
                 keys.append(key)
 
         df = pandas.concat(dataframes, keys=keys)
-        
+
         if self.prune_dataframe:
             # reset dataframe index - keep the same levels
             Utils.pruneDataFrameIndex(df, original=data)
@@ -234,7 +234,7 @@ class Transformer(Component):
 #                 t[minor_key] = rpy2.robjects.FloatVector(values)
 #             else:
 #                 t[minor_key] = rpy2.robjects.StrVector(values)
- 
+
 #         return rpy2.robjects.DataFrame(t)
 
 
@@ -681,7 +681,7 @@ class TransformerHistogramStats(Transformer):
 
         if len(data.columns) < 2:
             raise ValueError("expected at least two columns")
-        
+
         bins = data.iloc[:, 0]
         records = []
         for column in data.columns[1:]:
@@ -757,9 +757,9 @@ class TransformerPairwise(Transformer):
                                       len(yvals)))
 
                 take = [i for i in range(len(xvals))
-                        if xvals[i] is not None and yvals[i] is not None
-                        and type(xvals[i]) in (float, int)
-                        and type(yvals[i]) in (float, int)]
+                        if (xvals[i] is not None and yvals[i] is not None and
+                            type(xvals[i]) in (float, int) and
+                            type(yvals[i]) in (float, int))]
                 xvals = [xvals[i] for i in take]
                 yvals = [yvals[i] for i in take]
 
@@ -985,7 +985,8 @@ class TransformerAggregate(Transformer):
                 if x in self.mMapKeyword:
                     self.column_converters.append(self.mMapKeyword[x])
                 elif x in self.map_histogram_converters:
-                    self.histogram_converters.append(self.map_histogram_converters[x])
+                    self.histogram_converters.append(
+                        self.map_histogram_converters[x])
                 else:
                     raise KeyError("unknown keyword `%s`" % x)
 
@@ -1058,7 +1059,8 @@ class TransformerAggregate(Transformer):
         if self.rarify_ratio < 1:
             window = max(1, int(math.floor(len(data) * self.rarify_ratio)))
         else:
-            window = max(1, int(math.floor(float(len(data)) / self.rarify_ratio)))
+            window = max(
+                1, int(math.floor(float(len(data)) / self.rarify_ratio)))
         return data.ix[list(range(0, len(data), window))]
 
     def fill_range_with_zeros(self, data):
@@ -1068,8 +1070,10 @@ class TransformerAggregate(Transformer):
                               index=numpy.arange(min_range, max_range),
                               columns=data.columns[1:]).reset_index()
         df.columns = data.columns
-        merged = pandas.merge(df, data, on=data.columns[0], how="left").fillna(0)
-        merged[data.columns[1]] = merged[data.columns[1] + "_x"] + merged[data.columns[1]+"_y"]
+        merged = pandas.merge(df, data, on=data.columns[
+                              0], how="left").fillna(0)
+        merged[data.columns[1]] = merged[data.columns[
+            1] + "_x"] + merged[data.columns[1] + "_y"]
         merged = merged[data.columns]
         keys = tuple(list(data.groupby(by=data.index).groups.keys())[0])
         merged.index = pandas.MultiIndex.from_tuples(

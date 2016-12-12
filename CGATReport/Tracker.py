@@ -101,13 +101,13 @@ def getTableColumns(db, tablename, attach=None):
 
     The returned information contains one dictionary per
     column. The column name is in the "name" field.
-    
+
     If attach is not None, assume that engine is sqlite and
     use a direct query for table names.
     '''
     # for sqlite attached tables
     if attach and "." in tablename:
-        # PRAGMA table_info(tablename) does not work as 
+        # PRAGMA table_info(tablename) does not work as
         # a "." in a table name will cause an error.
         # Thus select from sqlite_master in attached
         # database directly and parse the result.
@@ -121,7 +121,7 @@ def getTableColumns(db, tablename, attach=None):
             raise SQLError(msg)
         # extract string from brackes onwards, ignore CREATE .... (
         s = r.fetchone()[0]
-        s = s[s.index("(")+1:]
+        s = s[s.index("(") + 1:]
         # convert to dict for compatibility with sqlalchemy inspector
         vals = [{"name": x} for x in re.findall("(\S+)[^,]+,", s)]
     else:
@@ -242,9 +242,10 @@ class Tracker(object):
         # 1. subtract property attributes, or
         # 2. subtract members of Tracker()
         l = dict([(attr, getattr(self, attr)) for attr in dir(self)
-                  if not isinstance(attr, collections.Callable) and
-                  not attr.startswith("__") and attr != "tracks"
-                  and attr != "slices"])
+                  if (not isinstance(attr, collections.Callable) and
+                      not attr.startswith("__") and
+                      attr != "tracks" and
+                      attr != "slices")])
 
         if locals:
             return dict(l, **locals)
@@ -1125,8 +1126,8 @@ class SingleTableTrackerRows(TrackerSQL):
                                      sort_statement))
             columns = self.getColumns(self.table)
             self._slices = [x for x in columns
-                            if x not in self.exclude_columns
-                            and x not in self.fields] +\
+                            if x not in self.exclude_columns and
+                            x not in self.fields] +\
                 list(self.extra_columns.keys())
             # remove columns with special characters (:, +, -,)
             self._slices = [x for x in self._slices
@@ -1357,7 +1358,7 @@ class SingleTableTrackerEdgeListToMatrix(TrackerSQL):
     dtype = numpy.int
     where = "1"
 
-    # saved by preloading 
+    # saved by preloading
     _matrix = None
     _rows = None
     _cols = None
@@ -1693,7 +1694,7 @@ class TrackerMultipleLists(TrackerSQL):
         statements = self.getStatements()
         # track and slice will be substituted in the statements
         return odict([(
-            x, 
+            x,
             self.getValues(statements[x])) for x in statements])
 
 

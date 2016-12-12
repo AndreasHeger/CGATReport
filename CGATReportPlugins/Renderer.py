@@ -140,7 +140,8 @@ class Renderer(Component):
                 for x in range(0, len(columns), self.split_at):
                     # extract a set of columns
                     result.extend(self.render(
-                        dataframe.loc[:, always+columns[x:x+self.split_at]],
+                        dataframe.loc[:, always +
+                                      columns[x:x + self.split_at]],
                         path))
             # split dataframe along index
             elif len(grouper) >= self.split_at:
@@ -586,7 +587,7 @@ class Table(TableBase):
                     self.format_columns[column] = fmt
         else:
             self.format_columns = None
-        
+
         self.add_percent = kwargs.get('add-percent', None)
         self.head = int(kwargs.get('head', 0))
 
@@ -660,7 +661,7 @@ class Table(TableBase):
                         dataframe[column] = cc.map('{:,.2f}'.format)
                 elif cc.dtype == numpy.int:
                     dataframe[column] = cc.map('{:,}'.format)
-                    
+
         # if index is not hierarchical, but contains tuples,
         # split tuples in index to build a new (hierarchical) index
         is_hierarchical = isinstance(dataframe.index,
@@ -689,7 +690,8 @@ class Table(TableBase):
         # as of sphinx 1.3.1, tables with more than 100 columns cause an
         # error:
         # Exception occurred:
-        # File "/ifs/apps/apps/python-2.7.9/lib/python2.7/site-packages/docutils/writers/html4css1/__init__.py", line 642, in write_colspecs
+        # File "/ifs/apps/apps/python-2.7.9/lib/python2.7/site-packages/docutils/
+        # writers/html4css1/__init__.py", line 642, in write_colspecs
         # colwidth = int(node['colwidth'] * 100.0 / width + 0.5)
         # ZeroDivisionError: float division by zero
         #
@@ -762,7 +764,7 @@ class XlsTable(Table):
         col_headers = dataframe.columns
         results.append(self.asSpreadSheet(dataframe, row_headers,
                                           col_headers, title))
-        
+
         return results
 
 
@@ -1020,7 +1022,7 @@ class MatrixBase:
             (See Toothy's implementation in the comments)
             '''
             return [atoi(c) for c in re.split('(\d+)', text)]
-            
+
         map_row_new2old = [x[0] for x in sorted(
             enumerate([natural_keys(x) for x in row_headers]),
             key=lambda x: x[1])]
@@ -1036,7 +1038,7 @@ class MatrixBase:
                                                        row_headers=row_headers,
                                                        col_headers=col_headers)
 
-        return matrix, row_headers, col_headers            
+        return matrix, row_headers, col_headers
 
     def transformSymmetricMax(self, matrix, rows, cols):
         """symmetrize a matrix.
@@ -1217,8 +1219,8 @@ class TableMatrix(TableBase, MatrixBase):
     group_level = "all"
 
     options = TableBase.options +\
-              (('full-row-labels', directives.unchanged),
-               ('transform-matrix', directives.unchanged),)
+        (('full-row-labels', directives.unchanged),
+         ('transform-matrix', directives.unchanged),)
 
     # wether or not to convert matrix to float
     tofloat = False
@@ -1240,7 +1242,7 @@ class TableMatrix(TableBase, MatrixBase):
         This method will also apply conversions if apply_transformations
         is set.
         """
-        
+
         if self.normalize_row_labels:
             drop = [x for x, y in enumerate(dataframe.index.values)
                     if len(set(y)) == 1]
@@ -1395,8 +1397,8 @@ class StatusMatrix(Status, TableBase):
 
     '''
     options = Status.options + TableBase.options +\
-              (('row-column', directives.unchanged),
-               ('transpose', directives.unchanged),)
+        (('row-column', directives.unchanged),
+         ('transpose', directives.unchanged),)
 
     # For backwards compatibility, group by slice (test function)
     # and not track (data track) by default.

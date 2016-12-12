@@ -86,7 +86,7 @@ if "docsdir" in locals():
     RSTDIR = docsdir
 
 
-def deleteFiles(test_f, dirs_to_check=(".",), dry_run = False):
+def deleteFiles(test_f, dirs_to_check=(".",), dry_run=False):
     """remove all files that test_f returns True for.
     """
     removed = []

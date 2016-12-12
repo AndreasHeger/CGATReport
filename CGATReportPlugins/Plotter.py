@@ -1,7 +1,7 @@
-from __future__ import unicode_literals
-
 """Mixin classes for Renderers that plot.
 """
+
+from __future__ import unicode_literals
 
 import os
 import re
@@ -21,7 +21,7 @@ from docutils.parsers.rst import directives
 
 import numpy
 import matplotlib
-matplotlib.use('Agg', warn=False)
+# matplotlib.use('Agg', warn=False)
 # This does not work:
 # Matplotlib might be imported beforehand? plt.switch_backend did not
 # change the backend. The only option I found was to change my own
@@ -78,7 +78,7 @@ def normalize_legends(original_legends):
 
     levels = list(zip(*paths))
     pruned_levels = [x for x in levels if len(set(x)) > 1]
-    
+
     new_legends = [path2str(x) for x in zip(*pruned_levels)]
     if len(new_legends) != len(original_legends):
         return original_legends
@@ -102,9 +102,9 @@ class Plotter(object):
     :term:`logscale`: apply logscales one or more axes.
 
     :term:`xtitle`: add a label to the X axis
-    
+
     :term:`ytitle`: add a label to the Y axis
-    
+
     :term:`title`:  title of the plot
 
     :term:`add-title`: add title to each plot
@@ -120,7 +120,7 @@ class Plotter(object):
           If functions are separated by a |, then they will
           be plotted on each separately in order, recycling if
           necessary
-    
+
     :term:`vline`: add one or more vertical lines to the
           plot.
 
@@ -228,8 +228,9 @@ class Plotter(object):
 
         if self.functions:
             if "," in self.functions and "|" in self.functions:
-                raise ValueError("functions need to be separated by , or |, not both")
-                
+                raise ValueError(
+                    "functions need to be separated by , or |, not both")
+
             self.all_functions_per_plot = True
             if "," in self.functions:
                 self.functions = self.functions.split(",")
@@ -411,7 +412,8 @@ class Plotter(object):
                     yvals = [f(x) for x in xvals]
                     plt.plot(xvals, yvals)
             else:
-                function = self.functions[(self.mFigure - 1) % len(self.functions)]
+                function = self.functions[
+                    (self.mFigure - 1) % len(self.functions)]
                 f = eval("lambda x: %s" % function)
                 xvals = numpy.arange(xstart, xend, increment)
                 yvals = [f(x) for x in xvals]
@@ -844,7 +846,7 @@ class PlotterMatrix(Plotter):
             self.split_rows = int(nrows / math.sqrt(nrows / ncols))
         else:
             self.split_rows = int(self.split_rows)
-            
+
         split_row = self.split_rows > 0 and nrows > self.split_rows
         split_col = (self.split_cols > 0 and ncols > self.split_cols) or \
                     (self.split_cols == "auto")
@@ -876,7 +878,7 @@ class PlotterMatrix(Plotter):
 
             self.debug("splitting matrix at rows: {} * {} x {}".format(
                 nplots, self.split_rows, ncols))
-            
+
             # not sure why this switch to numbers - disable
             # new_headers = ["%s" % (x + 1) for x in range(len(row_headers))]
             new_headers = row_headers
@@ -1924,7 +1926,7 @@ class InterleavedBarPlot(BarPlot):
                 vals[0] = 0
                 if self.error:
                     error[0] = 0
-                
+
             hatch, color, alpha = self.getColour(row, column)
 
             if self.bottom_value is not None:

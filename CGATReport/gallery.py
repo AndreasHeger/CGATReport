@@ -111,7 +111,7 @@ def main(argv=sys.argv):
         thumbdir = os.path.join(thisdir, 'thumbnails')
         if not os.path.exists(thumbdir):
             print(("no thumbnail directory '%s' - no gallery created" %
-                  thumbdir))
+                   thumbdir))
             return 0
 
         print(("CGATReport: collecting thumbnails from %s" % thumbdir))

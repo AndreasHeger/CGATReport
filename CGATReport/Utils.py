@@ -182,7 +182,6 @@ def quote_filename(text):
 
 def getDataFrameLevels(dataframe,
                        test_for_trivial=False):
-
     '''return numbers of levels in the index
     of the dataframe.
 
@@ -231,7 +230,7 @@ def getGroupLevels(dataframe,
             if modify_levels > 0:
                 l = list(range(modify_levels, nlevels))
             else:
-                l = list(range(0, nlevels+modify_levels))
+                l = list(range(0, nlevels + modify_levels))
             return tuple(l)
         else:
             return tuple(range(nlevels))
@@ -260,7 +259,7 @@ def pruneDataFrameIndex(dataframe,
         if nlevels > expected_levels:
             dataframe.reset_index(
                 level=list(range(expected_levels,
-                            nlevels)),
+                                 nlevels)),
                 drop=True,
                 inplace=True)
 
@@ -274,7 +273,7 @@ def toMultipleSeries(dataframe):
     for key, work in dataframe.groupby(
             level=level):
         for column in work.columns:
-            dataseries.append((key+(column,), work[column]))
+            dataseries.append((key + (column,), work[column]))
     return dataseries
 
 
@@ -367,6 +366,8 @@ def update_parameters(filenames):
 # DEFAULT: read parameters from config files
 # in the current directory sorted by name
 # If 'inifile' is in conf.py, read it first.
+
+
 def get_parameters():
     return update_parameters(
         filenames=[getattr(CGATReport.Config, 'inifile', None)] +
@@ -479,9 +480,10 @@ class memoized(object):
 
     def __call__(self, *args, **kwargs):
         try:
-            return self.cache[args+list(kwargs)]
+            return self.cache[args + list(kwargs)]
         except KeyError:
-            self.cache[args+list(kwargs)] = value = self.func(*args, **kwargs)
+            self.cache[
+                args + list(kwargs)] = value = self.func(*args, **kwargs)
             return value
         except TypeError:
             # uncachable -- for instance, passing a list as an argument.
@@ -879,16 +881,16 @@ def normalize_cell(s, length):
 
 def table_div(num_cols, col_width, header_flag):
     if header_flag == 1:
-        return num_cols*('+' + (col_width)*'=') + '+\n'
+        return num_cols * ('+' + (col_width) * '=') + '+\n'
     else:
-        return num_cols*('+' + (col_width)*'-') + '+\n'
+        return num_cols * ('+' + (col_width) * '-') + '+\n'
 
 
 def table2rst(table):
     """convert a table (list of lists) to rst table.
     """
     cell_width = 2 + max(
-        reduce(lambda x,y: x+y,
+        reduce(lambda x, y: x + y,
                [[max(list(map(len, str(item).split('\n')))) for item in row]
                 for row in table], []))
     num_cols = len(table[0])
@@ -1019,7 +1021,7 @@ def layoutBlocks(blocks, layout="column"):
         for xx in range(nblock, min(nblock + ncols, len(blocks))):
             txt, col = blocks[xx].text.split("\n"), xx % ncols
             txt = blocks[xx].text.split("\n") + \
-                  blocks[xx].postamble.split("\n")
+                blocks[xx].postamble.split("\n")
             col = xx % ncols
 
             max_width = columnwidths[col]
@@ -1308,7 +1310,7 @@ def buildRstWithImage(outname,
             url = "[{}]".format(" ".join(urls))
         else:
             url = ""
-        
+
         rst_output += template % locals()
 
     # treat latex separately

@@ -64,8 +64,8 @@ class RSTPlugin(Component):
             if len(new) > len(old):
                 self.warn("length of substitution string ({}) is "
                           "longer than original ({}):\n{}\n{}".format(
-                        len(new), len(old),
-                        new, old))
+                              len(new), len(old),
+                              new, old))
                 new = new[:len(old)]
 
             n = s.replace(old, new)

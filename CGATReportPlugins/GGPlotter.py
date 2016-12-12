@@ -11,20 +11,20 @@ import copy
 
 
 SHAPES = [
-        'o',#circle
-        '^',#triangle up
-        '<',
-        '>',
-        'D',#diamond
-        'v',#triangle down
-        's',#square
-        '*',#star
-        'p',#pentagon
-        '*',#octagon
-        'h',
-        'H',
-        'd',
-    ]
+    'o',  # circle
+    '^',  # triangle up
+    '<',
+    '>',
+    'D',  # diamond
+    'v',  # triangle down
+    's',  # square
+    '*',  # star
+    'p',  # pentagon
+    '*',  # octagon
+    'h',
+    'H',
+    'd',
+]
 
 # ggplot > 0.9
 try:
@@ -72,7 +72,7 @@ class GGPlot(Renderer, Plotter):
 
         if len(dataframe.dropna()) == 0:
             return []
-        
+
         s = "plot = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
         ll = copy.copy(locals())
         gl = copy.copy(globals())
@@ -88,7 +88,8 @@ class GGPlot(Renderer, Plotter):
         if self.title:
             plt.title(self.title)
 
-        # plot.make() calls plt.close() command, so create a dummy to be closed.
+        # plot.make() calls plt.close() command, so create a dummy to be
+        # closed.
         plt.figure()
         try:
             plts = [plot.make()]

@@ -12,6 +12,7 @@ from docutils.parsers.rst import directives
 LOGFILE = "cgatreport.log"
 LOGGING_FORMAT = '%(asctime)s %(levelname)s %(message)s'
 
+
 def get_logger():
 
     logger = logging.getLogger(

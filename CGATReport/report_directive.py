@@ -41,8 +41,8 @@ def out_of_date(original, derived):
     Returns True if derivative is out-of-date wrt original,
     both of which are full file paths.
     """
-    return (not os.path.exists(derived)
-            or os.stat(derived).st_mtime < os.stat(original).st_mtime)
+    return (not os.path.exists(derived) or
+            os.stat(derived).st_mtime < os.stat(original).st_mtime)
 
 
 def run(arguments,
@@ -159,15 +159,15 @@ def run(arguments,
         options, option_map["display"]))
 
     logger.debug("report_directive.run: renderer options: %s" %
-                  str(renderer_options))
+                 str(renderer_options))
     logger.debug("report_directive.run: transformer options: %s" %
-                  str(transformer_options))
+                 str(transformer_options))
     logger.debug("report_directive.run: dispatcher options: %s" %
-                  str(dispatcher_options))
+                 str(dispatcher_options))
     logger.debug("report_directive.run: tracker options: %s" %
-                  str(tracker_options))
+                 str(tracker_options))
     logger.debug("report_directive.run: display options: %s" %
-                  str(display_options))
+                 str(display_options))
 
     if "transform" in display_options:
         transformer_names = display_options["transform"].split(",")
@@ -187,7 +187,7 @@ def run(arguments,
             str(tracker_options) +\
             str(transformer_names) +\
             re.sub("\s", "", "".join(content))
-                
+
         options_hash = hashlib.md5(options_key.encode()).hexdigest()
 
         template_name = Utils.quote_filename(
@@ -402,8 +402,8 @@ def run(arguments,
     except:
 
         logger.warn("report_directive.run: exception caught while "
-                     "collecting with %s at %s:%i - see document" %
-                     (collector, str(document), lineno))
+                    "collecting with %s at %s:%i - see document" %
+                    (collector, str(document), lineno))
         blocks = ResultBlocks(ResultBlocks(
             Utils.buildException("collection")))
         code = None
@@ -421,7 +421,7 @@ def run(arguments,
 
     if "notebook" in requested_urls:
         urls.append(":download:`nb <%(notebook_url)s>`" % links)
-    
+
     map_figure2text["default-prefix"] = ""
     map_figure2text["default-suffix"] = ""
 
@@ -483,7 +483,7 @@ class report_directive(Directive):
         document = self.state.document.current_source
         logger = Component.get_logger()
         logger.info("report_directive: starting: %s:%i" %
-                     (str(document), self.lineno))
+                    (str(document), self.lineno))
 
         return run(self.arguments,
                    self.options,
@@ -510,4 +510,3 @@ def setup(app):
     # return {'parallel_read_safe': True}
 
 directives.register_directive('report', report_directive)
-

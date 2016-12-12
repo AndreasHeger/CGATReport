@@ -73,7 +73,8 @@ def run(work):
     try:
         for f, lineno, b, srcdir, builddir in work:
             ff = os.path.abspath(f)
-            logger.debug("build.run: profile: started: rst: %s:%i" % (ff, lineno))
+            logger.debug("build.run: profile: started: rst: %s:%i" %
+                         (ff, lineno))
 
             report_directive.run(b.mArguments,
                                  b.mOptions,
@@ -84,7 +85,8 @@ def run(work):
                                  srcdir=srcdir,
                                  builddir=builddir)
 
-            logger.debug("build.run: profile: finished: rst: %s:%i" % (ff, lineno))
+            logger.debug("build.run: profile: finished: rst: %s:%i" %
+                         (ff, lineno))
 
         return None
     except:
@@ -153,7 +155,7 @@ class timeit:
             sys.stdout.flush()
             result = func(*args, **kwargs)
             print(("CGATReport: phase %s finished in %i seconds" %
-                  (self.mStage, time.time() - start)))
+                   (self.mStage, time.time() - start)))
             sys.stdout.flush()
             return result
         return wrapped
@@ -242,12 +244,12 @@ def buildPlots(rst_files, options, args, sourcedir):
         counts = handler.getCounts()
 
         print((("CGATReport: messages: %i critical, %i errors, "
-               "%i warnings, %i info, %i debug") %
-              (counts["CRITICAL"],
-               counts["ERROR"],
-               counts["WARNING"],
-               counts["INFO"],
-               counts["DEBUG"])))
+                "%i warnings, %i info, %i debug") %
+               (counts["CRITICAL"],
+                counts["ERROR"],
+                counts["WARNING"],
+                counts["INFO"],
+                counts["DEBUG"])))
 
     logging.shutdown()
 
@@ -286,10 +288,10 @@ def cleanTrackers(rst_files, options, args):
             removed = clean.removeTracker(reference)
             removed.extend(clean.removeText(reference))
             print(("code has changed for %s: %i files removed" %
-                  (reference, len(removed))))
+                   (reference, len(removed))))
             ncleaned += 1
     print(("CGATReport: %i Trackers changed (%i tested, %i skipped)" %
-          (ncleaned, ntested, nskipped)))
+           (ncleaned, ntested, nskipped)))
 
 
 def runCommand(command):
@@ -312,7 +314,6 @@ def buildDocument(options, args):
 
 
 def main(argv=None):
-
 
     logger = Component.get_logger()
     if argv is None:
