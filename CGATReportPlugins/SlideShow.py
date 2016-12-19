@@ -249,9 +249,9 @@ class PlainSlideShow(Renderer):
         else:
             self.autoplay = "false"
 
-        self.thumbnail_display = kwargs.get("thumbnail-display", 4)
-        self.thumbnail_lanes = kwargs.get("thumbnail-lanes", 1)
-        self.thumbnail_width = kwargs.get("thumbnail-width", 200)
+        self.thumbnail_display = int(kwargs.get("thumbnail-display", 4))
+        self.thumbnail_lanes = int(kwargs.get("thumbnail-lanes", 1))
+        self.thumbnail_width = int(kwargs.get("thumbnail-width", 200))
 
     def import_image(self, filename):
         '''import image into report. The image is hard-linked.
@@ -335,7 +335,6 @@ class PlainSlideShow(Renderer):
 
         options = self.get_slideshow_options()
         lines = [self.prefix % options]
-
         for title, row in dataframe.iterrows():
             row = row[row.notnull()]
             values = row.tolist()
@@ -356,7 +355,7 @@ class PlainSlideShow(Renderer):
             except KeyError:
                 self.warn(
                     "no 'name' key in path %s" % (path2str(path)))
-                return blocks
+                name = title
 
             description, title = os.path.split(name)
 
@@ -384,7 +383,6 @@ class CaptionSlideShow(PlainSlideShow):
     """A slide show with captions underneath the images."""
 
     def add_image(self, filename, title, description):
-
         html_image_filename = self.import_image(filename)
 
         width = self.width

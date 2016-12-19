@@ -4,6 +4,7 @@ import os
 import sys
 import re
 import json
+import six
 
 try:
     from StringIO import StringIO
@@ -317,17 +318,24 @@ class TableBase(Renderer):
         '''save the table using CSV.'''
 
         out = StringIO()
-        try:
-            dataframe.to_csv(out, encoding=Utils.get_encoding())
-        except UnicodeDecodeError:
-            dataframe = Utils.force_dataframe_encode(
-                dataframe.reset_index(),
-                encoding=Utils.get_encoding())
-            dataframe.to_csv(out, encoding=Utils.get_encoding())
+        # use pandas to_csv, which encodes unicode string. Hence
+        # go back and forth between unicode->bytes->unicode.
+
+        # if six.PY2:
+        #     # In python 2, the csv module does not do unicode.
+        #     # However, the csv module is used by docutils to read the
+        #     # table, so force ASCII here and replace all unicode
+        #     # chars.
+        #     dataframe = Utils.force_dataframe_encode(
+        #         dataframe.reset_index(),
+        #         encoding="ascii",
+        #         errors="replace")
+
+        dataframe.to_csv(out, encoding=Utils.get_encoding())
+        lines = Utils.force_decode(out.getvalue()).split("\n")
 
         result = []
         result.append(".. csv-table:: %s" % title)
-        lines = Utils.force_decode(out.getvalue()).split("\n")
 
         if len(lines) > self.large_rows:
             if self.large_html_class is not None:

@@ -19,7 +19,7 @@ class WordCounter(Tracker):
         else:
             tracks = [track]
 
-        for root, dirs, files in os.walk('.'):
+        for root, dirs, files in os.walk(os.path.dirname(__file__)):
             for f in files:
                 fn, ext = os.path.splitext(f)
                 if ext not in tracks:

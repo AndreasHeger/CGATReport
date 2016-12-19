@@ -19,6 +19,7 @@ import traceback
 import hashlib
 import re
 import collections
+import six
 
 from docutils.parsers.rst import directives
 from docutils.parsers.rst import Directive
@@ -445,7 +446,8 @@ def run(arguments,
         lines.append("")
 
     # encode lines
-    # lines = [Utils.force_decode(x) for x in lines]
+    if six.PY2:
+        lines = [Utils.force_encode(x, encoding="ascii", errors="replace") for x in lines]
 
     # output rst text for this renderer
     if filename_text:

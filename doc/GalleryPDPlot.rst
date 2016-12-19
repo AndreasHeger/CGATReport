@@ -1,8 +1,8 @@
 .. _pdplot:
 
-======
-pdplot
-======
+=============================
+pdplot - plotting with pandas
+=============================
 
 The :class:`CGATReportPlugins.PandasPlotter.PandasPlot` displays a
 dataframe using the pandas_ `plot
