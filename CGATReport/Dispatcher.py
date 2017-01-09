@@ -160,7 +160,7 @@ class Dispatcher(Component.Component):
 
         kwargs = {}
         if self.tracker_options:
-            kwargs['options'] = self.tracker_options
+            kwargs = Utils.parse_tracker_options(self.tracker_options)
 
         if result is None:
             try:

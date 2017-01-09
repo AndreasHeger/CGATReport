@@ -259,7 +259,6 @@ class DeepLevelNamedNestedIndexExample(Tracker):
         df["x"] = [y + random.gauss(0, 0.2) for y in range(len(index))]
         df["y"] = [y + random.gauss(0, 0.2) for y in range(len(index))]
         df.index = index
-        
         return df
 
 
@@ -413,36 +412,40 @@ class ImageOnly(Tracker):
 
 
 class ImageWithName(Tracker):
-    
+
     def __call__(self):
-        return {'filename': ["images/figure1.png", 
+        return {'filename': ["images/figure1.png",
                              "images/figure2.png"],
                 'name': ['image A', 'image B']}
-    
+
 
 class TableDataExample(Tracker):
     """return array with multiple data types for pretty formatting."""
 
     def __call__(self):
-        
         df = pandas.DataFrame(
-            data = {
+            data={
                 "percent": [0.5, 0.1, 1.0],
                 "bigfloat": [0.5, 1.2, 10000.3],
                 "bigint": [10000, 100000, 10]}
             )
-        
         return df
 
 
 class TableTimeSeries(Tracker):
-    
-    def __call__(self):
-        
-         df = pandas.DataFrame(
-             numpy.random.randn(1000, 4),
-             index=pandas.date_range('1/1/2000', periods=1000),
-             columns=list('ABCD')).cumsum()
 
-         return df
-             
+    def __call__(self):
+        df = pandas.DataFrame(
+            numpy.random.randn(1000, 4),
+            index=pandas.date_range('1/1/2000', periods=1000),
+            columns=list('ABCD')).cumsum()
+        return df
+
+
+class TrackerWithOptions(Tracker):
+    tracks = ("track1", "track2", "track3")
+
+    def __call__(self, track, option_string="default", option_int=1):
+        v = int(track[-1])
+        return odict(((option_string + "_1", v),
+                      (option_string + "_2", v * option_int),))

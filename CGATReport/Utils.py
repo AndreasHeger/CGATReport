@@ -1327,3 +1327,18 @@ def buildRstWithImage(outname,
         rst_output += template % locals()
 
     return rst_output
+
+
+def parse_tracker_options(options):
+    parts = options.split(",")
+    kwargs = {}
+    for part in parts:
+        if "=" not in part:
+            raise ValueError("malformed tracker options '{}'".format(part))
+        key, val = part.split("=", 1)
+        try:
+            kwargs[key.strip()] = eval(val.strip())
+        except NameError:
+            kwargs[key.strip()] = val
+
+    return kwargs

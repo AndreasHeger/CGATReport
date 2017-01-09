@@ -9,3 +9,4 @@ This section lists tips and tricks for CGATReport.
 
    LongLabels.rst
    GeneLists.rst
+   OptionsForTrackers.rst

@@ -2,6 +2,8 @@ import unittest
 import subprocess
 import collections
 import os
+import tempfile
+import shutil
 
 N_CORES = 4
 
@@ -18,15 +20,25 @@ class TestReportBuilding(unittest.TestCase):
 
     def testFullReport(self):
 
-        build_dir = "test_report-results.dir"
-        docs_dir = os.path.abspath("../doc")
+        build_dir = tempfile.mkdtemp(prefix="test_report-results.dir.",
+                                     dir=os.path.abspath(os.curdir))
+
+        docs_dir = None
+        for p in ["doc", "../doc"]:
+            if os.path.exists(p):
+                docs_dir = os.path.abspath(p)
+
+        if docs_dir is None:
+            raise ValueError("could not find doc directory")
 
         # "cgatreport-build --num-jobs={n_cores} "
+        print ("docs_dir is {}".format(docs_dir))
+        print ("build_dir is {}".format(build_dir))
 
         subprocess.check_output(
             "rm -rf {build_dir} && "
             "mkdir {build_dir} && "
-            "gunzip < csvdb_data.txt.gz | sqlite3 {build_dir}/csvdb && "
+            "gunzip < {docs_dir}/csvdb_data.txt.gz | sqlite3 {build_dir}/csvdb && "
             "cp -r {docs_dir}/images {build_dir} && "
             "cp {docs_dir}/*.ini {build_dir}/ && "
             "cd {build_dir} && "
@@ -59,6 +71,8 @@ class TestReportBuilding(unittest.TestCase):
                 counter[parts[2]] += 1
                 if parts[2] == "ERROR":
                     errors.append(line)
+
+        # shutil.rmtree(build_dir)
 
         self.assertEqual(
             counter["ERROR"], 0,

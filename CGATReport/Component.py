@@ -145,6 +145,7 @@ def getOptionMap():
             'restrict': directives.unchanged,
             'exclude': directives.unchanged,
             'nocache': directives.flag,
+            'tracker': directives.unchanged,
         }
 
         # options used in trackers
@@ -181,9 +182,8 @@ def getOptionSpec():
     This method returns a flattened :var:`options`
     dictionary.
     '''
-    o = getOptionMap()
     r = {}
-    for x, xx in list(o.items()):
+    for x, xx in getOptionMap().items():
         r.update(xx)
 
     # add the primary actor options
