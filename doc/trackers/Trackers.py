@@ -443,9 +443,17 @@ class TableTimeSeries(Tracker):
 
 
 class TrackerWithOptions(Tracker):
+
+    cache = False
+
     tracks = ("track1", "track2", "track3")
 
-    def __call__(self, track, option_string="default", option_int=1):
+    def __init__(self, option_string="default", option_int=1, **kwargs):
+        Tracker.__init__(self, **kwargs)
+        self.option_int = option_int
+        self.option_string = option_string
+
+    def __call__(self, track):
         v = int(track[-1])
-        return odict(((option_string + "_1", v),
-                      (option_string + "_2", v * option_int),))
+        return odict(((self.option_string + "_1", v),
+                      (self.option_string + "_2", v * self.option_int),))

@@ -154,7 +154,7 @@ def run(arguments,
     dispatcher_options = Utils.selectAndDeleteOptions(
         options, option_map["dispatch"])
     tracker_options = Utils.selectAndDeleteOptions(
-        options, option_map["tracker"])
+        options, option_map["tracker"], expand=["tracker"])
     display_options = Utils.get_default_display_options()
     display_options.update(Utils.selectAndDeleteOptions(
         options, option_map["display"]))
@@ -270,7 +270,7 @@ def run(arguments,
         logger.debug(
             "report_directive.run: collecting tracker %s with options %s " %
             (tracker_name, tracker_options))
-        code, tracker, tracker_path = Utils.makeTracker(
+        code, tracker, tracker_path = Utils.make_tracker(
             tracker_name, (), tracker_options)
         if not tracker:
             logger.error(

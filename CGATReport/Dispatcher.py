@@ -131,7 +131,9 @@ class Dispatcher(Component.Component):
         self.include_columns = as_list(kwargs.get("include-columns", None))
         self.set_index = as_list(kwargs.get("set-index", None))
 
-        self.tracker_options = kwargs.get("tracker", None)
+        # TODO: indicate if tracker is parameterized
+        self.tracker_options = False
+
 
     def getData(self, path):
         """get data for track and slice. Save data in persistent cache for

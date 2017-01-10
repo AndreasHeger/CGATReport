@@ -375,16 +375,22 @@ def get_parameters():
         sorted(glob.glob("*.ini")))
 
 
-def selectAndDeleteOptions(options, select):
+def selectAndDeleteOptions(options, select, expand=[]):
     '''collect options in *select* and from *options* and remove those found.
+
+    expand is a list of keywards that will be expanded.
 
     returns dictionary of options found.
     '''
     new_options = {}
-    for k, v in list(options.items()):
+    for k, v in options.items():
         if k in select:
             new_options[k] = v
             del options[k]
+
+    for k in expand:
+        if k in new_options:
+            new_options.update(expand_option(new_options[k]))
     return new_options
 
 
@@ -651,7 +657,7 @@ def makeObject(path, args=(), kwargs={}):
 
 
 @memoized
-def makeTracker(path, args=(), kwargs={}):
+def make_tracker(path, args=(), kwargs={}):
     """retrieve an instantiated tracker and its associated code.
 
     returns a tuple (code, tracker, pathname).
@@ -1329,12 +1335,20 @@ def buildRstWithImage(outname,
     return rst_output
 
 
-def parse_tracker_options(options):
-    parts = options.split(",")
+def expand_option(option):
+    """expand option that is a ',' separated list of assignments.
+    """
     kwargs = {}
+    option = option.strip()
+    if len(option) == 0:
+        return kwargs
+    parts = option.split(",")
+
     for part in parts:
+        if not part.strip():
+            continue
         if "=" not in part:
-            raise ValueError("malformed tracker options '{}'".format(part))
+            raise ValueError("malformed tracker options '{}' in '{}'".format(part, option))
         key, val = part.split("=", 1)
         try:
             kwargs[key.strip()] = eval(val.strip())

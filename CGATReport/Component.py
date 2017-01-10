@@ -145,7 +145,6 @@ def getOptionMap():
             'restrict': directives.unchanged,
             'exclude': directives.unchanged,
             'nocache': directives.flag,
-            'tracker': directives.unchanged,
         }
 
         # options used in trackers
@@ -153,6 +152,7 @@ def getOptionMap():
             'regex': directives.unchanged,
             'glob': directives.unchanged,
             'sql_backend': directives.unchanged,
+            'tracker': directives.unchanged,
         }
 
         options["display"] = {

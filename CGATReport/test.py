@@ -404,6 +404,8 @@ def main(argv=None, **kwargs):
         kwargs, option_map["transform"])
     display_options = Utils.selectAndDeleteOptions(
         kwargs, option_map["display"])
+    tracker_options = Utils.selectAndDeleteOptions(
+        kwargs, option_map["tracker"], expand=["tracker"])
 
     ######################################################
     # decide whether to render or not
@@ -443,8 +445,8 @@ def main(argv=None, **kwargs):
             tracker_name = options.tracker
 
         try:
-            _code, tracker, tracker_path = Utils.makeTracker(
-                options.tracker, (), kwargs)
+            _code, tracker, tracker_path = Utils.make_tracker(
+                options.tracker, (), tracker_options)
         except ImportError:
             # try to find class in module
             trackers = []
