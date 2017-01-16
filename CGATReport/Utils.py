@@ -8,9 +8,9 @@ import traceback
 import math
 import glob
 import pkgutil
-from six import string_types
+from six import string_types, integer_types
 
-from logging import debug, warn, critical
+from logging import debug, warning, critical
 from functools import reduce
 
 # Python 2/3 Compatibility
@@ -40,36 +40,28 @@ TrackerKeywords = set(("text", "rst", "xls",))
 # unchanged.
 ImageOptions = set(("alt", "height", "width", "scale", "class"))
 
-# Taken from numpy.scalartype, but removing the types object and unicode
+# Taken from numpy.ScalarType, but removing the types object and unicode
 # None is allowed to represent missing values. numpy.float128 is a recent
 # numpy addition.
 try:
-    NumberTypes = (int, long, float, int, type(None),
-                   numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-                   numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64,
-                   numpy.float32, numpy.float64, numpy.float128)
     FloatTypes = (float,
                   numpy.float32, numpy.float64, numpy.float128)
-    IntTypes = (int, long,
-                numpy.int8, numpy.int16,
-                numpy.int32, numpy.int64,
-                numpy.uint8, numpy.uint16,
-                numpy.uint32, numpy.uint64)
+    IntTypes = integer_types + (
+        numpy.int8, numpy.int16,
+        numpy.int32, numpy.int64,
+        numpy.uint8, numpy.uint16,
+        numpy.uint32, numpy.uint64)
 
 except AttributeError as msg:
-    NumberTypes = (int, long, float, int, type(None),
-                   numpy.int8, numpy.int16,
-                   numpy.int32, numpy.int64,
-                   numpy.uint8, numpy.uint16,
-                   numpy.uint32, numpy.uint64,
-                   numpy.float32, numpy.float64)
     FloatTypes = (float,
                   numpy.float32, numpy.float64)
-    IntTypes = (int, long,
-                numpy.int8, numpy.int16,
-                numpy.int32, numpy.int64,
-                numpy.uint8, numpy.uint16,
-                numpy.uint32, numpy.uint64)
+    IntTypes = integer_types + (
+        numpy.int8, numpy.int16,
+        numpy.int32, numpy.int64,
+        numpy.uint8, numpy.uint16,
+        numpy.uint32, numpy.uint64)
+
+NumberTypes = IntTypes + FloatTypes + (type(None),)
 
 
 def isDataFrame(data):
@@ -414,8 +406,8 @@ def getImageFormats(display_options=None):
     if "display" in display_options:
         all_data = [x.strip() for x in display_options["display"].split(";")]
         if len(all_data) > 1:
-            warn(":display: only expects one format, additional ignored at %s" %
-                 display_options["display"])
+            warning(":display: only expects one format, additional ignored at %s" %
+                    display_options["display"])
         data = asList(all_data[0])
         default_format = _toFormat(data)
     elif "report_default_format" in PARAMS:
@@ -522,7 +514,7 @@ def getModule(name):
         try:
             (file, pathname, description) = imp.find_module(parts[0])
         except ImportError as msg:
-            warn("could not find module %s: msg=%s" % (name, msg))
+            warning("could not find module %s: msg=%s" % (name, msg))
             raise ImportError("could not find module %s: msg=%s" % (name, msg))
 
         path = [os.path.join(pathname, *parts[1:-1])]
@@ -536,12 +528,12 @@ def getModule(name):
     try:
         (modulefile, pathname, description) = imp.find_module(name, path)
     except ImportError as msg:
-        warn("could not find module %s in %s: msg=%s" % (name, path, msg))
+        warning("could not find module %s in %s: msg=%s" % (name, path, msg))
         raise ImportError(
             "could not find module %s in %s: msg=%s" % (name, path, msg))
 
     if modulefile is None:
-        warn("could not find module %s in %s" % (name, path))
+        warning("could not find module %s in %s" % (name, path))
         raise ImportError(
             "find_module returned None for %s in %s" %
             (name, path))
@@ -560,7 +552,7 @@ def getModule(name):
     try:
         module = imp.load_module(name, modulefile, pathname, description)
     except:
-        warn("could not load module %s" % name)
+        warning("could not load module %s" % name)
         raise
     finally:
         modulefile.close()
@@ -971,7 +963,7 @@ def layoutBlocks(blocks, layout="column"):
                 lines.extend(block.title.split("\n"))
                 lines.append("")
             else:
-                logger.warn("report_directive.layoutBlocks: missing title")
+                logger.warning("report_directive.layoutBlocks: missing title")
 
             lines.extend(block.text.split("\n"))
             lines.extend(block.postamble.split("\n"))
@@ -1185,7 +1177,7 @@ def writeNoteBookEntry(outfile, tracker, renderer, transformers,
     rendered_options = ",".join(cmd_options + ['renderer="%s"' % renderer])
     data_options = ",".join(cmd_options + ['renderer="none"'])
     if "'" in rendered_options:
-        logger.warn("notebook options contain ': %s" % (rendered_options))
+        logger.warning("notebook options contain ': %s" % (rendered_options))
 
     # no module name in tracker
     # javascript files life in the "_static" directory, while
