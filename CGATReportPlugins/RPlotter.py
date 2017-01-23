@@ -440,8 +440,6 @@ class GGPlot(Renderer, Plotter):
 
     def render(self, dataframe, path):
 
-        R.library('ggplot2')
-
         # add all indices as columns
         dataframe.reset_index(inplace=True)
 

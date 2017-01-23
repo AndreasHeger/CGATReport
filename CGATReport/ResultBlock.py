@@ -115,7 +115,14 @@ class ResultBlock(object):
                             self.postamble))
 
     def __str__(self):
-        return unicode(self).encode("utf-8")
+        a = [self.title,
+             self.preamble,
+             self.text,
+             self.postamble]
+        return "\n\n".join((self.title,
+                            self.preamble,
+                            self.text,
+                            self.postamble))
 
 
 class EmptyResultBlock(ResultBlock):

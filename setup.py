@@ -307,8 +307,7 @@ setup(name='CGATReport',
           ]
       },)
 
-# fix file permission for executables
-# set to "group writeable"
+# fix file permission for executables and set to "group writeable"
 # also updates the "sphinx" permissions
 if "install" in sys.argv:
     print ("updating file permissions for scripts")
@@ -327,4 +326,3 @@ if "install" in sys.argv:
     statement = 'perl -p -i -e "s/\/ifs\/apps\/apps\/python-2.7.1\/bin\/python2.7/\/bin\/env python/" ' + file_glob
     print(statement)
     subprocess.call(statement, shell=True)
-        

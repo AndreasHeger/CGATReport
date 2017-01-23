@@ -11,15 +11,13 @@ from CGATReport import Cache
 
 # move User renderer to CGATReport main distribution
 from CGATReportPlugins import Renderer
+from CGATReport.Types import is_string, ContainerTypes
+
+from collections import OrderedDict
 
 VERBOSE = True
 # maximimum number of levels in data tree
 MAX_PATH_NESTING = 5
-
-from collections import OrderedDict as odict
-
-# heap memory debugging, search for 'heap' in this code
-# from guppy import hpy; HP=hpy()
 
 
 class Dispatcher(Component.Component):
@@ -141,7 +139,6 @@ class Dispatcher(Component.Component):
 
         For functions, path should be an empty tuple.
         """
-
         if path:
             key = DataTree.path2str(path)
         else:
@@ -235,7 +232,7 @@ class Dispatcher(Component.Component):
                 continue
             if isinstance(y, str):
                 data_paths[x] = [y, ]
-            elif type(y) not in Utils.ContainerTypes:
+            elif type(y) not in ContainerTypes:
                 data_paths[x] = list(y)
 
         for x in to_remove[::-1]:
@@ -288,7 +285,7 @@ class Dispatcher(Component.Component):
         Data is stored in a multi-level dictionary (DataTree)
         '''
 
-        self.tree = odict()
+        self.tree = OrderedDict()
 
         self.debug("%s: collecting data paths." % (self.tracker))
 
@@ -339,7 +336,7 @@ class Dispatcher(Component.Component):
                 self.tracker,
                 len(all_paths)))
 
-        self.tree = odict()
+        self.tree = OrderedDict()
         for path in all_paths:
 
             d = self.getData(path)
@@ -371,7 +368,7 @@ class Dispatcher(Component.Component):
                 if s[0] in ('"', "'") and s[-1] in ('"', "'"):
                     s = s[1:-1]
                 rx = re.compile(s)
-                if not Utils.isString(label):
+                if not is_string(label):
                     continue
                 if rx.search(label):
                     return True

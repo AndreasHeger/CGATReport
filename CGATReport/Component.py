@@ -9,6 +9,8 @@ import collections
 import traceback
 from docutils.parsers.rst import directives
 
+from CGATReport.Types import force_encode, get_encoding
+
 LOGFILE = "cgatreport.log"
 LOGGING_FORMAT = '%(asctime)s %(levelname)s %(message)s'
 
@@ -24,7 +26,8 @@ def get_logger():
 
         fh = logging.FileHandler(
             LOGFILE,
-            mode="a")
+            mode="a",
+            encoding=get_encoding())
         formatter = logging.Formatter(LOGGING_FORMAT)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
@@ -44,13 +47,16 @@ class Component(object):
         self.logger = get_logger()
 
     def debug(self, msg):
-        self.logger.debug("disp%s: %s" % (id(self), msg))
+        self.logger.debug(force_encode("disp%s: %s" % (id(self), msg)))
 
     def warn(self, msg):
-        self.logger.warn("disp%s: %s" % (id(self), msg))
+        self.logger.warning(force_encode("disp%s: %s" % (id(self), msg)))
+
+    def warning(self, msg):
+        self.logger.warning(force_encode("disp%s: %s" % (id(self), msg)))
 
     def info(self, msg):
-        self.logger.info("disp%s: %s" % (id(self), msg))
+        self.logger.info(force_encode("disp%s: %s" % (id(self), msg)))
 
     def error(self, msg):
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()

@@ -26,6 +26,7 @@ from docutils.parsers.rst import Directive
 
 from CGATReport import Config, Dispatcher, Utils, Cache, Component
 from CGATReport.ResultBlock import ResultBlocks
+from CGATReport.Types import as_list, force_encode, get_encoding
 
 CGATREPORT_DEBUG = "CGATREPORT_DEBUG" in os.environ
 
@@ -354,9 +355,15 @@ def run(arguments,
     # write code output
     linked_codename = re.sub("\\\\", "/", os.path.join(rst2builddir, codename))
     if code and basedir != outdir:
-        with open(os.path.join(outdir, codename), "w") as outfile:
-            for line in code:
-                outfile.write(line)
+        if six.PY2:
+            with open(os.path.join(outdir, codename), "w") as outfile:
+                for line in code:
+                    outfile.write(line)
+        else:
+            with open(os.path.join(outdir, codename), "w",
+                      encoding=get_encoding()) as outfile:
+                for line in code:
+                    outfile.write(line)
 
     ########################################################
     # write notebook snippet
@@ -414,7 +421,7 @@ def run(arguments,
     # replace place holders or add text
     ###########################################################
     # add default for text-only output
-    requested_urls = Utils.asList(Utils.PARAMS["report_urls"])
+    requested_urls = as_list(Utils.PARAMS["report_urls"])
 
     urls = []
     if "code" in requested_urls:
@@ -447,13 +454,16 @@ def run(arguments,
 
     # encode lines
     if six.PY2:
-        lines = [Utils.force_encode(x, encoding="ascii", errors="replace") for x in lines]
+        lines = [force_encode(x, encoding="ascii", errors="replace") for x in lines]
 
     # output rst text for this renderer
     if filename_text:
-        with open(filename_text, "w") as outf:
-            txt = "\n".join(lines)
-            outf.write(Utils.force_encode(txt))
+        if six.PY2:
+            with open(filename_text, "w") as outf:
+                outf.write("\n".join(lines))
+        else:
+            with open(filename_text, "w", encoding=get_encoding()) as outf:
+                outf.write("\n".join(lines))
 
     if CGATREPORT_DEBUG:
         for x, l in enumerate(lines):
@@ -511,4 +521,4 @@ def setup(app):
 
     # return {'parallel_read_safe': True}
 
-directives.register_directive('report', report_directive)
+# directives.register_directive('report', report_directive)

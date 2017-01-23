@@ -5,6 +5,7 @@ import os
 import re
 import tempfile
 import shutil
+import sys
 
 N_CORES = 4
 
@@ -21,8 +22,11 @@ class TestReportBuilding(unittest.TestCase):
 
     def testFullReport(self):
 
-        build_dir = tempfile.mkdtemp(prefix="test_report-results.dir.",
-                                     dir=os.path.abspath(os.curdir))
+        # build_dir = tempfile.mkdtemp(prefix="test_report-results.dir.",
+        #                             dir=os.path.abspath(os.curdir))
+        build_dir = os.path.join(os.path.abspath(os.curdir),
+                                 "test_report-results-{}.dir".format(
+                                     sys.version.split(" ")[0]))
 
         docs_dir = os.path.abspath(
             os.path.join(os.path.dirname(os.path.dirname(__file__)),
@@ -47,7 +51,7 @@ class TestReportBuilding(unittest.TestCase):
             "-b html "
             "-d _build/doctrees "
             "{docs_dir} "
-            "_build/html".format(
+            "_build/html >& {build_dir}/build.log".format(
                 build_dir=build_dir,
                 docs_dir=docs_dir,
                 n_cores=N_CORES),

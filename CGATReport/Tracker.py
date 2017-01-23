@@ -22,6 +22,7 @@ import pandas
 import sqlalchemy
 import sqlalchemy.exc as exc
 import sqlalchemy.engine
+import six
 
 from CGATReport import Utils
 from CGATReport import Stats
@@ -49,13 +50,16 @@ def prettyPercent(numerator, denominator, format="%5.2f"):
     return x
 
 
-def getCallerLocals(level=3, decorators=0):
+def getCallerLocals(level=4, decorators=0):
     '''returns locals of caller using frame.
 
     optional pass number of decorators
 
     from http://pylab.blogspot.com/2009/02/python-accessing-caller-locals-from.html
     '''
+    if six.PY2:
+        level -= 1
+
     f = sys._getframe(level + decorators)
     args = inspect.getargvalues(f)
     return args[3]
@@ -696,7 +700,6 @@ class TrackerSQL(Tracker):
 
     def buildStatement(self, stmt):
         '''fill in placeholders in stmt.'''
-
         kwargs = self.members(getCallerLocals())
         statement = stmt % dict(list(kwargs.items()))
         return statement

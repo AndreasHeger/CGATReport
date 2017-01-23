@@ -180,3 +180,5 @@ def setup(app):
     app.add_directive('errorlist', CGATReportErrorList)
     app.connect('doctree-resolved', process_cgatreporterror_nodes)
     app.connect('env-purge-doc', purge_cgatreporterrors)
+
+    return {'parallel_read_safe': True}

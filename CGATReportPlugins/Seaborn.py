@@ -126,6 +126,7 @@ class KdePlot(DataSeriesPlot, SeabornPlot):
 
     def plotData(self, dataframe, melted):
         plts = []
+        import pdb; pdb.set_trace()
         if melted:
             for key, group in dataframe.groupby(dataframe.label):
                 plts.append(seaborn.kdeplot(

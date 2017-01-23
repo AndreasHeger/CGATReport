@@ -689,12 +689,12 @@ class TransformerHistogramStats(Transformer):
             for x, c in enumerate(counts):
                 if c != 0:
                     break
-            min_v = bins[x]
+            min_v = bins.ix[x]
             for x, c in enumerate(counts[::-1]):
                 if c != 0:
                     break
             x += 1
-            max_v = bins[-x]
+            max_v = bins.ix[-x]
             sums = bins * counts
             mean_v = float(sum(sums)) / sum(counts)
 

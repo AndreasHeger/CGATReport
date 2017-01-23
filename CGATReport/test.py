@@ -100,11 +100,13 @@ import glob
 import optparse
 import tempfile
 import code
+
 from builtins import str
 
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
 
+from CGATReport.Types import force_encode
 from CGATReport import Utils
 from CGATReport import Component
 
@@ -550,8 +552,8 @@ def main(argv=None, **kwargs):
                         print(("title: %s" % r.title))
                         print("")
                     for s in r:
-                        ss = str(s)
-                        print(Utils.force_encode(ss))
+                        for ss in str(s).split("\n"):
+                            print(force_encode(ss))
 
         if options.hardcopy:
 

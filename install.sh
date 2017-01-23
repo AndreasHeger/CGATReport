@@ -1,18 +1,30 @@
 #!/bin/bash -xe
 
-CONDA_INSTALL_DIR=$(readlink -f env)
+ROOT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
+if [[ -z "$CONDA_PY" ]]; then
+    CONDA_PY=2.7
+fi
+
 CONDA_INSTALL_TYPE=basic
+
+if [[ -z "$CONDA_INSTALL_DIR" ]]; then
+    CONDA_INSTALL_DIR=$(readlink -f env)
+fi
 
 if [[ -z "$TRAVIS_BUILD_DIR" ]]; then
     TRAVIS_BUILD_DIR="."
 fi
+
+CONDA_CHANNELS="--channel defaults --channel conda-forge --channel bioconda --channel r"
+CONDA_PACKAGES="pillow seaborn pandas seaborn scipy numpy matplotlib jpeg rpy2 r-ggplot2 r-gplots"
 
 # log installation information
 log() {
    echo "# CGATReport log | `hostname` | `date` | $1 "
 }
 
-printenv
+# printenv
 
 # function to detect the Operating System
 detect_os() {
@@ -104,43 +116,37 @@ fi # if-OS
 # install_os_packages
 
 # download and install conda
-if [ ! -d $CONDA_INSTALL_DIR ]; then
+if [ ! -d "$CONDA_INSTALL_DIR" ]; then
     log "installing conda into $CONDA_INSTALL_DIR"
     rm -f Miniconda-latest-Linux-x86_64.sh
-    wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
-    rm -rf $CONDA_INSTALL_DIR
-    bash Miniconda-latest-Linux-x86_64.sh -b -p $CONDA_INSTALL_DIR
+    wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    rm -rf "$CONDA_INSTALL_DIR"
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p "$CONDA_INSTALL_DIR"
     hash -r
 else
     log "using existing conda enviroment in $CONDA_INSTALL_DIR"
 fi
 
-export PATH="$CONDA_INSTALL_DIR/bin:$PATH"
-    
-# install cgat environment and additional packages: Pillow, seaborn
-conda update conda --yes
+# conda update conda --yes
 # conda info -a
 
 log "creating conda environment"
-
-conda create --yes -n $CONDA_INSTALL_TYPE 
-conda config --add channels asmeurer
-# conda config --add channels conda-forge
-conda config --add channels defaults
-conda config --add channels r
-conda config --add channels bioconda
-
-set +o nounset
-source activate basic
-set -o nounset
+"$CONDA_INSTALL_DIR"/bin/conda create --yes \
+    -n "$CONDA_INSTALL_TYPE" \
+    --override-channels "$CONDA_CHANNELS" \
+    python="$CONDA_PY" \
+    "$CONDA_PACKAGES"
 
 log "installing conda dependencies"
-
-conda install --yes Pillow seaborn pandas seaborn scipy numpy matplotlib \
-    jpeg bsddb rpy2 r-ggplot2 r-gplots
-
+which conda
+# $CONDA_INSTALL_DIR/bin/conda install --override-channels --yes $CONDA_CHANNELS $CONDA_PACKAGES
+    
 log "installing R dependencies"
-R -f install.R
+R -f "$ROOT_DIR"/install.R
+
+# set +o nounset
+source "$CONDA_INSTALL_DIR"/bin/activate "$CONDA_INSTALL_TYPE"
+# set -o nounset
 
 # The following packages will be pulled in through pip:
 # mpld3
@@ -149,11 +155,11 @@ pip install --upgrade --no-dependencies ggplot
 
 echo "setting up CGATReport"
 # setup CGATPipelines
-cd $TRAVIS_BUILD_DIR
+cd "$TRAVIS_BUILD_DIR"
 python setup.py develop
 
-log "building report"
-cd doc && make html
+# log "building report"
+# cd doc && make html
 
-cd $TRAVIS_BUILD_DIR
-cat doc/cgatreport.log | cut -d " " -f 3 | sort | uniq -c
+# cd $TRAVIS_BUILD_DIR
+# cat doc/cgatreport.log | cut -d " " -f 3 | sort | uniq -c

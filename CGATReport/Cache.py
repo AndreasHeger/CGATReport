@@ -1,9 +1,12 @@
 import os
 import shelve
 import pickle
+import six
 
 from CGATReport.Component import Component
 from CGATReport import Utils
+from CGATReport.Types import force_encode
+
 
 # Python 3 - bsddb.db not available
 # import bsddb.db
@@ -79,17 +82,17 @@ class Cache(Component):
 
     def __del__(self):
 
-        if self._cache is not None:
+        if self._cache is None:
             return
         self.debug("closing cache %s" % self.cache_filename)
-        self.debug("keys in cache %s" % (str(list(self._cache.keys()))))
+        self.debug("keys in cache %s" % (str(self._cache.keys())))
         self._cache.close()
         self._cache = None
 
     def keys(self):
         '''return keys in cache.'''
         if self._cache is not None:
-            return list(self._cache.keys())
+            return sorted(self._cache.keys())
         else:
             return []
 
@@ -100,7 +103,8 @@ class Cache(Component):
         if self._cache is None:
             raise KeyError("no cache - key `%s` does not exist" % str(key))
 
-        key = Utils.force_encode(key)
+        if six.PY2:
+            key = force_encode(key)
 
         try:
             if key in self._cache:
@@ -129,24 +133,30 @@ class Cache(Component):
     def __setitem__(self, key, data):
         '''save data in cache.
         '''
+        if self._cache is None:
+            return
 
-        if self._cache is not None:
-            # do not store data frames in cache until
-            # best method is clear
-            try:
-                key = Utils.force_encode(key)
-                self._cache[key] = data
-                self.debug("saved data for key '%s' in cache" % key)
-            # except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as
-            # msg:
-            except (OSError) as msg:
-                self.warn("could not save key '%s' from '%s': msg=%s" %
-                          (key,
-                           self.cache_filename,
-                           msg))
-            # The following sync call is absolutely necessary when
-            # using the multiprocessing library (python
-            # 2.6.1). Otherwise the cache is emptied somewhere before
-            # the final call to close(). Even necessary, if writeback
-            # = False
-            self._cache.sync()
+        if six.PY2:
+            key = force_encode(key)
+        else:
+            if isinstance(key, bytes):
+                raise ValueError("key '{}' is a byte string".format(key))
+
+        # do not store data frames in cache until
+        # best method is clear
+        try:
+            self._cache[key] = data
+            self.debug("saved data for key '%s' in cache" % key)
+        # except (bsddb.db.DBPageNotFoundError,bsddb.db.DBAccessError) as
+        # msg:
+        except (OSError) as msg:
+            self.warn("could not save key '%s' from '%s': msg=%s" %
+                      (key,
+                       self.cache_filename,
+                       msg))
+        # The following sync call is absolutely necessary when
+        # using the multiprocessing library (python
+        # 2.6.1). Otherwise the cache is emptied somewhere before
+        # the final call to close(). Even necessary, if writeback
+        # = False
+        self._cache.sync()

@@ -25,6 +25,7 @@ from math import log
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReport.DataTree import path2str
 from CGATReport import Utils, DataTree
+from CGATReport.Types import force_decode, get_encoding
 from CGATReport.Component import Component
 from CGATReport import CorrespondenceAnalysis
 
@@ -321,18 +322,20 @@ class TableBase(Renderer):
         # use pandas to_csv, which encodes unicode string. Hence
         # go back and forth between unicode->bytes->unicode.
 
-        # if six.PY2:
-        #     # In python 2, the csv module does not do unicode.
-        #     # However, the csv module is used by docutils to read the
-        #     # table, so force ASCII here and replace all unicode
-        #     # chars.
-        #     dataframe = Utils.force_dataframe_encode(
-        #         dataframe.reset_index(),
-        #         encoding="ascii",
-        #         errors="replace")
-
-        dataframe.to_csv(out, encoding=Utils.get_encoding())
-        lines = Utils.force_decode(out.getvalue()).split("\n")
+        if six.PY2:
+            # In python 2, the csv module does not do unicode.
+            # However, the csv module is used by docutils to read the
+            # table, so force ASCII here and replace all unicode
+            # chars.
+            #     dataframe = Utils.force_dataframe_encode(
+            #         dataframe.reset_index(),
+            #         encoding="ascii",
+            #         errors="replace")
+            dataframe.to_csv(out, encoding=get_encoding())
+            lines = force_decode(out.getvalue()).split("\n")
+        else:
+            dataframe.to_csv(out, encoding=get_encoding())
+            lines = out.getvalue().split("\n")
 
         result = []
         result.append(".. csv-table:: %s" % title)
@@ -359,7 +362,7 @@ class TableBase(Renderer):
         '''save the table using RST.'''
 
         out = StringIO()
-        dataframe.to_csv(out, encoding=Utils.get_encoding())
+        dataframe.to_csv(out, encoding=get_encoding())
         data = [x.split(',') for x in out.getvalue().split('\n')]
         # ignore last element - empty
         del data[-1]
@@ -1439,7 +1442,7 @@ class StatusMatrix(Status, TableBase):
             index=[self.row_column],
             columns="slice",
             values="status",
-            aggfunc=lambda x: str(x))
+            aggfunc=lambda x: ' '.join(x))
 
         if self.transpose:
             table = table.transpose()

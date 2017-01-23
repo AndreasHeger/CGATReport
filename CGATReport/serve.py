@@ -42,28 +42,22 @@ The options are:
 
 import sys
 import os
-import imp
-import io
-import re
-import types
-import glob
 import optparse
-import shutil
+
+from CGATReport import Utils
+from CGATReport import Cache
+from CGATReport import DataTree
+
+try:
+    import web
+except ImportError:
+    pass
 
 USAGE = """python %s [OPTIONS]
 
 start a cgatreport server
 
 """ % sys.argv[0]
-
-
-import web
-
-from CGATReport import Utils
-from CGATReport import Cache
-from CGATReport import DataTree
-from collections import OrderedDict as odict
-
 
 urls = ('/data/(.*)', 'DataTable',
         '/index/(.*)', 'Index')

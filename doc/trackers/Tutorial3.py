@@ -2,6 +2,7 @@ from CGATReport.Tracker import Tracker
 
 import os
 import re
+import six
 
 
 class WordCounter(Tracker):
@@ -24,7 +25,10 @@ class WordCounter(Tracker):
                 fn, ext = os.path.splitext(f)
                 if ext not in tracks:
                     continue
-                infile = open(os.path.join(root, f), "r")
+                if six.PY2:
+                    infile = open(os.path.join(root, f), "r")
+                else:
+                    infile = open(os.path.join(root, f), "r", encoding="utf-8")
                 words = re.split("\s+", "".join(infile.readlines()))
                 word_sizes.extend([len(word) for word in words])
                 infile.close()

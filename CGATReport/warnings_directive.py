@@ -53,7 +53,7 @@ class CGATReportWarning(BaseAdmonition):
             'warningclass': warningclass,
         })
 
-        logging.warn("CGATReport-Warning: %s" % warningclass)
+        logging.warning("CGATReport-Warning: %s" % warningclass)
 
         return r
 
@@ -181,3 +181,5 @@ def setup(app):
     app.add_directive('warninglist', CGATReportWarningList)
     app.connect('doctree-resolved', process_cgatreportwarning_nodes)
     app.connect('env-purge-doc', purge_cgatreportwarnings)
+
+    return {'parallel_read_safe': True}

@@ -5,6 +5,7 @@ from collections import OrderedDict as odict
 import pandas
 from CGATReport import Utils
 from CGATReport import Component
+from CGATReport.Types import is_string, is_array, is_dataframe
 
 
 def unique(iterables):
@@ -19,7 +20,7 @@ def path2str(path):
     '''convert path to printable string.'''
     if path is None:
         return ""
-    if Utils.isString(path):
+    if is_string(path):
         return path
     try:
         return "/".join(map(str, path))
@@ -29,7 +30,7 @@ def path2str(path):
 
 def str2path(s):
     '''convert printable string to path.'''
-    if Utils.isString(s):
+    if is_string(s):
         return s.split("/")
     return [s]
 
@@ -378,7 +379,7 @@ def asDataFrame(data):
 
     leaf = leaves[0][1]
 
-    if Utils.isArray(leaf):
+    if is_array(leaf):
 
         # build dataframe from arrays
         dataframes = []
@@ -427,7 +428,7 @@ def asDataFrame(data):
         expected_levels = len(index_tuples[0])
         df = concatDataFrames(dataframes, index_tuples)
 
-    elif Utils.isDataFrame(leaf):
+    elif is_dataframe(leaf):
         logger.debug('dataframe conversion: from dataframe')
 
         # build dataframe from list of dataframes
