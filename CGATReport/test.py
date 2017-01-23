@@ -415,6 +415,16 @@ def main(argv=None, **kwargs):
     else:
         renderer = Utils.getRenderer(options.renderer, renderer_options)
 
+    try:
+        rstdir = os.getcwd()
+        srcdir = os.getcwd()
+        builddir = os.getcwd()
+        renderer.set_paths(rstdir, srcdir, builddir)
+        renderer.set_display_options(display_options)
+    except AttributeError:
+        # User renderers will not have these methods
+        pass
+
     transformers = Utils.getTransformers(
         options.transformers, transformer_options)
 

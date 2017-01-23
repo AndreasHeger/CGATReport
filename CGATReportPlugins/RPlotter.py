@@ -436,6 +436,8 @@ class GGPlot(Renderer, Plotter):
 
         self.statement = kwargs.get('statement')
 
+        R.library('ggplot2')
+
     def render(self, dataframe, path):
 
         R.library('ggplot2')

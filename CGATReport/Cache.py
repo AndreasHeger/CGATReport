@@ -50,7 +50,8 @@ class Cache(Component):
                 raise OSError("could not create directory %s: %s" %
                               (self.cache_dir, msg))
 
-            self.cache_filename = os.path.join(self.cache_dir, cache_name)
+            self.cache_filename = os.path.join(self.cache_dir,
+                                               cache_name)
 
             if mode == "r":
                 if not os.path.exists(self.cache_filename):

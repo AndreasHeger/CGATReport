@@ -258,7 +258,6 @@ class PlainSlideShow(Renderer):
 
         returns path to image for use in html.
         '''
-
         mangled_filename = re.sub("/", "_", filename)
         filename = os.path.abspath(filename)
 
@@ -364,11 +363,10 @@ class PlainSlideShow(Renderer):
         lines.append("""</div>""")
 
         lines.append(self.skin % options)
-
         lines.append("""</div>""")
 
         lines = "\n".join(lines).split("\n")
-        lines = [".. only::html\n"] +\
+        lines = [".. only:: html\n"] +\
             ["   .. raw:: html\n"] +\
             ["      " + x for x in lines]
 

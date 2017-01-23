@@ -30,3 +30,7 @@ class CGATReportTest(unittest.TestCase):
         results = dispatcher({})
         print (results)
         return True
+
+
+if __name__ == "__main__":
+    unittest.main()
