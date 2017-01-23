@@ -82,6 +82,12 @@ class TestReportBuilding(unittest.TestCase):
                     ".*"
                     "slice indices must be "
                     "integers or None or have an __index__ method", x)]
+            errors = [x for x in errors if not re.search(
+                    "exception in rendering: <class 'TypeError'>"
+                    ".*"
+                    "slice indices must be "
+                    "integers or None or have an __index__ method", x)]
+
             counter["ERROR"] = len(errors)
 
         self.assertEqual(
