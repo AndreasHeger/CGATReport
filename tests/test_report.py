@@ -46,7 +46,7 @@ class TestReportBuilding(unittest.TestCase):
             "cp -r {docs_dir}/images {build_dir} && "
             "cp {docs_dir}/*.ini {build_dir}/ && "
             "cd {build_dir} && "
-            "xvfb-run -a "
+            "xvfb-run -d "
             "sphinx-build -j {n_cores} "
             "-b html "
             "-d _build/doctrees "
