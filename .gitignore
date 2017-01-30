@@ -1,3 +1,13 @@
+# CGATReport created files
+#
+*.log
+_build
+_cache
+_static
+toxtest*
+out*
+*out
+
 *.py[cod]
 
 # C extensions
