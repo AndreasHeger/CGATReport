@@ -1,40 +1,14 @@
-.. _Roadmap:
-
-=======
-Roadmap
-=======
-
-Planned features
-================
-
-The following features are planned:
-
-latex/pdf
-   test latex/pdf rendering of documents
-
-add automatic history
-    keep automatic track of releases/versions of
-    the document.
-
-examine memory usage
-    large datasets require a large amount of memory,
-    investigate if this can be optimized, for example
-    by using numpy more efficiently
-
-upload
-    add upload to galaxy and/or UCSC
-
-optional pdf support
-    pdf rendering takes a while and could be post-poned until
-    final document is produced. Similarly, pdf scatter plots 
-    with many points take a long while to render and these should
-    be thinned.
-
 .. _Releases:
 
 =============
 Release Notes
 =============
+
+Version 0.6
+===========
+
+* python3 compatibility and many other improvements and bugfixes.
+
 
 Version 0.3
 ===========
