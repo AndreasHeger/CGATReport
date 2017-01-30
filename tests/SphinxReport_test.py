@@ -3,10 +3,6 @@
 '''
 
 import unittest
-import sys
-
-IS_PYTHON3 = sys.version_info[0] >= 3
-
 import CGATReport
 import CGATReport.Utils
 import CGATReport.Dispatcher
@@ -18,7 +14,7 @@ class CGATReportTest(unittest.TestCase):
     tracker = "tests.TestTrackers.LabeledDataExample"
 
     def testTracker(self):
-        code, tracker, tracker_path = CGATReport.Utils.makeTracker(
+        code, tracker, tracker_path = CGATReport.Utils.make_tracker(
             self.tracker, (), {})
         renderer = CGATReport.Utils.getRenderer(
             self.renderer, {})

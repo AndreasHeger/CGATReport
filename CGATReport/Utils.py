@@ -241,7 +241,8 @@ def selectAndDeleteOptions(options, select, expand=[]):
     for k, v in options.items():
         if k in select:
             new_options[k] = v
-            del options[k]
+    for k in new_options.keys():
+        del options[k]
 
     for k in expand:
         if k in new_options:
