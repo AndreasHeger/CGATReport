@@ -133,14 +133,13 @@ fi
 log "creating conda environment"
 "$CONDA_INSTALL_DIR"/bin/conda create --yes \
     -n "$CONDA_INSTALL_TYPE" \
-    --override-channels "$CONDA_CHANNELS" \
+    --override-channels $CONDA_CHANNELS \
     python="$CONDA_PY" \
-    "$CONDA_PACKAGES"
+    $CONDA_PACKAGES
 
 log "installing conda dependencies"
 which conda
-# $CONDA_INSTALL_DIR/bin/conda install --override-channels --yes $CONDA_CHANNELS $CONDA_PACKAGES
-    
+
 log "installing R dependencies"
 R -f "$ROOT_DIR"/install.R
 
