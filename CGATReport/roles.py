@@ -222,6 +222,8 @@ def setup(app):
     setup.confdir = app.confdir
     setup.srcdir = app.srcdir
 
+    return {'parallel_read_safe': True}
+
 roles.register_local_role('pmid', pubmed_role)
 roles.register_local_role('biogps', biogps_role)
 roles.register_local_role('ucsc', ucsc_role)

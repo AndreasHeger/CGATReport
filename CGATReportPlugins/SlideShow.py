@@ -280,6 +280,9 @@ class PlainSlideShow(Renderer):
             # file exists
             pass
 
+        if self.build_environment:
+            self.build_environment.dlfiles.add_file(self.rst_dir, image_filename)
+
         return html_image_filename
 
     def import_thumbnail(self, filename, thumbnail_size):
@@ -308,6 +311,9 @@ class PlainSlideShow(Renderer):
             outdir)
         html_thumb_filename = os.path.join(rst2srcdir,
                                            "thumb-%s.png" % mangled_filename)
+
+        if self.build_environment:
+            self.build_environment.dlfiles.add_file(self.rst_dir, html_thumb_filename)
 
         return html_thumb_filename
 

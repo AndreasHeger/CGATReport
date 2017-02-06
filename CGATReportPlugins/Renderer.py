@@ -86,6 +86,9 @@ class Renderer(Component):
     # directive.
     display_options = {}
 
+    # the build environment
+    build_environment = None
+
     def __init__(self, *args, **kwargs):
         """create an Renderer object using an instance of
         a:class:`Tracker.Tracker`.
@@ -224,6 +227,10 @@ class Renderer(Component):
     def set_display_options(self, display_options):
         '''set display options given by user.'''
         self.display_options = display_options
+
+    def set_build_environment(self, env):
+        '''set the build environment.'''
+        self.build_environment = env
 
 
 class DataFrame(Renderer):

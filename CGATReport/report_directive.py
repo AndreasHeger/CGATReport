@@ -54,7 +54,8 @@ def run(arguments,
         state_machine=None,
         document=None,
         srcdir=None,
-        builddir=None):
+        builddir=None,
+        build_environment=None):
     """process:report: directive.
 
     *srdir* - top level directory of rst documents
@@ -306,6 +307,7 @@ def run(arguments,
         try:
             renderer.set_paths(rstdir, srcdir, builddir)
             renderer.set_display_options(display_options)
+            renderer.set_build_environment(build_environment)
         except AttributeError:
             # User renderers will not have these methods
             pass
@@ -497,12 +499,15 @@ class report_directive(Directive):
         logger.info("report_directive: starting: %s:%i" %
                     (str(document), self.lineno))
 
+        env = self.state.document.settings.env
+
         return run(self.arguments,
                    self.options,
                    self.lineno,
                    self.content,
                    self.state_machine,
-                   document)
+                   document,
+                   build_environment=env)
 
 
 def setup(app):
