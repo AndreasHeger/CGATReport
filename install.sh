@@ -137,15 +137,15 @@ log "creating conda environment"
     python="$CONDA_PY" \
     $CONDA_PACKAGES
 
-log "installing conda dependencies"
-which conda
+# set +o nounset
+source "$CONDA_INSTALL_DIR"/bin/activate "$CONDA_INSTALL_TYPE"
+# set -o nounset
 
 log "installing R dependencies"
 R -f "$ROOT_DIR"/install.R
 
-# set +o nounset
-source "$CONDA_INSTALL_DIR"/bin/activate "$CONDA_INSTALL_TYPE"
-# set -o nounset
+log "installing conda dependencies"
+which conda
 
 # The following packages will be pulled in through pip:
 # mpld3
