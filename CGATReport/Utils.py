@@ -5,8 +5,11 @@ import traceback
 import math
 import glob
 import pkgutil
+import pandas
+
 from logging import warning
 from functools import reduce
+import multiprocessing
 
 # Python 2/3 Compatibility
 try:
@@ -14,13 +17,12 @@ try:
 except:
     import configparser
 
-import pandas
 
 import CGATReport
 from CGATReport.ResultBlock import ResultBlocks, ResultBlock
 import CGATReport.Component as Component
 import CGATReport.Config
-from CGATReport.Types import get_encoding, quote_filename, quote_rst, is_string, as_list
+from CGATReport.Types import quote_filename, quote_rst, is_string, as_list
 
 # set with keywords that will not be pruned
 # This is important for the User Tracker

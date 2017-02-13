@@ -71,8 +71,8 @@ extensions = [
     'CGATReport.report_directive']
 
 # inheritance_diagram broken in python3
-if sys.version_info[0] == 2:
-    extensions.append('sphinx.ext.inheritance_diagram')
+# if sys.version_info[0] == 2:
+#     extensions.append('sphinx.ext.inheritance_diagram')
 
 # Included at the end of each rst file
 rst_epilog='''

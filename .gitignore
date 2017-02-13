@@ -7,7 +7,7 @@ _static
 toxtest*
 out*
 *out
-
+*.cache
 *.py[cod]
 
 # C extensions

@@ -10,12 +10,16 @@
 """
 
 from docutils import nodes
+import os
 import logging
 
 from sphinx.locale import _
 from sphinx.environment import NoUri
 from sphinx.util.compat import Directive
 from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+import shelve
+
+CGATREPORT_ERRORS_CACHE = "cgatreport_errors.cache"
 
 
 class cgatreporterror_node(nodes.warning, nodes.Element):
@@ -43,17 +47,13 @@ class CGATReportError(BaseAdmonition):
             errorclass = "generic"
 
         env = self.state.document.settings.env
-        if not hasattr(env, 'cgatreporterror_all_cgatreporterrors'):
-            env.cgatreporterror_all_cgatreporterrors = []
 
-        env.cgatreporterror_all_cgatreporterrors.append({
-            'docname': env.docname,
-            'lineno': self.lineno,
-            'cgatreporterror': r[0].deepcopy(),
-            'errorclass': errorclass,
-        })
+        error_cache = shelve.open(CGATREPORT_ERRORS_CACHE)
 
-        logging.error("CGATReport-Warning: %s" % errorclass)
+        error_cache["{}:{:06}".format(env.docname, self.lineno)] = (
+            r[0].deepcopy(), errorclass)
+
+        logging.error("CGATReport-Error: %s" % errorclass)
 
         return r
 
@@ -78,6 +78,7 @@ class CGATReportErrorList(Directive):
 
 
 def process_cgatreporterror_nodes(app, doctree, fromdocname):
+
     if not app.config['cgatreport_show_errors']:
         for node in doctree.traverse(cgatreporterror_node):
             node.parent.remove(node)
@@ -87,47 +88,53 @@ def process_cgatreporterror_nodes(app, doctree, fromdocname):
     # backlink to the original location.
     env = app.builder.env
 
-    if not hasattr(env, 'cgatreporterror_all_cgatreporterrors'):
-        env.cgatreporterror_all_cgatreporterrors = []
+    error_cache = shelve.open(CGATREPORT_ERRORS_CACHE)
 
     for node in doctree.traverse(cgatreporterrorlist):
+
         if not app.config['cgatreport_show_errors']:
             node.replace_self([])
             continue
 
-        content = []
         nerrors = 0
 
+        content = []
+
         para = nodes.paragraph()
-        para += nodes.Text("There are %i errors" %
-                           len(env.cgatreporterror_all_cgatreporterrors))
+        sorted_items = sorted(error_cache.items())
+        para += nodes.Text("There are {} errors".format(len(sorted_items)))
+
         content.append(para)
 
-        for cgatreporterror_info in env.cgatreporterror_all_cgatreporterrors:
+        for key, value in sorted_items:
+
+            docname, lineno = key.split(":")
+            lineno = int(lineno)
+            cgatreporterror, errorclass = value
 
             para = nodes.paragraph()
 
-            filename = env.doc2path(
-                cgatreporterror_info['docname'], base=None)
+            filename = env.doc2path(docname, base=None)
 
             nerrors += 1
-            location_str = '%s:%d ' % (
-                filename, cgatreporterror_info['lineno'])
+            location_str = '%s:%d ' % (filename, lineno)
+
             try:
-                description_str = cgatreporterror_info['errorclass']
+                description_str = errorclass
             except KeyError:
                 description_str = "unknown"
 
             # Create a reference
             newnode = nodes.reference('', '')
-            innernode = nodes.emphasis(_(location_str), _(location_str))
-            newnode['refdocname'] = cgatreporterror_info['docname']
+            innernode = nodes.emphasis((location_str), (location_str))
+            newnode['refdocname'] = docname
             try:
                 newnode['refuri'] = app.builder.get_relative_uri(
-                    fromdocname, cgatreporterror_info['docname'])
+                    fromdocname, docname)
             except NoUri:
                 # ignore if no URI can be determined, e.g. for LaTeX output
                 pass
+
             newnode.append(innernode)
 
             para += newnode
@@ -135,10 +142,8 @@ def process_cgatreporterror_nodes(app, doctree, fromdocname):
             para += nodes.Text("\n", "\n")
 
             # (Recursively) resolve references in the cgatreporterror content
-            cgatreporterror_entry = cgatreporterror_info[
-                'cgatreporterror']
-            env.resolve_references(cgatreporterror_entry,
-                                   cgatreporterror_info['docname'],
+            env.resolve_references(cgatreporterror,
+                                   docname,
                                    app.builder)
 
             content.append(para)
@@ -180,5 +185,10 @@ def setup(app):
     app.add_directive('errorlist', CGATReportErrorList)
     app.connect('doctree-resolved', process_cgatreporterror_nodes)
     app.connect('env-purge-doc', purge_cgatreporterrors)
+
+    try:
+        os.unlink(CGATREPORT_ERRORS_CACHE)
+    except OSError:
+        pass
 
     return {'parallel_read_safe': True}

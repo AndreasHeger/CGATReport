@@ -120,7 +120,6 @@ Normalization of row names
    :layout: row
    :width: 200
    :groupby: track
-   :layout: column-3
 
    Split matrix by track. Note that row labels are shortened.
 

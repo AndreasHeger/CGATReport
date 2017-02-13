@@ -5,7 +5,7 @@ Renderer
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: CGATReportPlugins.Renderer
+.. inheritance-diagram:: CGATReport.Plugins.Renderer
    :parts: 1
 
 Writing your own renderer
@@ -52,7 +52,7 @@ The example below creates a simple renderer::
 Renderer
 ========
 
-.. automodule:: CGATReportPlugins.Renderer
+.. automodule:: CGATReport.Plugins.Renderer
    :members:
    :inherited-members:
    :show-inheritance:

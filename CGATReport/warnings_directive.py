@@ -11,11 +11,14 @@
 
 import logging
 from docutils import nodes
+import shelve
 
 from sphinx.locale import _
 from sphinx.environment import NoUri
 from sphinx.util.compat import Directive
 from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+
+CGATREPORT_WARNINGS_CACHE = "cgatreport_warnings.cache"
 
 
 class cgatreportwarning_node(nodes.warning, nodes.Element):
@@ -46,12 +49,10 @@ class CGATReportWarning(BaseAdmonition):
         if not hasattr(env, 'cgatreportwarning_all_cgatreportwarnings'):
             env.cgatreportwarning_all_cgatreportwarnings = []
 
-        env.cgatreportwarning_all_cgatreportwarnings.append({
-            'docname': env.docname,
-            'lineno': self.lineno,
-            'cgatreportwarning': r[0].deepcopy(),
-            'warningclass': warningclass,
-        })
+        error_cache = shelve.open(CGATREPORT_WARNINGS_CACHE)
+
+        error_cache["{}:{:06}".format(env.docname, self.lineno)] = (
+            r[0].deepcopy(), warningclass)
 
         logging.warning("CGATReport-Warning: %s" % warningclass)
 
@@ -87,8 +88,7 @@ def process_cgatreportwarning_nodes(app, doctree, fromdocname):
     # with a backlink to the original location.
     env = app.builder.env
 
-    if not hasattr(env, 'cgatreportwarning_all_cgatreportwarnings'):
-        env.cgatreportwarning_all_cgatreportwarnings = []
+    error_cache = shelve.open(CGATREPORT_WARNINGS_CACHE)
 
     for node in doctree.traverse(cgatreportwarninglist):
         if not app.config['cgatreport_show_warnings']:
@@ -99,33 +99,36 @@ def process_cgatreportwarning_nodes(app, doctree, fromdocname):
         nwarnings = 0
 
         para = nodes.paragraph()
-        para += nodes.Text("There are %i warnings" %
-                           len(env.cgatreportwarning_all_cgatreportwarnings))
+        sorted_items = sorted(error_cache.items())
+        para += nodes.Text("There are {} warnings".format(len(sorted_items)))
         content.append(para)
 
-        for cgatreportwarning_info in env.cgatreportwarning_all_cgatreportwarnings:
+        for key, value in sorted_items:
+
+            docname, lineno = key.split(":")
+            lineno = int(lineno)
+            cgatreportwarning, warningclass = value
 
             para = nodes.paragraph()
 
-            filename = env.doc2path(
-                cgatreportwarning_info['docname'], base=None)
+            filename = env.doc2path(docname, base=None)
 
             nwarnings += 1
-            location_str = '%s:%d ' % (
-                filename, cgatreportwarning_info['lineno'])
+            location_str = '%s:%d ' % (filename, lineno)
+
             try:
-                description_str = cgatreportwarning_info['warningclass']
+                description_str = warningclass
             except KeyError:
                 description_str = "unknown"
 
             # Create a reference
             newnode = nodes.reference('', '')
             innernode = nodes.emphasis(_(location_str), _(location_str))
-            newnode['refdocname'] = cgatreportwarning_info['docname']
+            newnode['refdocname'] = docname
 
             try:
                 newnode['refuri'] = app.builder.get_relative_uri(
-                    fromdocname, cgatreportwarning_info['docname'])
+                    fromdocname, docname)
             except NoUri:
                 # ignore if no URI can be determined, e.g. for LaTeX output
                 pass
@@ -136,10 +139,8 @@ def process_cgatreportwarning_nodes(app, doctree, fromdocname):
             para += nodes.Text("\n", "\n")
 
             # (Recursively) resolve references in the cgatreportwarning content
-            cgatreportwarning_entry = cgatreportwarning_info[
-                'cgatreportwarning']
-            env.resolve_references(cgatreportwarning_entry,
-                                   cgatreportwarning_info['docname'],
+            env.resolve_references(cgatreportwarning,
+                                   docname,
                                    app.builder)
 
             content.append(para)

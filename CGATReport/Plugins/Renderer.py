@@ -1443,6 +1443,9 @@ class StatusMatrix(Status, TableBase):
         dirname = os.path.join(os.path.dirname(
             sys.modules["CGATReport"].__file__), "images")
 
+        # modify columns in-place, don't do this with original slice
+        dataframe = dataframe.copy()
+
         dataframe["status"] = [
             ".. image:: {}\n    :width: 32".format(
                 os.path.join(dirname,

@@ -5,21 +5,21 @@ Transformer
 Inheritance diagram
 ===================
 
-.. inheritance-diagram:: CGATReportPlugins.Transformer
+.. inheritance-diagram:: CGATReport.Plugins.Transformer
    :parts: 1
 
-.. inheritance-diagram:: CGATReportPlugins.TransformersGeneLists
+.. inheritance-diagram:: CGATReport.Plugins.TransformersGeneLists
    :parts: 1
 
 Transformer
 ===========
 
-.. automodule:: CGATReportPlugins.Transformer
+.. automodule:: CGATReport.Plugins.Transformer
    :members:
    :inherited-members:
    :show-inheritance:
 
-.. automodule:: CGATReportPlugins.TransformersGeneLists
+.. automodule:: CGATReport.Plugins.TransformersGeneLists
     :members:
     :undoc-members:
     :show-inheritance:

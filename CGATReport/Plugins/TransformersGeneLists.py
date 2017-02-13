@@ -319,5 +319,7 @@ class TransformerMultiTest(Transformer):
         padj = R["p.adjust"](data[self.pval],
                              method=self.method)
 
+        # create copy, don't set column in slice
+        data = data.copy()
         data["P-adjust"] = padj
         return data
