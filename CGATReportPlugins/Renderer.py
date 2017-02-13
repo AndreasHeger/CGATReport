@@ -25,7 +25,7 @@ from math import log
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReport.DataTree import path2str
 from CGATReport import Utils, DataTree
-from CGATReport.Types import force_decode, get_encoding
+from CGATReport.Types import force_decode, get_encoding, force_dataframe_encode
 from CGATReport.Component import Component
 from CGATReport import CorrespondenceAnalysis
 
@@ -334,11 +334,16 @@ class TableBase(Renderer):
             # However, the csv module is used by docutils to read the
             # table, so force ASCII here and replace all unicode
             # chars.
-            #     dataframe = Utils.force_dataframe_encode(
-            #         dataframe.reset_index(),
-            #         encoding="ascii",
-            #         errors="replace")
-            dataframe.to_csv(out, encoding=get_encoding())
+            try:
+                dataframe.to_csv(out, encoding=get_encoding())
+            except UnicodeDecodeError:
+                # try really hard
+                dataframe = force_dataframe_encode(
+                    dataframe.reset_index(),
+                    encoding="ascii",
+                    errors="replace")
+                dataframe.to_csv(out, encoding=get_encoding())
+
             lines = force_decode(out.getvalue()).split("\n")
         else:
             dataframe.to_csv(out, encoding=get_encoding())
