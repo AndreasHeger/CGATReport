@@ -4,8 +4,8 @@
 
 import unittest
 import CGATReport
-import CGATReport.Utils
 import CGATReport.Dispatcher
+from CGATReport.Capabilities import get_renderer, make_tracker
 
 
 class CGATReportTest(unittest.TestCase):
@@ -14,9 +14,9 @@ class CGATReportTest(unittest.TestCase):
     tracker = "tests.TestTrackers.LabeledDataExample"
 
     def testTracker(self):
-        code, tracker, tracker_path = CGATReport.Utils.make_tracker(
+        code, tracker, tracker_path = make_tracker(
             self.tracker, (), {})
-        renderer = CGATReport.Utils.getRenderer(
+        renderer = get_renderer(
             self.renderer, {})
 
         dispatcher = CGATReport.Dispatcher.Dispatcher(

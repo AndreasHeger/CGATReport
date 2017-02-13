@@ -2,7 +2,6 @@ import os
 import pep8
 from nose.tools import ok_
 import CGATReport
-import CGATReportPlugins
 
 
 def check_pep8(filename):
@@ -19,8 +18,7 @@ def check_pep8(filename):
 
 def test_pep8():
 
-    for base in [CGATReport.__file__,
-                 CGATReportPlugins.__file__]:
+    for base in [CGATReport.__file__]:
         for root, dirs, files in os.walk(os.path.dirname(base)):
             for fn in files:
                 if fn.endswith(".py") and not fn.startswith("."):
