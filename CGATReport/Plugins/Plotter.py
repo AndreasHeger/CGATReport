@@ -11,7 +11,7 @@ import datetime
 import pandas
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
-from CGATReportPlugins.Renderer import Renderer, NumpyMatrix, TableMatrix
+from CGATReport.Plugins.Renderer import Renderer, NumpyMatrix, TableMatrix
 from CGATReport.DataTree import path2str, str2path
 from CGATReport import DataTree, Stats, Utils
 

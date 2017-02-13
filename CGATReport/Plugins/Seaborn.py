@@ -4,8 +4,8 @@ from .Plotter import TableMatrixPlot, DataSeriesPlot
 import pandas
 import seaborn
 import numpy
-from CGATReportPlugins.Renderer import Renderer
-from CGATReportPlugins.Plotter import Plotter
+from CGATReport.Plugins.Renderer import Renderer
+from CGATReport.Plugins.Plotter import Plotter
 
 
 class SeabornPlot(object):

@@ -3,7 +3,7 @@ import re
 import random
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
-from CGATReportPlugins.Renderer import Renderer
+from CGATReport.Plugins.Renderer import Renderer
 from CGATReport.DataTree import path2str
 from CGATReport import Utils
 from docutils.parsers.rst import directives

@@ -27,6 +27,9 @@ from docutils.parsers.rst import Directive
 from CGATReport import Config, Dispatcher, Utils, Cache, Component
 from CGATReport.ResultBlock import ResultBlocks
 from CGATReport.Types import as_list, force_encode, get_encoding
+from CGATReport.Capabilities import get_renderer, get_transformers, get_plugins, make_tracker
+from CGATReport.Options import get_option_spec, select_and_delete_options, get_option_map, update_options
+from CGATReport.Utils import get_default_display_options
 
 CGATREPORT_DEBUG = "CGATREPORT_DEBUG" in os.environ
 
@@ -138,7 +141,7 @@ def run(arguments,
     # collect options
     # replace placedholders
     try:
-        options = Utils.updateOptions(options)
+        options = update_options(options)
     except ValueError as msg:
         logger.warn("failure while updating options: %s" % msg)
 
@@ -148,17 +151,17 @@ def run(arguments,
     renderer_name = None
 
     layout = options.get("layout", "column")
-    option_map = Component.getOptionMap()
-    renderer_options = Utils.selectAndDeleteOptions(
+    option_map = get_option_map()
+    renderer_options = select_and_delete_options(
         options, option_map["render"])
-    transformer_options = Utils.selectAndDeleteOptions(
+    transformer_options = select_and_delete_options(
         options, option_map["transform"])
-    dispatcher_options = Utils.selectAndDeleteOptions(
+    dispatcher_options = select_and_delete_options(
         options, option_map["dispatch"])
-    tracker_options = Utils.selectAndDeleteOptions(
+    tracker_options = select_and_delete_options(
         options, option_map["tracker"], expand=["tracker"])
-    display_options = Utils.get_default_display_options()
-    display_options.update(Utils.selectAndDeleteOptions(
+    display_options = get_default_display_options()
+    display_options.update(select_and_delete_options(
         options, option_map["display"]))
 
     logger.debug("report_directive.run: renderer options: %s" %
@@ -259,7 +262,7 @@ def run(arguments,
     ##########################################################
     # Initialize collectors
     collectors = []
-    for collector in list(Component.getPlugins("collect").values()):
+    for name, collector in get_plugins("collect").items():
         collectors.append(collector())
 
     ##########################################################
@@ -272,7 +275,7 @@ def run(arguments,
         logger.debug(
             "report_directive.run: collecting tracker %s with options %s " %
             (tracker_name, tracker_options))
-        code, tracker, tracker_path = Utils.make_tracker(
+        code, tracker, tracker_path = make_tracker(
             tracker_name, (), tracker_options)
         if not tracker:
             logger.error(
@@ -289,7 +292,7 @@ def run(arguments,
         # determine the transformer
         logger.debug("report_directive.run: creating transformers")
 
-        transformers = Utils.getTransformers(
+        transformers = get_transformers(
             transformer_names, transformer_options)
 
         ########################################################
@@ -302,7 +305,7 @@ def run(arguments,
                 str(document))
             raise ValueError("the report directive requires a renderer")
 
-        renderer = Utils.getRenderer(renderer_name, renderer_options)
+        renderer = get_renderer(renderer_name, renderer_options)
 
         try:
             renderer.set_paths(rstdir, srcdir, builddir)
@@ -423,7 +426,7 @@ def run(arguments,
     # replace place holders or add text
     ###########################################################
     # add default for text-only output
-    requested_urls = as_list(Utils.PARAMS["report_urls"])
+    requested_urls = as_list(Utils.get_params()["report_urls"])
 
     urls = []
     if "code" in requested_urls:
@@ -491,7 +494,7 @@ class report_directive(Directive):
     final_argument_whitespace = True
 
     # build option spec
-    option_spec = Component.getOptionSpec()
+    option_spec = get_option_spec()
 
     def run(self):
         document = self.state.document.current_source

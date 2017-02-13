@@ -353,7 +353,6 @@ class TransformerPandas(Transformer):
 
     def __init__(self, *args, **kwargs):
         Transformer.__init__(self, *args, **kwargs)
-
         try:
             self.statement = kwargs["tf-statement"]
         except KeyError:
