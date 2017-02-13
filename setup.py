@@ -103,6 +103,11 @@ Operating System :: Unix
 Operating System :: MacOS
 """
 
+# collect pysam version
+sys.path.insert(0, "CGATReport")
+import version
+version = version.__version__
+
 # external dependencies
 # R
 # sqlite
@@ -112,7 +117,7 @@ Operating System :: MacOS
 # graphvis - for dependency graphs in documentation
 
 setup(name='CGATReport',
-      version='0.7.0',
+      version=version,
       description='CGATReport : a report generator in python based on sphinx',
       author='Andreas Heger',
       author_email='andreas.heger@gmail.com',

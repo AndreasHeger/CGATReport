@@ -527,6 +527,5 @@ def setup(app):
 
     setup.logger = Component.get_logger()
 
-    # return {'parallel_read_safe': True}
+    return {'parallel_read_safe': True}
 
-# directives.register_directive('report', report_directive)
