@@ -30,28 +30,6 @@ if there are so few values that the correct type can not be guessed), the Tracke
 string instead of a numeric value, for example ``(u'0.64425349087',)`` instead of ``(u'0.64425349087',)``.
 These should be caught by the cgatreport`CGATReport.DataTypes`.
 
-cgatreport-build freezes keyboard and mouse when run with multiple processes
-******************************************************************************
-
-When running cgatreport-build, the keyboard and mouse freezes. The only remedy
-is to kill the processes remotely. Then, the following message appears::
-
-   cgatreport-build: Fatal IO error 0 (Success) on X server :0.0
-
-This seems to be a problem with combining matplotlib and multiprocessing. Possibly, 
-the first time a plot command is called that process receives the X connection and 
-other processes will then hang. The solutions are to either
-
-1. use a backend that does not require X. For example TkAgg backend works, while
-   GTKAgg does not. To change the matplotlib backend, edit your :file:`matplotlibrc` file.
-   Or, 
-
-2. only run cgatreport, not cgatreport-build. Instead of
-   ``cgatreport-build --num-jobs=4 sphinx-build -b html -d _build/doctrees   . _build/html``
-   run
-   ``sphinx-build -b html -d _build/doctrees   . _build/html``
-
-
 How do I insert a link into a document
 **************************************
 

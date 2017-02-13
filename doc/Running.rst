@@ -25,7 +25,7 @@ steps:
 5. Optionally, removing existing cached data of this :term:`tracker`
    using :ref:`cgatreport-clean`.
 
-6. Building the full document using :ref:`cgatreport-build` or the
+6. Building the full document using :ref:`sphinx-build` or the
    :ref:`Makefile`.
 
 Steps 1-6 are repeated until the document is finished.
@@ -57,27 +57,6 @@ controlling the build process. Type::
    make help
 
 for a list of all commands available.
-
-.. _cgatreport-build:
-
-cgatreport-build
-------------------
-
-At its simplest, cgatreport is a :mod:`Sphinx` extension
-and all images are simply built using the usual cgatreport`Sphinx` build.
-See the `Sphinx documentation <http://sphinx.pocoo.org/intro.html#running-a-build>`
-on how to running sphinx.
-
-However, rendering many images and extracting data takes time. The :ref:`cgatreport-build`
-utility can speed up this process by running several rendering processes in parallel.
-Note that :ref:`Caching` needs to be enabled for this to work. It also takes care of 
-building the :ref:`Gallery`. It is invoked as a prefix to the :file:`sphinx-build`
-command, for example::
-   
-   cgatreport-build --num-jobs=4 sphinx-build -b html -d _build/doctrees   . _build/html
-
-will use 4 processors in parallel to create all images before calling
-``sphinx-build`` to build the document.
 
 .. _cgatreport-clean:
 
@@ -255,7 +234,7 @@ is set, for example to::
    cgatreport_cachedir=os.path.abspath("_cache")
 
 Enabling caching will speed up the build process considerably, in
-particular as :ref:`cgatreport-build` can make use of parallel data
+particular as :ref:`sphinx-build` can make use of parallel data
 gathering and plotting.  Unfortunately currently there is no
 :ref:`Dependency` checking for cached data.  Thus, changes in the code
 of a :term:`Tracker` or changes in the data will not result in an
