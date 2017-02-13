@@ -1,6 +1,6 @@
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
-from CGATReportPlugins.Renderer import Renderer
-from CGATReportPlugins.Plotter import parseRanges
+from CGATReport.Plugins.Renderer import Renderer
+from CGATReport.Plugins.Plotter import parseRanges
 from CGATReport import Stats
 from CGATReport.DataTree import path2str
 

@@ -10,7 +10,7 @@ import itertools
 import numpy
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
-from CGATReportPlugins.Renderer import Renderer, NumpyMatrix
+from CGATReport.Plugins.Renderer import Renderer, NumpyMatrix
 from CGATReport.DataTree import path2str
 from CGATReport import Stats, Utils
 

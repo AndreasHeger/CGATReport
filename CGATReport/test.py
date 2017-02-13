@@ -108,11 +108,12 @@ from matplotlib import _pylab_helpers
 
 from CGATReport.Types import force_encode
 from CGATReport import Utils
+from CGATReport.Options import get_option_map, select_and_delete_options, update_options
 from CGATReport import Component
+from CGATReport.Capabilities import get_renderer, get_transformers, make_tracker
 
 import CGATReport.clean
 from CGATReport.Dispatcher import Dispatcher
-from CGATReport.Component import getOptionMap
 
 # set default directory where trackers can be found
 TRACKERDIR = "trackers"
@@ -397,16 +398,16 @@ def main(argv=None, **kwargs):
     if options.slices:
         kwargs["slices"] = options.slices
 
-    kwargs = Utils.updateOptions(kwargs)
+    kwargs = update_options(kwargs)
 
-    option_map = getOptionMap()
-    renderer_options = Utils.selectAndDeleteOptions(
+    option_map = get_option_map()
+    renderer_options = select_and_delete_options(
         kwargs, option_map["render"])
-    transformer_options = Utils.selectAndDeleteOptions(
+    transformer_options = select_and_delete_options(
         kwargs, option_map["transform"])
-    display_options = Utils.selectAndDeleteOptions(
+    display_options = select_and_delete_options(
         kwargs, option_map["display"])
-    tracker_options = Utils.selectAndDeleteOptions(
+    tracker_options = select_and_delete_options(
         kwargs, option_map["tracker"], expand=["tracker"])
 
     ######################################################
@@ -415,7 +416,7 @@ def main(argv=None, **kwargs):
        options.start_ipython or options.language == "notebook":
         renderer = None
     else:
-        renderer = Utils.getRenderer(options.renderer, renderer_options)
+        renderer = get_renderer(options.renderer, renderer_options)
 
     try:
         rstdir = os.getcwd()
@@ -427,7 +428,7 @@ def main(argv=None, **kwargs):
         # User renderers will not have these methods
         pass
 
-    transformers = Utils.getTransformers(
+    transformers = get_transformers(
         options.transformers, transformer_options)
 
     exclude = set(("Tracker",
@@ -457,7 +458,7 @@ def main(argv=None, **kwargs):
             tracker_name = options.tracker
 
         try:
-            _code, tracker, tracker_path = Utils.make_tracker(
+            _code, tracker, tracker_path = make_tracker(
                 options.tracker, (), tracker_options)
         except ImportError:
             # try to find class in module

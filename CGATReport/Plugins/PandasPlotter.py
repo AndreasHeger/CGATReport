@@ -1,7 +1,7 @@
 '''Plotting using the ggplot module.'''
 
-from CGATReportPlugins.Renderer import Renderer
-from CGATReportPlugins.Plotter import Plotter
+from CGATReport.Plugins.Renderer import Renderer
+from CGATReport.Plugins.Plotter import Plotter
 from docutils.parsers.rst import directives
 
 import matplotlib.pyplot as plt

@@ -10,7 +10,7 @@ from CGATReport import Utils
 from CGATReport import Cache
 
 # move User renderer to CGATReport main distribution
-from CGATReportPlugins import Renderer
+from CGATReport.Plugins import Renderer
 from CGATReport.Types import is_string, ContainerTypes
 
 from collections import OrderedDict

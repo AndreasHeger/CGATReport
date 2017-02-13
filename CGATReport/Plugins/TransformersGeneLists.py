@@ -1,4 +1,4 @@
-from CGATReportPlugins.Transformer import Transformer
+from CGATReport.Plugins.Transformer import Transformer
 from collections import OrderedDict as odict
 from docutils.parsers.rst import directives
 from CGATReport import DataTree, Utils

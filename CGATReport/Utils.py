@@ -1,16 +1,11 @@
 import re
 import os
 import sys
-import imp
-import io
-import types
 import traceback
 import math
 import glob
 import pkgutil
-import six
-
-from logging import debug, warning, critical
+from logging import warning
 from functools import reduce
 
 # Python 2/3 Compatibility
@@ -34,6 +29,48 @@ TrackerKeywords = set(("text", "rst", "xls",))
 # Options for rst image directive that will get passed through
 # unchanged.
 ImageOptions = set(("alt", "height", "width", "scale", "class"))
+
+
+# default values
+PARAMS = {
+    "report_show_errors": True,
+    "report_show_warnings": True,
+    "report_sql_backend": "sqlite:///./csvdb",
+    "report_cachedir": "_cache",
+    "report_urls": "data,code,rst",
+    "report_images": "hires,hires.png,200,eps,eps,50",
+}
+
+
+# read placeholders from config file in current directory
+# It would be nice to read default values, but the location
+# of the documentation source files are not known to this module.
+class memoized(object):
+
+    """Decorator that caches a function's return value each time it is called.
+    If called later with the same arguments, the cached value is returned, and
+    not re-evaluated.
+    """
+
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+
+    def __call__(self, *args, **kwargs):
+        try:
+            return self.cache[args + list(kwargs)]
+        except KeyError:
+            self.cache[
+                args + list(kwargs)] = value = self.func(*args, **kwargs)
+            return value
+        except TypeError:
+            # uncachable -- for instance, passing a list as an argument.
+            # Better to not cache than to blow up entirely.
+            return self.func(*args, **kwargs)
+
+    def __repr__(self):
+        """Return the function's docstring."""
+        return self.func.__doc__
 
 
 def getDataFrameLevels(dataframe,
@@ -133,17 +170,6 @@ def toMultipleSeries(dataframe):
     return dataseries
 
 
-# default values
-PARAMS = {
-    "report_show_errors": True,
-    "report_show_warnings": True,
-    "report_sql_backend": "sqlite:///./csvdb",
-    "report_cachedir": "_cache",
-    "report_urls": "data,code,rst",
-    "report_images": "hires,hires.png,200,eps,eps,50",
-}
-
-
 def convertValue(value, list_detection=False):
     '''convert a value to int, float or str.'''
     rx_int = re.compile("^\s*[+-]*[0-9]+\s*$")
@@ -230,26 +256,6 @@ def get_parameters():
         sorted(glob.glob("*.ini")))
 
 
-def selectAndDeleteOptions(options, select, expand=[]):
-    '''collect options in *select* and from *options* and remove those found.
-
-    expand is a list of keywards that will be expanded.
-
-    returns dictionary of options found.
-    '''
-    new_options = {}
-    for k, v in options.items():
-        if k in select:
-            new_options[k] = v
-    for k in new_options.keys():
-        del options[k]
-
-    for k in expand:
-        if k in new_options:
-            new_options.update(expand_option(new_options[k]))
-    return new_options
-
-
 def getImageFormats(display_options=None):
     '''return list of image formats to render (in addition to the default
     format).
@@ -327,224 +333,9 @@ def getImageOptions(display_options=None, indent=0):
         return ''
 
 
-# read placeholders from config file in current directory
-# It would be nice to read default values, but the location
-# of the documentation source files are not known to this module.
-class memoized(object):
-
-    """Decorator that caches a function's return value each time it is called.
-    If called later with the same arguments, the cached value is returned, and
-    not re-evaluated.
-    """
-
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
-
-    def __call__(self, *args, **kwargs):
-        try:
-            return self.cache[args + list(kwargs)]
-        except KeyError:
-            self.cache[
-                args + list(kwargs)] = value = self.func(*args, **kwargs)
-            return value
-        except TypeError:
-            # uncachable -- for instance, passing a list as an argument.
-            # Better to not cache than to blow up entirely.
-            return self.func(*args, **kwargs)
-
-    def __repr__(self):
-        """Return the function's docstring."""
-        return self.func.__doc__
-
-
-@memoized
-def getModule(name):
-    """load module in fullpat
-    """
-    # remove leading '.'
-    debug("entered getModule with `%s`" % name)
-
-    parts = name.split(".")
-    if parts[0] == "Tracker":
-        # special case: Trackers shipped with CGATReport
-        if len(parts) > 2:
-            raise NotImplementedError("built-in trackers are Tracker.<name> ")
-        name = "Tracker"
-        path = [os.path.join(CGATReport.__path__[0])]
-
-    # the first part needs to be on the python sys.path
-    elif len(parts) > 1:
-        try:
-            (file, pathname, description) = imp.find_module(parts[0])
-        except ImportError as msg:
-            warning("could not find module %s: msg=%s" % (name, msg))
-            raise ImportError("could not find module %s: msg=%s" % (name, msg))
-
-        path = [os.path.join(pathname, *parts[1:-1])]
-        name = parts[-1]
-    else:
-        path = None
-
-    debug("searching for module name=%s at path=%s" % (name, str(path)))
-
-    # find module
-    try:
-        (modulefile, pathname, description) = imp.find_module(name, path)
-    except ImportError as msg:
-        warning("could not find module %s in %s: msg=%s" % (name, path, msg))
-        raise ImportError(
-            "could not find module %s in %s: msg=%s" % (name, path, msg))
-
-    if modulefile is None:
-        warning("could not find module %s in %s" % (name, path))
-        raise ImportError(
-            "find_module returned None for %s in %s" %
-            (name, path))
-
-    stdout = sys.stdout
-    sys.stdout = io.StringIO()
-    debug("loading module: %s: %s, %s, %s" %
-          (name, modulefile, pathname, description))
-    # imp.load_module modifies sys.path - save original and restore
-    oldpath = sys.path
-
-    # add to sys.path to ensure that imports in the directory work
-    if pathname not in sys.path:
-        sys.path.append(os.path.dirname(pathname))
-
-    try:
-        module = imp.load_module(name, modulefile, pathname, description)
-    except:
-        warning("could not load module %s" % name)
-        raise
-    finally:
-        modulefile.close()
-        sys.stdout = stdout
-        sys.path = oldpath
-
-    return module, pathname
-
-
-def getCode(cls, pathname):
-    '''retrieve code for methods and functions.'''
-    # extract code
-    code = []
-    if six.PY2:
-        infile = open(pathname, "r")
-    else:
-        infile = open(pathname, "r", encoding=get_encoding())
-
-    for line in infile:
-        x = re.search("(\s*)(class|def)\s+%s" % cls, line)
-        if x:
-            indent = len(x.groups()[0])
-            code.append(line)
-            break
-    for line in infile:
-        if len(re.match("^(\s*)", line).groups()[0]) <= indent:
-            break
-        code.append(line)
-    infile.close()
-
-    return code
-
-
 def indent(text, indent):
     '''return *text(indented by *indent*.'''
     return "\n".join([" " * indent + x for x in text.split("\n")])
-
-
-def isClass(obj):
-    '''return true if obj is a class.
-
-    return False if it is a function object.
-    raise ValueError if neither
-    '''
-
-    # checking for subclass of Tracker causes a problem
-    # for classes defined in the module Tracker itself.
-    # The problem is that 'Tracker' is CGATReport.Tracker.Tracker,
-    # while the one in tracker is simply Tracker
-    # issubclass(obj, Tracker) and \
-
-    if isinstance(obj, type) and \
-            hasattr(obj, "__call__"):
-        return True
-    elif isinstance(obj, (type, types.FunctionType)):
-        return False
-    elif isinstance(obj, (type, types.LambdaType)):
-        return False
-
-    raise ValueError("can not make sense of tracker %s" % str(obj))
-
-
-def makeObject(path, args=(), kwargs={}):
-    '''return object of type *path*
-
-    This function is similar to an import statement, but
-    also instantiates the class and returns the object.
-
-    The object is instantiated with *args* and **kwargs**.
-    '''
-
-    # split class from module
-    name, cls = os.path.splitext(path)
-
-    # remove leading '.'
-    cls = cls[1:]
-
-    debug("instantiating class %s" % cls)
-
-    module, pathname = getModule(name)
-
-    # get class from module
-    try:
-        obj = getattr(module, cls)
-    except AttributeError:
-        raise AttributeError("module %s (%s) has no attribute '%s'" %
-                             (module, pathname, cls))
-    # instantiate, if it is a class
-    if isClass(obj):
-        try:
-            obj = obj(*args, **kwargs)
-        except AttributeError as msg:
-            critical("instantiating class %s.%s failed: %s" %
-                     (module, cls, msg))
-            raise
-
-    return obj, module, pathname, cls
-
-
-@memoized
-def make_tracker(path, args=(), kwargs={}):
-    """retrieve an instantiated tracker and its associated code.
-
-    returns a tuple (code, tracker, pathname).
-    """
-    obj, module, pathname, cls = makeObject(path, args, kwargs)
-    code = getCode(cls, pathname)
-    return code, obj, pathname
-
-
-@memoized
-def makeRenderer(path, args=(), kwargs={}):
-    """retrieve an instantiated Renderer.
-
-    returns the object.
-    """
-    obj, module, pathname, cls = makeObject(path, args, kwargs)
-    return obj
-
-
-@memoized
-def makeTransformer(path, args=(), kwargs={}):
-    """retrieve an instantiated Transformer.
-
-    returns the object.
-    """
-    obj, module, pathname, cls = makeObject(path, args, kwargs)
-    return obj
 
 
 def buildWarning(name, message):
@@ -620,77 +411,6 @@ def collectExceptionAsString(msg):
     return 'exception: %s\nmsg=%s\n%s' % (str(exceptionType),
                                           msg,
                                           "".join(lines))
-
-
-def getTransformers(transformers, kwargs={}):
-    '''find and instantiate all transformers.'''
-
-    result = []
-    for transformer in transformers:
-        k = "transform-%s" % transformer
-        if k in Component.getPlugins()["transform"]:
-            cls = Component.getPlugins()["transform"][k]
-            instance = cls(**kwargs)
-        else:
-            instance = makeTransformer(transformer, (), kwargs)
-
-        if not instance:
-            msg = "could not find transformer '%s'. Available transformers:\n  %s" % \
-                (transformer,
-                 "\n  ".join(sorted(getPlugins()["transform"].keys())))
-            raise KeyError(msg)
-
-        result.append(instance)
-
-    return result
-
-
-def updateOptions(kwargs):
-    '''replace placeholders in kwargs with
-    with PARAMS read from config file.
-
-    returns the update dictionary.
-    '''
-
-    for key, value in list(kwargs.items()):
-        try:
-            v = value.strip()
-        except AttributeError:
-            # ignore non-string types
-            continue
-
-        if v.startswith("@") and v.endswith("@"):
-            code = v[1:-1]
-            if code in PARAMS:
-                kwargs[key] = PARAMS[code]
-            else:
-                raise ValueError("unknown placeholder `%s`" % code)
-
-    return kwargs
-
-
-def getRenderer(renderer_name, kwargs={}):
-    '''find and instantiate renderer.'''
-
-    renderer = None
-
-    try:
-        cls = Component.getPlugins()["render"]["render-%s" % renderer_name]
-        renderer = cls(**kwargs)
-    except KeyError:
-        # This was uncommented to fix one bug
-        # but uncommenting invalidates user renderers
-        # TODO: needs to be revisited
-        renderer = makeRenderer(renderer_name, kwargs)
-
-    if not renderer:
-        raise KeyError(
-            "could not find renderer '%s'. Available renderers:\n  %s" %
-            (renderer_name,
-             "\n  ".join(
-                 sorted(Component.getPlugins()["render"].keys()))))
-
-    return renderer
 
 
 def my_get_data(package, resource):
@@ -934,6 +654,10 @@ def layoutBlocks(blocks, layout="column"):
     lines.append("")
 
     return lines
+
+
+def get_params():
+    return PARAMS
 
 
 def getOutputDirectory():
@@ -1193,26 +917,3 @@ def buildRstWithImage(outname,
         rst_output += template % locals()
 
     return rst_output
-
-
-def expand_option(option):
-    """expand option that is a ',' separated list of assignments.
-    """
-    kwargs = {}
-    option = option.strip()
-    if len(option) == 0:
-        return kwargs
-    parts = option.split(",")
-
-    for part in parts:
-        if not part.strip():
-            continue
-        if "=" not in part:
-            raise ValueError("malformed tracker options '{}' in '{}'".format(part, option))
-        key, val = part.split("=", 1)
-        try:
-            kwargs[key.strip()] = eval(val.strip())
-        except NameError:
-            kwargs[key.strip()] = val
-
-    return kwargs
