@@ -526,5 +526,4 @@ def setup(app):
     app.add_config_value('PARAMS', collections.defaultdict(), 'env')
 
     setup.logger = Component.get_logger()
-
     return {'parallel_read_safe': True}
