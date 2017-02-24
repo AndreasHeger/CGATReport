@@ -110,7 +110,7 @@ from CGATReport.Types import force_encode
 from CGATReport import Utils
 from CGATReport.Options import get_option_map, select_and_delete_options, update_options
 from CGATReport import Component
-from CGATReport.Capabilities import get_renderer, get_transformers, make_tracker
+from CGATReport.Capabilities import get_renderer, get_transformers, make_tracker, get_module, is_class
 
 import CGATReport.clean
 from CGATReport.Dispatcher import Dispatcher
@@ -128,7 +128,7 @@ RST_TEMPLATE = """.. report:: %(tracker)s
 """
 
 
-def getTrackers(fullpath):
+def get_available_trackers(fullpath):
     """retrieve a tracker and its associated code.
 
     The tracker is not instantiated.
@@ -144,16 +144,16 @@ def getTrackers(fullpath):
     name, cls = os.path.splitext(fullpath)
     # remove leading '.'
     cls = cls[1:]
-
+    
     module_name = os.path.basename(name)
-    module, pathname = Utils.getModule(name)
+    module, pathname = get_module(name)
     trackers = []
 
     for name in dir(module):
         obj = getattr(module, name)
 
         try:
-            if Utils.isClass(obj):
+            if is_class(obj):
                 trackers.append((name, obj, module_name, True))
             else:
                 trackers.append((name, obj, module_name, False))
@@ -468,7 +468,7 @@ def main(argv=None, **kwargs):
                     os.path.join(options.trackerdir, "*.py")):
                 modulename = os.path.basename(filename)
                 trackers.extend(
-                    [x for x in getTrackers(modulename)
+                    [x for x in get_available_trackers(modulename)
                      if x[0] not in exclude])
 
             for name, tracker_class, modulename, is_derived in trackers:

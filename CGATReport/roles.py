@@ -4,6 +4,8 @@ from docutils import nodes, utils
 from docutils.parsers.rst import roles
 
 from CGATReport import Utils
+from CGATReport.Capabilities import make_tracker
+
 
 default_settings = {
     'pubmed_url': "http://www.ncbi.nlm.nih.gov/pubmed/%i",
@@ -144,7 +146,7 @@ def param_role(role, rawtext, text, lineno, inliner,
     class_name, parameter_name = ".".join(parts[:-1]), parts[-1]
 
     try:
-        code, tracker, tracker_path = Utils.makeTracker(class_name)
+        code, tracker, tracker_path = make_tracker(class_name)
     except AttributeError:
         tracker = None
 
@@ -182,7 +184,7 @@ def value_role(role, rawtext, text, lineno, inliner,
     class_name = text
 
     try:
-        code, tracker, tracker_path = Utils.makeTracker(class_name)
+        code, tracker, tracker_path = make_tracker(class_name)
     except (AttributeError, ImportError):
         tracker = None
 
