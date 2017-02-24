@@ -28,12 +28,12 @@ class TestReportBuilding(unittest.TestCase):
                                  "test_report-results-{}.dir".format(
                                      sys.version.split(" ")[0]))
 
-        docs_dir = os.path.abspath(
-            os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                         "doc"))
+        docs_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "doc")
 
         if not os.path.exists(docs_dir):
-            raise ValueError("could not find doc directory")
+            raise ValueError("doc directory {} does not exist".format(docs_dir))
 
         # "cgatreport-build --num-jobs={n_cores} "
         print ("docs_dir is {}".format(docs_dir))
@@ -78,7 +78,6 @@ class TestReportBuilding(unittest.TestCase):
                     errors.append(line)
 
         # shutil.rmtree(build_dir)
-
         # filter version specific errors
         if sys.version_info.major == 3 and sys.version_info.minor >= 5:
             # statsmodels 0.6.1 is not py3.5 compatible
