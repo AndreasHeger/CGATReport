@@ -38,14 +38,11 @@ cgatreport_show_errors = True
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.coverage',
-              'sphinx.ext.pngmath',
-              'sphinx.ext.ifconfig',
               'CGATReport.only_directives',
               'CGATReport.report_directive',
               'CGATReport.errors_directive',
               'CGATReport.warnings_directive',
               'CGATReport.roles',
-              'sphinx.ext.inheritance_diagram',
               ]
 
 # Add any paths that contain templates here, relative to this directory.
