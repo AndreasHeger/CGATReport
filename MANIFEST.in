@@ -11,6 +11,7 @@ include KNOWN_BUGS
 include THANKS.txt
 include requires.txt
 include CGATReport/templates/*
+include CGATReport/templates/js/*
 include CGATReport/images/*
 include doc/Makefile
 include doc/images

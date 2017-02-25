@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = cgatreport-build --num-jobs=4 sphinx-build
+SPHINXBUILD   = sphinx-build
 SPHINXCLEAN   = cgatreport-clean
 PAPER         =
 
@@ -39,7 +39,7 @@ distclean:
 	$(SPHINXCLEAN) distclean
 
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
+	$(SPHINXBUILD) $(SPHINXOPTS) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
