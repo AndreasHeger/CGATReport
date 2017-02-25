@@ -11,7 +11,7 @@ method.
 
 .. report:: Trackers.MultipleColumnDataExample
    :render: pdplot
-   :statement: kind="scatter", x="col1", y="col2"
+   :kwargs: kind="scatter", x="col1", y="col2"
    :layout: column-2
    :width: 300
 
@@ -26,18 +26,18 @@ To follow the examples from `here <http://pandas.pydata.org/pandas-docs/stable/v
 
 .. report:: Trackers.TableTimeSeries
    :render: pdplot
-   :statement: kind="kde"
+   :kwargs: kind="kde"
 
    Density plot
 
 .. report:: Trackers.TableTimeSeries
    :render: pdplot
-   :statement: subplots=True
+   :kwargs: subplots=True
 
    Plotting with subplots
 
 .. report:: Trackers.TableTimeSeries
    :render: pdplot
-   :statement: kind="area", stacked=False
+   :kwargs: kind="area", stacked=False
 
    Area plots
