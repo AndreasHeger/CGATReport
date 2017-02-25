@@ -144,7 +144,6 @@ def get_available_trackers(fullpath):
     name, cls = os.path.splitext(fullpath)
     # remove leading '.'
     cls = cls[1:]
-    
     module_name = os.path.basename(name)
     module, pathname = get_module(name)
     trackers = []
