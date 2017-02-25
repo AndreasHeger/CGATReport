@@ -13,6 +13,14 @@ in a heat map or matrix plot.
 
    A matrix.
 
+.. report:: Trackers.MatrixTracker
+   :render: sb-heatmap-plot
+   :layout: row
+   :width: 200
+   :kwargs: cmap="RdGy"
+
+   Changing the colormap
+
 Options
 -------
 
