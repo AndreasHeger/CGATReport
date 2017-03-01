@@ -5,7 +5,7 @@ import itertools
 from copy import deepcopy
 import unittest
 
-from CGATReport.DataTree import asDataFrame
+from CGATReport.DataTree import as_dataframe
 from collections import OrderedDict as odict
 
 
@@ -37,7 +37,7 @@ class TestLabeledValues(unittest.TestCase):
 
     def testSimple(self):
 
-        df = asDataFrame(self.data)
+        df = as_dataframe(self.data)
         self.assertEqual(list(df.columns),
                          ["colC", "colB", "colA"])
         self.assertEqual(list(df.index),
@@ -48,7 +48,7 @@ class TestLabeledValues(unittest.TestCase):
         for row in list(self.data.keys()):
             dd = deepcopy(self.data)
             dd[row] = odict()
-            df = asDataFrame(dd)
+            df = as_dataframe(dd)
             self.assertEqual(list(df.columns),
                              ["colC", "colB", "colA"])
             self.assertEqual(list(df.index),
@@ -61,7 +61,7 @@ class TestLabeledValues(unittest.TestCase):
                 ("colA", "colB", "colC")):
             dd = deepcopy(self.data)
             del dd[row][col]
-            df = asDataFrame(dd)
+            df = as_dataframe(dd)
 
             if row == "rowC" and col == "colB":
                 # first row misses column B, so column A is second
@@ -110,7 +110,7 @@ class TestArrayValues(unittest.TestCase):
 
     def testSimple(self):
 
-        df = asDataFrame(self.data)
+        df = as_dataframe(self.data)
         self.assertEqual(list(df.columns),
                          ["colC", "colB", "colA"])
         self.assertEqual(list(df.index),
@@ -121,7 +121,7 @@ class TestArrayValues(unittest.TestCase):
         for row in list(self.data.keys()):
             dd = deepcopy(self.data)
             dd[row] = odict()
-            df = asDataFrame(dd)
+            df = as_dataframe(dd)
             self.assertEqual(list(df.columns),
                              ["colC", "colB", "colA"])
             self.assertEqual(list(df.index),
@@ -134,7 +134,7 @@ class TestArrayValues(unittest.TestCase):
                 ("colA", "colB", "colC")):
             dd = deepcopy(self.data)
             del dd[row][col]
-            df = asDataFrame(dd)
+            df = as_dataframe(dd)
 
             if row == "rowC" and col == "colB":
                 # first row misses column B, so column A is second

@@ -260,7 +260,7 @@ def concatDataFrames(dataframes, index_tuples):
     return df
 
 
-def as_dataframe(data, tracker):
+def as_dataframe(data, tracker=None):
     '''convert data tree to pandas DataFrame.
 
     The data frame is multi-indexed according to the depth within the
@@ -509,9 +509,9 @@ def as_dataframe(data, tracker):
 
     if is_hierarchical:
         n = list(df.index.names)
-        
         try:
-            l = getattr(tracker, "levels")
+            if tracker is not None:
+                l = getattr(tracker, "levels")
         except AttributeError:
             l = ["track", "slice"] + ["level%i" % x for x in range(len(n))]
 
