@@ -676,7 +676,7 @@ class Dispatcher(Component.Component):
             return results
 
         # merge all data to hierarchical indexed dataframe
-        self.data = DataTree.asDataFrame(self.tree)
+        self.data = DataTree.as_dataframe(self.tree, self.tracker)
 
         if self.data is None:
             self.info("%s: no data after conversion" % self.tracker)

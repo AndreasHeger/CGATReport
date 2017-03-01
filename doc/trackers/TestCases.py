@@ -176,3 +176,21 @@ class DeepTree(Tracker):
             x['data'] = random.randint(0, 100)
 
         return root
+
+
+class MultiLevel(Tracker):
+    '''example of using getPaths'''
+
+    levels = ["track", "slice", "size", "colour", "shape"]
+
+    def getPaths(self):
+        return [["track1", "track2", "track3"],
+                ["slice1", "slice2"],
+                ["large", "small"],
+                ["red", "green", "blue"],
+                ["circle", "square"]]
+
+    def __call__(self, *tracks):
+        return [random.randint(0, 100) for x in range(5)]
+
+

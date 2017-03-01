@@ -7,8 +7,7 @@ Release Notes
 Version 0.7.1
 =============
 
-* remove plugin system
-* use sphinx's parallel build system instead of cgatreport-build
+* minor bugfixes resulting from refactoring
 
 Version 0.7
 ===========
