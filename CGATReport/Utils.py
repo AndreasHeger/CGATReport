@@ -527,16 +527,15 @@ def layoutBlocks(blocks, layout="column"):
         return lines
 
     # flatten blocks
-    bb = ResultBlocks()
-    for b in blocks:
-        if b.title:
-            b.updateTitle(b.title, "prefix")
-        try:
-            bb.extend(b)
-        except TypeError:
-            bb.append(b)
-
-    blocks = bb
+    # bb = ResultBlocks()
+    # for b in blocks:
+    #     if b.title:
+    #         b.updateTitle(b.title, "prefix")
+    #     try:
+    #         bb.extend(b)
+    #     except TypeError:
+    #         bb.append(b)
+    # blocks = bb
 
     # check if postambles are identical across all blocks
     postambles = set([b.postamble for b in blocks])
@@ -620,7 +619,7 @@ def layoutBlocks(blocks, layout="column"):
             # extend lines
             txt = [x + " " * (max_width - len(x)) for x in txt]
 
-            new_blocks.append(txt)
+            new_blocks.append(ResultBlock("\n".join(txt)))
 
         for l in zip(*new_blocks):
             lines.append("|%s|" % "|".join(l))
@@ -643,7 +642,7 @@ def layoutBlocks(blocks, layout="column"):
                 # extend lines
                 txt = [x + " " * (max_width - len(x)) for x in txt]
 
-                new_blocks.append(txt)
+                new_blocks.append(ResultBlock("\n".join(txt)))
 
             for l in zip(*new_blocks):
                 lines.append("|%s|" % "|".join(l))

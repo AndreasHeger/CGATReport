@@ -90,6 +90,19 @@ def as_list(param):
         return param
 
 
+def to_string(self, value):
+    '''returns a number as string
+
+    If not a number, return empty string.'''
+
+    try:
+        return self.format % value
+    except TypeError:
+        return ""
+    except ValueError:
+        return "nan"
+
+
 def quote_rst(text):
     '''quote text for restructured text.'''
     return re.sub(r"([*])", r"\\\1", str(text))

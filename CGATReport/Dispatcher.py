@@ -2,6 +2,7 @@ import re
 import traceback
 import itertools
 import pandas
+import numpy
 
 from CGATReport.ResultBlock import ResultBlocks
 from CGATReport import DataTree
@@ -21,7 +22,6 @@ MAX_PATH_NESTING = 5
 
 
 class Dispatcher(Component.Component):
-
     """Dispatch the directives in the ``:report:`` directive
     to a:class:`Tracker`, class:`Transformer` and:class:`Renderer`.
 
@@ -277,6 +277,12 @@ class Dispatcher(Component.Component):
             if len(datapaths) >= 2:
                 datapaths[1] = _filter(datapaths[1], self.mInputSlices)
 
+        if self.mInputPaths:
+            for x in range(len(datapaths)):
+                l = _filter(datapaths[x], self.mInputPaths)
+                if len(l) > 0:
+                    datapaths[x] = l
+
         return datapaths
 
     def collect(self):
@@ -392,13 +398,25 @@ class Dispatcher(Component.Component):
         is_hierarchical = isinstance(self.data.index,
                                      pandas.core.index.MultiIndex)
         if is_hierarchical:
-            keep = [any([self._match(x, path_patterns) for x in labels])
-                    for labels in self.data.index]
+            if mode == "restrict":
+                keep = [True] * len(self.data.index)
+                for pattern in path_patterns:
+                    keep = numpy.logical_and(
+                        keep,
+                        [any([self._match(x, [pattern]) for x in labels])
+                         for labels in self.data.index])
+            elif mode == "exclude":
+                keep = [False] * len(self.data.index)
+                for pattern in path_patterns:
+                    keep = numpy.logical_or(
+                        keep,
+                        [any([self._match(x, [pattern]) for x in labels])
+                         for labels in self.data.index])
         else:
             keep = [self._match(x, path_patterns) for x in self.data.index]
 
-        if mode == "exclude":
-            keep = [not x for x in keep]
+            if mode == "exclude":
+                keep = [not x for x in keep]
 
         self.data = self.data[keep]
 
@@ -651,8 +669,8 @@ class Dispatcher(Component.Component):
             self.collect()
         except Exception as ex:
             self.error("%s: exception in collection: %s" % (self, str(ex)))
-            return ResultBlocks(ResultBlocks(
-                Utils.buildException("collection")))
+            return ResultBlocks(
+                Utils.buildException("collection"))
         finally:
             self.debug("profile: finished: tracker: %s" % (self.tracker))
 
@@ -699,8 +717,14 @@ class Dispatcher(Component.Component):
             self.transform()
         except:
             self.error("%s: exception in transformation" % self)
-            return ResultBlocks(ResultBlocks(
-                Utils.buildException("transformation")))
+            return ResultBlocks(
+                Utils.buildException("transformation"))
+
+        try:
+            self.reframe()
+        except:
+            self.error("%s: exception in reframing" % self)
+            return ResultBlocks(Utils.buildException("reframing"))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after transformation: %i data_paths: %s" %
@@ -710,8 +734,8 @@ class Dispatcher(Component.Component):
             self.filterPaths(self.restrict_paths, mode="restrict")
         except:
             self.error("%s: exception in restrict" % self)
-            return ResultBlocks(ResultBlocks(
-                Utils.buildException("restrict")))
+            return ResultBlocks(
+                Utils.buildException("restrict"))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after restrict: %i data_paths: %s" %
@@ -721,7 +745,7 @@ class Dispatcher(Component.Component):
             self.filterPaths(self.exclude_paths, mode="exclude")
         except:
             self.error("%s: exception in exclude" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("exclude")))
+            return ResultBlocks(Utils.buildException("exclude"))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after exclude: %i data_paths: %s" %
@@ -735,12 +759,6 @@ class Dispatcher(Component.Component):
         #     self.error("%s: exception in pruning" % self)
         # return ResultBlocks(ResultBlocks(Utils.buildException("pruning")))
 
-        try:
-            self.reframe()
-        except:
-            self.error("%s: exception in reframing" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("reframing")))
-
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after pruning: %i data_paths: %s" %
         #           (self, len(data_paths), str(data_paths)))
@@ -748,7 +766,7 @@ class Dispatcher(Component.Component):
             self.group()
         except:
             self.error("%s: exception in grouping" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("grouping")))
+            return ResultBlocks(Utils.buildException("grouping"))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after grouping: %i data_paths: %s" %
@@ -759,9 +777,10 @@ class Dispatcher(Component.Component):
             try:
                 result = self.render()
             except:
+                raise
                 self.error("%s: exception in rendering" % self)
-                return ResultBlocks(ResultBlocks(
-                    Utils.buildException("rendering")))
+                return ResultBlocks(
+                    Utils.buildException("rendering"))
             finally:
                 self.debug("profile: finished: renderer: %s" % (self.renderer))
         else:

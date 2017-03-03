@@ -5,8 +5,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import _pylab_helpers
 
-from CGATReport.Component import Component
 from CGATReport import Utils
+from CGATReport.Plugins.Collector import Collector
 
 try:
     import mpld3
@@ -23,30 +23,17 @@ try:
 except ImportError:
     HAVE_BOKEH = False
 
-
-class MatplotlibPlugin(Component):
-
-    capabilities = ['collect']
+class MatplotlibPlugin(Collector):
 
     def __init__(self, *args, **kwargs):
-        Component.__init__(self, *args, **kwargs)
+        Collector.__init__(self, *args, **kwargs)
 
         plt.close('all')
         # matplotlib.rcdefaults()
         # set a figure size that doesn't overflow typical browser windows
         matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
 
-    def collect(self,
-                blocks,
-                template_name,
-                outdir,
-                rstdir,
-                builddir,
-                srcdir,
-                content,
-                display_options,
-                tracker_id,
-                links={}):
+    def collect(self, blocks):
         '''collect one or more matplotlib figures and
 
         1. save as png, hires-png and pdf
@@ -56,12 +43,11 @@ class MatplotlibPlugin(Component):
         returns a map of place holder to placeholder text.
         '''
         fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
-
         map_figure2text = {}
 
         # determine the image formats to create
         default_format, additional_formats = Utils.getImageFormats(
-            display_options)
+            self.display_options)
         all_formats = [default_format, ] + additional_formats
 
         # create all required images
@@ -74,13 +60,13 @@ class MatplotlibPlugin(Component):
             figure = plt.figure(figid)
 
             # save explicit formats
-            outname = "%s_%02d" % (template_name, figid)
+            outname = "%s_%02d" % (self.template_name, figid)
 
             has_output = False
 
             for id, format, dpi in all_formats:
 
-                outpath = os.path.join(outdir, '%s.%s' % (outname, format))
+                outpath = os.path.join(self.outdir, '%s.%s' % (outname, format))
 
                 # sanitize figure size for Agg.
                 if figure.get_figwidth() > 32768 or figure.get_figheight() > 32768:
@@ -123,7 +109,7 @@ class MatplotlibPlugin(Component):
                     Utils.PARAMS.get("report_mpl", None) == "bokeh":
 
                 outpath = os.path.join(
-                    outdir,
+                    self.outdir,
                     '%s.html' % (outname))
                 is_html = True
 
@@ -161,14 +147,14 @@ class MatplotlibPlugin(Component):
             # create the text element
             rst_output = Utils.buildRstWithImage(
                 outname,
-                outdir,
-                rstdir,
-                builddir,
-                srcdir,
+                self.outdir,
+                self.rstdir,
+                self.builddir,
+                self.srcdir,
                 additional_formats,
-                tracker_id,
-                links,
-                display_options,
+                self.tracker_id,
+                self.links,
+                self.display_options,
                 default_format,
                 is_html=is_html,
                 text=script_text)

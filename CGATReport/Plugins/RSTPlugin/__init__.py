@@ -1,9 +1,9 @@
 import os
 import re
-from CGATReport.Component import Component
+from CGATReport.Plugins.Collector import Collector
 
 
-class RSTPlugin(Component):
+class RSTPlugin(Collector):
     '''collect rst text.
 
     This plugin looks for image/figure directives in literal text
@@ -29,19 +29,9 @@ class RSTPlugin(Component):
     rx_link = re.compile("\.\. _([^ |+,:]+)\s*:\s*([^ |+,:]+)[ ]*")
 
     def __init__(self, *args, **kwargs):
-        Component.__init__(self, *args, **kwargs)
+        Collector.__init__(self, *args, **kwargs)
 
-    def collect(self,
-                blocks,
-                template_name,
-                outdir,
-                rstdir,
-                builddir,
-                srcdir,
-                content,
-                display_options,
-                tracker_id,
-                links={}):
+    def collect(self, blocks):
         '''collect rst output from result blocks.
 
         '''

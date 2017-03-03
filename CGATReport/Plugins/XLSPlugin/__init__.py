@@ -1,27 +1,17 @@
 import os
 import re
-from CGATReport.Component import *
+from CGATReport.Plugins.Collector import Collector
 from CGATReport import Config
 
 
-class XLSPlugin(Component):
+class XLSPlugin(Collector):
 
     capabilities = ['collect']
 
     def __init__(self, *args, **kwargs):
-        Component.__init__(self, *args, **kwargs)
+        Collector.__init__(self, *args, **kwargs)
 
-    def collect(self,
-                blocks,
-                template_name,
-                outdir,
-                rstdir,
-                builddir,
-                srcdir,
-                content,
-                display_options,
-                tracker_id,
-                links={}):
+    def collect(self, blocks):
         '''collect xls output from result blocks.
 
         xls output is written to a file and a link will be inserted at
@@ -35,8 +25,8 @@ class XLSPlugin(Component):
                     continue
 
                 outname = "%s_%s" % (
-                    template_name, re.sub("/", "@", block.title))
-                outputpath = os.path.join(outdir, '%s.%s' %
+                    self.template_name, re.sub("/", "@", block.title))
+                outputpath = os.path.join(self.outdir, '%s.%s' %
                                           (outname, extension))
 
                 # save to file

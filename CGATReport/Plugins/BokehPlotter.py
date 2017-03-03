@@ -211,7 +211,7 @@ class LinePlot(Renderer, BokehPlotter):
         # do not plot more than ten tracks in one plot
         self.split_at = 10
 
-        self.format_colors = bk.brewer["Spectral"][10]
+        # self.format_colors = bk.brewer["Spectral"][10]
 
     def initPlot(self, fig, dataseries, path):
         '''initialize plot.'''

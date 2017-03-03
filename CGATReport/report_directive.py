@@ -260,12 +260,6 @@ def run(arguments,
         filename_text = None
 
     ##########################################################
-    # Initialize collectors
-    collectors = []
-    for name, collector in get_plugins("collect").items():
-        collectors.append(collector())
-
-    ##########################################################
     # instantiate tracker, dispatcher, renderer and transformers
     # and collect output
     ###########################################################
@@ -316,6 +310,63 @@ def run(arguments,
             pass
 
         ########################################################
+        # write code output
+        linked_codename = re.sub("\\\\", "/", os.path.join(rst2builddir, codename))
+        if code and basedir != outdir:
+            if six.PY2:
+                with open(os.path.join(outdir, codename), "w") as outfile:
+                    for line in code:
+                        outfile.write(line)
+            else:
+                with open(os.path.join(outdir, codename), "w",
+                          encoding=get_encoding()) as outfile:
+                    for line in code:
+                        outfile.write(line)
+
+        ########################################################
+        # write notebook snippet
+        linked_notebookname = re.sub(
+            "\\\\", "/", os.path.join(rst2builddir, notebookname))
+
+        if basedir != outdir and tracker_id is not None:
+            with open(os.path.join(outdir, notebookname), "w") as outfile:
+                Utils.writeNoteBookEntry(outfile,
+                                         renderer=renderer_name,
+                                         tracker=tracker_name,
+                                         transformers=transformer_names,
+                                         tracker_path=tracker_path,
+                                         options=list(renderer_options.items()) +
+                                         list(tracker_options.items()) +
+                                         list(transformer_options.items()))
+
+        if filename_text is not None:
+            linked_rstname = re.sub(
+                "\\\\", "/", os.path.join(rst2builddir, rstname))
+        else:
+            linked_rstname = None
+
+        ##########################################################
+        # Initialize collectors
+        links = {'code_url': linked_codename,
+                 'rst_url': linked_rstname,
+                 'notebook_url': linked_notebookname}
+
+        collectors = []
+        for name, collector in get_plugins("collect").items():
+            collectors.append(collector(
+                template_name=template_name,
+                outdir=outdir,
+                rstdir=rstdir,
+                builddir=builddir,
+                srcdir=srcdir,
+                content=content,
+                display_options=display_options,
+                trackerd_id=tracker_id,
+                links=links))
+            
+        renderer.set_collectors(collectors)
+
+        ########################################################
         # create and call dispatcher
         logger.debug("report_directive.run: creating dispatcher")
 
@@ -337,6 +388,7 @@ def run(arguments,
             tracker_id = None
 
     except:
+        raise
 
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
         tb = "\n".join(traceback.format_tb(exceptionTraceback))
@@ -352,75 +404,12 @@ def run(arguments,
             Utils.buildException("invocation")))
         code = None
         tracker_id = None
+        links = {'code_url': "",
+                 'rst_url': "",
+                 'notebook_url': ""}
 
     logger.debug(
         "report_directive.run: profile: started: collecting: %s" % tag)
-
-    ########################################################
-    # write code output
-    linked_codename = re.sub("\\\\", "/", os.path.join(rst2builddir, codename))
-    if code and basedir != outdir:
-        if six.PY2:
-            with open(os.path.join(outdir, codename), "w") as outfile:
-                for line in code:
-                    outfile.write(line)
-        else:
-            with open(os.path.join(outdir, codename), "w",
-                      encoding=get_encoding()) as outfile:
-                for line in code:
-                    outfile.write(line)
-
-    ########################################################
-    # write notebook snippet
-    linked_notebookname = re.sub(
-        "\\\\", "/", os.path.join(rst2builddir, notebookname))
-
-    if basedir != outdir and tracker_id is not None:
-        with open(os.path.join(outdir, notebookname), "w") as outfile:
-            Utils.writeNoteBookEntry(outfile,
-                                     renderer=renderer_name,
-                                     tracker=tracker_name,
-                                     transformers=transformer_names,
-                                     tracker_path=tracker_path,
-                                     options=list(renderer_options.items()) +
-                                     list(tracker_options.items()) +
-                                     list(transformer_options.items()))
-
-    if filename_text is not None:
-        linked_rstname = re.sub(
-            "\\\\", "/", os.path.join(rst2builddir, rstname))
-    else:
-        linked_rstname = None
-
-    ###########################################################
-    # collect images
-    ###########################################################
-    map_figure2text = {}
-    links = {'code_url': linked_codename,
-             'rst_url': linked_rstname,
-             'notebook_url': linked_notebookname}
-    try:
-        for collector in collectors:
-            map_figure2text.update(collector.collect(
-                blocks,
-                template_name,
-                outdir,
-                rstdir,
-                builddir,
-                srcdir,
-                content,
-                display_options,
-                tracker_id,
-                links=links))
-    except:
-
-        logger.warn("report_directive.run: exception caught while "
-                    "collecting with %s at %s:%i - see document" %
-                    (collector, str(document), lineno))
-        blocks = ResultBlocks(ResultBlocks(
-            Utils.buildException("collection")))
-        code = None
-        tracker_id = None
 
     ###########################################################
     # replace place holders or add text
@@ -435,6 +424,7 @@ def run(arguments,
     if "notebook" in requested_urls:
         urls.append(":download:`nb <%(notebook_url)s>`" % links)
 
+    map_figure2text = {}
     map_figure2text["default-prefix"] = ""
     map_figure2text["default-suffix"] = ""
 

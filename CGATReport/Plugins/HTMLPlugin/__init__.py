@@ -1,26 +1,14 @@
 import os
-from CGATReport.Component import Component
+from CGATReport.Plugins.Collector import Collector
 from CGATReport import Utils
 
 
-class HTMLPlugin(Component):
-
-    capabilities = ['collect']
+class HTMLPlugin(Collector):
 
     def __init__(self, *args, **kwargs):
-        Component.__init__(self, *args, **kwargs)
+        Collector.__init__(self, *args, **kwargs)
 
-    def collect(self,
-                blocks,
-                template_name,
-                outdir,
-                rstdir,
-                builddir,
-                srcdir,
-                content,
-                display_options,
-                tracker_id,
-                links={}):
+    def collect(self, blocks):
         '''collect html output from result blocks.
 
         HTML output is written to a file and a link will be inserted at
@@ -39,9 +27,9 @@ class HTMLPlugin(Component):
                 # as the link does not point to the correct location of the
                 # file.
                 outname = Utils.quote_filename(
-                    "%s_%s" % (template_name, block.title))
+                    "%s_%s" % (self.template_name, block.title))
                 outputpath = os.path.join(
-                    outdir, '%s.%s' % (outname, extension))
+                    self.outdir, '%s.%s' % (outname, extension))
 
                 # save to file
                 outf = open(outputpath, "w")

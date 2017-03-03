@@ -20,14 +20,14 @@ class ResultBlock(object):
 
     """
 
-    def __init__(self, text, title, preamble="", postamble=""):
+    def __init__(self, text, title="", preamble="", postamble=""):
         assert isinstance(
             text, string_types), \
             "created ResultBlock without text, but %s" % str(type(text))
-        assert isinstance(
-            title, string_types), \
-            "created ResultBlock without title, but %s" % str(title)
-        assert title is not None
+        if title:
+            assert isinstance(
+                title, string_types), \
+                "created ResultBlock without title, but %s" % str(title)
         assert text is not None
         self.text = text
         self.title = title
@@ -145,6 +145,10 @@ class ResultBlocks(object):
         object.__setattr__(self, "_data", [])
         object.__setattr__(self, "title", title)
         if block:
+            if not isinstance(block, ResultBlock):
+                raise ValueError("appending not a ResultBlock: {}".format(
+                    type(block)))
+
             self._data.append(block)
 
     def __iter__(self):
@@ -174,6 +178,18 @@ class ResultBlocks(object):
         '''
         for block in self._data:
             block.updateTitle(title, mode)
+
+    def append(self, value):
+        if not isinstance(value, ResultBlock):
+            raise ValueError("appending not a ResultBlock: {}".format(
+                type(value)))
+        self._data.append(value)
+
+    def extend(self, values):
+        if not isinstance(values, ResultBlocks):
+            raise ValueError("extending is not a ResultBlocks: {}".format(
+                type(values)))
+        self._data.extend(values)
 
     def __getattr__(self, name):
         return getattr(self._data, name)

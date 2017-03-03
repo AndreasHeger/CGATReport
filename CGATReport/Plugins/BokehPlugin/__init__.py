@@ -21,16 +21,7 @@ class BokehPlugin(Component):
         Component.__init__(self, *args, **kwargs)
 
     def collect(self,
-                blocks,
-                template_name,
-                outdir,
-                rstdir,
-                builddir,
-                srcdir,
-                content,
-                display_options,
-                tracker_id,
-                links={}):
+                blocks):
         '''collect rst output from result blocks.
 
         '''
