@@ -122,6 +122,7 @@ class Dispatcher(Component.Component):
 
         self.mInputTracks = as_list(kwargs.get("tracks", None))
         self.mInputSlices = as_list(kwargs.get("slices", None))
+        self.mInputPaths = as_list(kwargs.get("paths", None))
         self.restrict_paths = as_list(kwargs.get("restrict", None))
         self.exclude_paths = as_list(kwargs.get("exclude", None))
         self.mColumns = as_list(kwargs.get("columns", None))
@@ -131,7 +132,6 @@ class Dispatcher(Component.Component):
 
         # TODO: indicate if tracker is parameterized
         self.tracker_options = False
-
 
     def getData(self, path):
         """get data for track and slice. Save data in persistent cache for
@@ -562,11 +562,22 @@ class Dispatcher(Component.Component):
             index_columns = self.set_index
 
         dataframe.reset_index(inplace=True)
-        if self.include_columns:
-            new_columns = self.include_columns
+        is_hierarchical = isinstance(dataframe.columns,
+                                     pandas.core.index.MultiIndex)
+        if is_hierarchical:
+            if self.include_columns:
+                # will this work?
+                new_columns = self.include_columns
+            else:
+                new_columns = [
+                    x for x in dataframe.columns if not
+                    numpy.intersect1d(x, index_columns)]
         else:
-            new_columns = [
-                x for x in dataframe.columns if x not in index_columns]
+            if self.include_columns:
+                new_columns = self.include_columns
+            else:
+                new_columns = [
+                    x for x in dataframe.columns if x not in index_columns]
 
         if self.exclude_columns:
             new_columns = [
@@ -612,7 +623,7 @@ class Dispatcher(Component.Component):
             # no grouping for renderers that will accept
             # a dataframe with any level of indices and no explicit
             # grouping has been asked for.
-            results.append(self.renderer(dataframe, path=()))
+            results.extend(self.renderer(dataframe, path=()))
         else:
             level = Utils.getGroupLevels(
                 dataframe,
@@ -624,12 +635,11 @@ class Dispatcher(Component.Component):
             for key, work in dataframe.groupby(level=level):
 
                 try:
-                    results.append(self.renderer(work,
+                    results.extend(self.renderer(work,
                                                  path=key))
                 except:
                     self.error("%s: exception in rendering" % self)
-                    results.append(
-                        ResultBlocks(Utils.buildException("rendering")))
+                    results.append(Utils.buildException("rendering"))
 
         if len(results) == 0:
             self.warn("renderer returned no data.")
@@ -646,7 +656,7 @@ class Dispatcher(Component.Component):
             self.parseArguments(*args, **kwargs)
         except:
             self.error("%s: exception in parsing" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("parsing")))
+            return ResultBlocks(Utils.buildException("parsing"))
 
         # collect no data if tracker is the empty tracker
         # and go straight to rendering
@@ -656,8 +666,7 @@ class Dispatcher(Component.Component):
                 # type(Tracker.Empty) == CGATReport.Tracker.Empty
                 # type(self.tracker) == Tracker.Empty
                 # if isinstance(self.tracker, Tracker.Empty):
-                result = self.renderer()
-                return ResultBlocks(result)
+                return self.renderer()
         except AttributeError:
             # for function trackers
             pass
@@ -686,11 +695,11 @@ class Dispatcher(Component.Component):
         # directly. Note that no transformations will be applied.
         if isinstance(self.renderer, Renderer.User):
             results = ResultBlocks(title="main")
-            results.append(self.renderer(self.tree))
+            results.extend(self.renderer(self.tree))
             return results
         elif isinstance(self.renderer, Renderer.Debug):
             results = ResultBlocks(title="main")
-            results.append(self.renderer(self.tree))
+            results.extend(self.renderer(self.tree))
             return results
 
         # merge all data to hierarchical indexed dataframe
@@ -777,7 +786,6 @@ class Dispatcher(Component.Component):
             try:
                 result = self.render()
             except:
-                raise
                 self.error("%s: exception in rendering" % self)
                 return ResultBlocks(
                     Utils.buildException("rendering"))

@@ -1389,7 +1389,7 @@ class LinePlot(Renderer, Plotter):
                              nplotted)
                 nplotted += 1
 
-                self.legend.append(path2str(key) + "/" + column)
+                self.legend.append(path2str(key) + "/" + path2str(column))
 
         self.finishPlot(fig, dataframe, path)
 

@@ -132,19 +132,19 @@ class Renderer(Component):
         # legacy code, needs updating.
         map_figure2text = {}
         for dataframe, path in self.split_dataframe(dataframe, path):
-            rr = self.render(dataframe, path)
-            r = ResultBlocks(rr)
-            
+            r = self.render(dataframe, path)
+            if not isinstance(r, ResultBlocks):
+                raise ValueError("rendering should return ResultBlocks, received {} instead".format(
+                    type(r)))
             if self.collectors:
                 for collector in self.collectors:
                     map_figure2text.update(collector.collect(r))
-        
             r.updatePlaceholders(map_figure2text)
             result.extend(r)
         return result
 
     def split_dataframe(self, dataframe, path):
-            
+
         if not self.split_at:
             yield(dataframe, path)
         else:

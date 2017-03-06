@@ -17,29 +17,28 @@ class HTMLPlugin(Collector):
         map_figure2text = {}
         extension = "html"
 
-        for xblocks in blocks:
-            for block in xblocks:
-                if not hasattr(block, "html"):
-                    continue
+        for block in blocks:
+            if not hasattr(block, "html"):
+                continue
 
-                # remove special characters from filename. I think the docutils
-                # system removes these from links which later causes problems
-                # as the link does not point to the correct location of the
-                # file.
-                outname = Utils.quote_filename(
-                    "%s_%s" % (self.template_name, block.title))
-                outputpath = os.path.join(
-                    self.outdir, '%s.%s' % (outname, extension))
+            # remove special characters from filename. I think the docutils
+            # system removes these from links which later causes problems
+            # as the link does not point to the correct location of the
+            # file.
+            outname = Utils.quote_filename(
+                "%s_%s" % (self.template_name, block.title))
+            outputpath = os.path.join(
+                self.outdir, '%s.%s' % (outname, extension))
 
-                # save to file
-                outf = open(outputpath, "w")
-                outf.write(block.html)
-                outf.close()
+            # save to file
+            outf = open(outputpath, "w")
+            outf.write(block.html)
+            outf.close()
 
-                # use absolute path
-                link = os.path.abspath(outputpath)
+            # use absolute path
+            link = os.path.abspath(outputpath)
 
-                rst_output = "%(link)s" % locals()
-                map_figure2text["#$html %s$#" % block.title] = rst_output
+            rst_output = "%(link)s" % locals()
+            map_figure2text["#$html %s$#" % block.title] = rst_output
 
         return map_figure2text

@@ -23,6 +23,7 @@ try:
 except ImportError:
     HAVE_BOKEH = False
 
+
 class MatplotlibPlugin(Collector):
 
     def __init__(self, *args, **kwargs):
@@ -96,7 +97,7 @@ class MatplotlibPlugin(Collector):
             if HAVE_MPLD3 and \
                Utils.PARAMS.get("report_mpl", None) == "mpld3":
                 outpath = os.path.join(
-                    outdir,
+                    self.outdir,
                     '%s.html' % (outname))
 
                 # plt.legend()
@@ -143,6 +144,9 @@ class MatplotlibPlugin(Collector):
 
                     with open(outpath, "w") as outf:
                         outf.write(script_text)
+
+            # release memory
+            plt.close(figure)
 
             # create the text element
             rst_output = Utils.buildRstWithImage(

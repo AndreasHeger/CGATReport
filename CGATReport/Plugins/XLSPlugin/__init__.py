@@ -19,23 +19,22 @@ class XLSPlugin(Collector):
         '''
         map_figure2text = {}
         extension = "xlsx"
-        for xblocks in blocks:
-            for block in xblocks:
-                if not hasattr(block, "xls"):
-                    continue
+        for block in blocks:
+            if not hasattr(block, "xls"):
+                continue
 
-                outname = "%s_%s" % (
-                    self.template_name, re.sub("/", "@", block.title))
-                outputpath = os.path.join(self.outdir, '%s.%s' %
-                                          (outname, extension))
+            outname = "%s_%s" % (
+                self.template_name, re.sub("/", "@", block.title))
+            outputpath = os.path.join(self.outdir, '%s.%s' %
+                                      (outname, extension))
 
-                # save to file
-                block.xls.save(outputpath)
+            # save to file
+            block.xls.save(outputpath)
 
-                # use absolute path
-                link = os.path.abspath(outputpath)
+            # use absolute path
+            link = os.path.abspath(outputpath)
 
-                rst_output = "%(link)s" % locals()
-                map_figure2text["#$xls %s$#" % block.title] = rst_output
+            rst_output = "%(link)s" % locals()
+            map_figure2text["#$xls %s$#" % block.title] = rst_output
 
         return map_figure2text

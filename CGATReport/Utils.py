@@ -597,14 +597,16 @@ def layoutBlocks(blocks, layout="column"):
 
     # add empty blocks
     if len(blocks) % ncols:
-        blocks.extend([ResultBlock("", "")] * (ncols - len(blocks) % ncols))
+        blocks.extend(ResultBlocks(
+            [ResultBlock("", "")] * (ncols - len(blocks) % ncols)))
 
     for nblock in range(0, len(blocks), ncols):
 
-        # add text
+        ##################################################
+        # add content cells to layout
         lines.append(separator)
         max_height = max(text_heights[nblock:nblock + ncols])
-        new_blocks = ResultBlocks()
+        per_cell_lines = []
 
         for xx in range(nblock, min(nblock + ncols, len(blocks))):
             txt, col = blocks[xx].text.split("\n"), xx % ncols
@@ -619,17 +621,17 @@ def layoutBlocks(blocks, layout="column"):
             # extend lines
             txt = [x + " " * (max_width - len(x)) for x in txt]
 
-            new_blocks.append(ResultBlock("\n".join(txt)))
+            per_cell_lines.append(txt)
 
-        for l in zip(*new_blocks):
-            lines.append("|%s|" % "|".join(l))
+        for row in zip(*per_cell_lines):
+            lines.append("|%s|" % "|".join(row))
 
-        # add subtitles
+        ##################################################
+        # add subtitle cells to layout
         max_height = max(title_heights[nblock:nblock + ncols])
-
         if max_height > 0:
 
-            new_blocks = ResultBlocks()
+            per_cell_lines = []
             lines.append(separator)
 
             for xx in range(nblock, min(nblock + ncols, len(blocks))):
@@ -642,10 +644,10 @@ def layoutBlocks(blocks, layout="column"):
                 # extend lines
                 txt = [x + " " * (max_width - len(x)) for x in txt]
 
-                new_blocks.append(ResultBlock("\n".join(txt)))
+                per_cell_lines.append(txt)
 
-            for l in zip(*new_blocks):
-                lines.append("|%s|" % "|".join(l))
+            for row in zip(*per_cell_lines):
+                lines.append("|%s|" % "|".join(row))
 
     lines.append(separator)
 

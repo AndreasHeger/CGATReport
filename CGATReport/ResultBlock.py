@@ -142,14 +142,18 @@ class ResultBlocks(object):
     __slots__ = ["_data", "title"]
 
     def __init__(self, block=None, title=None):
-        object.__setattr__(self, "_data", [])
-        object.__setattr__(self, "title", title)
-        if block:
-            if not isinstance(block, ResultBlock):
-                raise ValueError("appending not a ResultBlock: {}".format(
-                    type(block)))
 
-            self._data.append(block)
+        self.title = title
+        if block:
+            if isinstance(block, ResultBlock):
+                self._data = [block]
+            elif isinstance(block, list) and isinstance(block[0], ResultBlock):
+                self._data = block
+            else:
+                raise ValueError("expected ResultBlock or list of ResultBlock, but got {}".format(
+                    type(block)))
+        else:
+            self._data = []
 
     def __iter__(self):
         return self._data.__iter__()
@@ -190,12 +194,6 @@ class ResultBlocks(object):
             raise ValueError("extending is not a ResultBlocks: {}".format(
                 type(values)))
         self._data.extend(values)
-
-    def __getattr__(self, name):
-        return getattr(self._data, name)
-
-    def __setattr__(self, name, value):
-        setattr(self._data, name, value)
 
     def clearPostamble(self):
         for block in self._data:

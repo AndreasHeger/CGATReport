@@ -25,7 +25,7 @@ from docutils.parsers.rst import directives
 from docutils.parsers.rst import Directive
 
 from CGATReport import Config, Dispatcher, Utils, Cache, Component
-from CGATReport.ResultBlock import ResultBlocks
+from CGATReport.ResultBlock import ResultBlocks, ResultBlock
 from CGATReport.Types import as_list, force_encode, get_encoding
 from CGATReport.Capabilities import get_renderer, get_transformers, get_plugins, make_tracker
 from CGATReport.Options import get_option_spec, select_and_delete_options, get_option_map, update_options
@@ -259,6 +259,7 @@ def run(arguments,
         template_name = ""
         filename_text = None
 
+    collect_here = False
     ##########################################################
     # instantiate tracker, dispatcher, renderer and transformers
     # and collect output
@@ -363,8 +364,12 @@ def run(arguments,
                 display_options=display_options,
                 trackerd_id=tracker_id,
                 links=links))
-            
-        renderer.set_collectors(collectors)
+
+        # user renderers might not be aware of collectors
+        try:
+            renderer.set_collectors(collectors)
+        except AttributeError:
+            collect_here = True
 
         ########################################################
         # create and call dispatcher
@@ -380,16 +385,14 @@ def run(arguments,
         blocks = dispatcher(**dispatcher_options)
 
         if blocks is None:
-            blocks = ResultBlocks(ResultBlocks(
+            blocks = ResultBlocks(
                 Utils.buildWarning(
                     "NoData",
-                    "tracker %s returned no Data" % str(tracker))))
+                    "tracker %s returned no Data" % str(tracker)))
             code = None
             tracker_id = None
 
     except:
-        raise
-
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
         tb = "\n".join(traceback.format_tb(exceptionTraceback))
 
@@ -400,8 +403,7 @@ def run(arguments,
              exceptionValue,
              tb))
 
-        blocks = ResultBlocks(ResultBlocks(
-            Utils.buildException("invocation")))
+        blocks = ResultBlocks(Utils.buildException("invocation"))
         code = None
         tracker_id = None
         links = {'code_url': "",
@@ -425,6 +427,11 @@ def run(arguments,
         urls.append(":download:`nb <%(notebook_url)s>`" % links)
 
     map_figure2text = {}
+
+    if collect_here:
+        for collector in collectors:
+            map_figure2text.update(collector.collect(blocks))
+
     map_figure2text["default-prefix"] = ""
     map_figure2text["default-suffix"] = ""
 

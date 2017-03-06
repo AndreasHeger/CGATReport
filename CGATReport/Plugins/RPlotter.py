@@ -436,9 +436,13 @@ class GGPlot(Renderer, Plotter):
 
         self.statement = kwargs.get('statement')
 
-        R.library('ggplot2')
+        if R:
+            R.library('ggplot2')
 
     def render(self, dataframe, path):
+
+        if not R:
+            return None
 
         # add all indices as columns
         dataframe.reset_index(inplace=True)

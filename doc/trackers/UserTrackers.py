@@ -9,13 +9,15 @@ from collections import OrderedDict as odict
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReport import Utils
 
-
 import matplotlib
 from matplotlib import pyplot as plt
 
-from rpy2.robjects import r as R
-import rpy2.robjects as ro
-import rpy2.robjects.numpy2ri
+try:
+    from rpy2.robjects import r as R
+    import rpy2.robjects as ro
+    import rpy2.robjects.numpy2ri
+except ImportError:
+    R = None
 
 
 class MatplotlibData(Tracker):
@@ -46,6 +48,9 @@ class RPlotData(Tracker):
     tracks = ("track1", "track2", "track3")
 
     def __call__(self, track, slice=None):
+        if not R:
+            return
+
         s = [random.randint(0, 20) for x in range(40)]
         random.shuffle(s)
         # do the plotting

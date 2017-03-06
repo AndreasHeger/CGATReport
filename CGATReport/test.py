@@ -551,9 +551,8 @@ def main(argv=None, **kwargs):
                         print("")
                         print(("title: %s" % r.title))
                         print("")
-                    for s in r:
-                        for ss in str(s).split("\n"):
-                            print(force_encode(ss))
+                    for ss in str(r).split("\n"):
+                        print(force_encode(ss))
 
         if options.hardcopy:
 
@@ -589,16 +588,15 @@ def main(argv=None, **kwargs):
 
             else:
                 for rr in result:
-                    for r in rr:
-                        if hasattr(r, 'xls'):
-                            tmpfile, outpath = tempfile.mkstemp(
-                                dir='.', suffix='.xlsx')
-                            os.close(tmpfile)
-                            print(('saving xlsx to %s' % outpath))
-                            r.xls.save(outpath)
-                        elif hasattr(r, 'bokeh'):
-                            import bokeh.plotting as bk
-                            bk.show()
+                    if hasattr(r, 'xls'):
+                        tmpfile, outpath = tempfile.mkstemp(
+                            dir='.', suffix='.xlsx')
+                        os.close(tmpfile)
+                        print(('saving xlsx to %s' % outpath))
+                        r.xls.save(outpath)
+                    elif hasattr(r, 'bokeh'):
+                        import bokeh.plotting as bk
+                        bk.show()
 
     ######################################################
     # build page

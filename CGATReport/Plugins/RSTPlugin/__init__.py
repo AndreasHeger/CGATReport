@@ -61,31 +61,30 @@ class RSTPlugin(Collector):
             n = s.replace(old, new)
             return n
 
-        for xblocks in blocks:
-            for block in xblocks:
-                if not hasattr(block, "text"):
-                    continue
-                lines = block.text.split("\n")
-                n = []
-                for l in lines:
-                    ll = l
-                    for x in self.rx_img.finditer(ll):
-                        directive, filename = x.groups()
-                        relpath = os.path.relpath(
-                            filename.strip(),
-                            os.path.abspath(rstdir))
-                        newpath = re.sub("\\\\", "/", relpath)
-                        l = replace_and_pad(l, filename, newpath)
+        for block in blocks:
+            if not hasattr(block, "text"):
+                continue
+            lines = block.text.split("\n")
+            n = []
+            for l in lines:
+                ll = l
+                for x in self.rx_img.finditer(ll):
+                    directive, filename = x.groups()
+                    relpath = os.path.relpath(
+                        filename.strip(),
+                        os.path.abspath(self.rstdir))
+                    newpath = re.sub("\\\\", "/", relpath)
+                    l = replace_and_pad(l, filename, newpath)
 
-                    for x in self.rx_link.finditer(ll):
-                        directive, filename = x.groups()
-                        newpath = re.sub(
-                            "\\\\", "/",
-                            os.path.abspath(filename.strip()))
-                        # pad with spaces to keep table alignment
-                        l = replace_and_pad(l, filename, newpath)
+                for x in self.rx_link.finditer(ll):
+                    directive, filename = x.groups()
+                    newpath = re.sub(
+                        "\\\\", "/",
+                        os.path.abspath(filename.strip()))
+                    # pad with spaces to keep table alignment
+                    l = replace_and_pad(l, filename, newpath)
 
-                    n.append(l)
-                block.text = "\n".join(n)
+                n.append(l)
+            block.text = "\n".join(n)
 
         return map_figure2text
