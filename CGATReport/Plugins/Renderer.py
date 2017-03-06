@@ -1225,7 +1225,7 @@ class MatrixBase:
             lines.append(
                 '   "%s","%s"' %
                 (rows[row], '","'.join(
-                    [to_string(x) for x in matrix[row]])))
+                    [to_string(x, format=self.format) for x in matrix[row]])))
         lines.append("")
 
         if path is None:

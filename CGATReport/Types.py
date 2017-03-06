@@ -90,13 +90,13 @@ def as_list(param):
         return param
 
 
-def to_string(self, value):
+def to_string(value, format="%i"):
     '''returns a number as string
 
     If not a number, return empty string.'''
 
     try:
-        return self.format % value
+        return format % value
     except TypeError:
         return ""
     except ValueError:

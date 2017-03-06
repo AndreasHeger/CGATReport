@@ -404,6 +404,7 @@ class VennTracker(Tracker):
                     '111': 10,
                     'labels': ("SetA", "SetB", "SetC")}
 
+
 class ImageOnly(Tracker):
     
     def __call__(self):

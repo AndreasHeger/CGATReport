@@ -80,9 +80,9 @@ class ResultBlock(object):
                 self.text = self.text.replace(pattern,
                                               map_old2new[pattern])
         if len(patterns) == 0:
-            self.text = map_old2new["default-prefix"] +\
+            self.text = map_old2new.get("default-prefix", "") +\
                 self.text +\
-                map_old2new["default-suffix"]
+                map_old2new.get("default-suffix", "")
 
     def updateTitle(self, title, mode="prefix"):
         if not self.title:

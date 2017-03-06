@@ -64,7 +64,7 @@ class RPlotPlugin(Collector):
                 R["dev.set"](figid)
 
                 outname = "%s_%02d" % (self.template_name, figid)
-                outpath = os.path.join(outdir, '%s.%s' % (outname, format))
+                outpath = os.path.join(self.outdir, '%s.%s' % (outname, format))
 
                 if format.endswith("png"):
                     # for busy images there is a problem with figure margins
@@ -157,48 +157,47 @@ class RPlotPlugin(Collector):
         ##########################################
         ##########################################
         # iterate over ggplot plots
-        for xblocks in blocks:
-            for block in xblocks:
-                if not hasattr(block, "rggplot"):
-                    continue
-                pp = block.rggplot
-                figname = block.figname
+        for block in blocks:
+            if not hasattr(block, "rggplot"):
+                continue
+            pp = block.rggplot
+            figname = block.figname
 
-                outname = "%s_%s" % (self.template_name, figname)
+            outname = "%s_%s" % (self.template_name, figname)
 
-                for id, format, dpi in all_formats:
-                    outpath = os.path.join(self.outdir, '%s.%s' % (outname, format))
+            for id, format, dpi in all_formats:
+                outpath = os.path.join(self.outdir, '%s.%s' % (outname, format))
 
-                    try:
-                        R.ggsave(outpath, plot=pp, dpi=dpi)
-                    except rpy2.rinterface.RRuntimeError as msg:
-                        raise
+                try:
+                    R.ggsave(outpath, plot=pp, dpi=dpi)
+                except rpy2.rinterface.RRuntimeError as msg:
+                    raise
 
-                    # width, height = 3 * dpi, 3 * dpi
-                    # if format.endswith("png"):
-                    #     R.png(outpath,
-                    #            width = width,
-                    #            height = height)
-                    # elif format.endswith("svg"):
-                    #     R.svg(outpath)
-                    # elif format.endswith("eps"):
-                    #     R.postscript(outpath)
-                    # elif format.endswith("pdf"):
-                    #     R.pdf(outpath)
-                    # R.plot(pp)
-                    # R["dev.off"]()
+                # width, height = 3 * dpi, 3 * dpi
+                # if format.endswith("png"):
+                #     R.png(outpath,
+                #            width = width,
+                #            height = height)
+                # elif format.endswith("svg"):
+                #     R.svg(outpath)
+                # elif format.endswith("eps"):
+                #     R.postscript(outpath)
+                # elif format.endswith("pdf"):
+                #     R.pdf(outpath)
+                # R.plot(pp)
+                # R["dev.off"]()
 
-                # create the text element
-                rst_output = Utils.buildRstWithImage(outname,
-                                                     self.outdir,
-                                                     self.rstdir,
-                                                     self.builddir,
-                                                     self.srcdir,
-                                                     additional_formats,
-                                                     self.tracker_id,
-                                                     self.links,
-                                                     self.display_options)
+            # create the text element
+            rst_output = Utils.buildRstWithImage(outname,
+                                                 self.outdir,
+                                                 self.rstdir,
+                                                 self.builddir,
+                                                 self.srcdir,
+                                                 additional_formats,
+                                                 self.tracker_id,
+                                                 self.links,
+                                                 self.display_options)
 
-                map_figure2text["#$ggplot %s$#" % figname] = rst_output
+            map_figure2text["#$ggplot %s$#" % figname] = rst_output
 
         return map_figure2text
