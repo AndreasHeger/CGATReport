@@ -80,9 +80,8 @@ for requirement in (l.strip() for l in open('requires.txt')
     install_requires.append(requirement)
 
 if major == 2:
-    install_requires.extend(['web.py>=0.37',
-                             'xlwt>=0.7.4',
-                             'matplotlib-venn>=0.5'])
+    install_requires.extend(['matplotlib-venn>=0.5'])
+                             
 elif major == 3:
     pass
 

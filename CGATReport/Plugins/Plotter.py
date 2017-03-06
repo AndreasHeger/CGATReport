@@ -1389,7 +1389,7 @@ class LinePlot(Renderer, Plotter):
                              nplotted)
                 nplotted += 1
 
-                self.legend.append(path2str(key) + "/" + column)
+                self.legend.append(path2str(key) + "/" + path2str(column))
 
         self.finishPlot(fig, dataframe, path)
 
@@ -2176,7 +2176,6 @@ class PlotByRow(Renderer, Plotter):
         Plotter.__init__(self, *args, **kwargs)
 
     def render(self, dataframe, path):
-
         blocks = ResultBlocks()
         for title, row in dataframe.iterrows():
             row = row[row.notnull()]
@@ -2350,13 +2349,14 @@ class GalleryPlot(PlotByRow):
         PlotByRow.__init__(self, *args, **kwargs)
 
     def plot(self, headers, values, path):
-
         blocks = ResultBlocks()
         dataseries = dict(list(zip(headers, values)))
-        try:
+        if "filename" in dataseries:
             # return value is a series
             filename = dataseries['filename']
-        except KeyError:
+        elif len(values) == 1:
+            filename = values[0]
+        else:
             self.warn(
                 "no 'filename' key in path %s" % (path2str(path)))
             return blocks

@@ -15,7 +15,6 @@ seaborn>=0.7.1
 six>=1.10.0
 sphinx>=1.0.5
 sqlalchemy>=1.1
-xlwt>=0.7.4
 
 # Optional/obsolete dependencies
 # rpy2 now an optional module

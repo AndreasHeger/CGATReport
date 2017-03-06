@@ -25,7 +25,7 @@ from math import log
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReport.DataTree import path2str
 from CGATReport import Utils, DataTree
-from CGATReport.Types import force_decode, get_encoding, force_dataframe_encode
+from CGATReport.Types import force_decode, get_encoding, force_dataframe_encode, to_string
 from CGATReport.Component import Component
 from CGATReport import CorrespondenceAnalysis
 
@@ -89,6 +89,9 @@ class Renderer(Component):
     # the build environment
     build_environment = None
 
+    # collectors
+    collectors = None
+
     def __init__(self, *args, **kwargs):
         """create an Renderer object using an instance of
         a:class:`Tracker.Tracker`.
@@ -125,8 +128,25 @@ class Renderer(Component):
         '''
         result = ResultBlocks()
 
+        # FIXME: the workflow below is overly complicated, result of
+        # legacy code, needs updating.
+        map_figure2text = {}
+        for dataframe, path in self.split_dataframe(dataframe, path):
+            r = self.render(dataframe, path)
+            if not isinstance(r, ResultBlocks):
+                raise ValueError("rendering should return ResultBlocks, received {} instead".format(
+                    type(r)))
+            if self.collectors:
+                for collector in self.collectors:
+                    map_figure2text.update(collector.collect(r))
+            r.updatePlaceholders(map_figure2text)
+            result.extend(r)
+        return result
+
+    def split_dataframe(self, dataframe, path):
+
         if not self.split_at:
-            result.extend(self.render(dataframe, path))
+            yield(dataframe, path)
         else:
             # split dataframe at first index
             level = Utils.getGroupLevels(dataframe)
@@ -144,10 +164,10 @@ class Renderer(Component):
                 columns = [c for c in columns if c not in always]
                 for x in range(0, len(columns), self.split_at):
                     # extract a set of columns
-                    result.extend(self.render(
+                    yield(
                         dataframe.loc[:, always +
                                       columns[x:x + self.split_at]],
-                        path))
+                        path)
             # split dataframe along index
             elif len(grouper) >= self.split_at:
                 # build groups
@@ -188,29 +208,14 @@ class Renderer(Component):
                         continue
                     first = False
 
-                    df = pandas.concat(
-                        [x[1] for x in group])
+                    df = pandas.concat([x[1] for x in group])
 
                     # reconcile index names
                     df.index.names = dataframe.index.names
-                    result.extend(self.render(df, path))
+                    yield (df,path)
             else:
                 # do not split dataframe
-                result.extend(self.render(dataframe, path))
-
-        return result
-
-    def toString(self, value):
-        '''returns a number as string
-
-        If not a number, return empty string.'''
-
-        try:
-            return self.format % value
-        except TypeError:
-            return ""
-        except ValueError:
-            return "nan"
+                yield (dataframe, path)
 
     def set_paths(self, rst_dir, src_dir, build_dir):
         '''set document paths. These are relevant to determine the
@@ -231,6 +236,10 @@ class Renderer(Component):
     def set_build_environment(self, env):
         '''set the build environment.'''
         self.build_environment = env
+
+
+    def set_collectors(self, collectors):
+        self.collectors = collectors
 
 
 class DataFrame(Renderer):
@@ -1216,7 +1225,7 @@ class MatrixBase:
             lines.append(
                 '   "%s","%s"' %
                 (rows[row], '","'.join(
-                    [self.toString(x) for x in matrix[row]])))
+                    [to_string(x, format=self.format) for x in matrix[row]])))
         lines.append("")
 
         if path is None:
@@ -1486,6 +1495,9 @@ class DataTreeRenderer(object):
 
     def __call__(self, data):
         return self.render(data)
+
+    def set_collectors(self, collectors):
+        self.collectors = collectors
 
 
 class User(DataTreeRenderer):

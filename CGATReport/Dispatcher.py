@@ -2,6 +2,7 @@ import re
 import traceback
 import itertools
 import pandas
+import numpy
 
 from CGATReport.ResultBlock import ResultBlocks
 from CGATReport import DataTree
@@ -21,7 +22,6 @@ MAX_PATH_NESTING = 5
 
 
 class Dispatcher(Component.Component):
-
     """Dispatch the directives in the ``:report:`` directive
     to a:class:`Tracker`, class:`Transformer` and:class:`Renderer`.
 
@@ -122,6 +122,7 @@ class Dispatcher(Component.Component):
 
         self.mInputTracks = as_list(kwargs.get("tracks", None))
         self.mInputSlices = as_list(kwargs.get("slices", None))
+        self.mInputPaths = as_list(kwargs.get("paths", None))
         self.restrict_paths = as_list(kwargs.get("restrict", None))
         self.exclude_paths = as_list(kwargs.get("exclude", None))
         self.mColumns = as_list(kwargs.get("columns", None))
@@ -131,7 +132,6 @@ class Dispatcher(Component.Component):
 
         # TODO: indicate if tracker is parameterized
         self.tracker_options = False
-
 
     def getData(self, path):
         """get data for track and slice. Save data in persistent cache for
@@ -277,6 +277,12 @@ class Dispatcher(Component.Component):
             if len(datapaths) >= 2:
                 datapaths[1] = _filter(datapaths[1], self.mInputSlices)
 
+        if self.mInputPaths:
+            for x in range(len(datapaths)):
+                l = _filter(datapaths[x], self.mInputPaths)
+                if len(l) > 0:
+                    datapaths[x] = l
+
         return datapaths
 
     def collect(self):
@@ -392,13 +398,25 @@ class Dispatcher(Component.Component):
         is_hierarchical = isinstance(self.data.index,
                                      pandas.core.index.MultiIndex)
         if is_hierarchical:
-            keep = [any([self._match(x, path_patterns) for x in labels])
-                    for labels in self.data.index]
+            if mode == "restrict":
+                keep = [True] * len(self.data.index)
+                for pattern in path_patterns:
+                    keep = numpy.logical_and(
+                        keep,
+                        [any([self._match(x, [pattern]) for x in labels])
+                         for labels in self.data.index])
+            elif mode == "exclude":
+                keep = [False] * len(self.data.index)
+                for pattern in path_patterns:
+                    keep = numpy.logical_or(
+                        keep,
+                        [any([self._match(x, [pattern]) for x in labels])
+                         for labels in self.data.index])
         else:
             keep = [self._match(x, path_patterns) for x in self.data.index]
 
-        if mode == "exclude":
-            keep = [not x for x in keep]
+            if mode == "exclude":
+                keep = [not x for x in keep]
 
         self.data = self.data[keep]
 
@@ -544,11 +562,22 @@ class Dispatcher(Component.Component):
             index_columns = self.set_index
 
         dataframe.reset_index(inplace=True)
-        if self.include_columns:
-            new_columns = self.include_columns
+        is_hierarchical = isinstance(dataframe.columns,
+                                     pandas.core.index.MultiIndex)
+        if is_hierarchical:
+            if self.include_columns:
+                # will this work?
+                new_columns = self.include_columns
+            else:
+                new_columns = [
+                    x for x in dataframe.columns if not
+                    numpy.intersect1d(x, index_columns)]
         else:
-            new_columns = [
-                x for x in dataframe.columns if x not in index_columns]
+            if self.include_columns:
+                new_columns = self.include_columns
+            else:
+                new_columns = [
+                    x for x in dataframe.columns if x not in index_columns]
 
         if self.exclude_columns:
             new_columns = [
@@ -594,7 +623,7 @@ class Dispatcher(Component.Component):
             # no grouping for renderers that will accept
             # a dataframe with any level of indices and no explicit
             # grouping has been asked for.
-            results.append(self.renderer(dataframe, path=()))
+            results.extend(self.renderer(dataframe, path=()))
         else:
             level = Utils.getGroupLevels(
                 dataframe,
@@ -606,12 +635,11 @@ class Dispatcher(Component.Component):
             for key, work in dataframe.groupby(level=level):
 
                 try:
-                    results.append(self.renderer(work,
+                    results.extend(self.renderer(work,
                                                  path=key))
                 except:
                     self.error("%s: exception in rendering" % self)
-                    results.append(
-                        ResultBlocks(Utils.buildException("rendering")))
+                    results.append(Utils.buildException("rendering"))
 
         if len(results) == 0:
             self.warn("renderer returned no data.")
@@ -628,7 +656,7 @@ class Dispatcher(Component.Component):
             self.parseArguments(*args, **kwargs)
         except:
             self.error("%s: exception in parsing" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("parsing")))
+            return ResultBlocks(Utils.buildException("parsing"))
 
         # collect no data if tracker is the empty tracker
         # and go straight to rendering
@@ -638,8 +666,7 @@ class Dispatcher(Component.Component):
                 # type(Tracker.Empty) == CGATReport.Tracker.Empty
                 # type(self.tracker) == Tracker.Empty
                 # if isinstance(self.tracker, Tracker.Empty):
-                result = self.renderer()
-                return ResultBlocks(result)
+                return self.renderer()
         except AttributeError:
             # for function trackers
             pass
@@ -651,8 +678,8 @@ class Dispatcher(Component.Component):
             self.collect()
         except Exception as ex:
             self.error("%s: exception in collection: %s" % (self, str(ex)))
-            return ResultBlocks(ResultBlocks(
-                Utils.buildException("collection")))
+            return ResultBlocks(
+                Utils.buildException("collection"))
         finally:
             self.debug("profile: finished: tracker: %s" % (self.tracker))
 
@@ -668,11 +695,11 @@ class Dispatcher(Component.Component):
         # directly. Note that no transformations will be applied.
         if isinstance(self.renderer, Renderer.User):
             results = ResultBlocks(title="main")
-            results.append(self.renderer(self.tree))
+            results.extend(self.renderer(self.tree))
             return results
         elif isinstance(self.renderer, Renderer.Debug):
             results = ResultBlocks(title="main")
-            results.append(self.renderer(self.tree))
+            results.extend(self.renderer(self.tree))
             return results
 
         # merge all data to hierarchical indexed dataframe
@@ -699,8 +726,14 @@ class Dispatcher(Component.Component):
             self.transform()
         except:
             self.error("%s: exception in transformation" % self)
-            return ResultBlocks(ResultBlocks(
-                Utils.buildException("transformation")))
+            return ResultBlocks(
+                Utils.buildException("transformation"))
+
+        try:
+            self.reframe()
+        except:
+            self.error("%s: exception in reframing" % self)
+            return ResultBlocks(Utils.buildException("reframing"))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after transformation: %i data_paths: %s" %
@@ -710,8 +743,8 @@ class Dispatcher(Component.Component):
             self.filterPaths(self.restrict_paths, mode="restrict")
         except:
             self.error("%s: exception in restrict" % self)
-            return ResultBlocks(ResultBlocks(
-                Utils.buildException("restrict")))
+            return ResultBlocks(
+                Utils.buildException("restrict"))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after restrict: %i data_paths: %s" %
@@ -721,7 +754,7 @@ class Dispatcher(Component.Component):
             self.filterPaths(self.exclude_paths, mode="exclude")
         except:
             self.error("%s: exception in exclude" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("exclude")))
+            return ResultBlocks(Utils.buildException("exclude"))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after exclude: %i data_paths: %s" %
@@ -735,12 +768,6 @@ class Dispatcher(Component.Component):
         #     self.error("%s: exception in pruning" % self)
         # return ResultBlocks(ResultBlocks(Utils.buildException("pruning")))
 
-        try:
-            self.reframe()
-        except:
-            self.error("%s: exception in reframing" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("reframing")))
-
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after pruning: %i data_paths: %s" %
         #           (self, len(data_paths), str(data_paths)))
@@ -748,7 +775,7 @@ class Dispatcher(Component.Component):
             self.group()
         except:
             self.error("%s: exception in grouping" % self)
-            return ResultBlocks(ResultBlocks(Utils.buildException("grouping")))
+            return ResultBlocks(Utils.buildException("grouping"))
 
         # data_paths = DataTree.getPaths(self.data)
         # self.debug("%s: after grouping: %i data_paths: %s" %
@@ -760,8 +787,8 @@ class Dispatcher(Component.Component):
                 result = self.render()
             except:
                 self.error("%s: exception in rendering" % self)
-                return ResultBlocks(ResultBlocks(
-                    Utils.buildException("rendering")))
+                return ResultBlocks(
+                    Utils.buildException("rendering"))
             finally:
                 self.debug("profile: finished: renderer: %s" % (self.renderer))
         else:

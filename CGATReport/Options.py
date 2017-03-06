@@ -31,6 +31,7 @@ def get_option_map():
             'exclude-columns': directives.unchanged,
             'tracks': directives.unchanged,
             'slices': directives.unchanged,
+            'paths': directives.unchanged,
             'layout': directives.unchanged,
             'restrict': directives.unchanged,
             'exclude': directives.unchanged,

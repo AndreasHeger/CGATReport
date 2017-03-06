@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from collections import OrderedDict as odict
 
+
 def ExampleWithoutData():
     '''example taken from matplotlib gallery.'''
     N = 5

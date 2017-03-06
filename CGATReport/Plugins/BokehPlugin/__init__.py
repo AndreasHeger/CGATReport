@@ -21,16 +21,7 @@ class BokehPlugin(Component):
         Component.__init__(self, *args, **kwargs)
 
     def collect(self,
-                blocks,
-                template_name,
-                outdir,
-                rstdir,
-                builddir,
-                srcdir,
-                content,
-                display_options,
-                tracker_id,
-                links={}):
+                blocks):
         '''collect rst output from result blocks.
 
         '''
@@ -42,34 +33,34 @@ class BokehPlugin(Component):
 
         figid = 10
 
-        for xblocks in blocks:
-            for block in xblocks:
-                if not hasattr(block, "bokeh"):
-                    continue
-                figid = block.bokeh._id
-                res = bokeh.resources.CDN
-                script_path = os.path.join(
-                    '_static/report_directive/', "%s.js" % figid)
+        for block in blocks:
+            if not hasattr(block, "bokeh"):
+                continue
+            
+            figid = block.bokeh._id
+            res = bokeh.resources.CDN
+            script_path = os.path.join(
+                '_static/report_directive/', "%s.js" % figid)
 
-                js_txt, script_txt = bokeh.embed.autoload_static(
-                    block.bokeh, res, script_path)
+            js_txt, script_txt = bokeh.embed.autoload_static(
+                block.bokeh, res, script_path)
 
-                # make sure to add the '/' at the end
-                # script = block.bokeh.create_html_snippet(
-                #     server=False,
-                #     embed_base_url='_static/report_directive/',
-                #     embed_save_loc=outdir,
-                #     static_path='_static/')
+            # make sure to add the '/' at the end
+            # script = block.bokeh.create_html_snippet(
+            #     server=False,
+            #     embed_base_url='_static/report_directive/',
+            #     embed_save_loc=outdir,
+            #     static_path='_static/')
 
-                with open(script_path, "w") as outf:
-                    outf.write(js_txt)
+            with open(script_path, "w") as outf:
+                outf.write(js_txt)
 
-                text = """.. raw:: html
+            text = """.. raw:: html
 
    <div><p>
          %s
    </p></div>
 """ % script_txt
 
-                map_figure2text["#$bkh %s$#" % figid] = text
+            map_figure2text["#$bkh %s$#" % figid] = text
         return map_figure2text

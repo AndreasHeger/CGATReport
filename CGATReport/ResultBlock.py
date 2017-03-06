@@ -20,14 +20,14 @@ class ResultBlock(object):
 
     """
 
-    def __init__(self, text, title, preamble="", postamble=""):
+    def __init__(self, text, title="", preamble="", postamble=""):
         assert isinstance(
             text, string_types), \
             "created ResultBlock without text, but %s" % str(type(text))
-        assert isinstance(
-            title, string_types), \
-            "created ResultBlock without title, but %s" % str(title)
-        assert title is not None
+        if title:
+            assert isinstance(
+                title, string_types), \
+                "created ResultBlock without title, but %s" % str(title)
         assert text is not None
         self.text = text
         self.title = title
@@ -80,9 +80,9 @@ class ResultBlock(object):
                 self.text = self.text.replace(pattern,
                                               map_old2new[pattern])
         if len(patterns) == 0:
-            self.text = map_old2new["default-prefix"] +\
+            self.text = map_old2new.get("default-prefix", "") +\
                 self.text +\
-                map_old2new["default-suffix"]
+                map_old2new.get("default-suffix", "")
 
     def updateTitle(self, title, mode="prefix"):
         if not self.title:
@@ -142,10 +142,18 @@ class ResultBlocks(object):
     __slots__ = ["_data", "title"]
 
     def __init__(self, block=None, title=None):
-        object.__setattr__(self, "_data", [])
-        object.__setattr__(self, "title", title)
+
+        self.title = title
         if block:
-            self._data.append(block)
+            if isinstance(block, ResultBlock):
+                self._data = [block]
+            elif isinstance(block, list) and isinstance(block[0], ResultBlock):
+                self._data = block
+            else:
+                raise ValueError("expected ResultBlock or list of ResultBlock, but got {}".format(
+                    type(block)))
+        else:
+            self._data = []
 
     def __iter__(self):
         return self._data.__iter__()
@@ -175,11 +183,17 @@ class ResultBlocks(object):
         for block in self._data:
             block.updateTitle(title, mode)
 
-    def __getattr__(self, name):
-        return getattr(self._data, name)
+    def append(self, value):
+        if not isinstance(value, ResultBlock):
+            raise ValueError("appending not a ResultBlock: {}".format(
+                type(value)))
+        self._data.append(value)
 
-    def __setattr__(self, name, value):
-        setattr(self._data, name, value)
+    def extend(self, values):
+        if not isinstance(values, ResultBlocks):
+            raise ValueError("extending is not a ResultBlocks: {}".format(
+                type(values)))
+        self._data.extend(values)
 
     def clearPostamble(self):
         for block in self._data:
