@@ -25,7 +25,7 @@ sqlalchemy>=1.1
 # Disabled, as it requires pytz==2013b, which
 # conflicts with other packages that require a
 # more recent pytz.
-# bokeh>=0.7.0
+bokeh>=0.12.4
 
 # patsy>=0.2.1
 # statsmodels > 0.6.1 required for python3.5 functionality, but issue with numpy.

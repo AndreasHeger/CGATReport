@@ -18,7 +18,6 @@ try:
     import bokeh.plotting
     import bokeh.embed
     import bokeh.mpl
-    import bokeh.mplexporter.exporter
     HAVE_BOKEH = True
 except ImportError:
     HAVE_BOKEH = False
@@ -108,7 +107,7 @@ class MatplotlibPlugin(Collector):
 
             elif HAVE_BOKEH and \
                     Utils.PARAMS.get("report_mpl", None) == "bokeh":
-
+                
                 outpath = os.path.join(
                     self.outdir,
                     '%s.html' % (outname))
@@ -116,20 +115,16 @@ class MatplotlibPlugin(Collector):
 
                 # (try to) convert to bokeh figure
                 try:
-                    # pd_job - use pandas object
-                    # xkcd - use xkcd style
-                    renderer = bokeh.mpl.BokehRenderer(pd_obj=True,
-                                                       xkcd=False)
-                    exporter = bokeh.mplexporter.exporter.Exporter(renderer)
-                    exporter.run(figure)
-                    bpl = renderer.fig
-
+                    bokeh_figure = bokeh.mpl.to_bokeh(figure,
+                                                      use_pandas=True,
+                                                      xkcd=False)
+                    
                 except NotImplementedError:
                     # fall back to matplotlib
                     is_html = False
 
                 if is_html:
-                    bokeh_id = bpl._id
+                    bokeh_id = bokeh_figure._id
                     res = bokeh.resources.CDN
                     script_path = os.path.join(
                         '_static/report_directive/',
@@ -137,7 +132,7 @@ class MatplotlibPlugin(Collector):
 
                     # get js figure and html snippet
                     js_text, script_text = bokeh.embed.autoload_static(
-                        bpl, res, script_path)
+                        bokeh_figure, res, script_path)
 
                     with open(script_path, "w") as outf:
                         outf.write(js_text)

@@ -1,5 +1,6 @@
 import os
 from CGATReport.Component import Component
+from CGATReport.Utils import indent
 
 try:
     import bokeh.embed
@@ -36,7 +37,7 @@ class BokehPlugin(Component):
         for block in blocks:
             if not hasattr(block, "bokeh"):
                 continue
-
+            
             figid = block.bokeh._id
             res = bokeh.resources.CDN
             script_path = os.path.join(
@@ -58,9 +59,9 @@ class BokehPlugin(Component):
             text = """.. raw:: html
 
    <div><p>
-         %s
+{}
    </p></div>
-""" % script_txt
+""".format(indent(script_txt, 8))
 
             map_figure2text["#$bkh %s$#" % figid] = text
         return map_figure2text
