@@ -107,7 +107,7 @@ class MatplotlibPlugin(Collector):
 
             elif HAVE_BOKEH and \
                     Utils.PARAMS.get("report_mpl", None) == "bokeh":
-                
+
                 outpath = os.path.join(
                     self.outdir,
                     '%s.html' % (outname))
@@ -118,7 +118,7 @@ class MatplotlibPlugin(Collector):
                     bokeh_figure = bokeh.mpl.to_bokeh(figure,
                                                       use_pandas=True,
                                                       xkcd=False)
-                    
+
                 except NotImplementedError:
                     # fall back to matplotlib
                     is_html = False
