@@ -2351,7 +2351,7 @@ class GalleryPlot(PlotByRow):
     def plot(self, headers, values, path):
         blocks = ResultBlocks()
         dataseries = dict(list(zip(headers, values)))
-        if "filename" in "dataseries":
+        if "filename" in dataseries:
             # return value is a series
             filename = dataseries['filename']
         elif len(values) == 1:

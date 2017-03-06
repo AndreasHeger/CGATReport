@@ -140,9 +140,8 @@ class BokehPlotter():
 
         returns the current figure.
         """
-        bk.figure()
+        self.bokeh_figure = bk.figure()
         bk.output_file('/dev/null')
-        bk.hold()
 
     def endPlot(self, plts, legends, path):
         """close plots.
@@ -151,13 +150,13 @@ class BokehPlotter():
         title = path2str(path)
         figid = 10
         lines = []
-        plot = self.plots[-1]
-        figid = plot._id
+        figid = self.bokeh_figure._id
         lines.append("")
         lines.append("#$bkh %s$#" % figid)
         lines.append("")
         r = ResultBlock("\n".join(lines), title=title)
-        r.bokeh = self.plots[-1]
+        r.bokeh = self.bokeh_figure
+
         return ResultBlocks(r)
 
 
@@ -246,11 +245,11 @@ class LinePlot(Renderer, BokehPlotter):
 
         color, linestyle, marker = self.getFormat(nplotted)
 
-        self.plots.append(bk.line(
+        self.bokeh_figure.line(
             xxvals,
             yyvals,
             color=color,
-            line_width=2))
+            line_width=2)
         # other options:
         # title=...
         # legend=...

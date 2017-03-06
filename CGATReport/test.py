@@ -596,7 +596,7 @@ def main(argv=None, **kwargs):
                         r.xls.save(outpath)
                     elif hasattr(r, 'bokeh'):
                         import bokeh.plotting as bk
-                        bk.show()
+                        bk.show(r.bokeh)
 
     ######################################################
     # build page

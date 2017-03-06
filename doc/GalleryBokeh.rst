@@ -3,7 +3,7 @@ Bokeh plotting
 ===============
 
 .. report:: Trackers.ArrayDataExample
-   :render: b-line-plot
+   :render: bk-line-plot
    :as-lines:
 
    Line plots with Bokeh

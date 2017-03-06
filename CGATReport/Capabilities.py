@@ -171,7 +171,7 @@ CapabilityMap = {
         "r-ggplot":
         CGATReport.Plugins.RPlotter.GGPlot,
         # Bokeh plots
-        "b-line-plot":
+        "bk-line-plot":
         CGATReport.Plugins.BokehPlotter.LinePlot,
         # backwards compatibility
         "box-plot":
