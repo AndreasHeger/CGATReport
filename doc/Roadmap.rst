@@ -4,6 +4,11 @@
 Release Notes
 =============
 
+Version 0.7.3
+=============
+
+* collect images sooner after creation
+
 Version 0.7.1
 =============
 
