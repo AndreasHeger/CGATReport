@@ -4,6 +4,11 @@
 Release Notes
 =============
 
+Version 0.7.4
+=============
+
+* activate bokeh plotting
+
 Version 0.7.3
 =============
 
