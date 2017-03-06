@@ -36,7 +36,7 @@ class BokehPlugin(Component):
         for block in blocks:
             if not hasattr(block, "bokeh"):
                 continue
-            
+
             figid = block.bokeh._id
             res = bokeh.resources.CDN
             script_path = os.path.join(

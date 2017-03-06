@@ -1,12 +1,13 @@
 from CGATReport.Component import Component
 
+
 class Collector(Component):
 
     capabilities = ['collect']
 
     def __init__(self, *args, **kwargs):
         Component.__init__(self, *args, **kwargs)
-        
+
         self.template_name = kwargs.get("template_name")
         self.outdir = kwargs.get("outdir")
         self.rstdir = kwargs.get("rstdir")

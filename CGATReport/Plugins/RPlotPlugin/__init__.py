@@ -40,7 +40,7 @@ class RPlotPlugin(Collector):
             return {}
 
         map_figure2text = {}
-        
+
         # determine the image formats to create
         default_format, additional_formats = Utils.getImageFormats(
             self.display_options)
