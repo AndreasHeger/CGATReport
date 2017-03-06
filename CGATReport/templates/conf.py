@@ -38,7 +38,6 @@ cgatreport_show_errors = True
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.coverage',
-              'CGATReport.only_directives',
               'CGATReport.report_directive',
               'CGATReport.errors_directive',
               'CGATReport.warnings_directive',
