@@ -21,12 +21,6 @@ from docutils.parsers.rst import directives
 
 import numpy
 import matplotlib
-# matplotlib.use('Agg', warn=False)
-# This does not work:
-# Matplotlib might be imported beforehand? plt.switch_backend did not
-# change the backend. The only option I found was to change my own
-# matplotlibrc.
-
 import matplotlib.colors
 import matplotlib.pyplot as plt
 

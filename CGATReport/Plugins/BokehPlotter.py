@@ -9,6 +9,7 @@ from docutils.parsers.rst import directives
 import re
 try:
     import bokeh.plotting as bk
+    from bokeh.palettes import brewer
     HAS_BOKEH = True
 except ImportError:
     HAS_BOKEH = False
@@ -134,6 +135,8 @@ class BokehPlotter():
 
         self.xformat = kwargs.get("xformat", None)
         self.yformat = kwargs.get("yformat", None)
+
+        self.format_colors = brewer["Spectral"][10]
 
     def startPlot(self, **kwargs):
         """prepare everything for a plot.
