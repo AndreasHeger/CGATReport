@@ -173,11 +173,10 @@ CapabilityMap = {
         # Bokeh plots
         "bk-line-plot":
         CGATReport.Plugins.BokehPlotter.LinePlot,
-        # backwards compatibility
-        "box-plot":
-        CGATReport.Plugins.Seaborn.BoxPlot,
-        "violin-plot":
-        CGATReport.Plugins.Seaborn.ViolinPlot
+        "bk-box-plot":
+        CGATReport.Plugins.BokehPlotter.BoxPlot,
+        "bk-scatter-plot":
+        CGATReport.Plugins.BokehPlotter.ScatterPlot,
     }
 }
 

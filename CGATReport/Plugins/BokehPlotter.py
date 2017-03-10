@@ -4,18 +4,20 @@ from CGATReport.Plugins.Plotter import parseRanges
 from CGATReport import Stats
 from CGATReport.DataTree import path2str
 
+import copy
 from docutils.parsers.rst import directives
 
 import re
 try:
     import bokeh.plotting as bk
     from bokeh.palettes import brewer
+    import bokeh.charts
     HAS_BOKEH = True
 except ImportError:
     HAS_BOKEH = False
 
 
-class BokehPlotter():
+class BokehPlotter(object):
 
     """Base class for Renderers that do simple 2D plotting.
 
@@ -98,6 +100,7 @@ class BokehPlotter():
         ('legend-location',  directives.unchanged),
         ('xformat', directives.unchanged),
         ('yformat', directives.unchanged),
+        ('kwargs', directives.unchanged),
     )
 
     format_colors = "bgrcmk"
@@ -138,29 +141,57 @@ class BokehPlotter():
 
         self.format_colors = brewer["Spectral"][10]
 
+        self.kwargs = kwargs.get("kwargs", "")
+
+    def execute(self, statement, g, l):
+        """execute bokeh statement. Inserts kwargs."""
+        statement = statement.strip()
+        assert statement.endswith(")")
+        if self.kwargs:
+            statement = statement[:-1] + ", %s)" % self.kwargs
+
+        ll = copy.copy(l)
+        gl = copy.copy(g)
+        plot = None
+        s = "plot = %s" % statement
+        try:
+            exec(s, gl, ll)
+        except Exception as msg:
+            raise Exception(
+                "bokeh raised error for statement '%s': msg=%s" %
+                (statement, msg))
+        plot = ll["plot"]
+
+        return plot
+
+    def build_kwargs_dict():
+        pass
+
     def startPlot(self, **kwargs):
         """prepare everything for a plot.
 
         returns the current figure.
         """
-        self.bokeh_figure = bk.figure()
-        bk.output_file('/dev/null')
+        pass
 
-    def endPlot(self, plts, legends, path):
+    def endPlot(self, plots, legends, path):
         """close plots.
         """
 
+        result = ResultBlocks()
         title = path2str(path)
-        figid = 10
-        lines = []
-        figid = self.bokeh_figure._id
-        lines.append("")
-        lines.append("#$bkh %s$#" % figid)
-        lines.append("")
-        r = ResultBlock("\n".join(lines), title=title)
-        r.bokeh = self.bokeh_figure
 
-        return ResultBlocks(r)
+        for plot in plots:
+            figid = plot._id
+            lines = []
+            lines.append("")
+            lines.append("#$bkh %s$#" % figid)
+            lines.append("")
+            r = ResultBlock("\n".join(lines), title=title)
+            r.bokeh = plot
+            result.append(r)
+
+        return result
 
 
 class LinePlot(Renderer, BokehPlotter):
@@ -214,6 +245,30 @@ class LinePlot(Renderer, BokehPlotter):
         self.split_at = 10
 
         # self.format_colors = bk.brewer["Spectral"][10]
+
+    def startPlot(self, **kwargs):
+        """prepare everything for a plot.
+
+        returns the current figure.
+        """
+        self.bokeh_figure = bk.figure()
+        bk.output_file('/dev/null')
+
+    def endPlot(self, plts, legends, path):
+        """close plots.
+        """
+
+        title = path2str(path)
+        figid = 10
+        lines = []
+        figid = self.bokeh_figure._id
+        lines.append("")
+        lines.append("#$bkh %s$#" % figid)
+        lines.append("")
+        r = ResultBlock("\n".join(lines), title=title)
+        r.bokeh = self.bokeh_figure
+
+        return ResultBlocks(r)
 
     def initPlot(self, fig, dataseries, path):
         '''initialize plot.'''
@@ -326,3 +381,51 @@ class LinePlot(Renderer, BokehPlotter):
         self.finishPlot(fig, dataframe, path)
 
         return self.endPlot(self.plots, self.legend, path)
+
+
+class BoxPlot(Renderer, BokehPlotter):
+
+    """Write a set of box plots.
+
+    This:class:`Renderer` requires two levels.
+
+    labels[dict] / data[array]
+    """
+
+    options = Renderer.options +\
+              BokehPlotter.options
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs)
+        BokehPlotter.__init__(self, *args, **kwargs)
+
+    def render(self, dataframe, path):
+        self.startPlot()
+        plts = [self.execute("bokeh.charts.BoxPlot(dataframe)",
+                             globals(), locals())]
+        return self.endPlot(plts, [], path)
+
+
+class ScatterPlot(Renderer, BokehPlotter):
+
+    """Write a set of box plots.
+
+    This:class:`Renderer` requires two levels.
+
+    labels[dict] / data[array]
+    """
+
+    options = Renderer.options +\
+              BokehPlotter.options
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs)
+        BokehPlotter.__init__(self, *args, **kwargs)
+
+    def render(self, dataframe, path):
+        self.startPlot()
+
+        plts = [self.execute("bokeh.charts.Scatter(dataframe)",
+                             globals(), locals())]
+
+        return self.endPlot(plts, [], path)

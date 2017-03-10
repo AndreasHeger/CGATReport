@@ -10,6 +10,9 @@ out*
 *.cache
 *.py[cod]
 
+# other
+*~
+
 # C extensions
 *.so
 

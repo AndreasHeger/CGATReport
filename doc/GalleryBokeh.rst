@@ -2,10 +2,14 @@
 Bokeh plotting
 ===============
 
+..
+   .. report:: Trackers.ArrayDataExample
+      :render: bk-line-plot
+      :as-lines:
+
+      Line plots with Bokeh
+
 .. report:: Trackers.ArrayDataExample
-   :render: bk-line-plot
-   :as-lines:
+   :render: bk-scatter-plot
 
-   Line plots with Bokeh
-
-
+   A bokeh box plot
