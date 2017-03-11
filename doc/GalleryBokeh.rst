@@ -2,6 +2,11 @@
 Bokeh plotting
 ===============
 
+.. toctree::
+
+   GalleryBokehScatterPlot.rst
+   GalleryBokehBoxPlot.rst
+
 ..
    .. report:: Trackers.ArrayDataExample
       :render: bk-line-plot
@@ -9,7 +14,3 @@ Bokeh plotting
 
       Line plots with Bokeh
 
-.. report:: Trackers.ArrayDataExample
-   :render: bk-scatter-plot
-
-   A bokeh box plot

@@ -407,8 +407,7 @@ class BoxPlot(Renderer, BokehPlotter):
 
 
 class ScatterPlot(Renderer, BokehPlotter):
-
-    """Write a set of box plots.
+    """A bokeh scatter plot
 
     This:class:`Renderer` requires two levels.
 
