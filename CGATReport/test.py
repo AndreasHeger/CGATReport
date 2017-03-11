@@ -235,6 +235,27 @@ def run(name, t, kwargs):
     print(("%s: collecting data finished" % name))
 
 
+def update_options_from_blob(kwargs, options, args):
+
+    # first of args is script name, so skip
+    args.pop(0)
+
+    if len(args) == 0:
+        return
+
+    args = [x.strip() for x in args.splitlines()]
+    if not args[0].startswith(":"):
+        options.tracker = args.pop(0)
+    for arg in args:
+        if not arg:
+            continue
+        if not arg.startswith(":"):
+            raise ValueError(
+                "parsing error, expected option to start with :, but got {}".format(arg))
+        key, value = [x.strip() for x in arg[1:].split(":", 1)]
+        kwargs[key] = value
+
+
 def main(argv=None, **kwargs):
     '''main function for test.py.
 
@@ -345,10 +366,6 @@ def main(argv=None, **kwargs):
 
     if argv:
         (options, args) = parser.parse_args(argv)
-
-        if len(args) == 2:
-            options.tracker, options.renderer = args
-
     else:
         (options, args) = parser.parse_args([])
 
@@ -370,6 +387,9 @@ def main(argv=None, **kwargs):
         os.chdir(options.workdir)
     else:
         savedir = None
+
+    if args:
+        update_options_from_blob(kwargs, options, args)
 
     Utils.update_parameters(sorted(glob.glob("*.ini")))
 

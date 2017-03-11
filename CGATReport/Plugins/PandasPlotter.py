@@ -9,7 +9,8 @@ import pandas
 
 
 class PandasPlot(Renderer, Plotter):
-    """plot using the pandas plot commands.
+
+    """Use the python ggplot libary for plotting.
     """
     options = (
         ('statement',  directives.unchanged),
@@ -39,8 +40,8 @@ class PandasPlot(Renderer, Plotter):
                 "pandas.plot() raised error for statement '%s': msg=%s" %
                 (s, msg))
 
-        self.mFigure += 1
         if self.title:
             plt.title(self.title)
         plts = [p]
+
         return self.endPlot(plts, None, path)

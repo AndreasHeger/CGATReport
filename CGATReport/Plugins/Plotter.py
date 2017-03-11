@@ -12,7 +12,7 @@ import pandas
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReport.Plugins.Renderer import Renderer, NumpyMatrix, TableMatrix
-from CGATReport.DataTree import path2str, str2path
+from CGATReport.DataTree import path2str, str2path, path2key
 from CGATReport import DataTree, Stats, Utils
 
 from collections import OrderedDict as odict
@@ -21,6 +21,12 @@ from docutils.parsers.rst import directives
 
 import numpy
 import matplotlib
+# matplotlib.use('Agg', warn=False)
+# This does not work:
+# Matplotlib might be imported beforehand? plt.switch_backend did not
+# change the backend. The only option I found was to change my own
+# matplotlibrc.
+
 import matplotlib.colors
 import matplotlib.pyplot as plt
 
@@ -282,8 +288,6 @@ class Plotter(object):
         returns the current figure.
         """
 
-        self.mFigure += 1
-
         # setting rc parameters disabled in order not interfere with seaborn
         # aesthetics
         # go to defaults
@@ -294,13 +298,15 @@ class Plotter(object):
         #     self.debug("extra plot options: %s" % str(self.mMPLRC))
         #     matplotlib.rcParams.update(self.mMPLRC)
 
-        self.mCurrentFigure = plt.figure(num=self.mFigure,
-                                         **self.mMPLFigureOptions)
+        self.mCurrentFigure = plt.figure(**self.mMPLFigureOptions)
 
         if self.title:
             plt.title(self.title)
 
         return self.mCurrentFigure
+
+    def get_figure_id(self):
+        return plt.gca().figure.number
 
     def wrapText(self, text, cliplen=20, separators=":_"):
         """wrap around text using the mathtext.
@@ -356,6 +362,8 @@ class Plotter(object):
         if not plts:
             return ResultBlocks()
 
+        figure_key = path2key(path)
+
         # convert to log-scale
         ax = plt.gca()
         # set logscale before the xlim, as it re-scales the plot.
@@ -407,7 +415,7 @@ class Plotter(object):
                     plt.plot(xvals, yvals)
             else:
                 function = self.functions[
-                    (self.mFigure - 1) % len(self.functions)]
+                    self.get_figure_id() % len(self.functions)]
                 f = eval("lambda x: %s" % function)
                 xvals = numpy.arange(xstart, xend, increment)
                 yvals = [f(x) for x in xvals]
@@ -510,7 +518,7 @@ class Plotter(object):
 
         blocks = ResultBlocks(
             ResultBlock(
-                text="#$mpl %i$#\n" % self.mFigure,
+                text="#$mpl {}.{}$#\n".format(figure_key, self.get_figure_id()),
                 title=DataTree.path2str(path),
                 preamble=preamble,
                 postamble=postamble))
@@ -552,10 +560,11 @@ class Plotter(object):
         if self.legend_location == "extra" and legends:
 
             blocks.append(
-                ResultBlock("\n".join(("#$mpl %i$#" % self.mFigure, "")),
-                            "legend"))
-            self.mFigure += 1
-            legend = plt.figure(self.mFigure, **self.mMPLFigureOptions)
+                ResultBlock("\n".join(
+                    ("#$mpl {}.{}$#".format(figure_key, self.get_figure_id())),
+                    "",
+                    "legend")))
+            legend = plt.figure(**self.mMPLFigureOptions)
             lx = legend.add_axes((0.1, 0.1, 0.9, 0.9))
             lx.set_title("Legend")
             lx.set_axis_off()
@@ -2403,7 +2412,9 @@ class GalleryPlot(PlotByRow):
             path = dataseries['name']
 
         blocks = ResultBlocks(ResultBlock("\n".join(
-            ("#$mpl %i$#" % (self.mFigure),
+            ("#$mpl {}.{}$#".format(
+                path2key(path),
+                self.get_figure_id()),
              "",
              "",
              )),

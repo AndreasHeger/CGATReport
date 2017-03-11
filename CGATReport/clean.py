@@ -224,7 +224,6 @@ def main():
             for d in dirs:
                 if os.path.exists(d):
                     shutil.rmtree(d)
-
     else:
         if options.dry_run:
             print("the following files will be deleted:")
@@ -248,16 +247,23 @@ def main():
                 if options.loglevel >= 2:
                     print("removing rst")
                 if options.loglevel >= 2:
-                    print(("sourcedir=%s" % options.path))
+                    print("sourcedir=%s" % options.path)
                 removed.extend(removeText(tracker,
                                           dry_run=options.dry_run,
                                           sourcedir=options.path,
                                           builddir=options.builddir,
                                           suffix=source_suffix))
-            print(("%i files (done)" % len(removed)))
+            print("%i files (done)" % len(removed))
             if options.loglevel >= 3:
                 print(("\n".join(removed)))
             if options.dry_run:
                 print(("\n".join(removed)))
+
+    print("removing errors and warnings cache")
+
+    for fn in glob.glob("cgatreport*cache*"):
+        os.unlink(fn)
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -22,7 +22,7 @@ class RPlotPlugin(Collector):
     def __init__(self, *args, **kwargs):
         Collector.__init__(self, *args, **kwargs)
 
-    def collect(self, blocks):
+    def collect(self, blocks, figure_key=""):
         '''collect one or more R figures.
 
         Plots are collected from all active devices.

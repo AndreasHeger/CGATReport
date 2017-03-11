@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import collections
 import itertools
+import re
 from collections import OrderedDict as odict
 import pandas
 from CGATReport import Utils
@@ -26,6 +27,13 @@ def path2str(path):
         return "/".join(map(str, path))
     except:
         return str(path)
+
+
+def path2key(path):
+    '''convert path to key.'''
+    if path is None:
+        return ""
+    return re.sub("/", "-", path2str(path))
 
 
 def str2path(s):

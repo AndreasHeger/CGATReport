@@ -110,7 +110,7 @@ class BokehPlotter(object):
 
     def __init__(self, *args, **kwargs):
         """parse option arguments."""
-
+ 
         self.mFigure = 0
 
         self.logscale = kwargs.get("logscale", None)

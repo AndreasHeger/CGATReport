@@ -8,6 +8,7 @@ from docutils.parsers.rst import directives
 import matplotlib.pyplot as plt
 import pandas
 import copy
+import warnings
 
 
 SHAPES = [
@@ -71,7 +72,8 @@ class GGPlot(Renderer, Plotter):
         dataframe.reset_index(inplace=True)
 
         if len(dataframe.dropna()) == 0:
-            return []
+            warnings.warn("dataframe is empty after dropping all NA columns")
+            return None
 
         s = "plot = ggplot(aes(%s), data=dataframe) + %s" % (self.aes, self.geom)
         ll = copy.copy(locals())
@@ -84,12 +86,11 @@ class GGPlot(Renderer, Plotter):
                 (s, msg))
         plot = ll["plot"]
 
-        self.mFigure += 1
         if self.title:
             plt.title(self.title)
 
-        # plot.make() calls plt.close() command, so create a dummy to be
-        # closed.
+        # plot.make() calls plt.close() command, so create a dummy plot that will be
+        # closed instead
         plt.figure()
         try:
             plts = [plot.make()]
@@ -97,5 +98,4 @@ class GGPlot(Renderer, Plotter):
             raise Exception(
                 "ggplot raised error on rendering for statement '%s': msg=%s" %
                 (s, msg))
-
         return self.endPlot(plts, None, path)

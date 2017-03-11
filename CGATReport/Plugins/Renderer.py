@@ -23,7 +23,7 @@ from numpy import arange
 from math import log
 
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
-from CGATReport.DataTree import path2str
+from CGATReport.DataTree import path2str, path2key
 from CGATReport import Utils, DataTree
 from CGATReport.Types import force_decode, get_encoding, force_dataframe_encode, to_string
 from CGATReport.Component import Component
@@ -133,13 +133,19 @@ class Renderer(Component):
         map_figure2text = {}
         for dataframe, path in self.split_dataframe(dataframe, path):
             r = self.render(dataframe, path)
+            if not r:
+                continue
             if not isinstance(r, ResultBlocks):
-                raise ValueError("rendering should return ResultBlocks, received {} instead".format(
-                    type(r)))
+                raise ValueError(
+                    "rendering should return ResultBlocks, "
+                    "received {} instead".format(
+                        type(r)))
             if self.collectors:
+                figure_key = path2key(path)
                 for collector in self.collectors:
-                    map_figure2text.update(collector.collect(r))
-            r.updatePlaceholders(map_figure2text)
+                    map_figure2text.update(collector.collect(
+                        r, figure_key=figure_key))
+                r.updatePlaceholders(map_figure2text)
             result.extend(r)
         return result
 

@@ -31,7 +31,7 @@ class RSTPlugin(Collector):
     def __init__(self, *args, **kwargs):
         Collector.__init__(self, *args, **kwargs)
 
-    def collect(self, blocks):
+    def collect(self, blocks, figure_key=""):
         '''collect rst output from result blocks.
 
         '''

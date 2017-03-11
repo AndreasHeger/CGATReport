@@ -177,6 +177,10 @@ CapabilityMap = {
         CGATReport.Plugins.BokehPlotter.BoxPlot,
         "bk-scatter-plot":
         CGATReport.Plugins.BokehPlotter.ScatterPlot,
+        "box-plot":
+        CGATReport.Plugins.Seaborn.BoxPlot,
+        "violin-plot":
+        CGATReport.Plugins.Seaborn.ViolinPlot,
     }
 }
 

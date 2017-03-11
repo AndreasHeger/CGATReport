@@ -22,7 +22,7 @@ class BokehPlugin(Component):
         Component.__init__(self, *args, **kwargs)
 
     def collect(self,
-                blocks):
+                blocks, figure_key=""):
         '''collect rst output from result blocks.
 
         '''

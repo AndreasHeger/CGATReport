@@ -11,7 +11,7 @@ class XLSPlugin(Collector):
     def __init__(self, *args, **kwargs):
         Collector.__init__(self, *args, **kwargs)
 
-    def collect(self, blocks):
+    def collect(self, blocks, figure_key=""):
         '''collect xls output from result blocks.
 
         xls output is written to a file and a link will be inserted at

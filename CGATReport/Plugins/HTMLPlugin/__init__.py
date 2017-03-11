@@ -8,7 +8,7 @@ class HTMLPlugin(Collector):
     def __init__(self, *args, **kwargs):
         Collector.__init__(self, *args, **kwargs)
 
-    def collect(self, blocks):
+    def collect(self, blocks, figure_key=""):
         '''collect html output from result blocks.
 
         HTML output is written to a file and a link will be inserted at
