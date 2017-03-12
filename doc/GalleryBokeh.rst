@@ -6,6 +6,7 @@ Bokeh plotting
 
    GalleryBokehScatterPlot.rst
    GalleryBokehBoxPlot.rst
+   GalleryBokehBarPlot.rst
 
 ..
    .. report:: Trackers.ArrayDataExample

@@ -1261,18 +1261,18 @@ class TransformerHistogram(TransformerAggregate):
 
 
 class TransformerMelt(Transformer):
-    '''Create a melted table
+    '''Create a melted table.
 
+    The original hierarchical index remains in-place.
     '''
 
     nlevels = None
 
     def __call__(self, data):
         ''' returns a melted table'''
-        # merge index into dataframe
-        # melt
-
-        return pandas.melt(data.reset_index(), data.index.names)
+        names = data.index.names
+        return pandas.melt(data.reset_index(),
+                           data.index.names).set_index(names)
 
 
 class TransformerPivot(Transformer):

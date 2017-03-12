@@ -428,3 +428,28 @@ class ScatterPlot(Renderer, BokehPlotter):
                              globals(), locals())]
 
         return self.endPlot(plts, [], path)
+
+
+class BarPlot(Renderer, BokehPlotter):
+    """A bokeh bar plot
+
+    This:class:`Renderer` requires two levels.
+
+    labels[dict] / data[array]
+    """
+
+    options = Renderer.options +\
+              BokehPlotter.options
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs)
+        BokehPlotter.__init__(self, *args, **kwargs)
+
+    def render(self, dataframe, path):
+        self.startPlot()
+
+        dataframe = dataframe.reset_index()
+        plts = [self.execute("bokeh.charts.Bar(dataframe)",
+                             globals(), locals())]
+
+        return self.endPlot(plts, [], path)

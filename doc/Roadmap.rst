@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+Version 0.7.5
+=============
+
+* bugfix in multi-plot generation for matplotlib plots
+* add bk-scatter-plot, bk-box-plot and bk-bar-plot
+
 Version 0.7.4
 =============
 

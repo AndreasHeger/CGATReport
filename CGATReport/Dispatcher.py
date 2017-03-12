@@ -466,10 +466,11 @@ class Dispatcher(Component.Component):
             # have a group_level attribute
             default_level = 0
 
-        groupby = self.groupby
+        groupby = re.sub(" ", "", self.groupby)
 
         if str(default_level).startswith("force"):
             groupby = default_level[len("force-"):]
+
         elif groupby == "default":
             groupby = default_level
 
@@ -485,6 +486,9 @@ class Dispatcher(Component.Component):
                 self.data = self.data.reorder_levels(
                     [1, 0] + list(range(2, nlevels)))
             self.group_level = 0
+
+        elif groupby == "track,slice":
+            self.group_level = 1
 
         elif groupby == "all":
             # group everything together
