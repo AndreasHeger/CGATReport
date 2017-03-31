@@ -243,7 +243,6 @@ class Renderer(Component):
         '''set the build environment.'''
         self.build_environment = env
 
-
     def set_collectors(self, collectors):
         self.collectors = collectors
 
@@ -1500,7 +1499,18 @@ class DataTreeRenderer(object):
         pass
 
     def __call__(self, data):
-        return self.render(data)
+
+        result = self.render(data)
+        if not isinstance(result, ResultBlocks):
+            raise ValueError("rendering should return ResultBlocks, "
+                             "received {} instead".format(
+                                 type(result)))
+        if self.collectors:
+            map_figure2text = {}
+            for collector in self.collectors:
+                map_figure2text.update(collector.collect(result))
+            result.updatePlaceholders(map_figure2text)
+        return result
 
     def set_collectors(self, collectors):
         self.collectors = collectors

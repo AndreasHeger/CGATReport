@@ -17,14 +17,14 @@ Plotting with matplotlib
 The following :term:`tracker` plots using matplotlib:
 
 .. literalinclude:: trackers/UserTrackers.py
-   :lines: 26-39
+   :pyobject: MatplotlibData
 
 The tracker creates a new figure, plots and returns a text element
 that contains a place-holder for the figure plotted. The place-holder
 is of the format ``#$mpl %i$#`` where ``%i`` is the figure number of
 the current plot.
 
-The plots are inserted  within a document as::
+The plots are inserted within a document as::
 
     .. report:: UserTrackers.MatplotlibData
        :render: user
@@ -44,7 +44,7 @@ Plotting with R
 The following :term:`tracker` plots using R:
 
 .. literalinclude:: trackers/UserTrackers.py
-   :lines: 37-54
+   :pyobject: RPlotData
 
 The tracker creates a new device, plots and returns a text element
 that contains a place-holder for the figure plotted. The place-holder

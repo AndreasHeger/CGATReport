@@ -4,6 +4,11 @@
 Release Notes
 =============
 
+Version 0.7.6
+=============
+
+* bugfix in user renderer 
+
 Version 0.7.5
 =============
 

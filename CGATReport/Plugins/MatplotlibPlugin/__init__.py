@@ -33,7 +33,7 @@ class MatplotlibPlugin(Collector):
         # set a figure size that doesn't overflow typical browser windows
         matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
 
-    def collect(self, blocks, figure_key=""):
+    def collect(self, blocks, figure_key=None):
         '''collect one or more matplotlib figures and
 
         1. save as png, hires-png and pdf
@@ -158,6 +158,10 @@ class MatplotlibPlugin(Collector):
                 is_html=is_html,
                 text=script_text)
 
-            map_figure2text["#$mpl {}.{}$#".format(figure_key, figid)] = rst_output
+            if figure_key is None:
+                f = figid
+            else:
+                f = "{}.{}".format(figure_key, figid)
+            map_figure2text["#$mpl {}$#".format(f)] = rst_output
 
         return map_figure2text

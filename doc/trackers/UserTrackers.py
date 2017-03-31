@@ -1,6 +1,4 @@
-import sys
 import os
-import re
 import random
 import glob
 
@@ -9,13 +7,10 @@ from collections import OrderedDict as odict
 from CGATReport.ResultBlock import ResultBlock, ResultBlocks
 from CGATReport import Utils
 
-import matplotlib
 from matplotlib import pyplot as plt
 
 try:
     from rpy2.robjects import r as R
-    import rpy2.robjects as ro
-    import rpy2.robjects.numpy2ri
 except ImportError:
     R = None
 
@@ -33,12 +28,7 @@ class MatplotlibData(Tracker):
         # do the plotting
         fig = plt.figure()
         plt.plot(s)
-        return odict((("text", "#$mpl %i$#" % fig.number),))
-
-
-def getCurrentRDevice():
-    '''return the numerical device id of the current device.'''
-    return R["dev.cur"]()[0]
+        return {"text": "#$mpl %i$#" % fig.number}
 
 
 class RPlotData(Tracker):
@@ -56,8 +46,9 @@ class RPlotData(Tracker):
         # do the plotting
         R.x11()
         R.plot(s, s)
-        r = {"text": "#$rpl %i$#" % getCurrentRDevice()}
-        return r
+
+        return {"text": "#$rpl %i$#" % R["dev.cur"]()[0]}
+
 
 IMAGEDIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "images")
