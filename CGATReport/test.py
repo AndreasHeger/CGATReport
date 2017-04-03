@@ -103,9 +103,17 @@ import code
 
 from builtins import str
 
-import matplotlib.pyplot as plt
-from matplotlib import _pylab_helpers
+# Work around an issue in bioconda where matplotlib requires
+# PyQT4 to be installed.
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
 
+from matplotlib import _pylab_helpers
+        
 from CGATReport.Types import force_encode
 from CGATReport import Utils
 from CGATReport.Options import get_option_map, select_and_delete_options, update_options
