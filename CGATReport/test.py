@@ -594,18 +594,17 @@ def main(argv=None, **kwargs):
 
         if result and options.do_show:
             if options.renderer.startswith("r-"):
-                for rr in result:
-                    for r in rr:
-                        if hasattr(r, 'rggplot'):
-                            from rpy2.robjects import r as R
-                            import rpy2.rinterface
-                            try:
-                                R.plot(r.rggplot)
-                            except rpy2.rinterface.RRuntimeError as msg:
-                                if re.search("object.*not found", str(msg)):
-                                    print(('%s: available columns in dataframe=%s' %
-                                           (msg,
-                                            R('''colnames(rframe)'''))))
+                for r in result:
+                    if hasattr(r, 'rggplot'):
+                        from rpy2.robjects import r as R
+                        import rpy2.rinterface
+                        try:
+                            R.plot(r.rggplot)
+                        except rpy2.rinterface.RRuntimeError as msg:
+                            if re.search("object.*not found", str(msg)):
+                                print(('%s: available columns in dataframe=%s' %
+                                       (msg,
+                                        R('''colnames(rframe)'''))))
 
                 print("press Ctrl-c to stop")
                 while 1:
