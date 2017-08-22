@@ -131,8 +131,8 @@ class Renderer(Component):
         # FIXME: the workflow below is overly complicated, result of
         # legacy code, needs updating.
         map_figure2text = {}
-        for dataframe, path in self.split_dataframe(dataframe, path):
-            r = self.render(dataframe, path)
+        for dataframe, subpath, subfig in self.split_dataframe(dataframe, path):
+            r = self.render(dataframe, subpath)
             if not r:
                 continue
             if not isinstance(r, ResultBlocks):
@@ -140,19 +140,24 @@ class Renderer(Component):
                     "rendering should return ResultBlocks, "
                     "received {} instead".format(
                         type(r)))
+            figure_key = path2key(subpath)
+        
             if self.collectors:
-                figure_key = path2key(path)
                 for collector in self.collectors:
                     map_figure2text.update(collector.collect(
-                        r, figure_key=figure_key))
-                r.updatePlaceholders(map_figure2text)
+                        r,
+                        figure_key=figure_key,
+                        subfig=subfig))
+            r.updatePlaceholders(map_figure2text)
             result.extend(r)
         return result
 
     def split_dataframe(self, dataframe, path):
 
+        subfig = 0
         if not self.split_at:
-            yield(dataframe, path)
+            yield(dataframe, path, subfig)
+            subfig += 1
         else:
             # split dataframe at first index
             level = Utils.getGroupLevels(dataframe)
@@ -173,7 +178,9 @@ class Renderer(Component):
                     yield(
                         dataframe.loc[:, always +
                                       columns[x:x + self.split_at]],
-                        path)
+                        path,
+                        subfig)
+                    subfig += 1
             # split dataframe along index
             elif len(grouper) >= self.split_at:
                 # build groups
@@ -218,11 +225,13 @@ class Renderer(Component):
 
                     # reconcile index names
                     df.index.names = dataframe.index.names
-                    yield (df,path)
+                    yield (df, path, subfig)
+                    subfig += 1
             else:
                 # do not split dataframe
-                yield (dataframe, path)
-
+                yield (dataframe, path, subfig)
+                subfig += 1
+                
     def set_paths(self, rst_dir, src_dir, build_dir):
         '''set document paths. These are relevant to determine the
         relative position of the object to be rendered in a hierarchy
@@ -1283,7 +1292,10 @@ class TableMatrix(TableBase, MatrixBase):
         if self.normalize_row_labels:
             drop = [x for x, y in enumerate(dataframe.index.values)
                     if len(set(y)) == 1]
-            rows = list(map(path2str, dataframe.index.droplevel(drop)))
+            if drop:
+                rows = list(map(path2str, dataframe.index.droplevel(drop)))
+            else:
+                rows = list(map(path2str, dataframe.index))
         else:
             rows = list(map(path2str, dataframe.index))
 
@@ -1392,8 +1404,11 @@ class Status(Renderer):
         for index, values in dataframe.iterrows():
             testname = values['name']
             status = values['status']
+            # Note the extra / in front of the path. This seems to be
+            # required for absolute path names in sphinx 1.5.4 as the
+            # leading / is removed.
             try:
-                image = ".. image:: {}\n    :width: 32".format(
+                image = ".. image:: /{}\n    :width: 32".format(
                     os.path.join(dirname,
                                  self.map_code2image[status.upper()]))
             except KeyError:
@@ -1454,14 +1469,17 @@ class StatusMatrix(Status, TableBase):
 
     def __call__(self, dataframe, path):
 
-        dirname = os.path.join(os.path.dirname(
-            sys.modules["CGATReport"].__file__), "images")
+        dirname = os.path.abspath(os.path.join(os.path.dirname(
+            sys.modules["CGATReport"].__file__), "images"))
 
         # modify columns in-place, don't do this with original slice
         dataframe = dataframe.copy()
 
+        # Note the extra / in front of the path. This seems to be required
+        # for absolute path names in sphinx 1.5.4 as the leading / is
+        # removed.
         dataframe["status"] = [
-            ".. image:: {}\n    :width: 32".format(
+            ".. image:: /{}\n    :width: 32".format(
                 os.path.join(dirname,
                              self.map_code2image.get(x.upper(), "NA")))
             for x in dataframe["status"]]

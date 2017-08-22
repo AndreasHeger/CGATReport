@@ -22,7 +22,8 @@ class RSTPlugin(Collector):
     # Pattern will also include a terminating '"'. This is used to
     # test if the context is a csv table, in which case no padding
     # should be done.
-    rx_img = re.compile("\.\. (image|figure):: ([^ |+,:]+[ ]*)")
+    # Ignore images with absolute path.
+    rx_img = re.compile("\.\. (image|figure):: ([^/][^ |+,:]+[ ]*)")
 
     # external link targets:
     # .. _link: target
@@ -31,7 +32,7 @@ class RSTPlugin(Collector):
     def __init__(self, *args, **kwargs):
         Collector.__init__(self, *args, **kwargs)
 
-    def collect(self, blocks, figure_key=""):
+    def collect(self, blocks, figure_key="", subfig=0):
         '''collect rst output from result blocks.
 
         '''
@@ -68,13 +69,13 @@ class RSTPlugin(Collector):
             n = []
             for l in lines:
                 ll = l
-                for x in self.rx_img.finditer(ll):
-                    directive, filename = x.groups()
-                    relpath = os.path.relpath(
-                        filename.strip(),
-                        os.path.abspath(self.rstdir))
-                    newpath = re.sub("\\\\", "/", relpath)
-                    l = replace_and_pad(l, filename, newpath)
+                # for x in self.rx_img.finditer(ll):
+                #     directive, filename = x.groups()
+                #     relpath = os.path.relpath(
+                #         filename.strip(),
+                #         os.path.abspath(self.rstdir))
+                #     newpath = re.sub("\\\\", "/", relpath)
+                #     l = replace_and_pad(l, filename, newpath)
 
                 for x in self.rx_link.finditer(ll):
                     directive, filename = x.groups()

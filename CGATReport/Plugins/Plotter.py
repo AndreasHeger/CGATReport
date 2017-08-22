@@ -2344,13 +2344,18 @@ class GalleryPlot(PlotByRow):
     '''Plot an image.
     '''
 
-    options = Renderer.options + Plotter.options
+    options = Renderer.options + Plotter.options + \
+              (('original', directives.flag),
+              )
+
 
     nlevels = 1
 
     def __init__(self, *args, **kwargs):
         PlotByRow.__init__(self, *args, **kwargs)
 
+        self.use_original = "original" in kwargs
+        
     def plot(self, headers, values, path):
         blocks = ResultBlocks()
         dataseries = dict(list(zip(headers, values)))
@@ -2364,7 +2369,7 @@ class GalleryPlot(PlotByRow):
                 "no 'filename' key in path %s" % (path2str(path)))
             return blocks
 
-        rst_text = '''.. figure:: %(filename)s
+        rst_text = '''.. figure:: /%(absfn)s
 '''
 
         # Warning: the link here will be invalid
@@ -2377,14 +2382,19 @@ class GalleryPlot(PlotByRow):
         absfn = os.path.abspath(filename)
         title = os.path.basename(filename)
 
+        if self.use_original:
+            return ResultBlocks(ResultBlock(text=rst_text % locals(),
+                                            title=title))
+        
         # do not render svg images
-        if filename.endswith(".svg"):
+        elif filename.endswith(".svg"):
             return ResultBlocks(ResultBlock(text=rst_text % locals(),
                                             title=title))
         # do not render pdf images
         elif filename.endswith(".pdf"):
             return ResultBlocks(ResultBlock(text=rst_link % locals(),
                                             title=title))
+
         else:
             self.startPlot()
             try:
@@ -2408,19 +2418,18 @@ class GalleryPlot(PlotByRow):
             plts.append(plt.imshow(data))
             ax.set_position([0, 0, 1, 1])
 
-        if "name" in dataseries:
-            path = dataseries['name']
+        name = dataseries.get("name", path2str(path))
 
-        blocks = ResultBlocks(ResultBlock("\n".join(
+        r = ResultBlock("\n".join(
             ("#$mpl {}.{}$#".format(
                 path2key(path),
                 self.get_figure_id()),
              "",
              "",
-             )),
-            title=path2str(path)))
-
-        return blocks
+            )),
+                        title=name)
+        
+        return ResultBlocks(r)
 
 
 class ScatterPlot(Renderer, Plotter):

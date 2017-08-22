@@ -33,7 +33,7 @@ class MatplotlibPlugin(Collector):
         # set a figure size that doesn't overflow typical browser windows
         matplotlib.rcParams['figure.figsize'] = (5.5, 4.5)
 
-    def collect(self, blocks, figure_key=None):
+    def collect(self, blocks, figure_key=None, subfig=0):
         '''collect one or more matplotlib figures and
 
         1. save as png, hires-png and pdf
@@ -43,6 +43,10 @@ class MatplotlibPlugin(Collector):
         returns a map of place holder to placeholder text.
         '''
         fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
+
+        self.debug("figure_key: {}, subfig: {}: collecting {} matplotlib images".format(
+            figure_key, subfig, len(fig_managers)))
+        
         map_figure2text = {}
 
         # determine the image formats to create
@@ -60,7 +64,7 @@ class MatplotlibPlugin(Collector):
             figure = plt.figure(figid)
 
             # save explicit formats
-            outname = "%s_%s_%02d" % (self.template_name, figure_key, figid)
+            outname = "%s_%s_%02d_%02d" % (self.template_name, figure_key, subfig, figid)
 
             has_output = False
 
