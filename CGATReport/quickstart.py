@@ -48,7 +48,7 @@ def main(argv=None):
         if os.path.exists(fn):
             raise OSError("file %s already exists - not overwriting." % fn)
 
-        outfile = open(fn, "w")
+        outfile = open(fn, "wb")
         x = Utils.get_data("CGATReport", "templates/%s" % src)
         if len(x) == 0:
             raise ValueError('file %s is empty' % src)
