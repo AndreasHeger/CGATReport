@@ -145,7 +145,13 @@ Large tables
 
    Rendering a large table (as xls)
 
-A table with images
+Table with images
+-----------------
+
+RST directives such as the image directive can be returned by a
+tracker and will be rendered in the table. Note that figures with
+absolute path names must start with two slashes ``//`` for reasons
+unknown.
 
 .. report:: Trackers.DataWithImagesExample
    :render: table

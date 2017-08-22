@@ -67,7 +67,7 @@ the seaborn `heatmap
 .. _sb-clustermap-plot:
 
 sb-clustermap-plot
-===============
+==================
 
 The :class:`CGATReportPlugins.Seaborn.ClustermapPlot` class plots labeled data
 in a heat map or matrix plot.

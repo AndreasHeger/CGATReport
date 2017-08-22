@@ -16,7 +16,6 @@ class HTMLPlugin(Collector):
         '''
         map_figure2text = {}
         extension = "html"
-
         for block in blocks:
             if not hasattr(block, "html"):
                 continue

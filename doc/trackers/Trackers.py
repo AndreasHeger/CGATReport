@@ -374,11 +374,9 @@ class DataWithImagesExample(Tracker):
     def __call__(self, track):
 
         images = glob.glob(os.path.join(IMAGEDIR, "*.png"))
-
-        data = odict()
-        data["numbers"] = list(range(len(images)))
-        data["images"] = [".. image:: %s" % x for x in images]
-
+        data = odict(
+            [("numbers", list(range(len(images)))),
+             ("images", [".. image:: /{}".format(x) for x in images])])
         return data
 
 

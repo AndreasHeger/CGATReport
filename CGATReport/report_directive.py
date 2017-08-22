@@ -365,9 +365,9 @@ def run(arguments,
                 trackerd_id=tracker_id,
                 links=links))
 
-        # user renderers might not be aware of collectors
+        # user renderers might not have a set_collectors method
         try:
-            renderer.set_collectors(collectors)
+            collect_here = not renderer.set_collectors(collectors)
         except AttributeError:
             collect_here = True
 

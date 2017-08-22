@@ -253,7 +253,9 @@ class Renderer(Component):
         self.build_environment = env
 
     def set_collectors(self, collectors):
+        '''set collectors. Return True on success'''
         self.collectors = collectors
+        return True
 
 
 class DataFrame(Renderer):
@@ -344,6 +346,9 @@ class TableBase(Renderer):
             'large-html-class',
             Utils.PARAMS.get('report_largetable_class',
                              None))
+
+    def set_collectors(self, collectors):
+        return False
 
     def asCSV(self, dataframe, row_headers, col_headers, title):
         '''save the table using CSV.'''
