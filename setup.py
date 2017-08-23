@@ -155,22 +155,3 @@ setup(name='CGATReport',
           ],
       },)
 
-# fix file permission for executables and set to "group writeable"
-# also updates the "sphinx" permissions
-if "install" in sys.argv:
-    print ("updating file permissions for scripts")
-    file_glob = os.path.join(
-        distutils.sysconfig.project_base,
-        "cgatreport-*")
-    for x in glob.glob(file_glob):
-        try:
-            os.chmod(x, os.stat(x).st_mode | stat.S_IWGRP)
-        except OSError:
-            pass
-
-    # replace the hardcoded python with /bin/env python. This
-    # allows using the install within a virtual environment.
-    print ("setting python to /bin/env python")
-    statement = 'perl -p -i -e "s/\/ifs\/apps\/apps\/python-2.7.1\/bin\/python2.7/\/bin\/env python/" ' + file_glob
-    print(statement)
-    subprocess.call(statement, shell=True)
