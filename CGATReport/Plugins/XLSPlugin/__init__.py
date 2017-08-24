@@ -27,7 +27,8 @@ class XLSPlugin(Collector):
                 self.template_name, re.sub("/", "@", block.title))
             outputpath = os.path.join(self.outdir, '%s.%s' %
                                       (outname, extension))
-
+            outputpath = re.sub(" ", "_", outputpath)
+            
             # save to file
             block.xls.save(outputpath)
 
