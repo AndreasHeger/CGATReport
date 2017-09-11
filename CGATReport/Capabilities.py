@@ -105,6 +105,8 @@ CapabilityMap = {
         CGATReport.Plugins.Renderer.NumpyMatrix,
         "status":
         CGATReport.Plugins.Renderer.Status,
+        "text":
+        CGATReport.Plugins.Plotter.Text,
         "status-matrix":
         CGATReport.Plugins.Renderer.StatusMatrix,
         "line-plot":

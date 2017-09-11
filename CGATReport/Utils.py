@@ -32,6 +32,9 @@ TrackerKeywords = set(("text", "rst", "xls",))
 # unchanged.
 ImageOptions = set(("alt", "height", "width", "scale", "class"))
 
+# TODO: make configurable parameter
+# TODO: create configuration system
+MAX_BLOCKS_PER_TAB = 6
 
 # default values
 PARAMS = {
@@ -515,7 +518,9 @@ def table2rst(table):
 def layoutBlocks(blocks, layout="column"):
     """layout blocks of rst text.
 
-    layout can be one of "column", "row", or "grid".
+    layout can be one of "column", "row", "grid" or "tabs".
+
+    The ``tabs`` layout requires the ``sphinx-tabs`` extension.
 
     The layout uses an rst table to arrange elements.
     """
@@ -576,6 +581,42 @@ def layoutBlocks(blocks, layout="column"):
         if ncols == 0:
             ncols = 1
             return lines
+
+    elif layout == "tabs":
+        blocks.shorten_titles()
+
+        # limit tabs. This could be made more intelligent by:
+        # A. taking into account title lengths
+        # B. wrap titles around in Java-script
+        # C. ...
+        for nblock in range(0, len(blocks), MAX_BLOCKS_PER_TAB):
+            block_group = blocks[nblock:nblock + MAX_BLOCKS_PER_TAB]
+
+            lines.append(".. tabs::")
+            lines.append("")
+
+            for blockid, block in enumerate(block_group):
+                if block.title:
+                    lines.append("   .. tab:: {}".format(block.title))
+                else:
+                    lines.append("   .. tab:: tab{}".format(blockid))
+
+                lines.append("")
+                lines.extend(indent(block.text, 6).split("\n"))
+                lines.append("")
+                lines.extend(block.postamble.split("\n"))
+
+            lines.append("")
+
+            if postamble:
+                lines.extend(postamble.split("\n"))
+                lines.append("")
+
+            lines.append("")
+            lines.append("")
+
+        return lines
+
     else:
         raise ValueError("unknown layout %s " % layout)
 

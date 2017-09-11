@@ -347,9 +347,6 @@ class TableBase(Renderer):
             Utils.PARAMS.get('report_largetable_class',
                              None))
 
-    def set_collectors(self, collectors):
-        return False
-
     def asCSV(self, dataframe, row_headers, col_headers, title):
         '''save the table using CSV.'''
 
@@ -641,6 +638,9 @@ class Table(TableBase):
 
         self.add_percent = kwargs.get('add-percent', None)
         self.head = int(kwargs.get('head', 0))
+
+    def set_collectors(self, collectors):
+        return False
 
     def modifyTable(self, dataframe):
         '''modify table if required, for example adding percentages.
@@ -1413,7 +1413,7 @@ class Status(Renderer):
             # required for absolute path names in sphinx 1.5.4 as the
             # leading / is removed.
             try:
-                image = ".. image:: /{}\n    :width: 32".format(
+                image = ".. image:: //{}\n    :width: 32".format(
                     os.path.join(dirname,
                                  self.map_code2image[status.upper()]))
             except KeyError:

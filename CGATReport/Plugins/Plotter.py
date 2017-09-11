@@ -2432,6 +2432,48 @@ class GalleryPlot(PlotByRow):
         return ResultBlocks(r)
 
 
+class Text(PlotByRow):
+    '''Insert data as quoted text
+    '''
+
+    options = Renderer.options + Plotter.options +\
+              (('language', directives.unchanged),
+              )
+
+    nlevels = 1
+    language = "guess"
+
+    def __init__(self, *args, **kwargs):
+        PlotByRow.__init__(self, *args, **kwargs)
+        self.language = kwargs.get("language", "guess")
+
+    def plot(self, headers, values, path):
+        blocks = ResultBlocks()
+        dataseries = dict(list(zip(headers, values)))
+        if "filename" in dataseries:
+            # return value is a series
+            filename = dataseries['filename']
+        elif len(values) == 1:
+            filename = values[0]
+        else:
+            self.warn(
+                "no 'filename' key in path %s" % (path2str(path)))
+            return blocks
+
+        name = dataseries.get("name", path2str(path))
+
+        # todo: permit gzip'ed files
+        with open(filename) as inf:
+            lines = inf.readlines()
+
+        lines = ["   {}".format(x) for x in lines]
+        rst_text = ".. code-block:: {}\n\n{}".format(
+            self.language, "".join(lines))
+
+        return ResultBlocks(ResultBlock(text=rst_text,
+                                        title=name))
+        
+
 class ScatterPlot(Renderer, Plotter):
 
     """Scatter plot.

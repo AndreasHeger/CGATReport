@@ -559,7 +559,7 @@ class Dispatcher(Component.Component):
 
         if self.set_index is None:
             try:
-                index_columns = dataframe.index.levels
+                index_columns = dataframe.index.names
             except AttributeError:
                 index_columns = [dataframe.index.name]
         else:

@@ -1,5 +1,6 @@
 """set and manipulate options for Capabilities.
 """
+import re
 
 from docutils.parsers.rst import directives
 
@@ -97,13 +98,18 @@ def update_options(kwargs):
         except AttributeError:
             # ignore non-string types
             continue
-
-        if v.startswith("@") and v.endswith("@"):
-            code = v[1:-1]
-            if code in params:
-                kwargs[key] = params[code]
-            else:
+            
+        last_end = 0
+        parts = []
+        for match in re.finditer("@([^@]+)@", v):
+            code = v[match.start() + 1:match.end() - 1]
+            if code not in params:
                 raise ValueError("unknown placeholder `%s`" % code)
+            parts.append(v[last_end:match.start()])
+            parts.append(params[code])
+            last_end = match.end()
+        parts.append(v[last_end:])
+        kwargs[key] = "".join(parts)
 
     return kwargs
 

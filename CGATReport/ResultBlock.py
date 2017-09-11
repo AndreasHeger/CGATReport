@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import re
+import os
 import itertools
 from six import string_types
 
@@ -140,6 +141,7 @@ class ResultBlocks(object):
     This class is recursive.
     '''
     __slots__ = ["_data", "title"]
+    max_short_title_length = 8
 
     def __init__(self, block=None, title=None):
 
@@ -202,6 +204,34 @@ class ResultBlocks(object):
     def clearPreamble(self):
         for block in self._data:
             block.clearPostamble()
+
+    def shorten_titles(self, mode="auto", max_length=8):
+        '''attempt to create meaningful short titles.
+
+        This is a container method as the list of all titles is taken
+        into consideration.
+        '''
+        long_titles = [x.title for x in self._data]
+        max_len = max(len(x) for x in long_titles)
+
+        if max_len <= max_length:
+            # do nothing if titles are sufficiently short
+            return
+
+        titles = long_titles
+        # succesively apply shortenings
+        # 1. remove common prefix/suffix
+        # ignore very short ones (such as plural s)
+        common_prefix = os.path.commonprefix(titles)
+        if common_prefix and len(common_prefix) > 2:
+            titles = [x[len(common_prefix):] for x in titles]
+            
+        common_suffix = os.path.commonprefix([x[::-1] for x in titles])
+        if common_suffix and len(common_suffix) > 2:
+            titles = [x[:-len(common_suffix)] for x in titles]
+
+        for block, short_title in zip(self._data, titles):
+            block.title = short_title
 
 
 def flat_iterator(blocks):
