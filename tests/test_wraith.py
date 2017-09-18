@@ -62,7 +62,7 @@ def changedir(path):
 
 
 def run_server():
-    run("python -m http.server {}".format(TEST_PORT))
+    run("python -m http.server {} >& server.log".format(TEST_PORT))
 
         
 @contextlib.contextmanager
