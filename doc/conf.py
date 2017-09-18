@@ -65,6 +65,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.ifconfig',
     'sphinx.ext.todo',
+    'sphinx_tabs.tabs',
     'CGATReport.roles',
     'CGATReport.errors_directive',
     'CGATReport.warnings_directive',

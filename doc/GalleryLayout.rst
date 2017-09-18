@@ -41,6 +41,15 @@ Testing the :term:`layout` option
 
    Grid layout
 
+.. report:: TestCases.LayoutTest
+   :render: line-plot
+   :transform: histogram
+   :layout: tabs
+   :mpl-rc: figure.figsize=(3,3)
+   :as-lines:
+
+   Tab layout - requires sphinx-tabs to be installed.
+
 Testing the :term:`split-at` option
 ===================================
 

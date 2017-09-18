@@ -1022,6 +1022,8 @@ class TransformerAggregate(Transformer):
         return data / m
 
     def smooth_histogram(self, data):
+        if len(data) <= self.smooth_window_size:
+            return data
         r = Stats.smooth(data, window_len=self.smooth_window_size)
         return r[:len(data)]
 

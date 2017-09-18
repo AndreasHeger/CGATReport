@@ -462,11 +462,14 @@ class Dispatcher(Component.Component):
         try:
             default_level = self.renderer.group_level
         except AttributeError:
-            # User rendere that is pure functions does not
+            # User renderer that are pure functions do not
             # have a group_level attribute
             default_level = 0
 
-        groupby = re.sub(" ", "", self.groupby)
+        try:
+            groupby = re.sub(" ", "", self.groupby)
+        except TypeError:
+            groupby = self.groupby
 
         if str(default_level).startswith("force"):
             groupby = default_level[len("force-"):]

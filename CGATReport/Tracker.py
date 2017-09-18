@@ -334,11 +334,15 @@ class TrackerMultipleFiles(Tracker):
 
 
 class TrackerTSV(TrackerSingleFile):
-
     """Base class for trackers that fetch data from an CSV file.
 
     Each track is a column in the file.
     """
+    separator = "\t"
+
+    # do not cache as retrieved directly from file
+    # and is usually parameterized
+    cache = False
 
     def __init__(self, *args, **kwargs):
         TrackerSingleFile.__init__(self, *args, **kwargs)
@@ -346,38 +350,25 @@ class TrackerTSV(TrackerSingleFile):
         self._data = None
         self._tracks = None
 
-    def getTracks(self, subset=None):
-        if self.filename.endswith(".gz"):
-            inf = gzip.open(self.filename, "r")
-        else:
-            inf = open(self.filename, "r")
+        def getTracks(self, subset=None):
+            self.readData()
+            return list(self.data.columns)
 
-        for line in inf:
-            if line.startswith("#"):
-                continue
-            tracks = line[:-1].split("\t")
-            break
-        inf.close()
-        self._tracks = tracks
-        return tracks
+        def readData(self):
+            if self._data is None:
+                self.data = pandas.read_csv(self.filename, sep=self.separator)
 
-    def readData(self):
-        if self._data is None:
-            if self.filename.endswith(".gz"):
-                inf = gzip.open(self.filename, "r")
-            else:
-                inf = open(self.filename, "r")
+        def __call__(self, track, **kwargs):
+            """return a data structure for track:param: track"""
+            self.readData()
+            return self.data[track].as_matrix()
 
-            data = [x.split()
-                    for x in inf.readlines() if not x.startswith("#")]
-            inf.close()
 
-            self.data = dict(list(zip(data[0], list(zip(*data[1:])))))
-
-    def __call__(self, track, **kwargs):
-        """return a data structure for track:param: track"""
-        self.readData()
-        return self.data[track]
+class TrackerCSV(TrackerTSV):
+    """Base class for trackers that fetch data from an CSV file.
+    Each track is a column in the file.
+    """
+    separator = ","
 
 
 class TrackerMatrices(TrackerMultipleFiles):

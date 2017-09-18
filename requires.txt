@@ -15,6 +15,7 @@ seaborn>=0.7.1
 six>=1.10.0
 sphinx>=1.0.5
 sqlalchemy>=1.1
+sphinx-tabs>=1.1.1
 
 # Optional/obsolete dependencies
 # rpy2 now an optional module
@@ -22,9 +23,6 @@ sqlalchemy>=1.1
 
 # sphinxcontrib-programoutput>=0.8
 
-# Disabled, as it requires pytz==2013b, which
-# conflicts with other packages that require a
-# more recent pytz.
 bokeh>=0.12.4
 
 # patsy>=0.2.1

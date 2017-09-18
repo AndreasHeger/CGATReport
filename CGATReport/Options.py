@@ -43,6 +43,7 @@ def get_option_map():
         OPTIONS["tracker"] = {
             'regex': directives.unchanged,
             'glob': directives.unchanged,
+            'filename': directives.unchanged,
             'sql_backend': directives.unchanged,
             'tracker': directives.unchanged,
         }
