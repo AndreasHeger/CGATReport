@@ -7,16 +7,15 @@ channels:
 - defaults
 
 dependencies:
-# system deps
+# system dependencies
 - nomkl
 - gcc
 - zlib
 - libpng
-# python deps
+# python dependencies
 - python
 - docutils>=0.12
 - future>=0.16.0
-# - ggplot>=0.11.5
 - matplotlib-venn>=0.5
 - matplotlib>=2.0
 - mpld3>=0.3
@@ -31,12 +30,15 @@ dependencies:
 - six>=1.10.0
 - sphinx>=1.6.3
 - sqlalchemy>=1.1
-- sphinx-tabs>=1.1.1
-- sqlite3
+- sqlite
+- rpy2
+- bkcharts>=0.2
 - pip:
+  - sphinx-tabs>=1.1.1
   - ggplot>=0.11.5
-# R deps
+# R dependencies
 - r-base
 - r-ggplot2
 - r-gplots
 - r-rcolorbrewer
+- r-svglite

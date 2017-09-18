@@ -84,8 +84,6 @@ class Cache(Component):
 
         if self._cache is None:
             return
-        self.debug("closing cache %s" % self.cache_filename)
-        self.debug("keys in cache %s" % (str(self._cache.keys())))
         self._cache.close()
         self._cache = None
 

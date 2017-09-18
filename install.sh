@@ -6,8 +6,6 @@ if [[ -z "$CONDA_PY" ]]; then
     CONDA_PY=3.6
 fi
 
-INSTALL_BRANCH=master
-
 if [[ -z "$CONDA_INSTALL_DIR" ]]; then
     CONDA_INSTALL_DIR=$(readlink -f env)
 fi
@@ -15,13 +13,6 @@ fi
 if [[ -z "$TRAVIS_BUILD_DIR" ]]; then
     TRAVIS_BUILD_DIR="."
 fi
-
-if [[ -z ${TRAVIS_BRANCH} ]]: then
-   TRAVIS_BRANCH=${INSTALL_BRANCH}
-fi
-
-CONDA_CHANNELS="--channel defaults --channel conda-forge --channel bioconda --channel r"
-CONDA_PACKAGES="pillow seaborn pandas seaborn scipy numpy matplotlib jpeg rpy2 r-ggplot2 r-gplots"
 
 # log installation information
 log() {
@@ -40,30 +31,21 @@ else
     log "using existing conda enviroment in $CONDA_INSTALL_DIR"
 fi
 
-# conda update conda --yes
-# conda info -a
+CONDA="${CONDA_INSTALL_DIR}"/bin/conda
 
-wget -O env.yml https://raw.githubusercontent.com/CGATOxford/cgat/${TRAVIS_BRANCH}/conda_env.yml
-conda env create -f env.yml
+"$CONDA" update conda --yes
+"$CONDA" info -a
+"$CONDA" env create -f ${ROOT_DIR}/conda_env.yml
 
-# set +o nounset
+set +o nounset
 source "$CONDA_INSTALL_DIR"/bin/activate cgat-report
-# set -o nounset
+set -o nounset
 
-log "installing R dependencies"
+# log "installing pure R dependencies"
 R -f "$ROOT_DIR"/install.R
 
-log "installing conda dependencies"
-which conda
-
-# The following packages will be pulled in through pip:
-# mpld3
-log "installing ggplot upgrade"
-pip install --upgrade --no-dependencies ggplot
-
-echo "setting up CGATReport"
-# setup CGATPipelines
-cd "$TRAVIS_BUILD_DIR"
+log "setting up CGATReport"
+cd "$ROOT_DIR"
 python setup.py develop
 
 # log "building report"

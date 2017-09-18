@@ -11,7 +11,7 @@ import re
 try:
     import bokeh.plotting as bk
     from bokeh.palettes import brewer
-    import bokeh.charts
+    import bkcharts
     HAS_BOKEH = True
 except ImportError:
     HAS_BOKEH = False
@@ -401,7 +401,7 @@ class BoxPlot(Renderer, BokehPlotter):
 
     def render(self, dataframe, path):
         self.startPlot()
-        plts = [self.execute("bokeh.charts.BoxPlot(dataframe)",
+        plts = [self.execute("bkcharts.BoxPlot(dataframe)",
                              globals(), locals())]
         return self.endPlot(plts, [], path)
 
@@ -424,7 +424,7 @@ class ScatterPlot(Renderer, BokehPlotter):
     def render(self, dataframe, path):
         self.startPlot()
 
-        plts = [self.execute("bokeh.charts.Scatter(dataframe)",
+        plts = [self.execute("bkcharts.Scatter(dataframe)",
                              globals(), locals())]
 
         return self.endPlot(plts, [], path)
@@ -449,7 +449,7 @@ class BarPlot(Renderer, BokehPlotter):
         self.startPlot()
 
         dataframe = dataframe.reset_index()
-        plts = [self.execute("bokeh.charts.Bar(dataframe)",
+        plts = [self.execute("bkcharts.Bar(dataframe)",
                              globals(), locals())]
 
         return self.endPlot(plts, [], path)
