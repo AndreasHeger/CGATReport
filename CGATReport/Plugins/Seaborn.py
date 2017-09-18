@@ -76,7 +76,7 @@ class BoxPlot(DataSeriesPlot, SeabornPlot):
     def plotData(self, data, melted):
         if melted:
             return [seaborn.boxplot(data.value,
-                                    groupby=data.label)]
+                                    hue=data.label)]
         else:
             return [seaborn.boxplot(data)]
 

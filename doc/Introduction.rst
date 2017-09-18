@@ -10,38 +10,21 @@ within reStructured text.
 
 This section explains the installation and configuration of cgatreport.
 
-.. _Requirements:
-
-Requirements
-************
-
-cgatreport requires the following software
-
-* python_
-* `SQLAlchemy <http://www.sqlalchemy.org/>`_
-* matplotlib_
-* sphinx_
-
-Additional functionality is available if the following modules are
-installed:
-
-* `web.py <http://webpy.org>`_
-
 Installation
 ************
 
-In order to install the extension, download the latest sources from *TODO* and unpack:
+In order to install the extension, type::
 
-   tar -xvzf sphinx-report.tar.gz
+   pip install CGATReport
 
-Alternatively, check out the the latest code from the subversion repository::
+To install from repository, type::
 
-   svn checkout http://sphinx-report.googlecode.com/svn/trunk/ sphinx-report-read-only
-
-To install, type::
-
-   python setup.py build
+   pip install --use-wheel -r requires.txt
    python setup.py install
+
+Alternatively, there is also a cgatreport conda package::
+
+   conda install cgat-report
 
 First steps
 ***********

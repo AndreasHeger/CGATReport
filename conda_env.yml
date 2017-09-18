@@ -1,0 +1,42 @@
+
+name: cgat-report
+
+channels:
+- bioconda
+- conda-forge
+- defaults
+
+dependencies:
+# system deps
+- nomkl
+- gcc
+- zlib
+- libpng
+# python deps
+- python
+- docutils>=0.12
+- future>=0.16.0
+# - ggplot>=0.11.5
+- matplotlib-venn>=0.5
+- matplotlib>=2.0
+- mpld3>=0.3
+- nose>=1.3.7
+- numpy>=1.12
+- openpyxl>=2.4
+- pandas>=0.20.0
+- pep8>=1.7.0
+- pillow>=2.7.0
+- scipy>=0.11
+- seaborn>=0.8.1
+- six>=1.10.0
+- sphinx>=1.6.3
+- sqlalchemy>=1.1
+- sphinx-tabs>=1.1.1
+- sqlite3
+- pip:
+  - ggplot>=0.11.5
+# R deps
+- r-base
+- r-ggplot2
+- r-gplots
+- r-rcolorbrewer
