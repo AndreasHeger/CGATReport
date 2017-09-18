@@ -60,20 +60,22 @@ def changedir(path):
     finally:
         os.chdir(save_dir)
 
+
+def run_server():
+    run("python -m http.server {}".format(TEST_PORT))
+
+        
 @contextlib.contextmanager
 def start_server(workdir):
 
     handler = http.server.SimpleHTTPRequestHandler
 
     with changedir(workdir):
-        with socketserver.TCPServer(("", TEST_PORT), handler) as httpd:
-            thread = threading.Thread(target=httpd.serve_forever)
-            thread.daemon = True
-            print("starting server")
-            thread.start()
-            print("yielding")
-            yield
-            print("back from yield")
+        thread = threading.Thread(target=run_server)
+        thread.start()
+        print("yielding")
+        yield
+        print("back from yield")
 
 
 def run(statement,

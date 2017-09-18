@@ -8,20 +8,6 @@ from matplotlib import _pylab_helpers
 from CGATReport import Utils
 from CGATReport.Plugins.Collector import Collector
 
-try:
-    import mpld3
-    HAVE_MPLD3 = True
-except ImportError:
-    HAVE_MPLD3 = False
-
-try:
-    import bokeh.plotting
-    import bokeh.embed
-    import bokeh.mpl
-    HAVE_BOKEH = True
-except ImportError:
-    HAVE_BOKEH = False
-
 
 class MatplotlibPlugin(Collector):
 
@@ -97,52 +83,6 @@ class MatplotlibPlugin(Collector):
             # insert display figure
             is_html = False
             script_text = None
-            if HAVE_MPLD3 and \
-               Utils.PARAMS.get("report_mpl", None) == "mpld3":
-                outpath = os.path.join(
-                    self.outdir,
-                    '%s.html' % (outname))
-
-                # plt.legend()
-                # write to file
-                with open(outpath, "w") as outf:
-                    outf.write(mpld3.fig_to_html(figure))
-                is_html = True
-
-            elif HAVE_BOKEH and \
-                    Utils.PARAMS.get("report_mpl", None) == "bokeh":
-
-                outpath = os.path.join(
-                    self.outdir,
-                    '%s.html' % (outname))
-                is_html = True
-
-                # (try to) convert to bokeh figure
-                try:
-                    bokeh_figure = bokeh.mpl.to_bokeh(figure,
-                                                      use_pandas=True,
-                                                      xkcd=False)
-
-                except NotImplementedError:
-                    # fall back to matplotlib
-                    is_html = False
-
-                if is_html:
-                    bokeh_id = bokeh_figure._id
-                    res = bokeh.resources.CDN
-                    script_path = os.path.join(
-                        '_static/report_directive/',
-                        "%s.js" % bokeh_id)
-
-                    # get js figure and html snippet
-                    js_text, script_text = bokeh.embed.autoload_static(
-                        bokeh_figure, res, script_path)
-
-                    with open(script_path, "w") as outf:
-                        outf.write(js_text)
-
-                    with open(outpath, "w") as outf:
-                        outf.write(script_text)
 
             # release memory
             plt.close(figure)
