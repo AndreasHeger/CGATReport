@@ -22,7 +22,8 @@ import CGATReport.Plugins.RPlotPlugin
 import CGATReport.Plugins.RPlotter
 import CGATReport.Plugins.RSTPlugin
 import CGATReport.Plugins.Renderer
-import CGATReport.Plugins.HoloviewPlotter
+import CGATReport.Plugins.HoloviewsPlotter
+import CGATReport.Plugins.HoloviewsPlugin
 import CGATReport.Plugins.Seaborn
 import CGATReport.Plugins.SlideShow
 import CGATReport.Plugins.Transformer
@@ -47,6 +48,9 @@ CapabilityMap = {
         CGATReport.Plugins.BokehPlugin.BokehPlugin,
         "svg":
         CGATReport.Plugins.SVGPlugin.SVGPlugin,
+        "hv":
+        CGATReport.Plugins.HoloviewsPlugin.HoloviewsPlugin,
+
     },
     "transform":
     {
@@ -149,7 +153,7 @@ CapabilityMap = {
         CGATReport.Plugins.GGPlotter.GGPlot,
         # holoview
         "hvplot":
-        CGATReport.Plugins.HoloviewPlotter.HoloviewPlot,
+        CGATReport.Plugins.HoloviewsPlotter.HoloviewsPlot,
         # pandas plotting
         "pdplot":
         CGATReport.Plugins.PandasPlotter.PandasPlot,
@@ -182,12 +186,6 @@ CapabilityMap = {
         # Bokeh plots
         "bk-line-plot":
         CGATReport.Plugins.BokehPlotter.LinePlot,
-        "bk-box-plot":
-        CGATReport.Plugins.BokehPlotter.BoxPlot,
-        "bk-scatter-plot":
-        CGATReport.Plugins.BokehPlotter.ScatterPlot,
-        "bk-bar-plot":
-        CGATReport.Plugins.BokehPlotter.BarPlot,
         "box-plot":
         CGATReport.Plugins.Seaborn.BoxPlot,
         "violin-plot":

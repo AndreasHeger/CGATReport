@@ -27,6 +27,7 @@ spider_skips:
   - !ruby/regexp /%23/
   - !ruby/regexp /.eps$/
   - !ruby/regexp /.svg$/
+  - !ruby/regexp /.xlsx$/
   - !ruby/regexp /notebook/
   - !ruby/regexp /code/
 directory: 'shots'

@@ -283,12 +283,12 @@ class LinePlot(Renderer, BokehPlotter):
         data series *n* within a plot.'''
 
         color = self.format_colors[nplotted % len(self.format_colors)]
-        nplotted /= len(self.format_colors)
+        nplotted //= len(self.format_colors)
         linestyle = self.format_lines[nplotted % len(self.format_lines)]
         if self.as_lines:
             marker = None
         else:
-            nplotted /= len(self.format_lines)
+            nplotted //= len(self.format_lines)
             marker = self.format_markers[nplotted % len(self.format_markers)]
 
         return color, linestyle, marker

@@ -13,13 +13,14 @@ except ImportError:
     HAS_HOLOVIEW = False
 
 
-class HoloviewPlot(Renderer):
+class HoloviewsPlot(Renderer):
 
     options = Renderer.options + \
               (('statement', directives.unchanged),)
 
     statement = None
-
+    engine = "bokeh"
+    
     def __init__(self, *args, **kwargs):
         self.statement = kwargs.get("statement", "")
         if self.statement is None:
@@ -29,7 +30,7 @@ class HoloviewPlot(Renderer):
             raise ValueError("Holoview can not be imported")
         
     def render(self, data, path):
-        """execute holoview statement. Inserts kwargs."""
+        """execute holoview statements."""
         statement = self.statement.strip()
         assert statement.endswith(")")
 
@@ -43,17 +44,10 @@ class HoloviewPlot(Renderer):
                 (statement, msg))
 
         layout = l["layout"]
-        renderer = hv.Store.renderers['matplotlib'].instance(fig='svg')
-        plot = renderer.get_plot(layout)
-        rendered = renderer(plot, fmt="auto")
-        
-        (data, info) = rendered
         title = path2str(path)
-        
         r = ResultBlock(
-            text="#$svg {}$#".format(title),
+            text="#$hv {}$#".format(title),
             title=title)
-        
-        r.svg = data
+        r.hv = layout
         
         return ResultBlocks(r)
