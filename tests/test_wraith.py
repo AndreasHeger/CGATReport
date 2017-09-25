@@ -25,6 +25,10 @@ domains:
 spider_skips:
   - !ruby/regexp /static$/
   - !ruby/regexp /%23/
+  - !ruby/regexp /.eps$/
+  - !ruby/regexp /.svg$/
+  - !ruby/regexp /notebook/
+  - !ruby/regexp /code/
 directory: 'shots'
 imports: "{wraith_data_config}"
 phantomjs_options: '--ignore-ssl-errors=true --ssl-protocol=tlsv1'
@@ -71,8 +75,8 @@ def start_server(workdir):
     handler = http.server.SimpleHTTPRequestHandler
 
     with changedir(workdir):
-        thread = threading.Thread(target=run_server)
-        thread.start()
+        # thread = threading.Thread(target=run_server)
+        # thread.start()
         print("yielding")
         yield
         print("back from yield")

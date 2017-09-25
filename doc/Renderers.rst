@@ -17,5 +17,4 @@ access to several plotting frontends.
    GalleryGGPlot.rst
    GalleryPDPlot.rst
    GalleryR.rst
-   GalleryBokeh.rst
    GallerySpecial.rst
