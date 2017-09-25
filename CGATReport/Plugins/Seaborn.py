@@ -38,6 +38,7 @@ class SeabornPlot(object):
     def build_kwargs_dict():
         pass
 
+
 class PairPlot(Renderer, Plotter, SeabornPlot):
 
     options = Renderer.options +\

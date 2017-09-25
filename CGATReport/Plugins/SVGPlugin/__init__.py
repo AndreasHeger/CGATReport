@@ -3,21 +3,23 @@ from CGATReport.Plugins.Collector import Collector
 from CGATReport import Utils
 
 
-class HTMLPlugin(Collector):
+class SVGPlugin(Collector):
 
     def __init__(self, *args, **kwargs):
         Collector.__init__(self, *args, **kwargs)
 
     def collect(self, blocks, figure_key="", subfig=0):
-        '''collect html output from result blocks.
+        '''collect svg output from result blocks.
 
-        HTML output is written to a file and a link will be inserted at
-        the place holder.
+        SVG output is written to a file and an image will be inserted
+        at the place holder.
         '''
         map_figure2text = {}
-        extension = "html"
+        extension = "svg"
+        rst_text = '''.. figure:: /{absfn}
+'''
         for block in blocks:
-            if not hasattr(block, "html"):
+            if not hasattr(block, "svg"):
                 continue
 
             # remove special characters from filename. I think the docutils
@@ -31,12 +33,11 @@ class HTMLPlugin(Collector):
 
             # save to file
             with open(outputpath, "w") as outf:
-                outf.write(block.html)
+                outf.write(block.svg)
 
             # use absolute path
-            link = os.path.abspath(outputpath)
-
-            rst_output = "%(link)s" % locals()
-            map_figure2text["#$html %s$#" % block.title] = rst_output
+            absfn = os.path.abspath(outputpath)
+            map_figure2text["#$svg %s$#" % block.title] = rst_text.format(
+                absfn=absfn)
 
         return map_figure2text

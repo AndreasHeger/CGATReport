@@ -22,11 +22,13 @@ import CGATReport.Plugins.RPlotPlugin
 import CGATReport.Plugins.RPlotter
 import CGATReport.Plugins.RSTPlugin
 import CGATReport.Plugins.Renderer
+import CGATReport.Plugins.HoloviewPlotter
 import CGATReport.Plugins.Seaborn
 import CGATReport.Plugins.SlideShow
 import CGATReport.Plugins.Transformer
 import CGATReport.Plugins.TransformersGeneLists
 import CGATReport.Plugins.XLSPlugin
+import CGATReport.Plugins.SVGPlugin
 
 CapabilityMap = {
     "collect":
@@ -43,6 +45,8 @@ CapabilityMap = {
         CGATReport.Plugins.XLSPlugin.XLSPlugin,
         "bokeh":
         CGATReport.Plugins.BokehPlugin.BokehPlugin,
+        "svg":
+        CGATReport.Plugins.SVGPlugin.SVGPlugin,
     },
     "transform":
     {
@@ -143,6 +147,9 @@ CapabilityMap = {
         # ggplot
         "ggplot":
         CGATReport.Plugins.GGPlotter.GGPlot,
+        # holoview
+        "hvplot":
+        CGATReport.Plugins.HoloviewPlotter.HoloviewPlot,
         # pandas plotting
         "pdplot":
         CGATReport.Plugins.PandasPlotter.PandasPlot,
