@@ -18,4 +18,5 @@ access to several plotting frontends.
    GalleryPDPlot.rst
    GalleryR.rst
    GalleryHoloviews.rst
+   GalleryBokeh.rst
    GallerySpecial.rst

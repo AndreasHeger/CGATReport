@@ -469,7 +469,11 @@ def run(arguments,
 
     if CGATREPORT_DEBUG:
         for x, l in enumerate(lines):
-            print(("%5i %s" % (x, l)))
+            try:
+                print(("%5i %s" % (x, l)))
+            except UnicodeEncodeError:
+                print(("line skipped - unicode error"))
+                pass
 
     if len(lines) and state_machine:
         state_machine.insert_input(
