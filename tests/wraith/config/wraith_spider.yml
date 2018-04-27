@@ -1,0 +1,15 @@
+
+browser: "phantomjs"
+domains:
+  test: http://localhost:9100
+spider_skips:
+  - !ruby/regexp /static$/
+  - !ruby/regexp /%23/
+  - !ruby/regexp /.eps$/
+  - !ruby/regexp /.svg$/
+  - !ruby/regexp /.xlsx$/
+  - !ruby/regexp /notebook/
+  - !ruby/regexp /code/
+directory: 'shots'
+imports: "wraith_data.yml"
+phantomjs_options: '--ignore-ssl-errors=true --ssl-protocol=tlsv1'

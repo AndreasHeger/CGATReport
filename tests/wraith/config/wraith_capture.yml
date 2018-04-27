@@ -1,0 +1,19 @@
+
+browser: "phantomjs"
+domains:
+  test: http://localhost:9100
+  current: https://www.cgat.org/downloads/public/CGATReport/documentation
+spider_skips:
+  - !ruby/regexp /static$/
+  - !ruby/regexp /%23/
+imports: "wraith_data.yml"
+screen_widths:
+  - 1280
+directory: 'shots'
+fuzz: '20%'
+threshold: 5
+gallery:
+  thumb_width:  200
+  thumb_height: 200
+mode: diffs_only
+phantomjs_options: '--ignore-ssl-errors=true --ssl-protocol=tlsv1'
