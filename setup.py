@@ -102,7 +102,7 @@ Operating System :: Unix
 Operating System :: MacOS
 """
 
-# collect pysam version
+# collect CGATReport version
 sys.path.insert(0, "CGATReport")
 import version
 version = version.__version__
