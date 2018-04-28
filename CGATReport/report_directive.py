@@ -151,6 +151,8 @@ def run(arguments,
     renderer_name = None
 
     layout = options.get("layout", "column")
+    long_titles = "long-titles" in options
+
     option_map = get_option_map()
     renderer_options = select_and_delete_options(
         options, option_map["render"])
@@ -194,7 +196,7 @@ def run(arguments,
             str(transformer_names) +\
             re.sub("\s", "", "".join(content))
 
-        options_hash = hashlib.md5(options_key.encode()).hexdigest()
+        options_hash = hashlib.md5(options_key.encode()).hexdigest()[:10]
 
         template_name = Utils.quote_filename(
             Config.SEPARATOR.join((tracker_name, renderer_name,
@@ -220,7 +222,7 @@ def run(arguments,
         # check if text element exists
         if os.path.exists(filename_text):
 
-            with open(filename_text, "r") as inf:
+            with open(filename_text, "r", encoding="utf-8") as inf:
                 lines = [x[:-1] for x in inf]
             filenames = []
 
@@ -445,7 +447,7 @@ def run(arguments,
     blocks.updatePlaceholders(map_figure2text)
 
     # render the output taking into account the layout
-    lines = Utils.layoutBlocks(blocks, layout)
+    lines = Utils.layoutBlocks(blocks, layout, long_titles=long_titles)
     lines.append("")
 
     # add caption

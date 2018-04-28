@@ -30,13 +30,13 @@ class HTMLPlugin(Collector):
                 self.outdir, '%s.%s' % (outname, extension))
 
             # save to file
-            with open(outputpath, "w") as outf:
+            with open(outputpath, "w", encoding="utf-8") as outf:
                 outf.write(block.html)
 
             # use absolute path
             link = os.path.abspath(outputpath)
-
-            rst_output = "%(link)s" % locals()
+            title = os.path.basename(block.title)
+            rst_output = ":download:`(link) </{}>`".format(link)
             map_figure2text["#$html %s$#" % block.title] = rst_output
 
         return map_figure2text

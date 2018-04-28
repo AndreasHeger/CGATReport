@@ -200,6 +200,28 @@ def convertValue(value, list_detection=False):
             return float(value)
         return value
 
+def limit_file_path(path,
+                    max_length=255,
+                    component_sep="-_",
+                    join_sep="-"):
+    """if a path is longer than max_length, try to truncate
+    the filename part."""
+
+    take = 5
+    while len(path) > max_length and take > 0:
+        dirname, basename = os.path.split(path)
+        components = re.split("[{}]".format(component_sep),
+                              basename)
+        new_components = []
+        for component in components:
+            if len(component) > 2 * take:
+                component = component[:take] + component[-take:]
+            new_components.append(component)
+        basename = join_sep.join(new_components)
+        path = os.path.join(dirname, basename)
+        take -= 1
+    return path
+
 
 def configToDictionary(config):
     p = {}
@@ -515,7 +537,7 @@ def table2rst(table):
     return rst
 
 
-def layoutBlocks(blocks, layout="column"):
+def layoutBlocks(blocks, layout="column", long_titles=False):
     """layout blocks of rst text.
 
     layout can be one of "column", "row", "grid" or "tabs".
@@ -583,7 +605,8 @@ def layoutBlocks(blocks, layout="column"):
             return lines
 
     elif layout == "tabs":
-        blocks.shorten_titles()
+        if not long_titles:
+            blocks.shorten_titles()
 
         # limit tabs. This could be made more intelligent by:
         # A. taking into account title lengths

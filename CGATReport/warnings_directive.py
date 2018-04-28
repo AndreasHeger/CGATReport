@@ -10,13 +10,15 @@
 """
 
 import logging
-from docutils import nodes
 import shelve
+
+from docutils import nodes
+from docutils.parsers.rst import Directive
+from docutils.parsers.rst.directives.admonitions import BaseAdmonition
 
 from sphinx.locale import _
 from sphinx.environment import NoUri
-from sphinx.util.compat import Directive
-from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+
 
 CGATREPORT_WARNINGS_CACHE = "cgatreport_warnings.cache"
 

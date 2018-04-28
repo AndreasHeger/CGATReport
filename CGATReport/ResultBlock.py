@@ -225,10 +225,18 @@ class ResultBlocks(object):
         common_prefix = os.path.commonprefix(titles)
         if common_prefix and len(common_prefix) > 2:
             titles = [x[len(common_prefix):] for x in titles]
-            
+
         common_suffix = os.path.commonprefix([x[::-1] for x in titles])
         if common_suffix and len(common_suffix) > 2:
             titles = [x[:-len(common_suffix)] for x in titles]
+
+        # the sphinx-tabs extension has an issue if there are more
+        # than 10 blocks and all are int, so add a "#" prefix
+        try:
+            map(int, titles)
+            titles = ["#{}".format(x) for x in titles]
+        except ValueError:
+            pass
 
         for block, short_title in zip(self._data, titles):
             block.title = short_title

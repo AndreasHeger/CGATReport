@@ -2,14 +2,15 @@ from __future__ import unicode_literals
 import os
 import sys
 import re
+import yaml
+from collections import OrderedDict as odict
+import collections
 import warnings
 import inspect
 import logging
 import glob
 import gzip
 
-from collections import OrderedDict as odict
-import collections
 
 # Python 2/3 Compatibility
 try:
@@ -350,22 +351,27 @@ class TrackerTSV(TrackerSingleFile):
         self._data = None
         self._tracks = None
 
-        def getTracks(self, subset=None):
-            self.readData()
-            return list(self.data.columns)
+    def getTracks(self, subset=None):
+        self.readData()
+        return list(self.data.columns)
 
-        def readData(self):
-            if self._data is None:
-                self.data = pandas.read_csv(self.filename, sep=self.separator)
+    def readData(self):
+        if self._data is None:
+            self.data = pandas.read_csv(self.filename,
+                                        sep=self.separator,
+                                        encoding="utf-8")
 
-        def __call__(self, track, **kwargs):
-            """return a data structure for track:param: track"""
-            self.readData()
-            return self.data[track].as_matrix()
+    def __call__(self, track, **kwargs):
+        """return a data structure for track:param: track"""
+        self.readData()
+        if len(self.data) == 0:
+            return None
+        return self.data[track].as_matrix()
 
 
 class TrackerCSV(TrackerTSV):
     """Base class for trackers that fetch data from an CSV file.
+
     Each track is a column in the file.
     """
     separator = ","
@@ -935,16 +941,8 @@ class TrackerSQLCheckTable(TrackerSQL):
 
 
 class Config(Tracker):
-
-    '''Tracker providing config values of ini files.
-
-    The .ini files need to be located in the directory
-    from which cgatreport is called.
-
-    returns a dictionary of key,value pairs.
-    '''
     tracks = glob.glob("*.ini")
-
+    
     def __init__(self, *args, **kwargs):
         Tracker.__init__(self, *args, **kwargs)
 
@@ -975,7 +973,6 @@ class Config(Tracker):
             for key, value in config.items(section):
                 x[key] = odict(list(zip(("value", "type"), convert(value))))
             result[section] = x
-
         return result
 
 

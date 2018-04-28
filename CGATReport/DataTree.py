@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import collections
 import itertools
+import hashlib
 import re
 from collections import OrderedDict as odict
 import pandas
@@ -29,11 +30,13 @@ def path2str(path):
         return str(path)
 
 
-def path2key(path):
+def path2key(path, max_length=50):
     '''convert path to key.'''
     if path is None:
         return ""
-    return re.sub("/", "-", path2str(path))
+
+    full_path = re.sub("/", "-", path2str(path))
+    return hashlib.md5(full_path.encode()).hexdigest()[:10]
 
 
 def str2path(s):
@@ -264,7 +267,7 @@ def concatDataFrames(dataframes, index_tuples):
         column_set.update(collections.OrderedDict(
             [(x, 0) for x in d.columns]))
 
-    df = df.reindex_axis(list(column_set.keys()), axis=1)
+    df = df.reindex(labels=list(column_set.keys()), axis=1)
     return df
 
 

@@ -141,7 +141,7 @@ class Renderer(Component):
                     "received {} instead".format(
                         type(r)))
             figure_key = path2key(subpath)
-        
+
             if self.collectors:
                 for collector in self.collectors:
                     map_figure2text.update(collector.collect(
@@ -432,7 +432,7 @@ class TableBase(Renderer):
                     len(row_headers),
                     len(col_headers)))
         lines = []
-        lines.append("`%i x %i table <#$html %s$#>`__" %
+        lines.append("%i x %i table #$html %s$#" %
                      (len(row_headers), len(col_headers),
                       title))
 
@@ -645,6 +645,9 @@ class Table(TableBase):
     def modifyTable(self, dataframe):
         '''modify table if required, for example adding percentages.
         '''
+
+        if len(dataframe) == 0:
+            return dataframe
 
         if self.head > 0:
             dataframe = dataframe[:self.head]

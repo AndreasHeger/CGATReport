@@ -32,7 +32,7 @@ class MatplotlibPlugin(Collector):
 
         self.debug("figure_key: {}, subfig: {}: collecting {} matplotlib images".format(
             figure_key, subfig, len(fig_managers)))
-        
+
         map_figure2text = {}
 
         # determine the image formats to create

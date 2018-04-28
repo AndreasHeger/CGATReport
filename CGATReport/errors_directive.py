@@ -13,9 +13,9 @@ from docutils import nodes
 import os
 import logging
 
+from docutils.parsers.rst import Directive
 from sphinx.locale import _
 from sphinx.environment import NoUri
-from sphinx.util.compat import Directive
 from docutils.parsers.rst.directives.admonitions import BaseAdmonition
 import shelve
 

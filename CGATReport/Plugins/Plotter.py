@@ -193,6 +193,7 @@ class Plotter(object):
         ('tight', directives.flag),
         ('xticks-action', directives.unchanged),
         ('xticks-max-chars', directives.length_or_unitless),
+        ('xticks-rotation', directives.length_or_unitless),
     )
 
     if HAS_SEABORN:
@@ -207,6 +208,9 @@ class Plotter(object):
     # maximum number of characters in X ticks
     # If 0, do not perform any action
     xticks_max_length = 10
+
+    # xticks rotation
+    xticks_rotation = 0
 
     # action to perform when X ticks are longer than maximum.
     # Options are "truncate-start", "truncate-end", "number"
@@ -255,6 +259,7 @@ class Plotter(object):
                                                 self.xticks_max_length))
         self.xticks_action = kwargs.get('xticks-action',
                                         'number')
+        self.xticks_rotation = kwargs.get('xticks-rotation', 0)
 
         if self.xticks_action not in ('number',
                                       'truncate-start',
@@ -515,6 +520,10 @@ class Plotter(object):
                      for x, y in zip(new_labels, xlabels)])
 
                 ax.set_xticklabels(new_labels)
+
+        if self.xticks_rotation:
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(self.xticks_rotation)
 
         blocks = ResultBlocks(
             ResultBlock(
@@ -2344,10 +2353,10 @@ class GalleryPlot(PlotByRow):
     '''Plot an image.
     '''
 
-    options = Renderer.options + Plotter.options + \
-              (('original', directives.flag),
-              )
-
+    options = Renderer.options + Plotter.options + (
+        ('original', directives.flag),
+        ('regex-title', directives.unchanged),
+    )
 
     nlevels = 1
 
@@ -2355,7 +2364,11 @@ class GalleryPlot(PlotByRow):
         PlotByRow.__init__(self, *args, **kwargs)
 
         self.use_original = "original" in kwargs
-        
+        if "regex-title" in kwargs:
+            self.regex_title = re.compile(kwargs["regex-title"])
+        else:
+            self.regex_title = None
+
     def plot(self, headers, values, path):
         blocks = ResultBlocks()
         dataseries = dict(list(zip(headers, values)))
@@ -2374,18 +2387,21 @@ class GalleryPlot(PlotByRow):
 
         # Warning: the link here will be invalid
         # if a report is moved.
-        rst_link = '''* `%(title)s <%(absfn)s>`_
+        rst_link = '''* :download:`%(title)s </%(absfn)s>`
 '''
 
         plts = []
 
         absfn = os.path.abspath(filename)
-        title = os.path.basename(filename)
+        if self.regex_title:
+            title = self.regex_title.search(filename).groups()[0]
+        else:
+            title = os.path.basename(filename)
 
         if self.use_original:
             return ResultBlocks(ResultBlock(text=rst_text % locals(),
                                             title=title))
-        
+
         # do not render svg images
         elif filename.endswith(".svg"):
             return ResultBlocks(ResultBlock(text=rst_text % locals(),
@@ -2395,40 +2411,37 @@ class GalleryPlot(PlotByRow):
             return ResultBlocks(ResultBlock(text=rst_link % locals(),
                                             title=title))
 
-        else:
-            self.startPlot()
-            try:
-                data = plt.imread(filename)
-            except IOError:
-                raise ValueError(
-                    "file format for file '%s' not recognized" % filename)
+        self.startPlot()
+        try:
+            data = plt.imread(filename)
+        except IOError:
+            raise ValueError(
+                "file format for file '%s' not recognized" % filename)
 
-            ax = plt.gca()
-            ax.frameon = False
-            ax.axison = False
+        ax = plt.gca()
+        ax.frameon = False
+        ax.axison = False
 
-            # remove excess space around the image
-            plt.tight_layout(pad=0)
+        # remove excess space around the image
+        plt.tight_layout(pad=0)
 
-            # Create a plot which the same shape as the original plot
-            im_aspect = float(data.shape[0]) / float(data.shape[1])
-            plt_size = self.mCurrentFigure.get_size_inches()
-            self.mCurrentFigure.set_figheight(plt_size[0] * im_aspect)
+        # Create a plot which the same shape as the original plot
+        im_aspect = float(data.shape[0]) / float(data.shape[1])
+        plt_size = self.mCurrentFigure.get_size_inches()
+        self.mCurrentFigure.set_figheight(plt_size[0] * im_aspect)
 
-            plts.append(plt.imshow(data))
-            ax.set_position([0, 0, 1, 1])
+        plts.append(plt.imshow(data))
+        ax.set_position([0, 0, 1, 1])
 
-        name = dataseries.get("name", path2str(path))
+        title = dataseries.get("name", title)
 
         r = ResultBlock("\n".join(
             ("#$mpl {}.{}$#".format(
                 path2key(path),
                 self.get_figure_id()),
              "",
-             "",
-            )),
-                        title=name)
-        
+             "")), title=title)
+
         return ResultBlocks(r)
 
 

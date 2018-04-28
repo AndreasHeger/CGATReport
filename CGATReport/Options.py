@@ -34,6 +34,7 @@ def get_option_map():
             'slices': directives.unchanged,
             'paths': directives.unchanged,
             'layout': directives.unchanged,
+            'long-titles': directives.flag,
             'restrict': directives.unchanged,
             'exclude': directives.unchanged,
             'nocache': directives.flag,

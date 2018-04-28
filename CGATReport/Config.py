@@ -4,7 +4,7 @@
 
 import os
 
-SEPARATOR = "@"
+SEPARATOR = "-"
 
 HTML_IMAGE_FORMAT = ('main', 'png', 80)
 LATEX_IMAGE_FORMAT = ()  # ('pdf', 'pdf' 50)
