@@ -1758,10 +1758,10 @@ class BarPlot(TableMatrix, Plotter):
             m = dataframe[l]
             try:
                 m = m.unstack()
-                return m.as_matrix()
+                return m.values
             except AttributeError:
                 # is not a multi-index object, no need to unstack
-                m = m.as_matrix()
+                m = m.values
                 m.shape = len(m), 1
                 return m
 
