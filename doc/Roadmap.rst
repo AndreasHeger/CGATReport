@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+Version 0.8.1
+=============
+
+* minor bugfix release
+* ggplot now an optional dependency
+* bokeh now an optional dependency
+
 Version 0.7.6
 =============
 

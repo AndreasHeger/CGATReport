@@ -558,8 +558,6 @@ class Plotter(object):
                                       ncol=1,
                                       )
             else:
-                # do not use plt.figlegend
-                # as legend disappears in mpld3
                 ax.legend(plts,
                           legends,
                           loc=self.legend_location,
