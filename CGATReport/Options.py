@@ -111,7 +111,7 @@ def update_options(kwargs):
             parts.append(params[code])
             last_end = match.end()
         parts.append(v[last_end:])
-        kwargs[key] = "".join(parts)
+        kwargs[key] = "".join(map(str, parts))
 
     return kwargs
 

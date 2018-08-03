@@ -1,7 +1,9 @@
 import itertools
 import numpy
 import pandas
+import copy
 import math
+import collections
 
 # used in evals for computing bins in histograms
 from numpy import arange
@@ -360,7 +362,11 @@ class TransformerPandas(Transformer):
                            "`tf-statement` option to be set.")
 
     def transform(self, data):
-        exec("data = data.{}".format(self.statement))
+        ll = copy.copy(locals())
+        exec("data = data.{}".format(self.statement), globals(), ll)
+        data = ll["data"]
+        if isinstance(data, pandas.Series):
+            data = data.to_frame()
         return data
 
 

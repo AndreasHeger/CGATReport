@@ -1,6 +1,6 @@
 docutils>=0.12
 future>=0.16.0
-ggplot>=0.11.5
+# ggplot>=0.11.5
 matplotlib-venn>=0.5
 matplotlib>=2.0
 mpld3>=0.3

@@ -35,7 +35,10 @@ except ImportError:
     pass
 
 # import all into namespace for eval
-from ggplot import *
+try:
+    from ggplot import *
+except ImportError:
+    pass
 
 
 class GGPlot(Renderer, Plotter):
