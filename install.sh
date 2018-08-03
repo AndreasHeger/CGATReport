@@ -42,7 +42,7 @@ source "$CONDA_INSTALL_DIR"/bin/activate cgat-report
 set -o nounset
 
 # log "installing pure R dependencies"
-R -f "$ROOT_DIR"/install.R
+# R -f "$ROOT_DIR"/install.R
 
 log "setting up CGATReport"
 cd "$ROOT_DIR"
