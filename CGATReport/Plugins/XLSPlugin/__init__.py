@@ -1,7 +1,6 @@
 import os
-import re
 from CGATReport.Plugins.Collector import Collector
-from CGATReport import Config
+from CGATReport import Utils
 
 
 class XLSPlugin(Collector):
@@ -23,11 +22,10 @@ class XLSPlugin(Collector):
             if not hasattr(block, "xls"):
                 continue
 
-            outname = "%s_%s" % (
-                self.template_name, re.sub("/", "@", block.title))
+            outname = Utils.quote_filename(
+                "%s_%s" % (self.template_name, block.title))
             outputpath = os.path.join(self.outdir, '%s.%s' %
                                       (outname, extension))
-            outputpath = re.sub(" ", "_", outputpath)
             
             # save to file
             block.xls.save(outputpath)
@@ -35,7 +33,7 @@ class XLSPlugin(Collector):
             # use absolute path
             link = os.path.abspath(outputpath)
 
-            rst_output = "%(link)s" % locals()
+            rst_output = ":download:`(link) </{}>`".format(link)
             map_figure2text["#$xls %s$#" % block.title] = rst_output
 
         return map_figure2text

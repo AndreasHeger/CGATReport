@@ -30,8 +30,9 @@ class PandasPlot(Renderer, Plotter):
 
         # Used to call reset_index() here in order to add
         # the index as a column, but now let caller do this.
+        self.startPlot()
         p = None
-        s = "p = dataframe.plot(%s)" % self.kwargs
+        s = "p = dataframe.plot(%s, ax=plt.gca())" % self.kwargs
 
         try:
             exec(s, globals(), locals())

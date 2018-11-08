@@ -35,7 +35,6 @@ class HTMLPlugin(Collector):
 
             # use absolute path
             link = os.path.abspath(outputpath)
-            title = os.path.basename(block.title)
             rst_output = ":download:`(link) </{}>`".format(link)
             map_figure2text["#$html %s$#" % block.title] = rst_output
 

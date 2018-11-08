@@ -452,7 +452,7 @@ class TableBase(Renderer):
 
         # substitute links
         data = [re.sub(
-            "`(.*?(?:\".+\"|\'.+\')?.*?)\s<(.*?(?:\".+\"|\'.+\')?.*?)>`_",
+            r"`(.*?(?:\".+\"|\'.+\')?.*?)\s<(.*?(?:\".+\"|\'.+\')?.*?)>`_",
             r'<a href="\2">\1</a>',
             x)
             for x in data]
@@ -569,7 +569,7 @@ class TableBase(Renderer):
 
         # write result block
         lines = []
-        lines.append("`%i x %i table <#$xls %s$#>`__" %
+        lines.append("%i x %i table #$xls %s$#" %
                      (len(row_headers), len(col_headers),
                       title))
         lines.append("")

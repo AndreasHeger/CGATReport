@@ -460,7 +460,10 @@ class TrackerImages(Tracker):
         self.glob = kwargs["glob"]
 
     def getTracks(self, subset=None):
-        return glob.glob(self.glob)
+        g = glob.glob(self.glob)
+        if len(g) == 0:
+             raise ValueError("glob expression '{}' returned no data".format(self.glob))
+        return g
 
     def __call__(self, track, **kwargs):
         """return a data structure for track:param: track and slice:slice:"""
