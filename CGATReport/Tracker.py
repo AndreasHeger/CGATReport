@@ -462,7 +462,7 @@ class TrackerImages(Tracker):
     def getTracks(self, subset=None):
         g = glob.glob(self.glob)
         if len(g) == 0:
-             raise ValueError("glob expression '{}' returned no data".format(self.glob))
+            raise ValueError("glob expression '{}' returned no data".format(self.glob))
         return g
 
     def __call__(self, track, **kwargs):
