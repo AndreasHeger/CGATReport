@@ -1394,7 +1394,7 @@ class Status(Renderer):
         # index has test names
         # columns are description, info, status
         columns = ('description', 'info', 'status', 'name')
-        if set(dataframe.columns) != set(columns):
+        if set(columns).difference(set(dataframe.columns)):
             raise ValueError("invalid columns: expected '%s', got '%s' " %
                              (columns, dataframe.columns))
 
@@ -1467,13 +1467,15 @@ class StatusMatrix(Status, TableBase):
     transpose = False
 
     row_column = "track"
+    col_column = "slice"
 
     def __init__(self, *args, **kwargs):
         TableBase.__init__(self, *args, **kwargs)
         Status.__init__(self, *args, **kwargs)
 
         self.transpose = "transpose" in kwargs
-        self.row_column = kwargs.get("row-column", "track")
+        self.row_column = [x.strip() for x in kwargs.get("row-column", "track").split(",")]
+        self.col_column = kwargs.get("col-column", "slice")
 
     def __call__(self, dataframe, path):
 
@@ -1494,8 +1496,8 @@ class StatusMatrix(Status, TableBase):
 
         table = pandas.pivot_table(
             dataframe.reset_index(),
-            index=[self.row_column],
-            columns="slice",
+            index=self.row_column,
+            columns=self.col_column,
             values="status",
             aggfunc=lambda x: ' '.join(x))
 

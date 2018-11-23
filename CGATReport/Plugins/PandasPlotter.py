@@ -10,7 +10,7 @@ import pandas
 
 class PandasPlot(Renderer, Plotter):
 
-    """Use the python ggplot libary for plotting.
+    """Use the pandas libary for plotting.
     """
     options = (
         ('statement',  directives.unchanged),

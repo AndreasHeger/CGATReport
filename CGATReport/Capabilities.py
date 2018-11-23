@@ -158,6 +158,8 @@ CapabilityMap = {
         "pdplot":
         CGATReport.Plugins.PandasPlotter.PandasPlot,
         # seaborn plots
+        "sbplot":
+        CGATReport.Plugins.Seaborn.SeabornPlot,
         "sb-box-plot":
         CGATReport.Plugins.Seaborn.BoxPlot,
         "sb-violin-plot":

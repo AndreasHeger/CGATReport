@@ -506,6 +506,13 @@ class Dispatcher(Component.Component):
             else:
                 g = groupby
             self.group_level = g
+        elif isinstance(groupby, str):
+            # group by index names
+            if nlevels > 1:
+                index_names = [x.strip() for x in groupby.split(",") if x in self.data.index.names]
+                indices = [self.data.index.names.index(x) for x in index_names]
+                self.data = self.data.reorder_levels(indices + [x for x in range(nlevels) if x not in indices])
+                self.group_level = len(indices) - 1
         else:
             self.group_level = 0
 

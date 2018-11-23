@@ -1,14 +1,60 @@
 from docutils.parsers.rst import directives
 
-from .Plotter import TableMatrixPlot, DataSeriesPlot
 import pandas
 import seaborn
 import numpy
+import matplotlib.pyplot as plt
 from CGATReport.Plugins.Renderer import Renderer
 from CGATReport.Plugins.Plotter import Plotter
+from CGATReport.Plugins.Plotter import TableMatrixPlot, DataSeriesPlot
 
 
-class SeabornPlot(object):
+class SeabornPlot(Renderer, Plotter):
+
+    """Use the seaborn libary for plotting.
+    """
+    options = (
+        ('statement', directives.unchanged),
+        ('kwargs', directives.unchanged),
+        ('kind', directives.unchanged),
+    ) + Renderer.options + Plotter.options
+
+    group_level = 0
+
+    def __init__(self, *args, **kwargs):
+        Renderer.__init__(self, *args, **kwargs)
+        Plotter.__init__(self, *args, **kwargs)
+
+        # statement is synonym for kwargs. The latter takes precedence
+        self.kwargs = kwargs.get('kwargs', kwargs.get('statement'))
+        self.plot_kind = kwargs.get('kind', None)
+        if self.plot_kind is None:
+            raise ValueError("seaborn-plot requires :kind: setting")
+
+    def render(self, dataframe, path):
+
+        # Used to call reset_index() here in order to add
+        # the index as a column, but now let caller do this.
+        self.startPlot()
+        p = None
+        s = "p = seaborn.{}(data=dataframe.reset_index(), {}, ax=plt.gca())".format(
+            self.plot_kind, self.kwargs)
+
+        try:
+            exec(s, globals(), locals())
+        except Exception as msg:
+            raise Exception(
+                "seaborn.{}() raised error for statement '{}': msg={}".format(
+                    self.plot_kind, s, msg))
+
+        if self.title:
+            plt.title(self.title)
+        plts = [p]
+
+        return self.endPlot(plts, None, path)
+
+
+class SeabornIndirectPlot(object):
 
     options = (
         ('kwargs', directives.unchanged),
@@ -39,16 +85,16 @@ class SeabornPlot(object):
         pass
 
 
-class PairPlot(Renderer, Plotter, SeabornPlot):
+class PairPlot(Renderer, Plotter, SeabornIndirectPlot):
 
     options = Renderer.options +\
               Plotter.options +\
-              SeabornPlot.options
+              SeabornIndirectPlot.options
 
     def __init__(self, *args, **kwargs):
         Renderer.__init__(self, *args, **kwargs)
         Plotter.__init__(self, *args, **kwargs)
-        SeabornPlot.__init__(self, *args, **kwargs)
+        SeabornIndirectPlot.__init__(self, *args, **kwargs)
 
     def render(self, dataframe, path):
 
@@ -58,7 +104,7 @@ class PairPlot(Renderer, Plotter, SeabornPlot):
         return self.endPlot([plot], [], path)
 
 
-class BoxPlot(DataSeriesPlot, SeabornPlot):
+class BoxPlot(DataSeriesPlot, SeabornIndirectPlot):
 
     """Write a set of box plots.
 
@@ -68,11 +114,11 @@ class BoxPlot(DataSeriesPlot, SeabornPlot):
     """
 
     options = DataSeriesPlot.options +\
-              SeabornPlot.options
+              SeabornIndirectPlot.options
 
     def __init__(self, *args, **kwargs):
         DataSeriesPlot.__init__(self, *args, **kwargs)
-        SeabornPlot.__init__(self, *args, **kwargs)
+        SeabornIndirectPlot.__init__(self, *args, **kwargs)
 
     def plotData(self, data, melted):
         if melted:
@@ -80,6 +126,29 @@ class BoxPlot(DataSeriesPlot, SeabornPlot):
                                     hue=data.label)]
         else:
             return [seaborn.boxplot(data)]
+
+
+class BarPlot(DataSeriesPlot, SeabornIndirectPlot):
+
+    """Write a set of bar plots.
+
+    This:class:`Renderer` requires two levels.
+
+    labels[dict] / data[array]
+    """
+
+    options = DataSeriesPlot.options +\
+              SeabornIndirectPlot.options
+
+    def __init__(self, *args, **kwargs):
+        DataSeriesPlot.__init__(self, *args, **kwargs)
+        SeabornIndirectPlot.__init__(self, *args, **kwargs)
+
+    def plotData(self, data, melted):
+        if melted:
+            return [seaborn.barplot(data.value,
+                                    hue=data.label)]
+        return [seaborn.barplot(data)]
 
 
 class ViolinPlot(BoxPlot):
@@ -105,7 +174,7 @@ class ViolinPlot(BoxPlot):
             return [seaborn.violinplot(data)]
 
 
-class KdePlot(DataSeriesPlot, SeabornPlot):
+class KdePlot(DataSeriesPlot, SeabornIndirectPlot):
 
     """Write a set of density plots.
 
@@ -117,11 +186,11 @@ class KdePlot(DataSeriesPlot, SeabornPlot):
     labels[dict] / data[array]
     """
     options = DataSeriesPlot.options +\
-              SeabornPlot.options
+              SeabornIndirectPlot.options
 
     def __init__(self, *args, **kwargs):
         DataSeriesPlot.__init__(self, *args, **kwargs)
-        SeabornPlot.__init__(self, *args, **kwargs)
+        SeabornIndirectPlot.__init__(self, *args, **kwargs)
 
     def plotData(self, dataframe, melted):
         plts = []
@@ -141,7 +210,7 @@ class KdePlot(DataSeriesPlot, SeabornPlot):
         return plts
 
 
-class DistPlot(DataSeriesPlot, SeabornPlot):
+class DistPlot(DataSeriesPlot, SeabornIndirectPlot):
     """Write a set of density plots.
 
     The data series is converted to a kernel density
@@ -152,11 +221,11 @@ class DistPlot(DataSeriesPlot, SeabornPlot):
     labels[dict] / data[array]
     """
 
-    options = DataSeriesPlot.options + SeabornPlot.options
+    options = DataSeriesPlot.options + SeabornIndirectPlot.options
 
     def __init__(self, *args, **kwargs):
         DataSeriesPlot.__init__(self, *args, **kwargs)
-        SeabornPlot.__init__(self, *args, **kwargs)
+        SeabornIndirectPlot.__init__(self, *args, **kwargs)
 
     def plotData(self, dataframe, melted):
         plts = []
@@ -177,13 +246,13 @@ class DistPlot(DataSeriesPlot, SeabornPlot):
         return plts
 
 
-class SeabornMatrixPlot(TableMatrixPlot, SeabornPlot):
+class SeabornMatrixPlot(TableMatrixPlot, SeabornIndirectPlot):
 
-    options = TableMatrixPlot.options + SeabornPlot.options
+    options = TableMatrixPlot.options + SeabornIndirectPlot.options
 
     def __init__(self, *args, **kwargs):
         TableMatrixPlot.__init__(self, *args, **kwargs)
-        SeabornPlot.__init__(self, *args, **kwargs)
+        SeabornIndirectPlot.__init__(self, *args, **kwargs)
 
     def addColourBar(self):
         pass

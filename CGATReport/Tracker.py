@@ -1019,16 +1019,27 @@ class Status(TrackerSQL):
         if not hasattr(self, "test%s" % slice):
             raise NotImplementedError("test%s not implement" % slice)
 
-        status, value = getattr(self, "test%s" % slice)(track)
+        r = getattr(self, "test%s" % slice)(track)
+        if len(r) == 2:
+            status, info = r
+            extra_args = None
+        elif len(r) == 3:
+            status, info, extra_args = r
+        else:
+            raise ValueError("expected 2 or 3 return values, received {}".format(len(r)))
+
         description = getattr(self, "test%s" % slice).__doc__
         if description is None:
             description = ""
 
-        return odict(
+        d = odict(
             (('name', slice),
              ('status', status),
-             ('info', str(value)),
+             ('info', str(info)),
              ('description', description)))
+        if extra_args:
+            d.update(extra_args)
+        return d
 
 
 class SQLStatementTracker(TrackerSQL):

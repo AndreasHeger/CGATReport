@@ -225,7 +225,7 @@ def run(arguments,
             with open(filename_text, "r", encoding="utf-8") as inf:
                 lines = [x[:-1] for x in inf]
             filenames = []
-
+            
             # check if all figures are present
             for line in lines:
                 for query in queries:
@@ -234,25 +234,27 @@ def run(arguments,
                         filenames.extend(list(x.groups()))
 
             filenames = [os.path.join(outdir, x) for x in filenames]
-
-            logger.debug(
-                "report_directive.run: %s: checking for %s" %
-                (tag, str(filenames)))
-            for filename in filenames:
-                if not os.path.exists(filename):
-                    logger.info(
-                        "report_directive.run: %s: redo: file %s is missing" %
-                        (tag, filename))
-                    break
+            if len(filenames) == 0:
+                logger.info("report_directive.run: %s: redo: no files found" % tag)
             else:
-                logger.info(
-                    "report_directive.run: %s: noredo: all files are present" %
-                    tag)
-                # all is present - save text and return
-                if lines and state_machine:
-                    state_machine.insert_input(
-                        lines, state_machine.input_lines.source(0))
-                return []
+                logger.debug(
+                    "report_directive.run: %s: checking for %s" %
+                    (tag, str(filenames)))
+                for filename in filenames:
+                    if not os.path.exists(filename):
+                        logger.info(
+                            "report_directive.run: %s: redo: file %s is missing" %
+                            (tag, filename))
+                        break
+                else:
+                    logger.info(
+                        "report_directive.run: %s: noredo: all files are present" %
+                        tag)
+                    # all is present - save text and return
+                    if lines and state_machine:
+                        state_machine.insert_input(
+                            lines, state_machine.input_lines.source(0))
+                    return []
         else:
             logger.debug(
                 "report_directive.run: %s: no check performed: %s missing" %
@@ -383,7 +385,6 @@ def run(arguments,
 
         # add the tracker options
         dispatcher_options.update(tracker_options)
-
         blocks = dispatcher(**dispatcher_options)
 
         if blocks is None:
