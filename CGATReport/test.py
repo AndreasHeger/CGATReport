@@ -443,7 +443,8 @@ def main(argv=None, **kwargs):
        options.start_ipython or options.language == "notebook":
         renderer = None
     else:
-        renderer = get_renderer(options.renderer, renderer_options)
+        renderer = get_renderer(options.renderer, {**renderer_options,
+                                                   **kwargs})
 
     try:
         rstdir = os.getcwd()

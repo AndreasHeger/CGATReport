@@ -312,7 +312,7 @@ def is_class(obj):
     raise ValueError("can not make sense of tracker %s" % str(obj))
 
 
-def make_object(path, args=(), kwargs={}):
+def make_object(path, args=None, kwargs=None):
     '''return object of type *path*
 
     This function is similar to an import statement, but
@@ -320,6 +320,11 @@ def make_object(path, args=(), kwargs={}):
 
     The object is instantiated with *args* and **kwargs**.
     '''
+
+    if args is None:
+        args = ()
+    if kwargs is None:
+        kwargs = {}
 
     # split class from module
     name, cls = os.path.splitext(path)
@@ -350,7 +355,7 @@ def make_object(path, args=(), kwargs={}):
 
 
 @memoized
-def make_tracker(path, args=(), kwargs={}):
+def make_tracker(path, args=None, kwargs=None):
     """retrieve an instantiated tracker and its associated code.
 
     returns a tuple (code, tracker, pathname).
@@ -361,7 +366,7 @@ def make_tracker(path, args=(), kwargs={}):
 
 
 @memoized
-def make_renderer(path, args=(), kwargs={}):
+def make_renderer(path, args=None, kwargs=None):
     """retrieve an instantiated Renderer.
 
     returns the object.
@@ -371,7 +376,7 @@ def make_renderer(path, args=(), kwargs={}):
 
 
 @memoized
-def make_transformer(path, args=(), kwargs={}):
+def make_transformer(path, args=None, kwargs=None):
     """retrieve an instantiated Transformer.
 
     returns the object.
@@ -380,8 +385,11 @@ def make_transformer(path, args=(), kwargs={}):
     return obj
 
 
-def get_transformers(transformers, kwargs={}):
+def get_transformers(transformers, kwargs=None):
     '''find and instantiate all transformers.'''
+
+    if kwargs is None:
+        kwargs = {}
 
     result = []
     for transformer in transformers:
@@ -402,8 +410,11 @@ def get_transformers(transformers, kwargs={}):
     return result
 
 
-def get_renderer(renderer_name, kwargs={}):
+def get_renderer(renderer_name, kwargs=None):
     '''find and instantiate renderer.'''
+
+    if kwargs is None:
+        kwargs = {}
 
     instance = None
 
@@ -411,7 +422,7 @@ def get_renderer(renderer_name, kwargs={}):
     if tt is not None:
         instance = tt(**kwargs)
     else:
-        instance = make_renderer(renderer_name, kwargs)
+        instance = make_renderer(renderer_name, (), kwargs)
 
     if not instance:
         raise KeyError(

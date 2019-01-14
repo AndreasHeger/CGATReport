@@ -970,9 +970,7 @@ class MatrixBase:
         '''add row total to the matrix.'''
         nrows, ncols = matrix.shape
 
-        totals = numpy.zeros(nrows)
-        for x in range(nrows):
-            totals[x] = sum(matrix[x, :])
+        totals = matrix.sum(axis=1)
         col_headers.append("total")
         totals.shape = (nrows, 1)
         return (numpy.hstack(numpy.hsplit(matrix, ncols) + [totals, ]),
