@@ -27,16 +27,8 @@ SHAPES = [
     'd',
 ]
 
-# ggplot > 0.9
 try:
-    import ggplot.discretemappers
-    ggplot.discretemappers.SHAPES = SHAPES
-except ImportError:
-    pass
-
-# import all into namespace for eval
-try:
-    from ggplot import *
+    from plotnine import *
 except ImportError:
     pass
 
@@ -96,7 +88,7 @@ class GGPlot(Renderer, Plotter):
         # closed instead
         plt.figure()
         try:
-            plts = [plot.make()]
+            plts = [plot.draw()]
         except Exception as msg:
             raise Exception(
                 "ggplot raised error on rendering for statement '%s': msg=%s" %
