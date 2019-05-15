@@ -25,6 +25,7 @@ dependencies:
 - pandas
 - pep8
 - pillow
+- plotnine
 - scipy
 - seaborn
 - six

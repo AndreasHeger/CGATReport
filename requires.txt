@@ -9,6 +9,7 @@ openpyxl>=2.4
 pandas>=0.20.0
 pep8>=1.7.0
 pillow>=2.7.0
+plotnine>=0.5.1
 scipy>=0.11
 seaborn>=0.8.1
 six>=1.10.0
