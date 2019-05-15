@@ -4,12 +4,12 @@
 ggplot
 ======
 
-The :class:`CGATReportPlugins.GGPlotter.GGPlot` displays
-a dataframe using the python port (ggplot_) of the plotnine_ package.
+The :class:`CGATReportPlugins.GGPlotter.GGPlot` displays a dataframe
+using the plotnine_ package.
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'value', color='track'
+   :aes: "value", color="track"
    :geom: geom_histogram()
    :layout: column-2
    :width: 300
@@ -18,14 +18,34 @@ a dataframe using the python port (ggplot_) of the plotnine_ package.
 
 .. report:: Tutorial5.ExpressionLevel
    :render: ggplot
-   :aes: 'value', color='track'
-   :geom: geom_histogram()
-   :layout: column-2
+   :aes: "value", color="track"
+   :geom: geom_histogram() + facet_wrap("~track")
    :groupby: all
    :width: 300
 
-   A histogram plot, all data grouped so that they are plotted
-   in the same plot.
+   A histogram plot, but using the facet-wrap functionality
+   of ggplot/plotnine.
+
+
+.. report:: Tutorial5.ExpressionLevel
+   :render: ggplot
+   :aes: "value", color="track"
+   :geom: geom_histogram() + facet_wrap("~track") + theme_xkcd()
+   :groupby: all
+   :width: 300
+
+   A histogram plot, but using theming.
+
+
+.. report:: Tutorial5.ExpressionLevel
+   :render: ggplot
+   :aes: "value", color="track"
+   :geom: geom_histogram() + facet_wrap("~track") + theme_xkcd() + theme(figure_size=(20, 20))
+   :groupby: all
+   :width: 300
+
+   A histogram plot, but using theming and setting the figure size
+	   
 
 Options
 -------

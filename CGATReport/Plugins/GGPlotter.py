@@ -10,22 +10,6 @@ import pandas
 import copy
 import warnings
 
-SHAPES = [
-    'o',  # circle
-    '^',  # triangle up
-    '<',
-    '>',
-    'D',  # diamond
-    'v',  # triangle down
-    's',  # square
-    '*',  # star
-    'p',  # pentagon
-    '*',  # octagon
-    'h',
-    'H',
-    'd',
-]
-
 try:
     from plotnine import *
 except ImportError:
@@ -33,8 +17,7 @@ except ImportError:
 
 
 class GGPlot(Renderer, Plotter):
-
-    """Use the python ggplot libary for plotting.
+    """Use the python plotnine libary for plotting.
     """
     options = (
         ('aes',  directives.unchanged),
@@ -58,13 +41,10 @@ class GGPlot(Renderer, Plotter):
 
     def render(self, dataframe, path):
 
-        # the index in the dataframe is reset in order
-        # to add the index as a column.
-
-        # Currently, ggplot is not using hierarchical indices, but
-        # see this thread: https://github.com/yhat/ggplot/issues/285
+        # the index in the dataframe is reset in order to add the
+        # index as a column so that it is available for plotting.
         dataframe.reset_index(inplace=True)
-
+        
         if len(dataframe.dropna()) == 0:
             warnings.warn("dataframe is empty after dropping all NA columns")
             return None
@@ -76,20 +56,16 @@ class GGPlot(Renderer, Plotter):
             exec(s, gl, ll)
         except Exception as msg:
             raise Exception(
-                "ggplot raised error for statement '%s': msg=%s" %
-                (s, msg))
+                "plotnine raised error for statement '{}': msg={}".format(s, msg))
         plot = ll["plot"]
 
         if self.title:
             plt.title(self.title)
 
-        # plot.make() calls plt.close() command, so create a dummy plot that will be
-        # closed instead
-        plt.figure()
         try:
             plts = [plot.draw()]
         except Exception as msg:
             raise Exception(
-                "ggplot raised error on rendering for statement '%s': msg=%s" %
-                (s, msg))
+                "ggplot raised error on rendering for statement '{}': msg={}".format(
+                s, msg))
         return self.endPlot(plts, None, path)
