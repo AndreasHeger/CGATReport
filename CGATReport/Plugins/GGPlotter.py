@@ -10,7 +10,6 @@ import pandas
 import copy
 import warnings
 
-
 SHAPES = [
     'o',  # circle
     '^',  # triangle up

@@ -706,7 +706,7 @@ class TransformerHistogramStats(Transformer):
             cumul = counts.cumsum()
             nvalues = cumul.iloc[-1]
             median_value = nvalues // 2
-            idx = cumul.searchsorted(median_value)[0]
+            idx = cumul.searchsorted(median_value)
             if cumul.iloc[idx] == median_value:
                 median_v = (bins.iloc[idx] + bins.iloc[idx + 1]) / 2.0
             else:
@@ -1249,9 +1249,9 @@ class TransformerHistogram(TransformerAggregate):
             bin_edges = self.binToX(bin_edges)
 
             # re-build dataframe
-            df = pandas.DataFrame.from_items(
+            df = pandas.DataFrame.from_dict(odict(
                 [('bin', bin_edges)] + list(zip(
-                    data.columns, all_counts)))
+                    data.columns, all_counts))))
 
         return df
 

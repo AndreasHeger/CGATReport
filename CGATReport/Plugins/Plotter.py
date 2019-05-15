@@ -1786,7 +1786,7 @@ class BarPlot(TableMatrix, Plotter):
 
         self.rows = [path2str(x) for x in list(df.index)]
         self.columns = list(df.columns)
-        self.data_matrix = df.as_matrix()
+        self.data_matrix = df.values
 
         if self.switch_row_col or self.data_matrix.shape[0] == 1:
             if self.data_matrix is not None:

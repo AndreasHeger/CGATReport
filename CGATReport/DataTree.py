@@ -253,7 +253,7 @@ def listAsDataFrame(data, index_title='names',
 def concatDataFrames(dataframes, index_tuples):
 
     # in pandas >0.19.0, keys of length 1 should not be tuples
-    df = pandas.concat(dataframes, keys=index_tuples)
+    df = pandas.concat(dataframes, keys=index_tuples, sort=True)
 
     # concat is akin to an SQL join operation and will
     # sort the columns lexicographically.

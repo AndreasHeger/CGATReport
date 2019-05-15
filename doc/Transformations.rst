@@ -618,8 +618,3 @@ This :term:`Transformer` has the following options:
       int
 
       Level in the :term:`datatree` hierarchy at which to count.
-
-
-
-
-

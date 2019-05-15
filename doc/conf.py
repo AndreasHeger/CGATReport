@@ -65,6 +65,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.ifconfig',
     'sphinx.ext.todo',
+    'sphinx.ext.inheritance_diagram',
     'sphinx_tabs.tabs',
     'CGATReport.roles',
     'CGATReport.errors_directive',
@@ -97,7 +98,7 @@ rst_epilog='''
 .. _bedtools: http://bedtools.readthedocs.org/en/latest/
 .. _UCSC Tools: http://genome.ucsc.edu/admin/git.html
 .. _seaborn: https://github.com/mwaskom/seaborn
-.. _ggplot: https://github.com/yhat/ggplot/
+.. _plotnine: https://github.com/has2k1/plotnine
 .. _ggplot2: http://ggplot2.org/
 .. _rpy2: http://rpy.sourceforge.net/rpy2.html
 .. _pandas: http://pandas.pydata.org/
