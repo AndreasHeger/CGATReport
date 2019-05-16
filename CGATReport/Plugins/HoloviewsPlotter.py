@@ -43,7 +43,9 @@ class HoloviewsPlot(Renderer):
                 "holoviews raised error for statement '%s': msg=%s" %
                 (statement, msg))
 
-        layout = l["layout"]
+        return self.endPlot(l["layout"], None, path)
+
+    def endPlot(self, layout, legend, path):
         title = path2str(path)
         r = ResultBlock(
             text="#$hv {}$#".format(title),
@@ -51,3 +53,4 @@ class HoloviewsPlot(Renderer):
         r.hv = layout
         
         return ResultBlocks(r)
+        

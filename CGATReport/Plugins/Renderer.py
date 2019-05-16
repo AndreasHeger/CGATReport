@@ -1308,7 +1308,7 @@ class TableMatrix(TableBase, MatrixBase):
         columns = list(dataframe.columns)
         # use numpy.matrix - permits easier broadcasting
         # for normalization.
-        matrix = numpy.matrix(dataframe.as_matrix())
+        matrix = dataframe.values
 
         # remove columns with only NaNs. This can happend
         # during the dataframe merging process if the
