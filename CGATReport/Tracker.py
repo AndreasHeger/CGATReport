@@ -366,7 +366,7 @@ class TrackerTSV(TrackerSingleFile):
         self.readData()
         if len(self.data) == 0:
             return None
-        return self.data[track].as_matrix()
+        return self.data[track].values
 
 
 class TrackerCSV(TrackerTSV):

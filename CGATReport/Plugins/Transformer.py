@@ -694,12 +694,12 @@ class TransformerHistogramStats(Transformer):
             for x, c in enumerate(counts):
                 if c != 0:
                     break
-            min_v = bins.ix[x]
+            min_v = bins.iloc[x]
             for x, c in enumerate(counts[::-1]):
                 if c != 0:
                     break
             x += 1
-            max_v = bins.ix[-x]
+            max_v = bins.iloc[-x]
             sums = bins * counts
             mean_v = float(sum(sums)) / sum(counts)
 
@@ -1068,11 +1068,11 @@ class TransformerAggregate(Transformer):
         else:
             window = max(
                 1, int(math.floor(float(len(data)) / self.rarify_ratio)))
-        return data.ix[list(range(0, len(data), window))]
+        return data.iloc[list(range(0, len(data), window))]
 
     def fill_range_with_zeros(self, data):
-        min_range = data.ix[:, 0].min()
-        max_range = data.ix[:, 0].max()
+        min_range = data.iloc[:, 0].min()
+        max_range = data.iloc[:, 0].max()
         df = pandas.DataFrame(0,
                               index=numpy.arange(min_range, max_range),
                               columns=data.columns[1:]).reset_index()

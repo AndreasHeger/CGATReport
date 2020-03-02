@@ -2095,7 +2095,7 @@ class DataSeriesPlot(Renderer, Plotter):
             # in hierarchical indices, get rid of superfluous
             # levels (often these are row numbers)
             if isinstance(dataframe.index,
-                          pandas.core.index.MultiIndex):
+                          pandas.MultiIndex):
                 todrop = []
                 for x, level in enumerate(dataframe.index.levels):
                     if len(level) == len(dataframe.index):

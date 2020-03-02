@@ -474,7 +474,7 @@ class TableBase(Renderer):
                     len(col_headers)))
 
         is_hierarchical = isinstance(dataframe.index,
-                                     pandas.core.index.MultiIndex)
+                                     pandas.MultiIndex)
 
         split = is_hierarchical and len(dataframe.index.levels) > 1
 
@@ -692,7 +692,7 @@ class Table(TableBase):
             dataframe = dataframe.transpose()
             # flatten the column index if it is hierarchical
             is_hierarchical = isinstance(dataframe.columns,
-                                         pandas.core.index.MultiIndex)
+                                         pandas.MultiIndex)
             if is_hierarchical:
                 dataframe.columns = ["/".join(x) for x in dataframe.columns]
 
@@ -719,7 +719,7 @@ class Table(TableBase):
         # if index is not hierarchical, but contains tuples,
         # split tuples in index to build a new (hierarchical) index
         is_hierarchical = isinstance(dataframe.index,
-                                     pandas.core.index.MultiIndex)
+                                     pandas.MultiIndex)
 
         if not is_hierarchical and isinstance(dataframe.index[0], tuple):
             idx = pandas.MultiIndex.from_tuples(dataframe.index)
@@ -1503,7 +1503,7 @@ class StatusMatrix(Status, TableBase):
             table = table.transpose()
             # flatten the column index if it is hierarchical
             is_hierarchical = isinstance(table.columns,
-                                         pandas.core.index.MultiIndex)
+                                         pandas.MultiIndex)
             if is_hierarchical:
                 table.columns = ["/".join(x) for x in table.columns]
 

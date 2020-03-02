@@ -396,7 +396,7 @@ class Dispatcher(Component.Component):
         # select rows to keep (matching any of the patterns in any
         # of the levels of the hierarchical index)
         is_hierarchical = isinstance(self.data.index,
-                                     pandas.core.index.MultiIndex)
+                                     pandas.MultiIndex)
         if is_hierarchical:
             if mode == "restrict":
                 keep = [True] * len(self.data.index)
@@ -537,7 +537,7 @@ class Dispatcher(Component.Component):
         self.pruned = []
 
         if isinstance(dataframe.index,
-                      pandas.core.index.MultiIndex):
+                      pandas.MultiIndex):
             todrop = []
             for x, level in enumerate(dataframe.index.levels):
 
@@ -577,7 +577,7 @@ class Dispatcher(Component.Component):
 
         dataframe.reset_index(inplace=True)
         is_hierarchical = isinstance(dataframe.columns,
-                                     pandas.core.index.MultiIndex)
+                                     pandas.MultiIndex)
         if is_hierarchical:
             if self.include_columns:
                 # will this work?

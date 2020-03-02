@@ -516,7 +516,7 @@ def as_dataframe(data, tracker=None):
 
     # rename levels in hierarchical index
     is_hierarchical = isinstance(df.index,
-                                 pandas.core.index.MultiIndex)
+                                 pandas.MultiIndex)
 
     if is_hierarchical:
         n = list(df.index.names)
