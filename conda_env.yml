@@ -9,9 +9,9 @@ channels:
 dependencies:
 # system dependencies
 - nomkl
-- gcc
 - zlib
 - libpng
+- pip
 # python dependencies
 - pyyaml
 - python
